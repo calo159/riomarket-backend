@@ -17,6 +17,12 @@ from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
+from apps.common.query import (  # noqa: F401  (reexpuestas: services.parametro_entero, ...)
+    aplicar_ordenamiento,
+    parametro_booleano,
+    parametro_entero,
+    validar_estado_parametro,
+)
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
 # de columnas: un valor fuera de lista no llega a ``order_by``).
@@ -238,34 +244,6 @@ def eliminar_categoria(*, categoria: Categoria) -> None:
 # ---------------------------------------------------------------------------
 # Búsqueda / ordenamiento / visibilidad
 # ---------------------------------------------------------------------------
-def parametro_entero(params, nombre: str) -> int | None:
-    """Parsea un parámetro entero; entrada inválida → 400."""
-    valor = params.get(nombre)
-    if not valor:
-        return None
-    try:
-        return int(valor)
-    except (TypeError, ValueError) as exc:
-        raise ValidationError({nombre: "Debe ser un número entero."}) from exc
-
-
-def _parametro_booleano(params, nombre: str) -> bool | None:
-    valor = params.get(nombre)
-    if valor in (None, ""):
-        return None
-    texto = str(valor).lower()
-    if texto in ("1", "true", "si", "s"):
-        return True
-    if texto in ("0", "false", "no", "n"):
-        return False
-    raise ValidationError({nombre: "Debe ser true o false."})
-
-
-def _validar_estado(valor: str, opciones) -> None:
-    if valor not in opciones:
-        raise ValidationError({"estado": f"Estado inválido. Use uno de: {', '.join(opciones)}."})
-
-
 def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
     """Visibilidad por rol + filtro ``?estado=`` (sin fuga de datos).
 
@@ -281,7 +259,7 @@ def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
 
     estado = params.get("estado")
     if estado:
-        _validar_estado(estado, Puesto.Estado.values)
+        validar_estado_parametro(estado, Puesto.Estado.values)
         queryset = queryset.filter(estado=estado)
     return queryset
 
@@ -302,7 +280,7 @@ def visibles_productos(usuario, queryset: QuerySet, params) -> QuerySet:
 
     estado = params.get("estado")
     if estado:
-        _validar_estado(estado, Producto.Estado.values)
+        validar_estado_parametro(estado, Producto.Estado.values)
         queryset = queryset.filter(estado=estado)
     return queryset
 
@@ -324,30 +302,6 @@ def visibles_imagenes(usuario, queryset: QuerySet) -> QuerySet:
     )
 
 
-def aplicar_ordenamiento(
-    queryset: QuerySet, parametro: str | None, permitidos: tuple[str, ...]
-) -> QuerySet:
-    """Ordena si el valor está en la lista blanca; si no, lanza 400.
-
-    Un ``order_by`` con valor arbitrario permitiría filtrar por columnas
-    internas (p. ej. ``?ordering=password``) y fallar con 500 al no existir.
-    """
-    if not parametro:
-        return queryset
-    campos = [c.strip() for c in parametro.split(",") if c.strip()]
-    invalidos = [c for c in campos if c not in permitidos]
-    if invalidos:
-        raise ValidationError(
-            {
-                "ordering": (
-                    f"Valor no permitido: {', '.join(invalidos)}. "
-                    f"Use uno de: {', '.join(permitidos)}."
-                )
-            }
-        )
-    return queryset.order_by(*campos)
-
-
 def filtrar_puestos(queryset: QuerySet, params) -> QuerySet:
     """``?q= &categoria= &vendedor= &domicilio=`` sobre puestos."""
     consulta = params.get("q")
@@ -363,7 +317,7 @@ def filtrar_puestos(queryset: QuerySet, params) -> QuerySet:
     vendedor = parametro_entero(params, "vendedor")
     if vendedor:
         queryset = queryset.filter(id_vendedor=vendedor)
-    domicilio = _parametro_booleano(params, "domicilio")
+    domicilio = parametro_booleano(params, "domicilio")
     if domicilio is not None:
         queryset = queryset.filter(ofrece_domicilio=domicilio)
     return queryset.distinct()

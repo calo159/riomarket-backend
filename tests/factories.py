@@ -1,9 +1,12 @@
 """Factories (factory_boy) compartidas por toda la suite."""
 
+from decimal import Decimal
+
 import factory
 
 from apps.accounts.models import Usuario, Vendedor
 from apps.catalog.models import Categoria, Producto, Puesto, PuestoCategoria
+from apps.orders.models import ItemPedido, Pedido
 
 
 class UsuarioFactory(factory.django.DjangoModelFactory):
@@ -104,3 +107,35 @@ class ProductoFactory(factory.django.DjangoModelFactory):
             PuestoCategoria.objects.get_or_create(
                 id_puesto=self.id_puesto, id_categoria=self.id_categoria
             )
+
+
+class PedidoFactory(factory.django.DjangoModelFactory):
+    """Pedido "vacio" (sin ítems) para probar transiciones de estado.
+
+    Para tests de creación con stock se usa ``services.crear_pedido``.
+    """
+
+    class Meta:
+        model = Pedido
+
+    id_comprador = factory.SubFactory(UsuarioFactory)
+    id_puesto = factory.SubFactory(PuestoFactory)
+    tipo_entrega = Pedido.TipoEntrega.RETIRO
+    estado = Pedido.Estado.PENDIENTE
+    subtotal = Decimal("0.00")
+    tarifa_domicilio = Decimal("0.00")
+    total = Decimal("0.00")
+
+
+class ItemPedidoFactory(factory.django.DjangoModelFactory):
+    """Ítem con el snapshot tomado del producto (como hace el servicio)."""
+
+    class Meta:
+        model = ItemPedido
+
+    id_pedido = factory.SubFactory(PedidoFactory)
+    id_producto = factory.SubFactory(ProductoFactory)
+    nombre_producto = factory.LazyAttribute(lambda item: item.id_producto.nombre)
+    unidad_medida = factory.LazyAttribute(lambda item: item.id_producto.unidad_medida)
+    precio_unitario = factory.LazyAttribute(lambda item: item.id_producto.precio)
+    cantidad = 1
