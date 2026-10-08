@@ -1,0 +1,43 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/*", ".venv", "venv", "staticfiles", "media"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (orden de imports)
+    "UP",  # modernizaciones de Python
+    "B",   # bugs conocidos (bugbear)
+    "C4",  # comprehensions
+    "SIM", # simplificaciones
+    "DJ",  # reglas específicas de Django
+    "RUF", # reglas ruff
+]
+ignore = [
+    "DJ01",   # null=True vs blank=True se decide caso a caso
+    "SIM108", # el ternario a veces es menos legible
+    "B008",   # calls en defaults (patrón DRF: APIView.as_view())
+]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["E402", "F403", "F405"]
+# RUF012: en Django, Meta.ordering/constraints y permission_classes son
+# clases o listas que Django espera como atributos de clase; el aviso de
+# "mutable default" no aplica (no se mutan en runtime).
+"apps/*/models.py" = ["RUF012"]
+"apps/*/views.py" = ["RUF012"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.coverage.run]
+source = ["apps"]
+branch = true
+omit = ["*/migrations/*", "*/tests/*", "*/admin.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
