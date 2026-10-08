@@ -2,7 +2,7 @@
 
 import factory
 
-from apps.accounts.models import Usuario
+from apps.accounts.models import Usuario, Vendedor
 from apps.catalog.models import Categoria, Producto, Puesto, PuestoCategoria
 
 
@@ -35,6 +35,28 @@ class CategoriaFactory(factory.django.DjangoModelFactory):
 
     nombre = factory.Sequence(lambda n: f"Categoria {n}")
     activa = True
+
+
+class VendedorFactory(factory.django.DjangoModelFactory):
+    """Fila de verificación de un vendedor.
+
+    Por defecto crea también su ``Usuario`` vendedor y queda aprobado (regla 1).
+    """
+
+    class Meta:
+        model = Vendedor
+
+    id_usuario = factory.SubFactory(UsuarioFactory, rol=Usuario.Rol.VENDEDOR)
+    estado_verificacion = Vendedor.EstadoVerificacion.APROBADO
+
+
+class VendedorPendienteFactory(VendedorFactory):
+    estado_verificacion = Vendedor.EstadoVerificacion.PENDIENTE
+
+
+class VendedorRechazadoFactory(VendedorFactory):
+    estado_verificacion = Vendedor.EstadoVerificacion.RECHAZADO
+    motivo_rechazo = "Documento ilegible."
 
 
 class PuestoFactory(factory.django.DjangoModelFactory):

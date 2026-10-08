@@ -7,7 +7,14 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import Usuario
 from apps.catalog.services import asignar_categoria
-from tests.factories import CategoriaFactory, ProductoFactory, PuestoFactory, UsuarioFactory
+from tests.factories import (
+    CategoriaFactory,
+    ProductoFactory,
+    PuestoFactory,
+    UsuarioFactory,
+    VendedorFactory,
+    VendedorPendienteFactory,
+)
 
 # PNG 1x1 válido (verificable por Pillow)
 PNG_BYTES = base64.b64decode(
@@ -22,12 +29,25 @@ def imagen_png():
 
 @pytest.fixture
 def vendedor():
-    return UsuarioFactory(rol=Usuario.Rol.VENDEDOR, password="ClaveSegura1!")
+    """Vendedor con identidad APROBADA (regla 1 real en Inc 2)."""
+    usuario = UsuarioFactory(rol=Usuario.Rol.VENDEDOR, password="ClaveSegura1!")
+    VendedorFactory(id_usuario=usuario)
+    return usuario
+
+
+@pytest.fixture
+def vendedor_pendiente():
+    """Vendedor cuya solicitud de verificación aún está pendiente."""
+    usuario = UsuarioFactory(rol=Usuario.Rol.VENDEDOR, password="ClaveSegura1!")
+    VendedorPendienteFactory(id_usuario=usuario)
+    return usuario
 
 
 @pytest.fixture
 def otro_vendedor():
-    return UsuarioFactory(rol=Usuario.Rol.VENDEDOR, password="ClaveSegura1!")
+    usuario = UsuarioFactory(rol=Usuario.Rol.VENDEDOR, password="ClaveSegura1!")
+    VendedorFactory(id_usuario=usuario)
+    return usuario
 
 
 @pytest.fixture
@@ -56,6 +76,13 @@ def cliente_vendedor(vendedor):
 def cliente_otro_vendedor(otro_vendedor):
     cliente = APIClient()
     cliente.force_authenticate(otro_vendedor)
+    return cliente
+
+
+@pytest.fixture
+def cliente_vendedor_pendiente(vendedor_pendiente):
+    cliente = APIClient()
+    cliente.force_authenticate(vendedor_pendiente)
     return cliente
 
 

@@ -56,6 +56,20 @@ class TestPuestos:
         respuesta = cliente_vendedor.post(PUESTOS, {}, format="json")
         assert respuesta.status_code == 403
 
+    def test_vendedor_pendiente_de_verificacion_no_crea(
+        self, cliente_vendedor_pendiente
+    ):
+        respuesta = cliente_vendedor_pendiente.post(
+            PUESTOS,
+            {
+                "nombre": "Déjame publicar",
+                "descripcion": "Sigo pendiente",
+                "direccion": "Calle 9 #1-20",
+            },
+            format="json",
+        )
+        assert respuesta.status_code == status.HTTP_403_FORBIDDEN
+
     def test_vendedor_crea_puesto(self, cliente_vendedor, vendedor):
         cuerpo = {
             "nombre": "Frutería La Playa",

@@ -6,7 +6,7 @@ contraseña por defecto — pásala con ``--password``.
 
 from django.core.management.base import BaseCommand
 
-from apps.accounts.models import Usuario
+from apps.accounts.models import Usuario, Vendedor
 from apps.catalog.models import Categoria, Producto, Puesto
 from apps.catalog.services import asignar_categoria
 
@@ -51,6 +51,11 @@ class Command(BaseCommand):
         )
         vendedor1.set_password(password)
         vendedor1.save()
+        # Regla 1 real (Inc 2): los vendedores demo salen YA aprobados.
+        Vendedor.objects.get_or_create(
+            id_usuario=vendedor1,
+            defaults={"estado_verificacion": Vendedor.EstadoVerificacion.APROBADO},
+        )
 
         vendedor2, _ = Usuario.objects.get_or_create(
             correo="diego@riomarket.test",
@@ -62,6 +67,10 @@ class Command(BaseCommand):
         )
         vendedor2.set_password(password)
         vendedor2.save()
+        Vendedor.objects.get_or_create(
+            id_usuario=vendedor2,
+            defaults={"estado_verificacion": Vendedor.EstadoVerificacion.APROBADO},
+        )
 
         comprador, _ = Usuario.objects.get_or_create(
             correo="luis@riomarket.test",
@@ -125,7 +134,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Seed completico: admin, 2 vendedores, 1 comprador, "
+                "Seed completico: admin, 2 vendedores aprobados, 1 comprador, "
                 "4 categorías, 2 puestos y 5 productos. "
                 f"Contraseña demo: {password}"
             )

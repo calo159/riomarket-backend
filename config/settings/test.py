@@ -27,6 +27,7 @@ REST_FRAMEWORK = {
         "register": "10000/min",
         "payment": "10000/min",
         "user": "10000/min",
+        "verificacion": "10000/min",
     },
 }
 

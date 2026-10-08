@@ -28,7 +28,8 @@ ignore = [
 # clases o listas que Django espera como atributos de clase; el aviso de
 # "mutable default" no aplica (no se mutan en runtime).
 "apps/*/models.py" = ["RUF012"]
-"apps/*/views.py" = ["RUF012"]
+"apps/**/views.py" = ["RUF012"]
+"apps/accounts/verificacion_views.py" = ["RUF012"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "config"]

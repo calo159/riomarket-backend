@@ -9,6 +9,9 @@ PBKDF2, nunca texto plano). Renombrarlo romería ``check_password``,
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
+from apps.common.storage import PrivateMediaStorage
+from apps.common.validators import validate_image_file
+
 
 class UsuarioManager(BaseUserManager["Usuario"]):
     """Manager que normaliza el correo y nunca guarda contraseñas en claro."""
@@ -136,13 +139,13 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def puede_publicar(self) -> bool:
         """Regla 1: ¿puede crear/editar su Puesto?
 
-        Requiere cuenta activa + rol vendedor + (cuando exista) verificación
-        aprobada.
+        Requiere cuenta activa + rol vendedor + verificación aprobada cuando
+        la solicitud existe.
 
-        FASE ACTUAL (Incremento 1): aún no existe el modelo ``Vendedor``;
-        "aprobado" equivale a cuenta activa. En el Incremento 2 el registro
-        como vendedor creará esa fila con estado ``pendiente``, por lo que
-        esta rama "sin solicitud" quedará reservada para cuentas legadas.
+        Incremento 2: al registrarse como vendedor se crea la fila ``Vendedor``
+        con estado ``pendiente``, así que publicar exige que un administrador
+        la haya aprobado. La rama "sin solicitud" queda reservada para cuentas
+        legadas creadas antes de este incremento.
         """
         if not self.is_active or not self.es_vendedor:
             return False
@@ -150,3 +153,84 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         if vendedor is None:
             return True
         return vendedor.estado_verificacion == vendedor.EstadoVerificacion.APROBADO
+
+
+class Vendedor(models.Model):
+    """Solicitud de verificación de identidad de un vendedor (regla 6 y ADR-002).
+
+    - ``numero_cedula``: número de cédula CIFRADO (Fernet) en reposo.
+    - ``cedula_huella``: HMAC-SHA256 determinístico con ``unique=True`` para
+      detectar duplicados sin descifrar (regla 6: la cédula no se repite).
+    - ``foto_cedula``: imagen del documento en ``PRIVATE_MEDIA_ROOT``, jamás
+      pública; se entrega por vista protegida solo a administradores.
+    """
+
+    class EstadoVerificacion(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        APROBADO = "aprobado", "Aprobado"
+        RECHAZADO = "rechazado", "Rechazado"
+
+    id_usuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name="vendedor",
+        verbose_name="vendedor",
+    )
+    numero_cedula = models.BinaryField(
+        "número de cédula",
+        max_length=512,
+        null=True,
+        blank=True,
+        help_text="Cifrado con Fernet; nunca se guarda en claro.",
+    )
+    cedula_huella = models.CharField(
+        "huella de cédula",
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="HMAC-SHA256 para unicidad sin descifrar (regla 6).",
+    )
+    foto_cedula = models.FileField(
+        "foto de cédula",
+        upload_to="cedulas/",
+        storage=PrivateMediaStorage(),
+        validators=[validate_image_file],
+        null=True,
+        blank=True,
+    )
+    estado_verificacion = models.CharField(
+        "estado de verificación",
+        max_length=15,
+        choices=EstadoVerificacion.choices,
+        default=EstadoVerificacion.PENDIENTE,
+    )
+    id_revisor = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        related_name="solicitudes_revisadas",
+        null=True,
+        blank=True,
+        verbose_name="revisor",
+    )
+    motivo_rechazo = models.TextField(blank=True, default="")
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    fecha_revision = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "verificación de vendedor"
+        verbose_name_plural = "verificaciones de vendedor"
+        ordering = ["fecha_solicitud"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(estado_verificacion__in=["pendiente", "aprobado", "rechazado"]),
+                name="vendedor_estado_verificacion_valido",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Verificación de {self.id_usuario_id} ({self.estado_verificacion})"
+
+    @property
+    def aprobado(self) -> bool:
+        return self.estado_verificacion == self.EstadoVerificacion.APROBADO

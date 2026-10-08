@@ -178,6 +178,7 @@ REST_FRAMEWORK = {
         "login": env("THROTTLE_LOGIN", default="10/min"),
         "register": env("THROTTLE_REGISTER", default="10/min"),
         "payment": env("THROTTLE_PAYMENT", default="30/min"),
+        "verificacion": env("THROTTLE_VERIFICACION", default="20/min"),
     },
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",

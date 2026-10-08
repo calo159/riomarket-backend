@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from apps.accounts.models import Usuario
+from apps.accounts.models import Usuario, Vendedor
 
 
 @admin.register(Usuario)
@@ -43,3 +43,35 @@ class UsuarioAdmin(admin.ModelAdmin):
     def activar_seleccionados(self, request, queryset):
         updated = queryset.update(estado=Usuario.Estado.ACTIVO)
         self.message_user(request, f"{updated} usuario(s) activado(s).")
+
+
+@admin.register(Vendedor)
+class VendedorAdmin(admin.ModelAdmin):
+    """Cola de verificación desde el admin operativo.
+
+    El número cifrado y la huella son de solo lectura: no se editan a mano
+    (se regeneran vía API de verificación).
+    """
+
+    list_display = (
+        "id_usuario",
+        "estado_verificacion",
+        "fecha_solicitud",
+        "fecha_revision",
+        "id_revisor",
+    )
+    list_filter = ("estado_verificacion",)
+    search_fields = ("id_usuario__correo", "id_usuario__nombre")
+    ordering = ("fecha_solicitud",)
+    readonly_fields = ("numero_cedula", "cedula_huella", "fecha_solicitud", "fecha_revision")
+    fields = (
+        "id_usuario",
+        "estado_verificacion",
+        "foto_cedula",
+        "id_revisor",
+        "motivo_rechazo",
+        "fecha_solicitud",
+        "fecha_revision",
+        "numero_cedula",
+        "cedula_huella",
+    )

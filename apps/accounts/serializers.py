@@ -7,6 +7,7 @@ normalización (deduplicación de "  Pepe@Mail.COM " y "+57 300...").
 
 import re
 
+from drf_spectacular.utils import OpenApiTypes, extend_schema_field
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -66,10 +67,28 @@ class LoginSerializer(TokenObtainPairSerializer):
 
 
 class PerfilSerializer(serializers.ModelSerializer):
+    estado_verificacion = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Usuario
-        fields = ("id", "nombre", "correo", "celular", "rol", "estado", "fecha_registro")
-        read_only_fields = ("id", "rol", "estado", "fecha_registro")
+        fields = (
+            "id",
+            "nombre",
+            "correo",
+            "celular",
+            "rol",
+            "estado",
+            "estado_verificacion",
+            "fecha_registro",
+        )
+        read_only_fields = ("id", "rol", "estado", "estado_verificacion", "fecha_registro")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_estado_verificacion(self, obj) -> str | None:
+        from apps.accounts import services
+
+        vendedor = services.mi_verificacion(obj)
+        return getattr(vendedor, "estado_verificacion", None)
 
     def validate_celular(self, value):
         if not CELULAR_PATRON.match(value):

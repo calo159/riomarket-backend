@@ -29,6 +29,7 @@ urlpatterns = [
     ),
     # APIs por módulo
     path("api/auth/", include("apps.accounts.urls")),
+    path("api/verificacion/", include("apps.accounts.verificacion_urls")),
     path("api/addresses/", include("apps.addresses.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
     path("api/catalog/", include("apps.catalog.urls")),

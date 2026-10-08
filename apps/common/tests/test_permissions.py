@@ -13,7 +13,7 @@ from apps.common.permissions import (
     EsVendedor,
     EsVendedorAprobado,
 )
-from tests.factories import UsuarioFactory
+from tests.factories import UsuarioFactory, VendedorPendienteFactory
 
 factory = APIRequestFactory()
 
@@ -39,14 +39,20 @@ class TestPermisosPorRol:
         assert EsVendedorAprobado().has_permission(request, None) is False
         assert EsAdministrador().has_permission(request, None) is False
 
-    def test_vendedor_sin_verificacion_pasa_en_fase_1(self):
-        # La verificación de cédula llega en el Incremento 2; mientras no
-        # exista la fila Vendedor, EsVendedorAprobado deja pasar.
+    def test_vendedor_sin_verificacion_pasa_por_cuenta_legada(self):
+        # Cuentas vendedor previas a la verificación (sin fila Vendedor) tienen
+        # la rama legada de EsVendedorAprobado y siguen publicando.
         vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
         request = _request(vendedor)
         assert EsVendedor().has_permission(request, None) is True
         assert EsVendedorAprobado().has_permission(request, None) is True
         assert EsComprador().has_permission(request, None) is False
+
+    def test_vendedor_pendiente_de_verificacion_no_pasa(self):
+        fila = VendedorPendienteFactory()
+        request = _request(fila.id_usuario)
+        assert EsVendedor().has_permission(request, None) is True
+        assert EsVendedorAprobado().has_permission(request, None) is False
 
     def test_vendedor_suspendido_no_pasa(self):
         vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)

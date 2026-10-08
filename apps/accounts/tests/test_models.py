@@ -88,13 +88,21 @@ class TestEstados:
         usuario.save()
         assert usuario.estado == Usuario.Estado.ACTIVO
 
-    def test_puede_publicar_en_incremento_1(self):
+    def test_puede_publicar_cuenta_legada_sin_fila_vendedor(self):
         comprador = UsuarioFactory(rol=Usuario.Rol.COMPRADOR)
         vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
         assert comprador.puede_publicar() is False
-        # Regla 1 (Inc 1): aún no existe la fila Vendedor, y la cuenta activa
-        # + rol vendedor basta para considerarlo "aprobado".
+        # Regla 1: cuenta activa + rol vendedor sin fila Vendedor (legada de la
+        # Fase 0, previa a la verificación) se considera habilitada.
         assert vendedor.puede_publicar() is True
+
+    def test_puede_publicar_depende_de_la_verificacion(self):
+        from tests.factories import VendedorFactory, VendedorPendienteFactory
+
+        pendiente = VendedorPendienteFactory()
+        assert pendiente.id_usuario.puede_publicar() is False
+        aprobado = VendedorFactory()
+        assert aprobado.id_usuario.puede_publicar() is True
 
     def test_puede_publicar_falso_si_suspendido(self):
         usuario = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
