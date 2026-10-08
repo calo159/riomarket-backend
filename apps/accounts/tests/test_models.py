@@ -88,12 +88,13 @@ class TestEstados:
         usuario.save()
         assert usuario.estado == Usuario.Estado.ACTIVO
 
-    def test_puede_publicar_requiere_vendedor_verificado(self):
+    def test_puede_publicar_en_incremento_1(self):
         comprador = UsuarioFactory(rol=Usuario.Rol.COMPRADOR)
-        vendedor_sin_verificar = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
+        vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
         assert comprador.puede_publicar() is False
-        # Regla 1: sin registro Vendedor (verificación) no puede publicar
-        assert vendedor_sin_verificar.puede_publicar() is False
+        # Regla 1 (Inc 1): aún no existe la fila Vendedor, y la cuenta activa
+        # + rol vendedor basta para considerarlo "aprobado".
+        assert vendedor.puede_publicar() is True
 
     def test_puede_publicar_falso_si_suspendido(self):
         usuario = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)

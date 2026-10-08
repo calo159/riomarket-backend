@@ -134,12 +134,19 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         self.save(update_fields=["estado"])
 
     def puede_publicar(self) -> bool:
-        """Cuenta activa + (si es vendedor) verificación aprobada."""
-        if not self.is_active:
-            return False
-        if not self.es_vendedor:
+        """Regla 1: ¿puede crear/editar su Puesto?
+
+        Requiere cuenta activa + rol vendedor + (cuando exista) verificación
+        aprobada.
+
+        FASE ACTUAL (Incremento 1): aún no existe el modelo ``Vendedor``;
+        "aprobado" equivale a cuenta activa. En el Incremento 2 el registro
+        como vendedor creará esa fila con estado ``pendiente``, por lo que
+        esta rama "sin solicitud" quedará reservada para cuentas legadas.
+        """
+        if not self.is_active or not self.es_vendedor:
             return False
         vendedor = getattr(self, "vendedor", None)
         if vendedor is None:
-            return False
+            return True
         return vendedor.estado_verificacion == vendedor.EstadoVerificacion.APROBADO

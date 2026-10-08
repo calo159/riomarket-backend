@@ -76,6 +76,7 @@ class EsDuenoOAdmin(BasePermission):
 
     message = "Solo el dueño del recurso o un administrador puede acceder."
 
+    # Cadena de dueños: Producto -> Puesto -> Vendedor; Imagen -> Producto ...
     _ATRIBUTOS_DUENO = (
         "usuario",
         "id_usuario",
@@ -83,18 +84,31 @@ class EsDuenoOAdmin(BasePermission):
         "id_comprador",
         "vendedor",
         "id_vendedor",
+        "puesto",
+        "id_puesto",
+        "producto",
+        "id_producto",
+        "dueno",
     )
+    _PROFUNDIDAD_MAX = 3
 
     @classmethod
-    def _buscar_dueno(cls, obj):
+    def _buscar_dueno(cls, obj, profundidad: int = 0):
         from apps.accounts.models import Usuario
 
         if isinstance(obj, Usuario):
             return obj
+        if profundidad >= cls._PROFUNDIDAD_MAX:
+            return None
         for atributo in cls._ATRIBUTOS_DUENO:
             valor = getattr(obj, atributo, None)
             if isinstance(valor, Usuario):
                 return valor
+            # Sigue bajando por la cadena de FK (Producto -> Puesto -> Vendedor)
+            if valor is not None and hasattr(valor, "_meta"):
+                encontrado = cls._buscar_dueno(valor, profundidad + 1)
+                if encontrado is not None:
+                    return encontrado
         return None
 
     def has_object_permission(self, request, view, obj):
