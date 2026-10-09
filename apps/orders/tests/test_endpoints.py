@@ -103,8 +103,11 @@ class TestListado:
         assert len(ids) == 2
         assert otro.pk in ids
 
-    def test_filtro_por_estado(self, cliente_comprador, comprador, vendedor, puesto, producto):
+    def test_filtro_por_estado(
+        self, cliente_comprador, comprador, vendedor, puesto, producto, aprobar_pago
+    ):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         respuesta = cliente_comprador.get(PEDIDOS, {"estado": "confirmado"})
         assert [p["id"] for p in respuesta.data["results"]] == [pedido.pk]
@@ -165,9 +168,10 @@ class TestEdicion:
         assert respuesta.status_code == status.HTTP_403_FORBIDDEN
 
     def test_no_edita_un_pedido_confirmado(
-        self, cliente_comprador, comprador, vendedor, puesto, producto
+        self, cliente_comprador, comprador, vendedor, puesto, producto, aprobar_pago
     ):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         respuesta = cliente_comprador.patch(
             f"{PEDIDOS}{pedido.pk}/", {"notas": "tarde"}, format="json"
@@ -178,20 +182,35 @@ class TestEdicion:
 
 @pytest.mark.django_db
 class TestTransiciones:
-    def test_vendedor_confirma(self, cliente_vendedor, comprador, puesto, producto):
+    def test_vendedor_confirma(self, cliente_vendedor, comprador, puesto, producto, aprobar_pago):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
         respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/confirmar/")
         assert respuesta.status_code == status.HTTP_200_OK
         assert respuesta.data["estado"] == "confirmado"
+
+    def test_confirma_sin_pago_400(self, cliente_vendedor, comprador, puesto, producto):
+        pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/confirmar/")
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+        assert "pago" in str(respuesta.data["errors"])
 
     def test_comprador_no_confirma(self, cliente_comprador, comprador, puesto, producto):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
         assert cliente_comprador.post(f"{PEDIDOS}{pedido.pk}/confirmar/").status_code == 403
 
     def test_flujo_completo_por_api(
-        self, cliente_comprador, cliente_vendedor, comprador, vendedor, puesto, producto
+        self,
+        cliente_comprador,
+        cliente_vendedor,
+        comprador,
+        vendedor,
+        puesto,
+        producto,
+        aprobar_pago,
     ):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
         for accion, cliente in (
             ("confirmar", cliente_vendedor),
             ("en-preparacion", cliente_vendedor),
@@ -235,6 +254,83 @@ class TestHistorialProtegido:
         assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
         assert "no_eliminable" in str(respuesta.data["errors"])
         assert Producto.objects.filter(pk=producto.pk).exists()
+
+
+def _direccion_datos(**extra):
+    datos = {
+        "alias": "Casa",
+        "direccion": "Calle 5 #4-3",
+        "referencia": "Portón azul",
+    }
+    datos.update(extra)
+    return datos
+
+
+def _cuerpo_domicilio(puesto, producto, direccion=None, cantidad=1):
+    datos = _cuerpo(puesto, producto, cantidad=cantidad)
+    datos["tipo_entrega"] = "domicilio"
+    if direccion is not None:
+        datos["id_direccion"] = direccion.pk
+    return datos
+
+
+@pytest.mark.django_db
+class TestDireccionGuardada:
+    def test_crea_desde_direccion_guardada(
+        self, cliente_comprador, comprador, puesto_domicilio, producto_domicilio
+    ):
+        from apps.addresses import services as direcciones_services
+
+        direccion = direcciones_services.crear_direccion(
+            usuario=comprador,
+            datos=_direccion_datos(latitud="11.544000", longitud="-72.907000"),
+        )
+        respuesta = cliente_comprador.post(
+            PEDIDOS,
+            _cuerpo_domicilio(puesto_domicilio, producto_domicilio, direccion),
+            format="json",
+        )
+        assert respuesta.status_code == status.HTTP_201_CREATED
+        assert respuesta.data["id_direccion"] == direccion.pk
+        assert respuesta.data["direccion_entrega"] == "Calle 5 #4-3"
+        assert respuesta.data["referencia_entrega"] == "Portón azul"
+        assert respuesta.data["latitud_entrega"] == "11.544000"
+        assert respuesta.data["longitud_entrega"] == "-72.907000"
+
+    def test_direccion_de_otro_usuario_400(
+        self, cliente_comprador, puesto_domicilio, producto_domicilio
+    ):
+        from tests.factories import DireccionFactory, UsuarioFactory
+
+        ajena = DireccionFactory(id_usuario=UsuarioFactory())
+        respuesta = cliente_comprador.post(
+            PEDIDOS, _cuerpo_domicilio(puesto_domicilio, producto_domicilio, ajena), format="json"
+        )
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+        assert "id_direccion" in str(respuesta.data["errors"])
+
+    def test_direccion_inactiva_400(
+        self, cliente_comprador, comprador, puesto_domicilio, producto_domicilio
+    ):
+        from tests.factories import DireccionFactory
+
+        inactiva = DireccionFactory(id_usuario=comprador, activa=False)
+        respuesta = cliente_comprador.post(
+            PEDIDOS,
+            _cuerpo_domicilio(puesto_domicilio, producto_domicilio, inactiva),
+            format="json",
+        )
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+        assert "id_direccion" in str(respuesta.data["errors"])
+
+    def test_sin_direccion_y_sin_texto_400(
+        self, cliente_comprador, puesto_domicilio, producto_domicilio
+    ):
+        respuesta = cliente_comprador.post(
+            PEDIDOS, _cuerpo_domicilio(puesto_domicilio, producto_domicilio), format="json"
+        )
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+        assert "direccion_entrega" in str(respuesta.data["errors"])
 
 
 def _datos(puesto, producto, cantidad=1):

@@ -9,6 +9,10 @@ from django.core.management.base import BaseCommand
 from apps.accounts.models import Usuario, Vendedor
 from apps.catalog.models import Categoria, Producto, Puesto
 from apps.catalog.services import asignar_categoria
+from apps.orders import services as orders_services
+from apps.orders.models import Pedido
+from apps.payments import services as pagos_services
+from apps.payments.models import Pago
 
 # Río de la bahía de Riohacha (para puestos con domicilio)
 LAT_RIOHACHA = "11.544"
@@ -126,19 +130,42 @@ class Command(BaseCommand):
             asignar_categoria(puesto=puesto, categoria=categoria)
 
         # --- Productos (regla 2: la categoría está asignada al puesto) ---
-        self._producto(puesto1, arepas, "Arepa de huevo", 3500, 25)
+        arepa = self._producto(puesto1, arepas, "Arepa de huevo", 3500, 25)
         self._producto(puesto1, arepas, "Enrollado de dulce (paquete x3)", 9000, 10)
         self._producto(puesto1, comida, "Friche de chivo", 28000, 6)
         self._producto(puesto2, artesanias, "Mochila wayuu", 45000, 4)
         self._producto(puesto2, ropa, "Guayabera artesanal", 60000, 8)
 
+        # --- Pedido demo con pago en efectivo ya confirmado (Fase 4) ---
+        self._pedido_demo(comprador, vendedor1, puesto1, arepa)
+
         self.stdout.write(
             self.style.SUCCESS(
                 "Seed completico: admin, 2 vendedores aprobados, 1 comprador, "
-                "4 categorías, 2 puestos y 5 productos. "
+                "4 categorías, 2 puestos, 5 productos y 1 pedido con pago. "
                 f"Contraseña demo: {password}"
             )
         )
+
+    def _pedido_demo(self, comprador, vendedor, puesto, producto):
+        """Un pedido + pago en efectivo confirmado (idempotente)."""
+        if Pedido.objects.filter(id_comprador=comprador).exists():
+            return
+        pedido = orders_services.crear_pedido(
+            usuario=comprador,
+            datos={
+                "id_puesto": puesto,
+                "tipo_entrega": Pedido.TipoEntrega.RETIRO,
+                "notas": "Pedido de demostración.",
+                "items": [{"id_producto": producto, "cantidad": 2}],
+            },
+        )
+        pago = pagos_services.crear_pago(
+            pedido=pedido,
+            usuario=comprador,
+            datos={"metodo_pago": Pago.MetodoPago.EFECTIVO},
+        )
+        pagos_services.confirmar_efectivo(pago=pago, usuario=vendedor, datos={})
 
     def _producto(self, puesto, categoria, nombre, precio, stock):
         producto, creado = Producto.objects.get_or_create(

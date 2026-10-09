@@ -5,8 +5,11 @@ from decimal import Decimal
 import factory
 
 from apps.accounts.models import Usuario, Vendedor
+from apps.addresses.models import Direccion
 from apps.catalog.models import Categoria, Producto, Puesto, PuestoCategoria
+from apps.notifications.models import Notificacion
 from apps.orders.models import ItemPedido, Pedido
+from apps.payments.models import Pago
 
 
 class UsuarioFactory(factory.django.DjangoModelFactory):
@@ -139,3 +142,43 @@ class ItemPedidoFactory(factory.django.DjangoModelFactory):
     unidad_medida = factory.LazyAttribute(lambda item: item.id_producto.unidad_medida)
     precio_unitario = factory.LazyAttribute(lambda item: item.id_producto.precio)
     cantidad = 1
+
+
+class PagoFactory(factory.django.DjangoModelFactory):
+    """Pago "vacío" (montos en cero) para probar estados y transiciones."""
+
+    class Meta:
+        model = Pago
+
+    id_pedido = factory.SubFactory(PedidoFactory)
+    metodo_pago = Pago.MetodoPago.SIMULADO
+    estado = Pago.Estado.PENDIENTE
+    subtotal_pedido = Decimal("0.00")
+    tarifa_domicilio_aplicada = Decimal("0.00")
+    comision_plataforma = Decimal("0.00")
+    total_cobrado = Decimal("0.00")
+
+
+class DireccionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Direccion
+
+    id_usuario = factory.SubFactory(UsuarioFactory)
+    alias = factory.Sequence(lambda n: f"Direccion {n}")
+    direccion = factory.Sequence(lambda n: f"Calle {n} #1-2")
+    referencia = "Frente al parque"
+    latitud = None
+    longitud = None
+    es_predeterminada = False
+    activa = True
+
+
+class NotificacionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Notificacion
+
+    id_usuario = factory.SubFactory(UsuarioFactory)
+    tipo = Notificacion.Tipo.GENERAL
+    titulo = "Aviso"
+    mensaje = "Mensaje de prueba"
+    leida = False

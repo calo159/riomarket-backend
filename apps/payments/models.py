@@ -65,6 +65,7 @@ class Pago(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    fecha_reembolso = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "pago"
@@ -123,6 +124,17 @@ class Pago(models.Model):
             raise ValidationError(
                 {"id_pedido": "No se puede registrar un pago para un pedido cancelado."}
             )
+
+    @property
+    def es_final(self) -> bool:
+        return self.estado in self.ESTADOS_FINALES
+
+    @property
+    def neto_vendedor(self) -> Decimal:
+        """Lo que recibe el vendedor (subtotal menos la comisión, ADR-003)."""
+        from apps.common import pricing
+
+        return pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma)
 
     def __str__(self):
         return f"Pago #{self.pk} - Pedido #{self.id_pedido_id} - {self.estado}"

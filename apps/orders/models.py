@@ -64,6 +64,17 @@ class Pedido(models.Model):
         blank=True,
         help_text="Referencia para encontrar el sitio: color de la casa, portón, etc.",
     )
+    id_direccion = models.ForeignKey(
+        "addresses.Direccion",
+        on_delete=models.SET_NULL,
+        related_name="pedidos",
+        null=True,
+        blank=True,
+        verbose_name="dirección guardada",
+        help_text="Dirección reutilizada (snapshot); se conserva aunque se borre.",
+    )
+    latitud_entrega = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitud_entrega = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     notas = models.TextField(blank=True, help_text="Notas del comprador para el vendedor.")
     subtotal = models.DecimalField(
         max_digits=12,
@@ -122,6 +133,13 @@ class Pedido(models.Model):
             models.CheckConstraint(
                 condition=models.Q(tipo_entrega="retiro") | ~models.Q(direccion_entrega=""),
                 name="pedido_domicilio_requiere_direccion",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(latitud_entrega__isnull=True, longitud_entrega__isnull=True)
+                    | models.Q(latitud_entrega__isnull=False, longitud_entrega__isnull=False)
+                ),
+                name="pedido_coordenadas_completas",
             ),
         ]
 

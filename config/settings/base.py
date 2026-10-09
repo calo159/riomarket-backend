@@ -1,10 +1,11 @@
-﻿"""Configuración base compartida por todos los entornos.
+"""Configuración base compartida por todos los entornos.
 
 Toda variable sensible se lee desde variables de entorno (django-environ).
 Nunca se escriben credenciales ni claves en el código.
 """
 
 import os
+from decimal import Decimal
 from pathlib import Path
 
 import environ
@@ -63,6 +64,8 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.orders",
     "apps.payments",
+    "apps.addresses",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
@@ -173,6 +176,7 @@ REST_FRAMEWORK = {
         "login": env("THROTTLE_LOGIN", default="10/min"),
         "register": env("THROTTLE_REGISTER", default="10/min"),
         "verificacion": env("THROTTLE_VERIFICACION", default="20/min"),
+        "pagos": env("THROTTLE_PAGOS", default="60/min"),
     },
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -246,11 +250,20 @@ LOGGING = {
     },
 }
 
-
-
 # ---------------------------------------------------------------------------
 # Pagos (Fase 4)
 # ---------------------------------------------------------------------------
-DOMICILIO_TARIFA_BASE = env.float("DOMICILIO_TARIFA_BASE", default=0.0)
-PLATFORM_COMMISSION_PERCENTAGE = env.float("PLATFORM_COMMISSION_PERCENTAGE", default=0.0)
+# Montos como Decimal (nunca float: 0.1+0.2 != 0.3). Se leen como texto.
+DOMICILIO_TARIFA_BASE = Decimal(env("DOMICILIO_TARIFA_BASE", default="0.00"))
+PLATFORM_COMMISSION_PERCENTAGE = Decimal(env("PLATFORM_COMMISSION_PERCENTAGE", default="0.00"))
+# La pasarela sandbox (simular pagos) SOLO se permite en desarrollo/tests.
+PAYMENTS_SANDBOX_ENABLED = env.bool("PAYMENTS_SANDBOX_ENABLED", default=DEBUG)
+# Secreto para verificar la firma de los webhooks de la pasarela real.
+PAYMENTS_WEBHOOK_SECRET = env("PAYMENTS_WEBHOOK_SECRET", default="")
 
+# ---------------------------------------------------------------------------
+# Notificaciones (Fase 5)
+# ---------------------------------------------------------------------------
+# El email es opcional: por defecto solo se crean notificaciones in-app.
+NOTIFICATIONS_EMAIL_ENABLED = env.bool("NOTIFICATIONS_EMAIL_ENABLED", default=False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-responder@riomarket.local")

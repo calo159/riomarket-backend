@@ -91,3 +91,20 @@ def producto(puesto):
 @pytest.fixture
 def producto_domicilio(puesto_domicilio):
     return ProductoFactory(id_puesto=puesto_domicilio)
+
+
+@pytest.fixture
+def aprobar_pago():
+    """Crea un pago simulado y lo deja APROBADO (regla de negocio de Fase 4)."""
+    from apps.payments import services as pagos_services
+    from apps.payments.models import Pago
+
+    def _aprobar(pedido, usuario):
+        pago = pagos_services.crear_pago(
+            pedido=pedido,
+            usuario=usuario,
+            datos={"metodo_pago": Pago.MetodoPago.SIMULADO},
+        )
+        return pagos_services.simular_pago(pago=pago, usuario=usuario, datos={"accion": "aprobar"})
+
+    return _aprobar

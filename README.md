@@ -23,10 +23,13 @@ Django REST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
 | `accounts` (verificación) | `/api/verificacion/` | ✅ Verificación de identidad con foto de cédula (almacenamiento privado) |
 | `catalog` | `/api/catalog/` | ✅ Categorías, puestos, productos e imágenes |
 | `orders` | `/api/orders/` | ✅ Pedidos: creación con stock atómico y máquina de estados |
+| `payments` | `/api/payments/` | ✅ Pagos: montos, comisión, sandbox y webhook |
+| `addresses` | `/api/addresses/` | ✅ Direcciones de entrega guardadas (una predeterminada por usuario) |
+| `notifications` | `/api/notifications/` | ✅ Avisos in-app de pedidos (email opcional por flag) |
 | `common` | `/api/health/` | ✅ Health check, permisos por rol, crypto, paginación |
 
 > Nota: la verificación de identidad vive en `apps/accounts` (modelo
-> `Vendedor`); las apps futuras (pagos, direcciones, reseñas) se agregan
+> `Vendedor`); las apps futuras (reseñas, promociones, auditoría) se agregan
 > cuando tengan modelos y endpoints reales.
 
 ### Reglas de negocio implementadas
@@ -45,7 +48,20 @@ Django REST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
    el stock exactamente una vez.
 5. **Pedidos (estados)** — `pendiente → confirmado → en_preparacion →
    en_camino → entregado` (+ `cancelado`); cada transición tiene rol asignado
-   (vendedor dueño, comprador o admin).
+   (vendedor dueño, comprador o admin). Confirmar exige **pago aprobado**.
+6. **Pagos** — montos desde una fuente única (`apps/common/pricing.py`); la
+   **comisión se descuenta al vendedor** y el comprador paga
+   `subtotal + tarifa_domicilio`. Máquina de estados explícita con bloqueo de
+   fila; `simular`/`simulado` solo en sandbox; cancelar reembolsa o anula. Ver
+   [`docs/ADR-003-pagos.md`](docs/ADR-003-pagos.md).
+7. **Direcciones** — cada comprador guarda sus direcciones (una sola
+   predeterminada); al crear un pedido se puede reutilizar una dirección y se
+   copia como snapshot (`direccion_entrega`, `referencia`, coordenadas), sin
+   perder el texto libre. Ver
+   [`docs/ADR-004-direcciones-y-notificaciones.md`](docs/ADR-004-direcciones-y-notificaciones.md).
+8. **Notificaciones** — los services avisan al vendedor (pedido creado) y al
+   comprador/vendedor en cada cambio de estado, in-app; el email es **opcional**
+   con `NOTIFICATIONS_EMAIL_ENABLED` y nunca rompe la operación.
 
 ## Arranque rápido
 
@@ -86,6 +102,12 @@ Todas se leen con `django-environ`; la plantilla completa está en
 | `REDIS_URL` | Redis (solo caché del entorno de producción) |
 | `FERNET_KEY` | Clave de cifrado (obligatoria con `DEBUG=False`) |
 | `CORS_ALLOWED_ORIGINS` | Whitelist explícita (nunca `*`) |
+| `DOMICILIO_TARIFA_BASE` | Tarifa de domicilio aplicada por el servidor |
+| `PLATFORM_COMMISSION_PERCENTAGE` | Comisión de plataforma (se descuenta al vendedor) |
+| `PAYMENTS_SANDBOX_ENABLED` | Habilita `simular`/método `simulado` (por defecto `DEBUG`) |
+| `PAYMENTS_WEBHOOK_SECRET` | Secreto HMAC para validar el webhook de la pasarela |
+| `NOTIFICATIONS_EMAIL_ENABLED` | Envía además email por notificación (por defecto `False`) |
+| `DEFAULT_FROM_EMAIL` | Remitente de las notificaciones por correo |
 
 Nunca subir un `.env` real al repositorio.
 
@@ -113,6 +135,19 @@ Nunca subir un `.env` real al repositorio.
 | `POST /api/orders/pedidos/{id}/enviar/` | `en_preparacion → en_camino` | vendedor/admin |
 | `POST /api/orders/pedidos/{id}/entregar/` | `en_camino → entregado` | partes/admin |
 | `POST /api/orders/pedidos/{id}/cancelar/` | Cancelar y reponer stock | partes/admin |
+| `GET/POST /api/payments/pagos/` | Listar (los míos) y registrar pago | autenticado |
+| `POST /api/payments/pagos/{id}/simular/` | Aprobar/rechazar (solo sandbox) | comprador/admin |
+| `POST /api/payments/pagos/{id}/confirmar-efectivo/` | Confirmar cobro en efectivo | vendedor/admin |
+| `POST /api/payments/pagos/{id}/reembolsar/` | `aprobado → reembolsado` | admin |
+| `POST /api/payments/pagos/{id}/anular/` | Anular pago | admin |
+| `POST /api/payments/webhook/{proveedor}/` | Evento firmado de la pasarela | pública (HMAC) |
+| `GET/POST /api/addresses/direcciones/` | Listar (las mías) y crear dirección | comprador |
+| `PATCH/DELETE /api/addresses/direcciones/{id}/` | Editar/eliminar una dirección | dueño/admin |
+| `POST /api/addresses/direcciones/{id}/predeterminar/` | Marcarla como predeterminada | dueño/admin |
+| `GET /api/notifications/notificaciones/` | Listar mis notificaciones (el admin, todas) | autenticado |
+| `POST /api/notifications/notificaciones/{id}/leida/` | Marcar una como leída | destinatario/admin |
+| `POST /api/notifications/notificaciones/marcar-todas/` | Marcar todas como leídas | autenticado |
+| `GET /api/notifications/notificaciones/contador/` | Contar no leídas | autenticado |
 | `GET /api/health/` | Health check (DB) | pública |
 
 Detalle completo (filtros, parámetros, esquemas): **`/api/docs/`** (Swagger),
@@ -159,7 +194,7 @@ python manage.py seed_demo                     # datos de ejemplo
 python manage.py spectacular --validate        # validar esquema OpenAPI
 python manage.py runserver                     # servidor de desarrollo
 
-pytest                                         # suite completa (~276 pruebas)
+pytest                                         # suite completa (~323 pruebas)
 pytest apps\orders -q --cov=apps.orders        # tests de un módulo con cobertura
 ruff check apps tests config --no-cache        # lint
 ruff format apps tests config --no-cache       # formato
@@ -172,11 +207,15 @@ backend/
 ├── apps/
 │   ├── accounts/       # usuarios, JWT, verificación de identidad
 │   ├── catalog/        # categorías, puestos, productos, imágenes
-│   ├── common/         # permisos, exceptions, crypto, query, pagination
-│   └── orders/         # pedidos (models, services, views, urls)
+│   ├── common/         # permisos, exceptions, crypto, query, pricing
+│   ├── orders/         # pedidos (models, services, views, urls)
+│   ├── payments/       # pagos (models, services, pasarela, views, urls)
+│   ├── addresses/      # direcciones de entrega (models, services, views, urls)
+│   └── notifications/  # notificaciones in-app (models, services, views, urls)
 ├── config/
 │   ├── settings/       # base, dev, prod, test
 │   └── urls.py
+├── docs/               # ADRs (001 enums, 002 media, 003 pagos, 004 direcciones/notificaciones)
 ├── tests/              # factories compartidas
 ├── docker-compose.yml
 └── requirements*.txt
@@ -188,6 +227,6 @@ backend/
 - ✅ Fase 1 — catálogo + auth JWT
 - ✅ Fase 2 — verificación de identidad
 - ✅ Fase 3 — pedidos (stock atómico + máquina de estados)
-- ⬜ Fase 4 — pagos (tarifa de domicilio, comisión de plataforma)
-- ⬜ Fase 5 — direcciones y notificaciones
+- ✅ Fase 4 — pagos (tarifa de domicilio, comisión de plataforma)
+- ✅ Fase 5 — direcciones y notificaciones
 - ⬜ Fase 6 — promociones, reputación y auditoría

@@ -19,6 +19,7 @@ class PagoAdmin(admin.ModelAdmin):
         "referencia_gateway",
         "fecha_creacion",
         "fecha_aprobacion",
+        "fecha_reembolso",
     )
     list_filter = ("estado", "metodo_pago")
     search_fields = ("referencia_gateway", "id_pedido__pk")
@@ -30,5 +31,6 @@ class PagoAdmin(admin.ModelAdmin):
         "fecha_creacion",
         "fecha_actualizacion",
         "fecha_aprobacion",
+        "fecha_reembolso",
         "datos_sandbox",
     )

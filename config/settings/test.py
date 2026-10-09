@@ -4,7 +4,25 @@
   para que los CheckConstraint y restricciones se comporten como en producción.
 - Throttles con límites altos para no interferir; el rate limiting real se
   prueba con overrides en los tests específicos.
+
+En una máquina limpia (sin .env) la suite debe correr con un solo comando:
+las variables obligatorias de ``base.py`` se fijan aquí con ``setdefault``
+antes de importar la configuración base. Si existe un ``.env`` real (local),
+sus valores tienen prioridad... salvo las claves de test que fijamos abajo.
 """
+
+import os
+
+# --- Valores por defecto SOLO para tests (nunca usar en producción) ---------
+# SECRET_KEY ≥ 32 bytes: evita InsecureKeyLengthWarning en simplejwt.
+os.environ.setdefault(
+    "SECRET_KEY", "test-secret-key-riomarket-0123456789abcdefghijklmnopqrstuvwxyz"
+)
+# Clave Fernet válida (32 bytes base64url) para cifrar datos sensibles en tests.
+os.environ.setdefault("FERNET_KEY", "5yje5UOGK7sn3fg3xean97SK9QMXDRl-jS8LiAKULP8=")
+os.environ.setdefault("DEBUG", "False")
+# Pagos: la pasarela sandbox SÍ se habilita en tests.
+os.environ.setdefault("PAYMENTS_SANDBOX_ENABLED", "True")
 
 from .base import *
 
@@ -23,6 +41,7 @@ REST_FRAMEWORK = {
         "register": "10000/min",
         "user": "10000/min",
         "verificacion": "10000/min",
+        "pagos": "10000/min",
     },
 }
 

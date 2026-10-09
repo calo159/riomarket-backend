@@ -12,6 +12,7 @@ Las autorizaciones viven aquí (``PermissionDenied`` → 403 en la API) para
 que sean verificables aisladas desde tests, igual que las del catálogo.
 """
 
+import logging
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -20,13 +21,14 @@ from django.db.models import Q, QuerySet
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Producto, Puesto
+from apps.common import pricing
 from apps.common.query import parametro_entero, validar_estado_parametro
 from apps.orders.models import ItemPedido, Pedido
 
+logger = logging.getLogger(__name__)
+
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección).
 ORDENAMIENTO_PEDIDO = ("fecha_creacion", "-fecha_creacion", "total", "-total", "id", "-id")
-
-TARIFA_DOMICILIO = Decimal("0.00")  # se define en la fase de pagos (settings)
 
 # Máquina de estados de la regla 5: destino -> transiciones permitidas desde él.
 TRANSICIONES: dict[str, tuple[str, ...]] = {
@@ -60,15 +62,20 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
         raise ValidationError({"id_puesto": "Debe indicar el puesto del pedido."})
 
     tipo_entrega = datos.get("tipo_entrega") or Pedido.TipoEntrega.RETIRO
-    direccion = (datos.get("direccion_entrega") or "").strip()
+    direccion_texto = (datos.get("direccion_entrega") or "").strip()
+    referencia = (datos.get("referencia_entrega") or "").strip()
     if puesto.estado != Puesto.Estado.ACTIVO:
         raise ValidationError({"id_puesto": "Ese puesto no está activo."})
     if tipo_entrega not in Pedido.TipoEntrega.values:
         raise ValidationError({"tipo_entrega": f"Tipo de entrega inválido: {tipo_entrega}."})
+    direccion_guardada = _resolver_direccion(usuario, datos.get("id_direccion"))
     if tipo_entrega == Pedido.TipoEntrega.DOMICILIO:
         if not puesto.ofrece_domicilio:
             raise ValidationError({"tipo_entrega": "Ese puesto no ofrece servicio a domicilio."})
-        if not direccion:
+        if direccion_guardada is not None:
+            direccion_texto = direccion_texto or direccion_guardada.direccion
+            referencia = referencia or direccion_guardada.referencia
+        if not direccion_texto:
             raise ValidationError(
                 {"direccion_entrega": "Un pedido a domicilio debe indicar la dirección."}
             )
@@ -76,14 +83,19 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     with transaction.atomic():
         productos = _bloquear_productos(lineas)
         subtotal = Decimal("0.00")
+        # Fuente única de montos: la MISMA función que usa payments para el pago.
+        tarifa = pricing.tarifa_domicilio(es_domicilio=tipo_entrega == Pedido.TipoEntrega.DOMICILIO)
         pedido = Pedido(
             id_comprador=usuario,
             id_puesto=puesto,
             tipo_entrega=tipo_entrega,
-            direccion_entrega=direccion,
-            referencia_entrega=datos.get("referencia_entrega") or "",
+            direccion_entrega=direccion_texto,
+            referencia_entrega=referencia,
+            id_direccion=direccion_guardada,
+            latitud_entrega=direccion_guardada.latitud if direccion_guardada else None,
+            longitud_entrega=direccion_guardada.longitud if direccion_guardada else None,
             notas=datos.get("notas") or "",
-            tarifa_domicilio=TARIFA_DOMICILIO,
+            tarifa_domicilio=tarifa,
         )
         items_a_crear = []
         for producto, cantidad in _iterar_lineas(lineas, productos, puesto):
@@ -114,6 +126,7 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
                 precio_unitario=producto.precio,
                 cantidad=cantidad,
             )
+    _notificar_pedido_creado(pedido)
     return pedido
 
 
@@ -128,6 +141,19 @@ def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     for campo in permitidos:
         if campo in datos:
             setattr(pedido, campo, datos[campo])
+    if "id_direccion" in datos:
+        direccion_guardada = _resolver_direccion(usuario, datos.get("id_direccion"))
+        pedido.id_direccion = direccion_guardada
+        if direccion_guardada is not None:
+            pedido.latitud_entrega = direccion_guardada.latitud
+            pedido.longitud_entrega = direccion_guardada.longitud
+            if pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO:
+                pedido.direccion_entrega = (
+                    pedido.direccion_entrega or direccion_guardada.direccion
+                ).strip()
+        else:
+            pedido.latitud_entrega = None
+            pedido.longitud_entrega = None
     if pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO and not pedido.direccion_entrega.strip():
         raise ValidationError(
             {"direccion_entrega": "Un pedido a domicilio debe indicar la dirección."}
@@ -234,13 +260,74 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
             }
         )
     _autorizar(pedido, usuario, quien=_rol_para(destino))
+    if destino == Pedido.Estado.CONFIRMADO:
+        _exigir_pago_aprobado(pedido)
+    estado_anterior = pedido.estado
     # Stock + estado en una sola transacción: o pasa todo o no pasa nada.
     with transaction.atomic():
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
+            _reembolsar_o_anular_pago(pedido)
         pedido.estado = destino
         pedido.save(update_fields=["estado", "fecha_actualizacion"])
+    _notificar_cambio_estado(pedido, estado_anterior)
     return pedido
+
+
+def _exigir_pago_aprobado(pedido: Pedido) -> None:
+    """Regla de negocio (Fase 4): para confirmar, el pago debe estar aprobado.
+
+    Aplica a todos los métodos: en efectivo el vendedor/admin aprueba el cobro
+    con ``payments.confirmar_efectivo``; con pasarela, el pago se aprueba al
+    simular (sandbox) o vía webhook.
+    """
+    from apps.payments.models import Pago
+
+    pago = Pago.objects.filter(id_pedido=pedido).first()
+    if pago is None:
+        raise ValidationError(
+            {"pago": "El pedido requiere un pago registrado y aprobado antes de confirmarse."}
+        )
+    if pago.estado != Pago.Estado.APROBADO:
+        raise ValidationError(
+            {"pago": f"El pago está en estado '{pago.estado}': debe estar aprobado para confirmar."}
+        )
+
+
+def _reembolsar_o_anular_pago(pedido: Pedido) -> None:
+    """Al cancelar: reembolsa el pago aprobado o anula el que sigue en curso."""
+    from apps.payments import services as pagos_services
+
+    pagos_services.reembolsar_o_anular_por_cancelacion(pedido=pedido)
+
+
+def _resolver_direccion(usuario, direccion):
+    """Valida que la dirección guardada pertenezca al usuario y esté activa."""
+    if direccion is None:
+        return None
+    if direccion.id_usuario_id != usuario.pk:
+        raise ValidationError({"id_direccion": "Esa dirección no te pertenece."})
+    if not direccion.activa:
+        raise ValidationError({"id_direccion": "Esa dirección está inactiva."})
+    return direccion
+
+
+def _notificar_pedido_creado(pedido: Pedido) -> None:
+    from apps.notifications import services as notif
+
+    try:
+        notif.notificar_pedido_creado(pedido=pedido)
+    except Exception:  # pragma: no cover - la notificación no debe romper el pedido
+        logger.exception("No se pudo notificar la creación del pedido %s", pedido.pk)
+
+
+def _notificar_cambio_estado(pedido: Pedido, estado_anterior: str) -> None:
+    from apps.notifications import services as notif
+
+    try:
+        notif.notificar_cambio_estado_pedido(pedido=pedido, estado_anterior=estado_anterior)
+    except Exception:  # pragma: no cover - la notificación no debe romper el pedido
+        logger.exception("No se pudo notificar el cambio de estado del pedido %s", pedido.pk)
 
 
 def _rol_para(destino: str) -> str:

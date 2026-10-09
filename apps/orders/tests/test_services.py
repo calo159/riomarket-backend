@@ -229,10 +229,11 @@ class TestRegla4Creacion:
 
 @pytest.mark.django_db
 class TestRegla5Transiciones:
-    def test_flujo_feliz_hasta_entregado(self, comprador, vendedor, puesto, producto):
+    def test_flujo_feliz_hasta_entregado(self, comprador, vendedor, puesto, producto, aprobar_pago):
         pedido = services.crear_pedido(
             usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
         )
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
         services.marcar_enviado(pedido=pedido, usuario=vendedor)
@@ -262,12 +263,37 @@ class TestRegla5Transiciones:
         with pytest.raises(PermissionDenied):
             services.confirmar_pedido(pedido=pedido, usuario=otro_vendedor)
 
-    def test_admin_confirma(self, comprador, admin, puesto, producto):
+    def test_admin_confirma(self, comprador, admin, puesto, producto, aprobar_pago):
         pedido = services.crear_pedido(
             usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
         )
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=admin)
         assert pedido.estado == Pedido.Estado.CONFIRMADO
+
+    def test_no_confirma_sin_pago(self, comprador, vendedor, puesto, producto):
+        pedido = services.crear_pedido(
+            usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
+        )
+        with pytest.raises(DjangoValidationError) as error:
+            services.confirmar_pedido(pedido=pedido, usuario=vendedor)
+        assert "pago" in error.value.message_dict
+
+    def test_no_confirma_con_pago_sin_aprobar(self, comprador, vendedor, puesto, producto):
+        from apps.payments import services as pagos_services
+        from apps.payments.models import Pago
+
+        pedido = services.crear_pedido(
+            usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
+        )
+        pagos_services.crear_pago(
+            pedido=pedido,
+            usuario=comprador,
+            datos={"metodo_pago": Pago.MetodoPago.SIMULADO},
+        )
+        with pytest.raises(DjangoValidationError) as error:
+            services.confirmar_pedido(pedido=pedido, usuario=vendedor)
+        assert "pago" in error.value.message_dict
 
     def test_comprador_cancela_y_repone_stock(self, comprador, puesto, producto):
         pedido = services.crear_pedido(
@@ -290,10 +316,13 @@ class TestRegla5Transiciones:
         producto.refresh_from_db()
         assert producto.stock == 10  # el stock no se repone dos veces
 
-    def test_no_se_cancela_un_pedido_entregado(self, comprador, vendedor, puesto, producto):
+    def test_no_se_cancela_un_pedido_entregado(
+        self, comprador, vendedor, puesto, producto, aprobar_pago
+    ):
         pedido = services.crear_pedido(
             usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
         )
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
         services.marcar_enviado(pedido=pedido, usuario=vendedor)
@@ -337,10 +366,11 @@ class TestVisibilidad:
         assert list(services.visibles_pedidos(admin, qs, {})) == [pedido]
         assert list(services.visibles_pedidos(AnonymousUser(), qs, {})) == []
 
-    def test_filtro_estado(self, comprador, vendedor, puesto, producto):
+    def test_filtro_estado(self, comprador, vendedor, puesto, producto, aprobar_pago):
         pedido = services.crear_pedido(
             usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
         )
+        aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         qs = Pedido.objects.all()
         confirmados = services.visibles_pedidos(comprador, qs, {"estado": "confirmado"})
