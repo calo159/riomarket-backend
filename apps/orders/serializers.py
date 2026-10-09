@@ -37,6 +37,7 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
 
 class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, allow_empty=False)
+    codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = Pedido
@@ -54,8 +55,11 @@ class PedidoSerializer(serializers.ModelSerializer):
             "notas",
             "subtotal",
             "tarifa_domicilio",
+            "id_cupon",
+            "descuento_cupon",
             "total",
             "items",
+            "codigo_cupon",
             "fecha_creacion",
             "fecha_actualizacion",
         )
@@ -67,6 +71,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "longitud_entrega",
             "subtotal",
             "tarifa_domicilio",
+            "id_cupon",
+            "descuento_cupon",
             "total",
             "fecha_creacion",
             "fecha_actualizacion",

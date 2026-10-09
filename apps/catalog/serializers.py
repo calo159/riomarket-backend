@@ -26,6 +26,8 @@ class PuestoSerializer(serializers.ModelSerializer):
     """
 
     categorias = serializers.SerializerMethodField()
+    calificacion_promedio = serializers.FloatField(read_only=True, default=None, allow_null=True)
+    cantidad_resenas = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Puesto
@@ -40,6 +42,8 @@ class PuestoSerializer(serializers.ModelSerializer):
             "horario",
             "ofrece_domicilio",
             "estado",
+            "calificacion_promedio",
+            "cantidad_resenas",
             "categorias",
         )
         read_only_fields = ("id", "id_vendedor", "estado")

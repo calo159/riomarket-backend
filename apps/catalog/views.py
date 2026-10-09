@@ -29,6 +29,7 @@ from apps.catalog.serializers import (
 )
 from apps.common.permissions import EsAdministrador, EsDuenoOAdmin, EsVendedorAprobado
 from apps.common.query import aplicar_ordenamiento, parametro_entero
+from apps.reviews.services import anotar_reputacion
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
     OpenApiParameter(name="q", type=OpenApiTypes.STR, description="Nombre o descripción"),
@@ -106,6 +107,10 @@ class PuestoViewSet(viewsets.ModelViewSet):
         )
         qs = services.visibles_puestos(self.request.user, qs, params)
         qs = services.filtrar_puestos(qs, params)
+        qs = anotar_reputacion(qs)
+        if not params.get("ordering"):
+            # El agregado (Count distinct) quita el orden por defecto del Meta.
+            qs = qs.order_by("nombre")
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PUESTO)
 
     @action(detail=True, methods=["post"], url_path="categorias")

@@ -114,7 +114,10 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
             items_a_crear.append((producto, cantidad))
 
         pedido.subtotal = subtotal
-        pedido.total = subtotal + pedido.tarifa_domicilio
+        cupon, descuento = _resolver_cupon(usuario, puesto, datos.get("codigo_cupon"), subtotal)
+        pedido.id_cupon = cupon
+        pedido.descuento_cupon = descuento
+        pedido.total = subtotal + pedido.tarifa_domicilio - descuento
         pedido.full_clean()
         pedido.save()
         for producto, cantidad in items_a_crear:
@@ -126,7 +129,14 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
                 precio_unitario=producto.precio,
                 cantidad=cantidad,
             )
+        if cupon is not None:
+            from apps.promotions import services as promos_services
+
+            promos_services.registrar_uso(
+                cupon=cupon, usuario=usuario, pedido=pedido, descuento=descuento
+            )
     _notificar_pedido_creado(pedido)
+    _auditar(usuario, "crear", pedido, {"total": str(pedido.total), "cupon": pedido.id_cupon_id})
     return pedido
 
 
@@ -271,6 +281,7 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
         pedido.estado = destino
         pedido.save(update_fields=["estado", "fecha_actualizacion"])
     _notificar_cambio_estado(pedido, estado_anterior)
+    _auditar(usuario, "transicion", pedido, {"de": estado_anterior, "a": destino})
     return pedido
 
 
@@ -310,6 +321,31 @@ def _resolver_direccion(usuario, direccion):
     if not direccion.activa:
         raise ValidationError({"id_direccion": "Esa dirección está inactiva."})
     return direccion
+
+
+def _resolver_cupon(usuario, puesto, codigo, subtotal):
+    """Aplica el cupón (bloqueando su fila) si se envió uno; si no, no aplica."""
+    codigo = (codigo or "").strip()
+    if not codigo:
+        return None, Decimal("0.00")
+    from apps.promotions import services as promos_services
+
+    return promos_services.aplicar_cupon(
+        usuario=usuario, codigo=codigo, puesto=puesto, subtotal=subtotal
+    )
+
+
+def _auditar(usuario, accion: str, pedido: Pedido, detalle: dict | None = None) -> None:
+    """Registra la acción en la auditoría (best-effort, nunca rompe el pedido)."""
+    from apps.audit import services as audit
+
+    audit.registrar(
+        usuario=usuario,
+        accion=accion,
+        entidad="pedido",
+        id_entidad=pedido.pk,
+        detalle=detalle or {},
+    )
 
 
 def _notificar_pedido_creado(pedido: Pedido) -> None:

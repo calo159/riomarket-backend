@@ -80,7 +80,7 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
     # El pedido ya congeló la tarifa (fuente única en crear_pedido): se copia.
     tarifa = pedido.tarifa_domicilio
     comision = pricing.comision_plataforma(pedido.subtotal)
-    total = pedido.subtotal + tarifa
+    total = pedido.subtotal + tarifa - pedido.descuento_cupon
 
     with transaction.atomic():
         pago = Pago(
@@ -90,18 +90,43 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
             subtotal_pedido=pedido.subtotal,
             tarifa_domicilio_aplicada=tarifa,
             comision_plataforma=comision,
+            descuento_aplicado=pedido.descuento_cupon,
             total_cobrado=total,
             notas=(datos.get("notas") or "").strip(),
             datos_sandbox={},
         )
         pago.full_clean()
         pago.save()
+    _auditar_pago(usuario, pago, "crear")
     return pago
 
 
 # ---------------------------------------------------------------------------
 # Transiciones (siempre con fila bloqueada)
 # ---------------------------------------------------------------------------
+def _auditar_pago(usuario, pago: Pago, accion: str) -> None:
+    """Registra la acción en la auditoría (best-effort)."""
+    if usuario is None:
+        return
+    from apps.audit import services as audit
+
+    audit.registrar(
+        usuario=usuario,
+        accion=accion,
+        entidad="pago",
+        id_entidad=pago.pk,
+        detalle={"estado": pago.estado, "pedido": pago.id_pedido_id},
+    )
+
+
+_ACCION_POR_ESTADO = {
+    Pago.Estado.APROBADO: "aprobar",
+    Pago.Estado.RECHAZADO: "rechazar",
+    Pago.Estado.REEMBOLSADO: "reembolsar",
+    Pago.Estado.ANULADO: "anular",
+}
+
+
 def _aplicar_estado(
     *,
     pago: Pago,
@@ -109,6 +134,7 @@ def _aplicar_estado(
     referencia: str = "",
     origen: str = "",
     motivo: str = "",
+    usuario: Usuario | None = None,
 ) -> Pago:
     """Mueve el pago a ``destino`` bloqueando la fila y revalidando el estado."""
     with transaction.atomic():
@@ -145,6 +171,7 @@ def _aplicar_estado(
             bloqueado.notas = (bloqueado.notas + "\n" + motivo).strip()
         bloqueado.full_clean()
         bloqueado.save()
+    _auditar_pago(usuario, bloqueado, _ACCION_POR_ESTADO.get(destino, destino))
     return bloqueado
 
 
@@ -175,6 +202,7 @@ def simular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> 
         destino=destino,
         referencia=referencia or f"sandbox-{accion}",
         origen="simulacion",
+        usuario=usuario,
     )
 
 
@@ -196,6 +224,7 @@ def confirmar_efectivo(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
         referencia="efectivo-cobrado",
         origen="efectivo",
         motivo=(datos.get("notas") or "").strip(),
+        usuario=usuario,
     )
 
 
@@ -208,6 +237,7 @@ def marcar_reembolsado(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
         destino=Pago.Estado.REEMBOLSADO,
         origen="admin",
         motivo=(datos.get("notas") or "").strip(),
+        usuario=usuario,
     )
 
 
@@ -220,6 +250,7 @@ def anular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> P
         destino=Pago.Estado.ANULADO,
         origen="admin",
         motivo=(datos.get("notas") or "").strip(),
+        usuario=usuario,
     )
 
 

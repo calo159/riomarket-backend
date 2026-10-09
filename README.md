@@ -26,11 +26,13 @@ Django REST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
 | `payments` | `/api/payments/` | ✅ Pagos: montos, comisión, sandbox y webhook |
 | `addresses` | `/api/addresses/` | ✅ Direcciones de entrega guardadas (una predeterminada por usuario) |
 | `notifications` | `/api/notifications/` | ✅ Avisos in-app de pedidos (email opcional por flag) |
+| `reviews` | `/api/reviews/` | ✅ Reseñas de puestos y reputación (promedio/cantidad) |
+| `promotions` | `/api/promotions/` | ✅ Cupones de descuento por puesto o globales |
+| `audit` | `/api/audit/` | ✅ Auditoría de acciones (lectura solo admin) |
 | `common` | `/api/health/` | ✅ Health check, permisos por rol, crypto, paginación |
 
 > Nota: la verificación de identidad vive en `apps/accounts` (modelo
-> `Vendedor`); las apps futuras (reseñas, promociones, auditoría) se agregan
-> cuando tengan modelos y endpoints reales.
+> `Vendedor`).
 
 ### Reglas de negocio implementadas
 
@@ -62,6 +64,19 @@ Django REST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
 8. **Notificaciones** — los services avisan al vendedor (pedido creado) y al
    comprador/vendedor en cada cambio de estado, in-app; el email es **opcional**
    con `NOTIFICATIONS_EMAIL_ENABLED` y nunca rompe la operación.
+9. **Reseñas y reputación** — solo un comprador con un pedido **entregado** de
+   ese puesto reseña (una reseña por usuario+puesto); el vendedor responde y el
+   admin modera. La reputación se calcula sobre las reseñas visibles. Ver
+   [`docs/ADR-005-reputacion-resenas.md`](docs/ADR-005-reputacion-resenas.md).
+10. **Promociones (cupones)** — cupones de monto o porcentaje (con tope, monto
+    mínimo, vigencia y límites de uso), por puesto o globales. El descuento lo
+    asume el vendedor: `total = subtotal + tarifa − descuento` y
+    `neto_vendedor = subtotal − comisión − descuento`. Ver
+    [`docs/ADR-006-promociones-cupones.md`](docs/ADR-006-promociones-cupones.md).
+11. **Auditoría** — pedidos, pagos, cupones y reseñas dejan rastro (usuario,
+    acción, entidad, IP) consultable solo por el admin; el registro es
+    best-effort y nunca rompe la operación. Ver
+    [`docs/ADR-007-auditoria.md`](docs/ADR-007-auditoria.md).
 
 ## Arranque rápido
 
@@ -148,6 +163,14 @@ Nunca subir un `.env` real al repositorio.
 | `POST /api/notifications/notificaciones/{id}/leida/` | Marcar una como leída | destinatario/admin |
 | `POST /api/notifications/notificaciones/marcar-todas/` | Marcar todas como leídas | autenticado |
 | `GET /api/notifications/notificaciones/contador/` | Contar no leídas | autenticado |
+| `GET /api/reviews/resenas/` | Listar reseñas (visibilidad por rol) | pública |
+| `POST /api/reviews/resenas/` | Crear reseña (tras pedido entregado) | comprador |
+| `PATCH/DELETE /api/reviews/resenas/{id}/` | Editar/eliminar la propia reseña | autor/admin |
+| `POST /api/reviews/resenas/{id}/responder/` | Responder como vendedor del puesto | dueño/admin |
+| `GET/POST /api/promotions/cupones/` | Listar (según rol) y crear cupones | vendedor/admin |
+| `PATCH/DELETE /api/promotions/cupones/{id}/` | Editar/eliminar cupones | dueño/admin |
+| `POST /api/promotions/cupones/validar/` | Calcular descuento de un cupón (checkout) | autenticado |
+| `GET /api/audit/registros/` | Listar registros de auditoría (filtros) | admin |
 | `GET /api/health/` | Health check (DB) | pública |
 
 Detalle completo (filtros, parámetros, esquemas): **`/api/docs/`** (Swagger),
@@ -194,7 +217,7 @@ python manage.py seed_demo                     # datos de ejemplo
 python manage.py spectacular --validate        # validar esquema OpenAPI
 python manage.py runserver                     # servidor de desarrollo
 
-pytest                                         # suite completa (~323 pruebas)
+pytest                                         # suite completa (~473 pruebas)
 pytest apps\orders -q --cov=apps.orders        # tests de un módulo con cobertura
 ruff check apps tests config --no-cache        # lint
 ruff format apps tests config --no-cache       # formato
@@ -211,12 +234,16 @@ backend/
 │   ├── orders/         # pedidos (models, services, views, urls)
 │   ├── payments/       # pagos (models, services, pasarela, views, urls)
 │   ├── addresses/      # direcciones de entrega (models, services, views, urls)
-│   └── notifications/  # notificaciones in-app (models, services, views, urls)
+│   ├── notifications/  # notificaciones in-app (models, services, views, urls)
+│   ├── reviews/        # reseñas y reputación de puestos
+│   ├── promotions/     # cupones de descuento
+│   └── audit/          # auditoría de acciones
 ├── config/
 │   ├── settings/       # base, dev, prod, test
 │   └── urls.py
-├── docs/               # ADRs (001 enums, 002 media, 003 pagos, 004 direcciones/notificaciones)
+├── docs/               # ADRs (001 enums, 002 media, 003 pagos, 004 direcciones, 005 reseñas, 006 promociones, 007 auditoría)
 ├── tests/              # factories compartidas
+├── .github/workflows/  # CI (ruff, makemigrations, pytest, OpenAPI)
 ├── docker-compose.yml
 └── requirements*.txt
 ```
@@ -229,4 +256,4 @@ backend/
 - ✅ Fase 3 — pedidos (stock atómico + máquina de estados)
 - ✅ Fase 4 — pagos (tarifa de domicilio, comisión de plataforma)
 - ✅ Fase 5 — direcciones y notificaciones
-- ⬜ Fase 6 — promociones, reputación y auditoría
+- ✅ Fase 6 — reseñas/reputación, promociones, auditoría y CI

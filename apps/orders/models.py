@@ -89,6 +89,21 @@ class Pedido(models.Model):
         validators=[MinValueValidator(Decimal("0"))],
         help_text="Tarifa de domicilio; se cobra cuando la fase de pagos esté activa.",
     )
+    id_cupon = models.ForeignKey(
+        "promotions.Cupon",
+        on_delete=models.SET_NULL,
+        related_name="pedidos",
+        null=True,
+        blank=True,
+        verbose_name="cupón aplicado",
+        help_text="Snapshot del cupón usado; sobrevive aunque se borre el cupón.",
+    )
+    descuento_cupon = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0"))],
+    )
     total = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -123,12 +138,17 @@ class Pedido(models.Model):
             models.CheckConstraint(
                 condition=models.Q(subtotal__gte=0)
                 & models.Q(tarifa_domicilio__gte=0)
+                & models.Q(descuento_cupon__gte=0)
                 & models.Q(total__gte=0),
                 name="pedido_totales_no_negativos",
             ),
             models.CheckConstraint(
-                condition=models.Q(total=models.F("subtotal") + models.F("tarifa_domicilio")),
-                name="pedido_total_es_subtotal_mas_tarifa",
+                condition=models.Q(
+                    total=models.F("subtotal")
+                    + models.F("tarifa_domicilio")
+                    - models.F("descuento_cupon")
+                ),
+                name="pedido_total_es_subtotal_mas_tarifa_menos_descuento",
             ),
             models.CheckConstraint(
                 condition=models.Q(tipo_entrega="retiro") | ~models.Q(direccion_entrega=""),
@@ -147,8 +167,12 @@ class Pedido(models.Model):
         """Defensa explícita de las reglas que también están en CHECK."""
         super().clean()
         errores = {}
-        if self.total != self.subtotal + self.tarifa_domicilio:
-            errores["total"] = "El total debe ser subtotal + tarifa_domicilio."
+        if self.descuento_cupon < 0:
+            errores["descuento_cupon"] = "El descuento no puede ser negativo."
+        if self.total != self.subtotal + self.tarifa_domicilio - self.descuento_cupon:
+            errores["total"] = "El total debe ser subtotal + tarifa_domicilio - descuento."
+        if self.id_cupon_id and self.descuento_cupon == 0:
+            errores["descuento_cupon"] = "Un pedido con cupón debe aplicar su descuento."
         if self.tipo_entrega == self.TipoEntrega.DOMICILIO and not self.direccion_entrega.strip():
             errores["direccion_entrega"] = (
                 "Un pedido a domicilio debe indicar la dirección de entrega."

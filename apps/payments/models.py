@@ -53,6 +53,13 @@ class Pago(models.Model):
         default=Decimal("0.00"),
         validators=[MinValueValidator(Decimal("0"))],
     )
+    descuento_aplicado = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="Descuento del cupón aplicado al pedido (lo asume el vendedor).",
+    )
     total_cobrado = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -102,6 +109,7 @@ class Pago(models.Model):
                 condition=models.Q(subtotal_pedido__gte=0)
                 & models.Q(tarifa_domicilio_aplicada__gte=0)
                 & models.Q(comision_plataforma__gte=0)
+                & models.Q(descuento_aplicado__gte=0)
                 & models.Q(total_cobrado__gte=0),
                 name="pago_montos_no_negativos",
             ),
@@ -109,6 +117,7 @@ class Pago(models.Model):
                 condition=models.Q(
                     total_cobrado=models.F("subtotal_pedido")
                     + models.F("tarifa_domicilio_aplicada")
+                    - models.F("descuento_aplicado")
                 ),
                 name="pago_total_coincide_con_subtotal_mas_domicilio",
             ),
@@ -131,10 +140,12 @@ class Pago(models.Model):
 
     @property
     def neto_vendedor(self) -> Decimal:
-        """Lo que recibe el vendedor (subtotal menos la comisión, ADR-003)."""
+        """Lo que recibe el vendedor: subtotal - comisión - descuento (ADR-003/6b)."""
         from apps.common import pricing
 
-        return pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma)
+        return pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma) - Decimal(
+            self.descuento_aplicado
+        )
 
     def __str__(self):
         return f"Pago #{self.pk} - Pedido #{self.id_pedido_id} - {self.estado}"

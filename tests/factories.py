@@ -10,6 +10,8 @@ from apps.catalog.models import Categoria, Producto, Puesto, PuestoCategoria
 from apps.notifications.models import Notificacion
 from apps.orders.models import ItemPedido, Pedido
 from apps.payments.models import Pago
+from apps.promotions.models import Cupon, UsoCupon
+from apps.reviews.models import Resena
 
 
 class UsuarioFactory(factory.django.DjangoModelFactory):
@@ -182,3 +184,41 @@ class NotificacionFactory(factory.django.DjangoModelFactory):
     titulo = "Aviso"
     mensaje = "Mensaje de prueba"
     leida = False
+
+
+class ResenaFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Resena
+
+    id_usuario = factory.SubFactory(UsuarioFactory)
+    id_puesto = factory.SubFactory(PuestoFactory)
+    calificacion = 5
+    comentario = "Muy bueno"
+    visible = True
+
+
+class CuponFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Cupon
+
+    codigo = factory.Sequence(lambda n: f"PROMO{n}")
+    id_puesto = None
+    tipo_descuento = Cupon.TipoDescuento.MONTO
+    valor = Decimal("2000.00")
+    monto_minimo_pedido = Decimal("0.00")
+    tope_descuento = None
+    usos_totales = None
+    usos_por_usuario = None
+    fecha_inicio = None
+    fecha_fin = None
+    activo = True
+
+
+class UsoCuponFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UsoCupon
+
+    id_cupon = factory.SubFactory(CuponFactory)
+    id_usuario = factory.SubFactory(UsuarioFactory)
+    id_pedido = factory.SubFactory(PedidoFactory)
+    descuento_aplicado = Decimal("0.00")

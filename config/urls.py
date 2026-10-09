@@ -35,6 +35,9 @@ urlpatterns = [
     path("api/payments/", include("apps.payments.urls")),
     path("api/addresses/", include("apps.addresses.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
+    path("api/reviews/", include("apps.reviews.urls")),
+    path("api/promotions/", include("apps.promotions.urls")),
+    path("api/audit/", include("apps.audit.urls")),
 ]
 
 # Solo en DEBUG: sirve los archivos PÚBLICOS subidos (imágenes de producto).

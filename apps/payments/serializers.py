@@ -23,6 +23,7 @@ class PagoSerializer(serializers.ModelSerializer):
             "estado",
             "subtotal_pedido",
             "tarifa_domicilio_aplicada",
+            "descuento_aplicado",
             "total_cobrado",
             "referencia_gateway",
             "notas",
