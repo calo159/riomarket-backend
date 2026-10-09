@@ -1,4 +1,4 @@
-"""Configuración base compartida por todos los entornos.
+﻿"""Configuración base compartida por todos los entornos.
 
 Toda variable sensible se lee desde variables de entorno (django-environ).
 Nunca se escriben credenciales ni claves en el código.
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.catalog",
     "apps.orders",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -244,3 +245,12 @@ LOGGING = {
         "apps": {"level": "DEBUG" if DEBUG else "INFO", "propagate": True},
     },
 }
+
+
+
+# ---------------------------------------------------------------------------
+# Pagos (Fase 4)
+# ---------------------------------------------------------------------------
+DOMICILIO_TARIFA_BASE = env.float("DOMICILIO_TARIFA_BASE", default=0.0)
+PLATFORM_COMMISSION_PERCENTAGE = env.float("PLATFORM_COMMISSION_PERCENTAGE", default=0.0)
+
