@@ -20,11 +20,7 @@ from django.db.models import Q, QuerySet
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Producto, Puesto
-from apps.common.query import (  # noqa: F401  (reexportado: services.aplicar_ordenamiento)
-    aplicar_ordenamiento,
-    parametro_entero,
-    validar_estado_parametro,
-)
+from apps.common.query import parametro_entero, validar_estado_parametro
 from apps.orders.models import ItemPedido, Pedido
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección).

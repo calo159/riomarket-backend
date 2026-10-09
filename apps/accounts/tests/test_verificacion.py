@@ -362,8 +362,7 @@ class TestCedulaPrivada:
         )
         api_client.force_authenticate(revisor)
         assert (
-            api_client.get(f"{SOLICITUDES}{solicitud.pk}/cedula/").status_code
-            == status.HTTP_200_OK
+            api_client.get(f"{SOLICITUDES}{solicitud.pk}/cedula/").status_code == status.HTTP_200_OK
         )
 
     def test_anonimo_no_ve_la_foto(self, api_client):

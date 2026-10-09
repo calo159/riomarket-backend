@@ -37,6 +37,7 @@ SIN_SOLICITUD = {
     "fecha_revision": None,
 }
 
+
 # Respuesta de error uniforme (misma forma que el resto de la API).
 def _errores_serializer(nombre):
     from drf_spectacular.utils import inline_serializer

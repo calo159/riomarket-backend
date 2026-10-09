@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 
 from apps.catalog import services
 from apps.catalog.models import Categoria, Producto, Puesto
+from apps.common.query import aplicar_ordenamiento, parametro_entero
 from tests.factories import CategoriaFactory, ProductoFactory, PuestoFactory
 
 
@@ -161,11 +162,11 @@ class TestBusquedaYOrdenamiento:
     def test_ordering_no_permitido_lanza_400(self, puesto):
         qs = Puesto.objects.all()
         with pytest.raises(DjangoValidationError):
-            services.aplicar_ordenamiento(qs, "password", services.ORDENAMIENTO_PUESTO)
+            aplicar_ordenamiento(qs, "password", services.ORDENAMIENTO_PUESTO)
 
     def test_ordering_permitido_aplica(self, puesto):
         qs = Puesto.objects.all()
-        resultado = services.aplicar_ordenamiento(qs, "nombre", services.ORDENAMIENTO_PUESTO)
+        resultado = aplicar_ordenamiento(qs, "nombre", services.ORDENAMIENTO_PUESTO)
         assert list(resultado) == list(Puesto.objects.order_by("nombre"))
 
     def test_parametro_entero_invalido(self):
@@ -173,4 +174,4 @@ class TestBusquedaYOrdenamiento:
 
         params = QueryDict("categoria=abc")
         with pytest.raises(DjangoValidationError):
-            services.parametro_entero(params, "categoria")
+            parametro_entero(params, "categoria")

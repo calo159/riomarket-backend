@@ -1,8 +1,7 @@
 """Reglas de negocio del catálogo.
 
 Las reglas viven aquí (y no en los serializers) para que sean verificables
-aisladamente desde tests y reutilizables por otras capas (admin, comandos,
-tareas Celery):
+aisladamente desde tests y reutilizables por otras capas (admin, comandos):
 
 1. Solo un vendedor aprobado puede crear/editar su Puesto.
 2. Un Producto solo puede usar una categoría ya asignada a su Puesto.
@@ -17,12 +16,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
-from apps.common.query import (  # noqa: F401  (reexpuestas: services.parametro_entero, ...)
-    aplicar_ordenamiento,
-    parametro_booleano,
-    parametro_entero,
-    validar_estado_parametro,
-)
+from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
 # de columnas: un valor fuera de lista no llega a ``order_by``).
@@ -117,7 +111,7 @@ def quitar_categoria(*, puesto: Puesto, categoria: Categoria) -> None:
         raise ValidationError({"categoria": "La categoría no estaba asignada al puesto."})
 
 
-def crear_producto(*, puesto: Puesto, categoria: Categoria, usuario, datos: dict) -> object:
+def crear_producto(*, puesto: Puesto, categoria: Categoria, usuario, datos: dict) -> Producto:
     """``datos`` trae los campos escalares (nombre, precio, stock, ...).
 
     Los FK viajan aparte: el dueño del puesto lo decide la vista y la
@@ -144,15 +138,13 @@ def crear_producto(*, puesto: Puesto, categoria: Categoria, usuario, datos: dict
                 )
             }
         )
-    from apps.catalog.models import Producto
-
     producto = Producto(id_puesto=puesto, id_categoria=categoria, **datos)
     producto.full_clean()
     producto.save()
     return producto
 
 
-def actualizar_producto(*, producto, usuario, datos: dict) -> object:
+def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
     """Aplica ``datos`` al producto validando las reglas 1 y 2.
 
     No permite mover un producto a otro puesto (no existe transferencia).

@@ -1,7 +1,7 @@
 # RioMarket — Backend
 
 API REST de un marketplace para los puestos de mercado de Riohacha. Django 5 +
-DREST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
+Django REST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
 
 ## Stack
 
@@ -10,29 +10,33 @@ DREST Framework, autenticación JWT, PostgreSQL y documentación OpenAPI.
 | Framework | Django 5.1 + Django REST Framework 3.17 |
 | Auth | JWT (simplejwt) con rotación de refresh y blacklist |
 | Base de datos | PostgreSQL 16 (SQLite solo para tests) |
-| Cache / tareas | Redis 7 + Celery 5 |
+| Caché | Redis 7 (solo producción; dev/CI usan caché local) |
 | Documentación | drf-spectacular (Swagger UI, Redoc, esquema OpenAPI) |
 | Calidad | ruff (lint + format), pytest + pytest-django + factory_boy |
-| Contenedores | Docker Compose (postgres, redis, web, celery_worker) |
+| Contenedores | Docker Compose (postgres, redis, web) |
 
 ## Módulos
 
 | App | Ruta base | Estado |
 | --- | --- | --- |
 | `accounts` | `/api/auth/` | ✅ Registro, login/logout JWT, perfil |
-| `accounts` (trust) | `/api/verificacion/` | ✅ Verificación de identidad con foto de cédula (almacenamiento privado) |
+| `accounts` (verificación) | `/api/verificacion/` | ✅ Verificación de identidad con foto de cédula (almacenamiento privado) |
 | `catalog` | `/api/catalog/` | ✅ Categorías, puestos, productos e imágenes |
 | `orders` | `/api/orders/` | ✅ Pedidos: creación con stock atómico y máquina de estados |
 | `common` | `/api/health/` | ✅ Health check, permisos por rol, crypto, paginación |
-| `addresses`, `notifications`, `payments`, `promotions`, `trust`, `audit` | — | 🚧 Apps creadas, sin endpoints aún |
+
+> Nota: la verificación de identidad vive en `apps/accounts` (modelo
+> `Vendedor`); las apps futuras (pagos, direcciones, reseñas) se agregan
+> cuando tengan modelos y endpoints reales.
 
 ### Reglas de negocio implementadas
 
 1. **Catálogo** — solo el vendedor dueño administra su puesto y productos; las
    imágenes se validan por tipo MIME y tamaño; nada se borra si hay historial
    (`PROTECT`), se desactiva.
-2. **Confianza (trust)** — el vendedor debe tener la identidad verificada
-   (cédula) para publicar; la foto de cédula vive fuera del medio público.
+2. **Confianza (verificación de identidad)** — el vendedor debe tener la
+   identidad verificada (cédula) para publicar; la foto de cédula vive fuera
+   del medio público.
 3. **Verificación** — el usuario sube su solicitud y un administrador la
    aprueba o rechaza; la cédula se sirve solo al dueño o al admin.
 4. **Pedidos (creación)** — un pedido agrupa ítems de **un solo puesto**,
@@ -79,10 +83,9 @@ Todas se leen con `django-environ`; la plantilla completa está en
 | --- | --- |
 | `DJANGO_SETTINGS_MODULE` | `config.settings.dev` / `.prod` / `.test` |
 | `DATABASE_URL` | PostgreSQL (`postgres://usuario:pass@host:5432/db`) |
-| `REDIS_URL`, `CELERY_BROKER_URL` | Redis y broker de Celery |
+| `REDIS_URL` | Redis (solo caché del entorno de producción) |
 | `FERNET_KEY` | Clave de cifrado (obligatoria con `DEBUG=False`) |
 | `CORS_ALLOWED_ORIGINS` | Whitelist explícita (nunca `*`) |
-| `PLATFORM_COMMISSION_PERCENTAGE` | Comisión de plataforma (pagos) |
 
 Nunca subir un `.env` real al repositorio.
 
@@ -168,15 +171,9 @@ ruff format apps tests config --no-cache       # formato
 backend/
 ├── apps/
 │   ├── accounts/       # usuarios, JWT, verificación de identidad
-│   ├── addresses/      # 🚧 direcciones de entrega
-│   ├── audit/          # 🚧 auditoría de acciones
 │   ├── catalog/        # categorías, puestos, productos, imágenes
 │   ├── common/         # permisos, exceptions, crypto, query, pagination
-│   ├── notifications/  # 🚧 notificaciones
-│   ├── orders/         # pedidos (models, services, views, urls)
-│   ├── payments/       # 🚧 pagos y comisiones
-│   ├── promotions/     # 🚧 promociones
-│   └── trust/          # 🚧 confianza / reputación
+│   └── orders/         # pedidos (models, services, views, urls)
 ├── config/
 │   ├── settings/       # base, dev, prod, test
 │   └── urls.py
@@ -189,7 +186,7 @@ backend/
 
 - ✅ Fase 0 — setup (Django + DRF, Docker, calidad, ADRs)
 - ✅ Fase 1 — catálogo + auth JWT
-- ✅ Fase 2 — verificación de identidad (trust)
+- ✅ Fase 2 — verificación de identidad
 - ✅ Fase 3 — pedidos (stock atómico + máquina de estados)
 - ⬜ Fase 4 — pagos (tarifa de domicilio, comisión de plataforma)
 - ⬜ Fase 5 — direcciones y notificaciones

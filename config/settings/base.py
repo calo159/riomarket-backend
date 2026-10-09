@@ -60,14 +60,8 @@ INSTALLED_APPS = [
     # Apps del proyecto
     "apps.common",
     "apps.accounts",
-    "apps.addresses",
-    "apps.notifications",
     "apps.catalog",
     "apps.orders",
-    "apps.payments",
-    "apps.promotions",
-    "apps.trust",
-    "apps.audit",
 ]
 
 MIDDLEWARE = [
@@ -167,7 +161,7 @@ REST_FRAMEWORK = {
     # Throttling global por defecto. NOTA: ScopedRateThrottle como clase por
     # defecto NO hace nada (los endpoints sin throttle_scope pasan siempre),
     # por eso el global es Anon/UserRateThrottle y el por-scope se declara
-    # vista a vista (login, register, payment).
+    # vista a vista (login, register, verificacion).
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
@@ -177,7 +171,6 @@ REST_FRAMEWORK = {
         "user": env("THROTTLE_USER", default="300/min"),
         "login": env("THROTTLE_LOGIN", default="10/min"),
         "register": env("THROTTLE_REGISTER", default="10/min"),
-        "payment": env("THROTTLE_PAYMENT", default="30/min"),
         "verificacion": env("THROTTLE_VERIFICACION", default="20/min"),
     },
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
@@ -219,26 +212,10 @@ SPECTACULAR_SETTINGS = {
 }
 
 # ---------------------------------------------------------------------------
-# Celery (notificaciones y comisiones asíncronas)
+# Caché compartida entre procesos (Redis en producción; locmem en dev/tests)
 # ---------------------------------------------------------------------------
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
-CELERY_TASK_TIME_LIMIT = env.int("CELERY_TASK_TIME_LIMIT", default=120)
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-# En desarrollo sin Redis se puede activar la ejecución síncrona (tests la usan)
-CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_ALWAYS_EAGER", default=False)
-CELERY_TASK_EAGER_PROPAGATES = env.bool("CELERY_ALWAYS_EAGER", default=False)
-
-# ---------------------------------------------------------------------------
-# Reglas de negocio parametrizadas (nunca hardcodeadas en el código)
-# ---------------------------------------------------------------------------
-PLATFORM_COMMISSION_PERCENTAGE = env.float("PLATFORM_COMMISSION_PERCENTAGE", default=10.0)
-
-# Pasarela de pago: implementación "sandbox" hasta conectar Wompi/ePayco/PayU
-PAYMENT_GATEWAY_SANDBOX = env.bool("PAYMENT_GATEWAY_SANDBOX", default=True)
+# CACHES se define en settings/prod.py (RedisCache con REDIS_URL).
+# Ver config/settings/dev.py y test.py para los entornos locales.
 
 # ---------------------------------------------------------------------------
 # Validación estricta de archivos subidos

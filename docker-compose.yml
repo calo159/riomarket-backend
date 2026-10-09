@@ -51,9 +51,6 @@ services:
     environment:
       DATABASE_URL: postgres://riomarket_user:riomarket_pass@db:5432/riomarket_db
       REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
-      CELERY_ALWAYS_EAGER: "False"
       ALLOWED_HOSTS: localhost,127.0.0.1,web
     depends_on:
       db:
@@ -66,30 +63,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-
-  celery_worker:
-    build:
-      context: .
-      args:
-        REQUIREMENTS_FILE: requirements-dev.txt
-    container_name: riomarket_celery_worker
-    restart: unless-stopped
-    command: celery -A config worker -l info
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgres://riomarket_user:riomarket_pass@db:5432/riomarket_db
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
-      CELERY_ALWAYS_EAGER: "False"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -102,9 +102,7 @@ class DecidirVerificacionSerializer(serializers.Serializer):
             attrs["estado"] == Vendedor.EstadoVerificacion.RECHAZADO
             and not (attrs.get("motivo_rechazo") or "").strip()
         ):
-            raise serializers.ValidationError(
-                {"motivo_rechazo": "Indica el motivo del rechazo."}
-            )
+            raise serializers.ValidationError({"motivo_rechazo": "Indica el motivo del rechazo."})
         return attrs
 
     def update(self, instance, validated_data):

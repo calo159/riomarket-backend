@@ -30,14 +30,8 @@ urlpatterns = [
     # APIs por módulo
     path("api/auth/", include("apps.accounts.urls")),
     path("api/verificacion/", include("apps.accounts.verificacion_urls")),
-    path("api/addresses/", include("apps.addresses.urls")),
-    path("api/notifications/", include("apps.notifications.urls")),
     path("api/catalog/", include("apps.catalog.urls")),
     path("api/orders/", include("apps.orders.urls")),
-    path("api/payments/", include("apps.payments.urls")),
-    path("api/promotions/", include("apps.promotions.urls")),
-    path("api/trust/", include("apps.trust.urls")),
-    path("api/admin/", include("apps.audit.urls")),
 ]
 
 # Solo en DEBUG: sirve los archivos PÚBLICOS subidos (imágenes de producto).

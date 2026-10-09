@@ -34,6 +34,5 @@ def test_settings_cargados():
     from django.conf import settings
 
     assert settings.AUTH_USER_MODEL == "accounts.Usuario"
-    assert settings.PLATFORM_COMMISSION_PERCENTAGE > 0
     assert settings.SIMPLE_JWT["ROTATE_REFRESH_TOKENS"] is True
     assert settings.SIMPLE_JWT["BLACKLIST_AFTER_ROTATION"] is True

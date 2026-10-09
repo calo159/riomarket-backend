@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.common.permissions import EsComprador
+from apps.common.query import aplicar_ordenamiento
 from apps.orders import services
 from apps.orders.models import Pedido
 from apps.orders.serializers import PedidoSerializer
@@ -43,9 +44,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         params = self.request.query_params
         qs = Pedido.objects.select_related("id_puesto", "id_comprador").prefetch_related("items")
         qs = services.visibles_pedidos(self.request.user, qs, params)
-        return services.aplicar_ordenamiento(
-            qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO
-        )
+        return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO)
 
     @extend_schema(
         description=(

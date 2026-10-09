@@ -56,9 +56,7 @@ class TestPuestos:
         respuesta = cliente_vendedor.post(PUESTOS, {}, format="json")
         assert respuesta.status_code == 403
 
-    def test_vendedor_pendiente_de_verificacion_no_crea(
-        self, cliente_vendedor_pendiente
-    ):
+    def test_vendedor_pendiente_de_verificacion_no_crea(self, cliente_vendedor_pendiente):
         respuesta = cliente_vendedor_pendiente.post(
             PUESTOS,
             {

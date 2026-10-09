@@ -100,9 +100,7 @@ def solicitar_verificacion(*, usuario: Usuario, numero_cedula, foto) -> Vendedor
     - La foto del documento se valida como imagen y va a ``PRIVATE_MEDIA_ROOT``.
     """
     if not usuario.is_active or not usuario.es_vendedor:
-        raise ValidationError(
-            {"usuario": "Se requiere una cuenta de vendedor activa."}
-        )
+        raise ValidationError({"usuario": "Se requiere una cuenta de vendedor activa."})
 
     numero = crypto.normalizar_cedula(numero_cedula)
     if not numero or numero == "0":
@@ -111,13 +109,11 @@ def solicitar_verificacion(*, usuario: Usuario, numero_cedula, foto) -> Vendedor
     huella = crypto.huella_deterministica(numero)
     duplicado = Vendedor.objects.filter(cedula_huella=huella).exclude(id_usuario=usuario)
     if duplicado.exists():
-        raise ValidationError(
-            {"numero_cedula": "Ya existe una cuenta verificada con esa cédula."}
-        )
+        raise ValidationError({"numero_cedula": "Ya existe una cuenta verificada con esa cédula."})
 
-    validate_image_file(foto)
     if foto is None:
         raise ValidationError({"foto_cedula": "La foto de la cédula es obligatoria."})
+    validate_image_file(foto)
 
     vendedor, _ = Vendedor.objects.get_or_create(id_usuario=usuario)
 
@@ -143,9 +139,7 @@ def aprobar_verificacion(*, vendedor: Vendedor, revisor: Usuario) -> Vendedor:
     if not revisor.es_administrador or not revisor.is_active:
         raise ValidationError({"revisor": "Solo un administrador activo puede revisar."})
     if not vendedor.cedula_huella or not vendedor.foto_cedula:
-        raise ValidationError(
-            {"vendedor": "La solicitud no tiene documento ni foto para revisar."}
-        )
+        raise ValidationError({"vendedor": "La solicitud no tiene documento ni foto para revisar."})
     vendedor.estado_verificacion = Vendedor.EstadoVerificacion.APROBADO
     vendedor.id_revisor = revisor
     vendedor.motivo_rechazo = ""
@@ -158,9 +152,7 @@ def rechazar_verificacion(*, vendedor: Vendedor, revisor: Usuario, motivo: str) 
     if not revisor.es_administrador or not revisor.is_active:
         raise ValidationError({"revisor": "Solo un administrador activo puede revisar."})
     if not vendedor.cedula_huella or not vendedor.foto_cedula:
-        raise ValidationError(
-            {"vendedor": "La solicitud no tiene documento ni foto para revisar."}
-        )
+        raise ValidationError({"vendedor": "La solicitud no tiene documento ni foto para revisar."})
     motivo = (motivo or "").strip()
     if not motivo:
         raise ValidationError({"motivo_rechazo": "Indica el motivo del rechazo."})

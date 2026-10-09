@@ -28,6 +28,7 @@ from apps.catalog.serializers import (
     PuestoSerializer,
 )
 from apps.common.permissions import EsAdministrador, EsDuenoOAdmin, EsVendedorAprobado
+from apps.common.query import aplicar_ordenamiento, parametro_entero
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
     OpenApiParameter(name="q", type=OpenApiTypes.STR, description="Nombre o descripción"),
@@ -105,9 +106,7 @@ class PuestoViewSet(viewsets.ModelViewSet):
         )
         qs = services.visibles_puestos(self.request.user, qs, params)
         qs = services.filtrar_puestos(qs, params)
-        return services.aplicar_ordenamiento(
-            qs, params.get("ordering"), services.ORDENAMIENTO_PUESTO
-        )
+        return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PUESTO)
 
     @action(detail=True, methods=["post"], url_path="categorias")
     def asignar_categoria(self, request, pk=None):
@@ -137,7 +136,7 @@ class PuestoViewSet(viewsets.ModelViewSet):
     def _get_categoria(self, categoria_id):
         from django.shortcuts import get_object_or_404
 
-        numero = services.parametro_entero({"categoria_id": categoria_id}, "categoria_id")
+        numero = parametro_entero({"categoria_id": categoria_id}, "categoria_id")
         return get_object_or_404(Categoria, id=numero or 0)
 
 
@@ -168,9 +167,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         )
         qs = services.visibles_productos(self.request.user, qs, params)
         qs = services.filtrar_productos(qs, params)
-        return services.aplicar_ordenamiento(
-            qs, params.get("ordering"), services.ORDENAMIENTO_PRODUCTO
-        )
+        return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PRODUCTO)
 
     @action(detail=True, methods=["post"], url_path="imagenes")
     def subir_imagen(self, request, pk=None):
@@ -205,7 +202,7 @@ class ImagenProductoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = ImagenProducto.objects.select_related("id_producto__id_puesto")
         qs = services.visibles_imagenes(self.request.user, qs)
-        producto = services.parametro_entero(self.request.query_params, "producto")
+        producto = parametro_entero(self.request.query_params, "producto")
         if producto:
             qs = qs.filter(id_producto=producto)
         return qs

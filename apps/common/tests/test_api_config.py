@@ -33,7 +33,7 @@ def test_throttling_global_activo():
     assert "ScopedRateThrottle" not in clases
 
     rates = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
-    for scope in ("anon", "user", "login", "register", "payment"):
+    for scope in ("anon", "user", "login", "register", "verificacion"):
         assert scope in rates
 
 
