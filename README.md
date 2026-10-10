@@ -633,6 +633,13 @@ Otras limitaciones / hallazgos:
 - ✅ **Fase 4** — pagos (tarifa de domicilio, comisión de plataforma)
 - ✅ **Fase 5** — direcciones y notificaciones
 - ✅ **Fase 6** — reseñas/reputación, promociones, auditoría y CI
+- ⬜ **Fase 7** — producción: gunicorn/uvicorn, proxy inverso, almacenamiento
+  de objetos y SMTP real (ver [Despliegue](#despliegue-y-limitaciones-conocidas))
+- ⬜ **Fase 8** — pasarela de pagos real que reemplace `PasarelaSandbox` y
+  webhook firmado con `PAYMENTS_WEBHOOK_SECRET`
+- ⬜ **Fase 9** — frontend web/móvil que consuma `/api/`
+- ⬜ **Fase 10** — endurecimiento: retención/archivado de auditoría, `LICENSE`
+  y badge de cobertura en CI
 
 ## Contribuir, licencia y autores
 

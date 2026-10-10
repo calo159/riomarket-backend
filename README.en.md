@@ -633,6 +633,13 @@ Other limitations / findings:
 - ✅ **Phase 4** — payments (delivery fee, platform commission)
 - ✅ **Phase 5** — addresses and notifications
 - ✅ **Phase 6** — reviews/reputation, promotions, audit and CI
+- ⬜ **Phase 7** — production: gunicorn/uvicorn, reverse proxy, object storage
+  and real SMTP (see [Deployment](#deployment-and-known-limitations))
+- ⬜ **Phase 8** — a real payment gateway replacing `PasarelaSandbox` and a
+  signed webhook with `PAYMENTS_WEBHOOK_SECRET`
+- ⬜ **Phase 9** — a web/mobile frontend consuming `/api/`
+- ⬜ **Phase 10** — hardening: audit retention/archiving, `LICENSE` and a
+  coverage badge in CI
 
 ## Contributing, license and authors
 
