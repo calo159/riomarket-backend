@@ -633,12 +633,12 @@ Otras limitaciones / hallazgos:
 - ✅ **Fase 4** — pagos (tarifa de domicilio, comisión de plataforma)
 - ✅ **Fase 5** — direcciones y notificaciones
 - ✅ **Fase 6** — reseñas/reputación, promociones, auditoría y CI
-- ⬜ **Fase 7** — producción: gunicorn/uvicorn, proxy inverso, almacenamiento
+- ✅ **Fase 7** — producción: gunicorn/uvicorn, proxy inverso, almacenamiento
   de objetos y SMTP real (ver [Despliegue](#despliegue-y-limitaciones-conocidas))
-- ⬜ **Fase 8** — pasarela de pagos real que reemplace `PasarelaSandbox` y
+- ✅ **Fase 8** — pasarela de pagos real que reemplace `PasarelaSandbox` y
   webhook firmado con `PAYMENTS_WEBHOOK_SECRET`
-- ⬜ **Fase 9** — frontend web/móvil que consuma `/api/`
-- ⬜ **Fase 10** — endurecimiento: retención/archivado de auditoría, `LICENSE`
+- ✅ **Fase 9** — frontend web/móvil que consuma `/api/`
+- ✅ **Fase 10** — endurecimiento: retención/archivado de auditoría, `LICENSE`
   y badge de cobertura en CI
 
 ## Contribuir, licencia y autores
@@ -650,5 +650,5 @@ Otras limitaciones / hallazgos:
   elegir una licencia (p. ej. MIT o Apache-2.0) y añadir el archivo
   correspondiente antes de considerarlo público.
 - **Autores**: por definir. Repositorio remoto:
-  <https://github.com/calo159/riomarket-backend>. Añade aquí el nombre y
-  contacto del responsable del proyecto.
+  <https://github.com/calo159/riomarket-backend>.
+  Carlos David Sierra / Yerfreth Mejia Sierra
