@@ -259,9 +259,11 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 ### Tests
 
 No `.env` is needed to run the suite: `config/settings/test.py` sets, with
-`setdefault`, a `SECRET_KEY`, a valid `FERNET_KEY`, `DEBUG=False` and
-`PAYMENTS_SANDBOX_ENABLED=True` before importing the base configuration. If a
-`.env` exists, its connection values (for example `DATABASE_URL`) are respected.
+`setdefault`, a `SECRET_KEY`, a valid `FERNET_KEY`, `DEBUG=False`,
+`PAYMENTS_SANDBOX_ENABLED=True` and deterministic prices/fees before importing
+the base configuration. By default the suite runs on **in-memory SQLite**,
+ignoring the local `.env`'s `DATABASE_URL` (which usually points to Supabase).
+To use real PostgreSQL, export `TEST_DATABASE_URL`.
 
 ## Using the API
 
@@ -552,9 +554,10 @@ pytest apps/payments/tests/test_pagos.py::test_nombre -q   # one test
 pytest --cov=apps --cov-report=term-missing                # coverage
 ```
 
-- **473 tests** (22 files), all green.
-- They use `pytest-django` + `factory_boy`; by default they run on the database
-  from `DATABASE_URL` (PostgreSQL locally/CI) or SQLite on a clean machine.
+- **478 tests** (23 files), all green.
+- They use `pytest-django` + `factory_boy`; by default they run on **in-memory
+  SQLite**, without touching the `.env`'s `DATABASE_URL`. For real PostgreSQL
+  (e.g. to check specific `CheckConstraint`s) export `TEST_DATABASE_URL`.
 - They cover models/constraints, services (business rules), permissions,
   endpoints and the `seed_demo` command.
 - CI (`.github/workflows/ci.yml`) runs on every push/PR: `ruff`,
@@ -614,8 +617,13 @@ Other limitations / findings:
 - **`FERNET_KEY no es una clave Fernet válida`**: it must be 32 bytes in
   base64url; generate a new one, don't reuse plain text.
 - **Tests fail on a clean machine**: they shouldn't; `config/settings/test.py`
-  sets `SECRET_KEY`/`FERNET_KEY`/`DEBUG`. If it persists, check that there is no
-  `.env` with `DEBUG=False` and an empty `FERNET_KEY`.
+  sets `SECRET_KEY`/`FERNET_KEY`/`DEBUG` and runs on in-memory SQLite. If it
+  persists, check that there is no `.env` with `DEBUG=False` and an empty
+  `FERNET_KEY`.
+- **Tests try to connect to PostgreSQL/Supabase**: they shouldn't; the suite
+  ignores `DATABASE_URL` and uses in-memory SQLite. If you forced PostgreSQL,
+  check that `TEST_DATABASE_URL` points to a database where the test DB can be
+  created/dropped.
 - **The container can't connect to PostgreSQL**: inside Compose, `localhost`
   points to the `web` container, not to `db`. Use
   `DATABASE_URL=...@db:5432/...` (already set that way in `docker-compose.yml`).

@@ -44,6 +44,9 @@ TOTAL_MINIMO = 100
 LAT_BASE = "11.544440"
 LON_BASE = "-72.907490"
 
+# Tablas de datos del seed: sin reformatear (las tuplas largas se leen mejor en
+# una línea; E501 ya se ignora para este archivo en pyproject.toml).
+# fmt: off
 USUARIOS = [
     {
         "clave": "admin",
@@ -367,6 +370,7 @@ RESENAS = [
     (3, "tejidos", 5, "Sandalias cómodas y bonitas.", "SM-14", "¡Que las disfrutes!"),
     (4, "cocina", 4, "Arroz de coco muy sabroso.", "SM-15", None),
 ]
+# fmt: on
 
 
 class Command(BaseCommand):
@@ -418,9 +422,7 @@ class Command(BaseCommand):
     def _crear_usuarios(self):
         for datos in USUARIOS:
             campos = {k: v for k, v in datos.items() if k not in ("clave", "correo")}
-            usuario, _ = Usuario.objects.get_or_create(
-                correo=datos["correo"], defaults=campos
-            )
+            usuario, _ = Usuario.objects.get_or_create(correo=datos["correo"], defaults=campos)
             usuario.nombre = datos["nombre"]
             usuario.celular = datos["celular"]
             usuario.rol = datos["rol"]
@@ -437,9 +439,7 @@ class Command(BaseCommand):
                 )
 
         self.compradores = [
-            self.usuarios[d["clave"]]
-            for d in USUARIOS
-            if d["rol"] == Usuario.Rol.COMPRADOR
+            self.usuarios[d["clave"]] for d in USUARIOS if d["rol"] == Usuario.Rol.COMPRADOR
         ]
 
     # ------------------------------------------------------------------
@@ -590,8 +590,7 @@ class Command(BaseCommand):
             "tipo_entrega": tipo_entrega,
             "notas": f"{marcador} Pedido de demostración del mercado de Riohacha.",
             "items": [
-                {"id_producto": productos[idx], "cantidad": cantidad}
-                for idx, cantidad in items
+                {"id_producto": productos[idx], "cantidad": cantidad} for idx, cantidad in items
             ],
         }
         if tipo_entrega == Pedido.TipoEntrega.DOMICILIO:
@@ -613,9 +612,7 @@ class Command(BaseCommand):
                 )
                 if pago_aprobado:
                     if metodo == Pago.MetodoPago.EFECTIVO:
-                        pagos_services.confirmar_efectivo(
-                            pago=pago, usuario=vendedor, datos={}
-                        )
+                        pagos_services.confirmar_efectivo(pago=pago, usuario=vendedor, datos={})
                     else:
                         pagos_services.simular_pago(
                             pago=pago, usuario=comprador, datos={"accion": "aprobar"}
