@@ -30,6 +30,8 @@ ignore = [
 "apps/*/models.py" = ["RUF012"]
 "apps/**/views.py" = ["RUF012"]
 "apps/accounts/verificacion_views.py" = ["RUF012"]
+# Tablas de datos del seed: las tuplas largas se leen mejor en una línea.
+"apps/common/management/commands/seed_masivo.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["apps", "config"]
