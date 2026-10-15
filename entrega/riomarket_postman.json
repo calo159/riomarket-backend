@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "RioMarket API",
+    "description": "Flujo de prueba de la entrega (login, catálogo, pedido, pago, transiciones).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "token", "value": "" },
+    { "key": "token_vendedor", "value": "" },
+    { "key": "id_pedido", "value": "1" },
+    { "key": "id_pago", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/health/", "host": ["{{base_url}}"], "path": ["api", "health", ""] }
+      }
+    },
+    {
+      "name": "2. Login comprador",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"luis@riomarket.test\",\n  \"password\": \"RioMarket2026!\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login/", "host": ["{{base_url}}"], "path": ["api", "auth", "login", ""] }
+      }
+    },
+    {
+      "name": "3. Login vendedor",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"carmen@riomarket.test\",\n  \"password\": \"RioMarket2026!\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login/", "host": ["{{base_url}}"], "path": ["api", "auth", "login", ""] }
+      }
+    },
+    {
+      "name": "4. Listar productos",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{base_url}}/api/catalog/productos/", "host": ["{{base_url}}"], "path": ["api", "catalog", "productos", ""] }
+      }
+    },
+    {
+      "name": "5. Crear pedido",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"id_puesto\": 1,\n  \"tipo_entrega\": \"retiro\",\n  \"items\": [{\"id_producto\": 1, \"cantidad\": 1}]\n}" },
+        "url": { "raw": "{{base_url}}/api/orders/pedidos/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", ""] }
+      }
+    },
+    {
+      "name": "6. Registrar pago",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"pedido\": {{id_pedido}},\n  \"metodo_pago\": \"simulado\"\n}" },
+        "url": { "raw": "{{base_url}}/api/payments/pagos/", "host": ["{{base_url}}"], "path": ["api", "payments", "pagos", ""] }
+      }
+    },
+    {
+      "name": "7. Aprobar pago (sandbox)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"accion\": \"aprobar\"\n}" },
+        "url": { "raw": "{{base_url}}/api/payments/pagos/{{id_pago}}/simular/", "host": ["{{base_url}}"], "path": ["api", "payments", "pagos", "{{id_pago}}", "simular", ""] }
+      }
+    },
+    {
+      "name": "8. Confirmar pedido",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token_vendedor}}" }],
+        "url": { "raw": "{{base_url}}/api/orders/pedidos/{{id_pedido}}/confirmar/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", "{{id_pedido}}", "confirmar", ""] }
+      }
+    },
+    {
+      "name": "9. En preparación",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token_vendedor}}" }],
+        "url": { "raw": "{{base_url}}/api/orders/pedidos/{{id_pedido}}/en-preparacion/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", "{{id_pedido}}", "en-preparacion", ""] }
+      }
+    },
+    {
+      "name": "10. Enviar",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token_vendedor}}" }],
+        "url": { "raw": "{{base_url}}/api/orders/pedidos/{{id_pedido}}/enviar/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", "{{id_pedido}}", "enviar", ""] }
+      }
+    },
+    {
+      "name": "11. Entregar",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token_vendedor}}" }],
+        "url": { "raw": "{{base_url}}/api/orders/pedidos/{{id_pedido}}/entregar/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", "{{id_pedido}}", "entregar", ""] }
+      }
+    }
+  ]
+}
