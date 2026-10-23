@@ -2,7 +2,7 @@
 
 API REST del marketplace para los puestos de mercado de Riohacha (Colombia):
 catálogo, pedidos, pagos, verificación de identidad, reseñas y
-notificaciones. **Este repositorio es solo el backend.**
+notificaciones. **Incluye la API REST (Django) y la SPA del frontend (React).**
 
 [![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/django-5.1-092E20)](https://www.djangoproject.com/)
@@ -17,6 +17,7 @@ notificaciones. **Este repositorio es solo el backend.**
 - [Arquitectura](#arquitectura)
 - [Flujo de un pedido](#flujo-de-un-pedido)
 - [Inicio rápido](#inicio-rápido)
+- [Frontend](#frontend)
 - [Configuración](#configuración)
 - [Uso de la API](#uso-de-la-api)
 - [Referencia de endpoints](#referencia-de-endpoints)
@@ -40,8 +41,8 @@ Resuelve la publicación de productos, el pedido a un solo puesto, el pago
 (verificación de identidad y reseñas).
 
 Hay tres roles: **comprador**, **vendedor** y **administrador**. Este repo
-expone únicamente la API REST; un frontend (web/móvil) consume los endpoints de
-`/api/`.
+incluye la API REST y una SPA en [`frontend/`](frontend/README.md) (React +
+Vite + TypeScript) que consume los endpoints de `/api/`.
 
 ## Funcionalidades
 
@@ -188,6 +189,40 @@ python manage.py migrate
 python manage.py seed_demo
 python manage.py runserver
 ```
+
+## Frontend
+
+La SPA vive en [`frontend/`](frontend/README.md) y cubre los flujos de
+comprador, vendedor y administrador. Con el backend local en marcha:
+
+```bash
+cd frontend
+npm ci
+cp .env.example .env    # Windows: copy .env.example .env
+npm run dev
+```
+
+Abre <http://127.0.0.1:3000>. El login incluye acceso rápido con las cuentas de
+demostración si `VITE_DEMO_MODE=true` (contraseña `RioMarket2026!`):
+
+| Rol | Correo |
+| --- | --- |
+| Administrador | `admin@riomarket.test` |
+| Vendedor | `carmen@riomarket.test` |
+| Comprador | `luis@riomarket.test` |
+
+Comandos de calidad del frontend:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+La SPA no sustituye la autorización del backend: las rutas y acciones se
+ocultan según el rol, pero la API valida permisos en cada petición. Revisa las
+limitaciones conocidas en el [README del frontend](frontend/README.md).
 
 ## Configuración
 
@@ -490,8 +525,9 @@ riomarket-backend/
 │   ├── asgi.py
 │   └── wsgi.py
 ├── docs/                # ADRs y documentación extendida
+├── frontend/            # SPA React + Vite + TypeScript
 ├── tests/               # factories compartidas y smoke tests
-├── .github/workflows/   # CI (ruff, makemigrations, pytest, OpenAPI)
+├── .github/workflows/   # CI (backend y frontend)
 ├── conftest.py
 ├── docker-compose.yml
 ├── Dockerfile
@@ -559,8 +595,12 @@ pytest --cov=apps --cov-report=term-missing                # cobertura
   (p. ej. verificar `CheckConstraint` específicos) exporta `TEST_DATABASE_URL`.
 - Cubren models/constraints, services (reglas de negocio), permisos,
   endpoints y el comando `seed_demo`.
-- CI (`.github/workflows/ci.yml`) corre en cada push/PR: `ruff`,
-  `makemigrations --check`, `pytest` y validación del esquema OpenAPI.
+- CI (`.github/workflows/ci.yml`) corre en cada push/PR: backend (`ruff`,
+  `makemigrations --check`, `pytest`, validación OpenAPI) y frontend (`lint`,
+  `typecheck`, tests con Vitest y build).
+- Frontend: `cd frontend && npm ci && npm test` para unitarios y
+  `npm run test:e2e` para el smoke de Playwright. Ver
+  [`frontend/README.md`](frontend/README.md).
 
 ## Despliegue y limitaciones conocidas
 

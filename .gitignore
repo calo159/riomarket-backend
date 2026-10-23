@@ -44,3 +44,7 @@ htmlcov/
 .idea/
 .vscode/
 *.log
+
+# frontend/src/lib es código fuente, no un directorio de build de Python
+!frontend/src/lib/
+!frontend/src/lib/**

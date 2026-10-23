@@ -1,0 +1,52 @@
+import { api } from '../lib/http';
+import type { Paginado, Pedido } from '../lib/types';
+
+export interface FiltrosPedido {
+  estado?: string;
+  tipo_entrega?: string;
+  puesto?: number | string;
+  ordering?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface DatosPedido {
+  id_puesto: number;
+  tipo_entrega: 'retiro' | 'domicilio';
+  direccion_entrega?: string;
+  referencia_entrega?: string;
+  id_direccion?: number | null;
+  notas?: string;
+  items: { id_producto: number; cantidad: number }[];
+  codigo_cupon?: string;
+}
+
+export async function listarPedidos(filtros: FiltrosPedido = {}): Promise<Paginado<Pedido>> {
+  const { data } = await api.get<Paginado<Pedido>>('/orders/pedidos/', { params: filtros });
+  return data;
+}
+
+export async function obtenerPedido(id: number | string): Promise<Pedido> {
+  const { data } = await api.get<Pedido>(`/orders/pedidos/${id}/`);
+  return data;
+}
+
+export async function crearPedido(datos: DatosPedido): Promise<Pedido> {
+  const { data } = await api.post<Pedido>('/orders/pedidos/', datos);
+  return data;
+}
+
+export async function actualizarPedido(
+  id: number,
+  datos: Partial<Pick<Pedido, 'direccion_entrega' | 'referencia_entrega' | 'notas'>>,
+): Promise<Pedido> {
+  const { data } = await api.patch<Pedido>(`/orders/pedidos/${id}/`, datos);
+  return data;
+}
+
+export type AccionPedido = 'confirmar' | 'en-preparacion' | 'enviar' | 'entregar' | 'cancelar';
+
+export async function ejecutarAccionPedido(id: number, accion: AccionPedido): Promise<Pedido> {
+  const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/${accion}/`, {});
+  return data;
+}
