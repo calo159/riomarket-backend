@@ -193,7 +193,10 @@ python manage.py runserver
 ## Frontend
 
 La SPA vive en [`frontend/`](frontend/README.md) y cubre los flujos de
-comprador, vendedor y administrador. Con el backend local en marcha:
+comprador, vendedor y administrador. Las fases 1–7 del encargo están completas;
+el detalle de cumplimiento, comandos y resultados de las pruebas está en el
+[README del frontend](frontend/README.md#estado-de-cumplimiento). Con el backend
+local en marcha:
 
 ```bash
 cd frontend

@@ -41,8 +41,8 @@ single-stall ordering, payment (cash or gateway), home delivery and trust
 between the parties (identity verification and reviews).
 
 There are three roles: **buyer**, **seller** and **administrator**. This repo
-exposes only the REST API; a frontend (web/mobile) consumes the endpoints under
-`/api/`.
+includes the REST API and a React + Vite + TypeScript SPA in
+[`frontend/`](frontend/README.md) that consumes the endpoints under `/api/`.
 
 ## Features
 
@@ -645,7 +645,8 @@ Other limitations / findings:
   and real SMTP (see [Deployment](#deployment-and-known-limitations))
 - ⬜ **Phase 8** — a real payment gateway replacing `PasarelaSandbox` and a
   signed webhook with `PAYMENTS_WEBHOOK_SECRET`
-- ⬜ **Phase 9** — a web/mobile frontend consuming `/api/`
+- ✅ **Phase 9** — React + Vite + TypeScript SPA in `frontend/` consuming `/api/`
+  (see the [frontend README](frontend/README.md#estado-de-cumplimiento))
 - ⬜ **Phase 10** — hardening: audit retention/archiving, `LICENSE` and a
   coverage badge in CI
 

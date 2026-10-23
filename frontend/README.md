@@ -13,6 +13,31 @@ Consume la API REST del backend Django/DRF de este repositorio.
 - Tailwind CSS
 - Vitest + Testing Library y Playwright
 
+## Estado de cumplimiento
+
+El encargo original está en [`PROMPT.md`](./PROMPT.md). Todas las fases están
+implementadas:
+
+| Fase | Alcance | Estado |
+| --- | --- | --- |
+| 1 | Base: Vite, Tailwind, scripts, HTTP con refresh compartido, sesión, RBAC y layouts | ✅ |
+| 2 | Login, registro comprador/vendedor, redirección por rol, logout y sincronización entre pestañas | ✅ |
+| 3 | Inicio, catálogo con filtros/orden/paginación, producto, puesto y carrito persistente de un solo puesto | ✅ |
+| 4 | Checkout, pedidos, pagos, direcciones, notificaciones, perfil y reseñas | ✅ |
+| 5 | Dashboard, verificación, puestos, productos, pedidos, cupones y reseñas del vendedor | ✅ |
+| 6 | Métricas, verificaciones, pagos, cupones, auditoría y pedidos del administrador | ✅ |
+| 7 | Modo demo, `React.lazy`, tests de interceptores y guards, smoke E2E, CI y documentación | ✅ |
+
+Verificación local (última ejecución):
+
+```text
+npm run lint       ✅ sin errores ni warnings
+npm run typecheck  ✅ sin errores
+npm test           ✅ 2 archivos, 7 tests
+npm run build      ✅ build de producción
+npm run test:e2e   ✅ 2 smoke tests de Playwright
+```
+
 ## Requisitos
 
 - Node.js 20+
@@ -116,7 +141,8 @@ credenciales de comprador, vendedor y administrador.
 
 1. El comprador arma el carrito. Un carrito solo admite productos de un puesto.
 2. En el checkout elige retiro o domicilio, una dirección guardada o una
-   dirección manual, notas y un cupón opcional.
+   dirección manual (se puede guardar en la libreta sin salir del checkout),
+   notas y un cupón opcional.
 3. Al crear el pedido se abre el detalle para registrar el pago.
 4. El vendedor confirma el pedido (el backend exige un pago aprobado), lo pasa
    a preparación, lo envía y lo entrega.
@@ -162,8 +188,9 @@ frontend/
   el directorio de puestos, pero no suspenderlos desde el frontend.
 - El pago sandbox solo funciona si backend y frontend tienen habilitado el
   sandbox.
-- Una dirección escrita manualmente en el checkout se guarda en el pedido, pero
-  no en la libreta de direcciones. Para reutilizarla, créala en `/direcciones`.
+- Una dirección escrita manualmente en el checkout solo pasa a la libreta si
+  marcas «Guardar esta dirección en mi libreta»; de lo contrario queda únicamente
+  como snapshot del pedido.
 - Las notificaciones por correo dependen de la configuración SMTP del backend.
 - El bundle se divide por ruta; algunas rutas del panel cargan varios
   componentes y Vite puede avisar del tamaño de algún chunk.

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bike,
   CheckCircle2,
@@ -19,7 +19,7 @@ import { formatearMoneda } from '../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { crearPedido, type DatosPedido } from '../api/orders';
 import { validarCupon } from '../api/coupons';
-import { listarDirecciones } from '../api/addresses';
+import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
 
@@ -30,12 +30,15 @@ export function Checkout() {
   const { usuario } = useSession();
   const navigate = useNavigate();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const [tipoEntrega, setTipoEntrega] = useState<'retiro' | 'domicilio'>('retiro');
   const [modoDireccion, setModoDireccion] = useState<'guardada' | 'manual'>('manual');
   const [direccionId, setDireccionId] = useState<number | null>(null);
   const [direccion, setDireccion] = useState('');
   const [referencia, setReferencia] = useState('');
+  const [alias, setAlias] = useState('');
+  const [guardarEnLibreta, setGuardarEnLibreta] = useState(false);
   const [notas, setNotas] = useState('');
   const [codigoCupon, setCodigoCupon] = useState('');
   const [cupon, setCupon] = useState<RespuestaValidarCupon | null>(null);
@@ -92,9 +95,22 @@ export function Checkout() {
   });
 
   const crear = useMutation({
-    mutationFn: (datos: DatosPedido) => crearPedido(datos),
+    mutationFn: async (datos: DatosPedido) => {
+      let idDireccion = datos.id_direccion;
+      if (datos.tipo_entrega === 'domicilio' && modoDireccion === 'manual' && guardarEnLibreta) {
+        const nueva = await crearDireccion({
+          alias: alias.trim(),
+          direccion: (datos.direccion_entrega ?? '').trim(),
+          referencia: datos.referencia_entrega,
+          es_predeterminada: (direcciones.data?.length ?? 0) === 0,
+        });
+        idDireccion = nueva.id;
+      }
+      return crearPedido({ ...datos, id_direccion: idDireccion });
+    },
     onSuccess: (pedido) => {
       vaciar();
+      if (guardarEnLibreta) void queryClient.invalidateQueries({ queryKey: ['direcciones'] });
       toast.exito('¡Pedido creado! Ahora puedes registrar el pago.');
       navigate(`/pedidos/${pedido.id}?nuevo=1`);
     },
@@ -138,6 +154,7 @@ export function Checkout() {
     const nuevos: Record<string, string> = {};
     if (tipoEntrega === 'domicilio') {
       if (modoDireccion === 'manual' && !direccion.trim()) nuevos.direccion_entrega = 'Escribe la dirección de entrega.';
+      if (modoDireccion === 'manual' && guardarEnLibreta && !alias.trim()) nuevos.alias = 'Ponle un nombre a la dirección guardada.';
       if (modoDireccion === 'guardada' && !direccionId) nuevos.direccion_entrega = 'Selecciona una dirección.';
     }
     if (Object.keys(nuevos).length) {
@@ -283,6 +300,34 @@ export function Checkout() {
                     ¿Usas esta dirección seguido? Guárdala en{' '}
                     <Link to="/direcciones" className="link">tus direcciones</Link>.
                   </p>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded text-brand-600"
+                      checked={guardarEnLibreta}
+                      onChange={(evento) => {
+                        setGuardarEnLibreta(evento.target.checked);
+                        setErrores((valor) => {
+                          if (evento.target.checked) return valor;
+                          const resto = { ...valor };
+                          delete resto.alias;
+                          return resto;
+                        });
+                      }}
+                    />
+                    Guardar esta dirección en mi libreta
+                  </label>
+                  {guardarEnLibreta && (
+                    <Campo etiqueta="Nombre corto" htmlFor="alias" error={errores.alias} ayuda="Ej. Casa, Trabajo, Casa de mamá.">
+                      <input
+                        id="alias"
+                        className="input"
+                        placeholder="Casa"
+                        value={alias}
+                        onChange={(evento) => setAlias(evento.target.value)}
+                      />
+                    </Campo>
+                  )}
                 </div>
               )}
             </section>
