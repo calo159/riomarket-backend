@@ -13,7 +13,8 @@ Todo está automatizado en `render.yaml`:
 1. **Subir el repo a GitHub** (rama `main`).
 2. En https://dashboard.render.com → **New → Blueprint** → conectar el repo →
    **Apply**. No hay que escribir ninguna variable.
-3. Esperar el deploy y abrir la URL `https://riomarket.onrender.com`.
+3. Esperar el deploy y abrir la URL que muestre Render (por defecto
+   `https://riomarket.onrender.com`; puede cambiar si el nombre está ocupado).
 
 Usuario demo: `admin@riomarket.test` / `RioMarket2026!`
 (también `carmen@`, `diego@`, `luis@riomarket.test` con la misma clave).

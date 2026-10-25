@@ -1,15 +1,17 @@
 {
   "info": {
     "name": "RioMarket API",
-    "description": "Flujo de prueba de la entrega (login, catálogo, pedido, pago, transiciones).",
+    "description": "Flujo de prueba de la entrega (login, catálogo, pedido, pago en efectivo y transiciones). Ejecuta las solicitudes en orden; los scripts guardan tokens e IDs en variables de colección.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:8000" },
     { "key": "token", "value": "" },
     { "key": "token_vendedor", "value": "" },
-    { "key": "id_pedido", "value": "1" },
-    { "key": "id_pago", "value": "1" }
+    { "key": "id_puesto", "value": "1" },
+    { "key": "id_producto", "value": "1" },
+    { "key": "id_pedido", "value": "" },
+    { "key": "id_pago", "value": "" }
   ],
   "item": [
     {
@@ -21,6 +23,18 @@
     },
     {
       "name": "2. Login comprador",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('token', data.access);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -30,6 +44,18 @@
     },
     {
       "name": "3. Login vendedor",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('token_vendedor', data.access);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -38,47 +64,84 @@
       }
     },
     {
-      "name": "4. Listar productos",
+      "name": "4. Listar productos del puesto 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const producto = pm.response.json().results[0];",
+              "pm.collectionVariables.set('id_puesto', producto.id_puesto);",
+              "pm.collectionVariables.set('id_producto', producto.id);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-        "url": { "raw": "{{base_url}}/api/catalog/productos/", "host": ["{{base_url}}"], "path": ["api", "catalog", "productos", ""] }
+        "url": { "raw": "{{base_url}}/api/catalog/productos/?puesto=1&page_size=1", "host": ["{{base_url}}"], "path": ["api", "catalog", "productos", ""], "query": [{ "key": "puesto", "value": "1" }, { "key": "page_size", "value": "1" }] }
       }
     },
     {
       "name": "5. Crear pedido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('id_pedido', data.id);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
           { "key": "Authorization", "value": "Bearer {{token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode": "raw", "raw": "{\n  \"id_puesto\": 1,\n  \"tipo_entrega\": \"retiro\",\n  \"items\": [{\"id_producto\": 1, \"cantidad\": 1}]\n}" },
+        "body": { "mode": "raw", "raw": "{\n  \"id_puesto\": {{id_puesto}},\n  \"tipo_entrega\": \"retiro\",\n  \"items\": [{\"id_producto\": {{id_producto}}, \"cantidad\": 1}]\n}" },
         "url": { "raw": "{{base_url}}/api/orders/pedidos/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", ""] }
       }
     },
     {
-      "name": "6. Registrar pago",
+      "name": "6. Registrar pago en efectivo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('id_pago', data.id);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
           { "key": "Authorization", "value": "Bearer {{token}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode": "raw", "raw": "{\n  \"pedido\": {{id_pedido}},\n  \"metodo_pago\": \"simulado\"\n}" },
+        "body": { "mode": "raw", "raw": "{\n  \"pedido\": {{id_pedido}},\n  \"metodo_pago\": \"efectivo\"\n}" },
         "url": { "raw": "{{base_url}}/api/payments/pagos/", "host": ["{{base_url}}"], "path": ["api", "payments", "pagos", ""] }
       }
     },
     {
-      "name": "7. Aprobar pago (sandbox)",
+      "name": "7. Confirmar cobro en efectivo (vendedor)",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Authorization", "value": "Bearer {{token_vendedor}}" },
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "body": { "mode": "raw", "raw": "{\n  \"accion\": \"aprobar\"\n}" },
-        "url": { "raw": "{{base_url}}/api/payments/pagos/{{id_pago}}/simular/", "host": ["{{base_url}}"], "path": ["api", "payments", "pagos", "{{id_pago}}", "simular", ""] }
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{base_url}}/api/payments/pagos/{{id_pago}}/confirmar-efectivo/", "host": ["{{base_url}}"], "path": ["api", "payments", "pagos", "{{id_pago}}", "confirmar-efectivo", ""] }
       }
     },
     {

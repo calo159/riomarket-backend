@@ -1,106 +1,113 @@
 # RioMarket
 
-Marketplace local para los puestos de mercado de Riohacha (Colombia). Este
-repositorio incluye la **API REST** en Django/DRF y la **SPA** en React/Vite que
-la consume: catálogo, pedidos, pagos, verificación de vendedores, reseñas,
-cupones, notificaciones y auditoría.
+Marketplace local para los puestos de mercado de Riohacha (Colombia). Incluye la **API REST** en Django/DRF y la **SPA** en React/Vite: catálogo, pedidos, pagos, verificación de vendedores, reseñas, cupones, notificaciones y auditoría.
 
-[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/)
-[![DRF](https://img.shields.io/badge/DRF-3.18-red)](https://www.django-rest-framework.org/)
-[![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/)
-[![CI](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/) [![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/DRF-3.18-red)](https://www.django-rest-framework.org/) [![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/) [![CI](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml)
+
+> **Demo:** <https://riomarket.onrender.com> (URL por defecto del Blueprint; puede variar). El plan gratuito de Render duerme el servicio tras unos minutos sin tráfico: la primera visita puede tardar cerca de un minuto en responder.
 
 ## Contenido
 
-- [Qué resuelve](#qué-resuelve)
-- [Stack](#stack)
-- [Arquitectura](#arquitectura)
-- [Flujo de un pedido](#flujo-de-un-pedido)
-- [Inicio rápido](#inicio-rápido)
-- [Usuarios demo](#usuarios-demo)
-- [Autenticación](#autenticación)
-- [Pruebas](#pruebas)
-- [Despliegue en Render](#despliegue-en-render)
-- [Documentación](#documentación)
-- [Limitaciones y seguridad](#limitaciones-y-seguridad)
+- [Qué es](#qué-es-riomarket) · [Funcionalidades](#funcionalidades-y-estado) · [Arquitectura](#arquitectura) · [Stack](#stack) · [Inicio](#inicio-rápido) · [Datos](#datos-demo)
+- [Configuración](#configuración) · [Autenticación](#autenticación-y-roles) · [API](#api) · [Frontend](#frontend) · [Pruebas](#pruebas)
+- [Despliegue](#despliegue-en-render) · [Seguridad](#seguridad-y-limitaciones) · [Estructura](#estructura) · [Documentación](#documentación) · [Problemas](#solución-de-problemas) · [Roadmap](#roadmap) · [Contribuir y licencia](#contribuir-licencia-y-autores)
 
-## Qué resuelve
+## Qué es RioMarket
 
-RioMarket conecta a vendedores de puestos de mercado con compradores locales sin
-obligarlos a montar una tienda propia. Cubre publicación de productos, pedido a
-un solo puesto, pago en efectivo o sandbox, domicilio, verificación de identidad,
-reputación y cupones.
+RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a montar una tienda propia. Un pedido pertenece a **un solo puesto**; el servidor calcula los montos, congela los precios y descuenta el stock de forma transaccional. Los roles son **comprador**, **vendedor** y **administrador**: el vendedor debe estar verificado para publicar y el comprador solo puede reseñar pedidos entregados.
 
-Roles: **comprador**, **vendedor** y **administrador**. El vendedor debe estar
-verificado para publicar; el comprador puede guardar direcciones y reseñar solo
-pedidos entregados.
+## Funcionalidades y estado
+
+| Área | Estado | Detalle |
+| --- | --- | --- |
+| Sesión | Listo | JWT de acceso en memoria + refresh en cookie HttpOnly |
+| Catálogo y compra | Listo | Puestos, categorías, productos, imágenes, filtros, carrito y checkout |
+| Pedidos | Listo | Un puesto por pedido, estados, stock transaccional y cancelación |
+| Pagos | Listo (sandbox) | Efectivo confirmado por el vendedor y simulación; sin pasarela real |
+| Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
+| Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
+| Paneles | Listo | Comprador, vendedor y administrador en una sola SPA |
+| Usuarios y pasarela | No incluido | Sin CRUD de usuarios, cambio de clave ni pago real |
+
+## Arquitectura
+
+En desarrollo, Vite sirve la SPA en el puerto 3000 y hace proxy de `/api` y `/media` hacia Django (puerto 8000). En producción, Django con WhiteNoise sirve el build de la SPA y mantiene la API bajo `/api`, de modo que todo vive en el mismo origen.
+
+```mermaid
+flowchart LR
+    N[Navegador] -->|HTTPS| D[Django + gunicorn]
+    D -->|frontend/dist| SPA[React SPA]
+    SPA -->|fetch /api| D
+    D --> DB[(PostgreSQL)]
+    D --> MEDIA[(media efímera)]
+    D --> PRIV[(media_privado)]
+```
+
+`accounts` es la base; `catalog` depende de ella; `orders` y `payments` dependen de ambas; `common` es transversal; `addresses`, `notifications`, `reviews`, `promotions` y `audit` se apoyan en las anteriores. Cada app separa `models / serializers / services / views / urls / tests`, y las reglas de negocio viven en `services.py`.
+
+### Flujo de un pedido
+
+```mermaid
+stateDiagram-v2
+    [*] --> pendiente
+    pendiente --> confirmado: pago aprobado
+    pendiente --> cancelado
+    confirmado --> en_preparacion
+    confirmado --> cancelado
+    en_preparacion --> en_camino
+    en_preparacion --> cancelado
+    en_camino --> entregado
+    entregado --> [*]
+    cancelado --> [*]
+```
+
+El vendedor confirma y avanza la preparación; el comprador o el vendedor pueden cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
 
 ## Stack
 
 | Capa | Tecnología |
 | --- | --- |
-| Backend | Python 3.12, Django 5.2, Django REST Framework 3.18, SimpleJWT |
-| Base de datos | PostgreSQL 16 (Supabase/Render); SQLite en memoria para tests |
-| Frontend | React 18, TypeScript, Vite 5, React Router 6, TanStack Query, Tailwind |
+| Backend | Python 3.12, Django 5.2, DRF 3.18, SimpleJWT, drf-spectacular |
+| Datos | PostgreSQL 16 (Render o Supabase); SQLite en memoria para las pruebas |
+| Frontend | React 18, TypeScript estricto, Vite 5, React Router 6, TanStack Query, Tailwind |
 | Calidad | pytest, ruff, Vitest, Testing Library, Playwright, ESLint, GitHub Actions |
-| Despliegue | Docker, Docker Compose (desarrollo) y Render (producción demo) |
-
-## Arquitectura
-
-`accounts` es la base; `catalog` depende de ella; `orders` y `payments` cuelgan de
-ambas; `common` es transversal. `addresses`, `notifications`, `reviews`,
-`promotions` y `audit` se apoyan en las anteriores.
-
-```mermaid
-flowchart LR
-    common[(common)]
-    accounts --> catalog --> orders --> payments
-    accounts --> addresses
-    orders --> notifications
-    catalog --> reviews
-    catalog --> promotions
-    orders --> audit
-    payments --> audit
-```
-
-Cada app sigue `models / serializers / services / views / urls / tests`, con las
-reglas de negocio en `services.py`. El ERD, las dependencias y la matriz de
-permisos están en [`docs/arquitectura.md`](docs/arquitectura.md).
-
-## Flujo de un pedido
-
-El pedido nace `pendiente` y avanza con transiciones asignadas por rol. La
-transición a `confirmado` exige un pago aprobado.
-
-```text
-pendiente -> confirmado -> en_preparacion -> en_camino -> entregado
-     \___________ cancelado (repone stock una sola vez) ___________/
-```
-
-Un pedido agrupa productos de un solo puesto, congela nombre y precio en los
-ítems y descuenta stock con `select_for_update`. Los montos se calculan en el
-servidor desde `apps/common/pricing.py`; la comisión se descuenta al vendedor y
-el comprador paga `subtotal + domicilio - descuento`.
+| Entrega | Docker Compose para desarrollo; Render para la demo |
 
 ## Inicio rápido
 
-### Con Docker (desarrollo)
+Requisitos: Python 3.12, Node.js 20+ y PostgreSQL 16 (o Docker). El repositorio incluye un `.env` para la demo; haz una copia antes de reemplazarlo.
 
-Requiere Docker y Docker Compose. Levanta PostgreSQL 16, Redis 7 y el backend
-con `runserver`.
+### 1. Backend
+
+**Con Docker:**
 
 ```bash
 git clone https://github.com/calo159/riomarket-backend.git
 cd riomarket-backend
-cp .env.example .env          # Windows: copy .env.example .env
 docker compose up --build -d
 docker compose exec web python manage.py migrate
 docker compose exec web python manage.py seed_masivo
 ```
 
-El frontend se levanta aparte en <http://127.0.0.1:3000>:
+**Sin Docker:**
+
+```bash
+git clone https://github.com/calo159/riomarket-backend.git
+cd riomarket-backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1    # Windows PowerShell
+source .venv/bin/activate     # Linux/macOS (usa solo la línea de tu sistema)
+pip install -r requirements-dev.txt
+python manage.py migrate
+python manage.py seed_masivo
+python manage.py runserver
+```
+
+El `.env` incluido apunta a la base de la demo; si prefieres otra base, haz una copia del archivo y cambia `DATABASE_URL`. El backend queda en <http://127.0.0.1:8000>: salud en `/api/health/`, Swagger en `/api/docs/`, Redoc en `/api/docs/redoc/`, esquema en `/api/schema/` y administración en `/admin/`.
+
+### 2. Frontend (otra terminal)
 
 ```bash
 cd frontend
@@ -109,35 +116,13 @@ cp .env.example .env          # Windows: copy .env.example .env
 npm run dev
 ```
 
-### Local sin Docker
+### 3. Abrir la aplicación
 
-Necesitas Python 3.12 y una base PostgreSQL accesible en `DATABASE_URL`; el
-`.env` incluido apunta a Supabase. Para una base local, ajusta esa variable.
+Entra a <http://127.0.0.1:3000> (usa `127.0.0.1`, no `localhost`: la cookie de sesión es `SameSite=Strict`) e inicia sesión con alguno de los usuarios de la sección siguiente.
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-copy .env.example .env
-python manage.py migrate
-python manage.py seed_masivo
-python manage.py runserver
-```
+## Datos demo
 
-En Linux/macOS cambia la activación por `source .venv/bin/activate` y `cp` por
-`copy`. El backend queda en <http://127.0.0.1:8000>.
-
-URLs útiles:
-
-- Health: <http://127.0.0.1:8000/api/health/>
-- Swagger: <http://127.0.0.1:8000/api/docs/>
-- Redoc: <http://127.0.0.1:8000/api/docs/redoc/>
-- Admin: <http://127.0.0.1:8000/admin/>
-
-## Usuarios demo
-
-Contraseña para todos: `RioMarket2026!` (se puede cambiar con
-`--password` o `SEED_DEMO_PASSWORD`).
+Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED_DEMO_PASSWORD`).
 
 | Rol | Correo |
 | --- | --- |
@@ -146,27 +131,77 @@ Contraseña para todos: `RioMarket2026!` (se puede cambiar con
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente, crea 15 usuarios y 522 registros de dominio en una
-base limpia. `seed_demo` sigue disponible para una carga mínima. En Render se
-ejecuta `seed_masivo --if-empty`: solo carga datos si la base tiene menos de 100
-registros.
+`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo --if-empty`, que siembra únicamente si hay menos de 100 registros.
 
-## Autenticación
+Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
-- El `access` JWT viaja en `Authorization: Bearer` y vive solo en memoria en la
-  SPA.
-- El `refresh` viaja en la cookie `rm_refresh` (`HttpOnly`, `SameSite=Strict`,
-  `Secure` fuera de desarrollo, `path=/api/auth/`). **No** se devuelve en el
-  cuerpo del login.
-- Renovar y cerrar sesión exigen la cabecera
-  `X-Requested-With: XMLHttpRequest`; el frontend la envía automáticamente.
-- El refresh rota y el anterior se blacklistea. Si falla, la SPA cierra sesión.
-- La autorización real siempre la valida el backend; el frontend solo oculta
-  rutas y acciones.
+### Prueba rápida (3 minutos)
 
-Detalle de endpoints y flujo `curl` en [`docs/api-ejemplos.md`](docs/api-ejemplos.md).
+1. Entra como **comprador** (`luis@riomarket.test`), busca un producto y agrégalo al carrito.
+2. Haz el checkout eligiendo retiro o domicilio y paga (efectivo o simulado).
+3. Entra como **vendedor** (`carmen@riomarket.test`), confirma el pago en efectivo y avanza el pedido: confirmado, en preparación, en camino.
+4. Vuelve como comprador, marca el pedido como entregado y deja una reseña.
+5. Entra como **administrador** (`admin@riomarket.test`) y revisa pedidos, pagos y auditoría.
+
+## Configuración
+
+`.env.example` documenta todas las variables; las principales son:
+
+| Variable | Uso | Demo |
+| --- | --- | --- |
+| `DEBUG` / `DJANGO_SETTINGS_MODULE` | Entorno activo | `True` / `config.settings.dev` |
+| `SECRET_KEY` / `FERNET_KEY` | Firma y cifrado; Fernet es obligatoria en producción | Valores de demo |
+| `ALLOWED_HOSTS` | Hosts permitidos | `localhost,127.0.0.1,web` |
+| `DATABASE_URL` / `CONN_MAX_AGE` | PostgreSQL y persistencia de conexiones | Supabase / `60` |
+| `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` | Orígenes de la SPA y HTTPS | Local / `https://*.onrender.com` |
+| `DOMICILIO_TARIFA_BASE` / `PLATFORM_COMMISSION_PERCENTAGE` | Tarifa de domicilio y comisión | `3000.00` / `5.00` |
+| `PAYMENTS_SANDBOX_ENABLED` / `SEED_DEMO` | Sandbox de pagos y seed en Render | `True` / `true` |
+
+Para producción genera las claves así:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"   # SECRET_KEY
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"                   # FERNET_KEY
+```
+
+## Autenticación y roles
+
+- El `access` JWT viaja en `Authorization: Bearer` y vive solo en memoria en la SPA. Dura 15 minutos por defecto.
+- El `refresh` viaja en la cookie `rm_refresh`: `HttpOnly`, `SameSite=Strict`, `Secure` fuera de desarrollo y `path=/api/auth/`. **No** se devuelve en el cuerpo del login.
+- Renovar y cerrar sesión exigen la cabecera `X-Requested-With: XMLHttpRequest`; el frontend la envía automáticamente. El refresh rota y el anterior queda en lista negra.
+- El login devuelve `{access, usuario}`. Si el refresh falla, la SPA limpia la sesión y redirige a `/login?expirada=1`.
+- **Comprador:** compra, direcciones y reseñas. **Vendedor:** catálogo propio, pedidos y cupones. **Administrador:** verificaciones, pagos, catálogo y auditoría.
+
+El flujo completo con `curl` y respuestas reales está en [`docs/api-ejemplos.md`](docs/api-ejemplos.md); la demo de 6 pasos, en [`entrega/flujo_prueba.curl.md`](entrega/flujo_prueba.curl.md).
+
+## API
+
+La API está documentada con OpenAPI (Swagger en `/api/docs/`). Módulos principales:
+
+| Módulo | Prefijo | Recursos |
+| --- | --- | --- |
+| Autenticación | `/api/auth/` | Registro, login, refresh, logout y perfil |
+| Catálogo | `/api/catalog/` | Categorías, puestos, productos e imágenes |
+| Pedidos y pagos | `/api/orders/` · `/api/payments/` | Estados, ítems, efectivo, sandbox y webhook |
+| Direcciones y verificación | `/api/addresses/` · `/api/verificacion/` | Libreta de direcciones y revisión de vendedores |
+| Reseñas y promociones | `/api/reviews/` · `/api/promotions/` | Reseñas, respuestas, cupones y su validación |
+| Notificaciones, auditoría y salud | `/api/notifications/` · `/api/audit/` · `/api/health/` | Bandeja, consulta para el administrador y estado del servicio |
+
+La paginación usa `page`, `page_size` (máximo 100) y `ordering` con listas blancas por módulo. Los errores tienen siempre la forma `{"success": false, "status_code": 400, "errors": {...}}`.
+
+## Frontend
+
+La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones están en [`frontend/README.md#estado-de-cumplimiento`](frontend/README.md#estado-de-cumplimiento). Los comandos de arranque están en [Inicio rápido](#2-frontend-otra-terminal).
+
+- **Comprador** (`/`): catálogo, carrito, checkout, pedidos, direcciones y perfil.
+- **Vendedor** (`/vendedor`): puestos, productos, pedidos, cupones, reseñas y verificación.
+- **Administrador** (`/admin`): verificaciones, pedidos, pagos, puestos, cupones y auditoría.
+
+Vite corre en `127.0.0.1:3000` y hace proxy de `/api` y `/media`. Si defines `VITE_API_URL`, usa el mismo host de la SPA para que la cookie `SameSite=Strict` siga siendo del mismo sitio. El acceso rápido con las cuentas demo del login se activa con `VITE_DEMO_MODE=true`.
 
 ## Pruebas
+
+Backend:
 
 ```bash
 pytest -q
@@ -176,74 +211,93 @@ python manage.py makemigrations --check --dry-run
 python manage.py spectacular --file schema.yaml --validate
 ```
 
-Resultado actual: **483 pruebas backend** en verde, sin migraciones pendientes y
-sin errores de esquema (queda un warning de nombres de `enum`). La suite usa
-SQLite en memoria y no toca la base de `.env`; para PostgreSQL real exporta
-`TEST_DATABASE_URL`.
+Resultado actual: **483 pruebas en verde**, lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
 
-Frontend:
+Frontend (`cd frontend`):
 
 ```bash
-cd frontend
-npm ci
 npm run lint
 npm run typecheck
 npm test
 npm run build
 ```
 
-Resultado actual: **10 pruebas** en 3 archivos, lint/typecheck/build en verde. El
-smoke E2E con Playwright se ejecuta con `npm run test:e2e` (requiere
-`npx playwright install chromium`).
+Resultado: **10 pruebas en 3 archivos**, con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
+
+Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` mantiene **12 avisos** (2 críticos, 2 altos y 8 moderados), principalmente en herramientas de desarrollo; el detalle está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
 
 ## Despliegue en Render
 
-`render.yaml` crea el servicio Docker y una base PostgreSQL free. El arranque
-(`scripts/render-start.sh`) ejecuta `collectstatic`, `migrate` y
-`seed_masivo --if-empty`; luego inicia gunicorn. El frontend se compila dentro de
-`Dockerfile.render` y WhiteNoise sirve los assets.
+`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
 
-Pasos: subir el repo a GitHub, crear un **Blueprint** en Render y aplicar. La URL
-queda como `https://riomarket.onrender.com`.
+1. Sube el repositorio a GitHub (rama `main`).
+2. En Render, elige **New → Blueprint** y conecta el repositorio.
+3. Confirma los recursos y espera a que termine el deploy.
+4. Verifica `/api/health/`, `/api/docs/` y `/`.
 
-Límites del plan free:
+La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.onrender.com`. Límites del plan gratuito: el servicio se duerme, la base **caduca a los 30 días** y el disco es efímero. Para una base duradera usa Supabase y reemplaza `DATABASE_URL`. Más detalles en [`docs/despliegue.md`](docs/despliegue.md).
 
-- El servicio se duerme tras 15 minutos sin tráfico.
-- La base free **caduca a los 30 días**.
-- El disco es efímero: las imágenes subidas se pierden en cada redeploy.
-- Sin Shell: los datos se cargan en el arranque.
+## Seguridad y limitaciones
 
-Para una base duradera, usa Supabase y reemplaza `DATABASE_URL` en Render. Los
-detalles y la rotación de secretos están en [`docs/despliegue.md`](docs/despliegue.md).
+- No hay pasarela de pago real: solo existe `PasarelaSandbox`. En producción real hay que desactivar `PAYMENTS_SANDBOX_ENABLED` e integrar un proveedor.
+- El correo es opcional y depende de SMTP; la demo usa solo avisos dentro de la aplicación.
+- No hay administración de usuarios ni cambio de contraseña.
+- `media/` y `media_privado/` usan disco local, que es efímero en Render. La foto de la cédula se cifra y se sirve solo por una vista autorizada.
+- Las imágenes y la cédula se validan por tipo y tamaño; los tokens y secretos no se registran en los logs.
+- **`.env` está versionado a propósito para la entrega** y contiene credenciales de la demo. El repositorio es público: cuando termine la calificación, rota la contraseña de la base o haz el repositorio privado.
+- No hay archivo `LICENSE`; el responsable debe elegir uno antes de reutilizar el código fuera del contexto académico.
+
+El detalle de los controles (JWT, cookies, CSP, cifrado con Fernet, límites de peticiones y permisos) está en [`SEGURIDAD.md`](SEGURIDAD.md).
+
+## Estructura
+
+```text
+riomarket-backend/
+├── apps/                  # accounts, catalog, orders, payments, addresses,
+│                          # notifications, reviews, promotions, audit, common
+├── config/                # settings dev/test/prod, URLs, WSGI y ASGI
+├── docs/                  # arquitectura, API, despliegue, ADRs y presentación
+├── entrega/               # guía, flujo curl, respaldos de datos y Postman
+├── frontend/              # SPA React/Vite, pruebas y configuración
+├── scripts/               # arranque en Render
+├── tests/                 # pruebas transversales y factories
+├── .github/workflows/     # CI de backend y frontend
+├── Dockerfile             # desarrollo (docker-compose)
+├── Dockerfile.render      # producción (compila la SPA y arranca gunicorn)
+├── docker-compose.yml     # PostgreSQL, Redis y backend
+├── render.yaml            # Blueprint de Render
+├── requirements.txt / requirements-dev.txt
+└── manage.py
+```
 
 ## Documentación
 
-- [Índice de documentación](docs/README.md)
-- [Arquitectura y matriz de permisos](docs/arquitectura.md)
-- [Ejemplos de API](docs/api-ejemplos.md)
-- [Despliegue](docs/despliegue.md)
-- [Alcance y decisiones del frontend](docs/alcance-frontend.md)
-- [Auditoría y mantenimiento](docs/MANTENIMIENTO.md)
-- [Seguridad](SEGURIDAD.md)
-- [Guion de presentación](docs/PRESENTACION.md)
-- ADRs: [enums](docs/ADR-001-enums.md), [media](docs/ADR-002-media-publica-y-privada.md),
-  [pagos](docs/ADR-003-pagos.md), [direcciones](docs/ADR-004-direcciones-y-notificaciones.md),
-  [reseñas](docs/ADR-005-reputacion-resenas.md), [cupones](docs/ADR-006-promociones-cupones.md),
-  [auditoría](docs/ADR-007-auditoria.md)
+- **Guías:** [Índice](docs/README.md) · [Arquitectura y permisos](docs/arquitectura.md) · [Ejemplos de la API](docs/api-ejemplos.md) · [Despliegue](docs/despliegue.md) · [Alcance del frontend](docs/alcance-frontend.md)
+- **Proyecto:** [Mantenimiento](docs/MANTENIMIENTO.md) · [Presentación](docs/PRESENTACION.md) · [Seguridad](SEGURIDAD.md)
+- **Entrega:** [Guía de entrega](entrega/LEEME_ENTREGA.md) · [Flujo curl](entrega/flujo_prueba.curl.md) · [Colección Postman](entrega/riomarket_postman.json)
+- **Decisiones (ADR):** [enums](docs/ADR-001-enums.md) · [media](docs/ADR-002-media-publica-y-privada.md) · [pagos](docs/ADR-003-pagos.md) · [direcciones](docs/ADR-004-direcciones-y-notificaciones.md) · [reseñas](docs/ADR-005-reputacion-resenas.md) · [cupones](docs/ADR-006-promociones-cupones.md) · [auditoría](docs/ADR-007-auditoria.md)
 
-## Limitaciones y seguridad
+## Solución de problemas
 
-- No hay pasarela de pago real: solo existe `PasarelaSandbox`; en producción debe
-  desactivarse `PAYMENTS_SANDBOX_ENABLED`.
-- El correo es opcional y depende de configurar SMTP; la demo funciona in-app.
-- No hay endpoint para administrar usuarios ni cambiar contraseña; el perfil
-  edita nombre, correo y celular.
-- `media/` y `media_privado/` usan disco local; en Render son efímeros. La foto
-  de cédula se sirve solo por una vista autorizada.
-- `.env` está versionado a propósito para la entrega y contiene credenciales de
-  Supabase. El repositorio es público: rota la contraseña o hazlo privado después
-  de entregar.
-- No hay archivo `LICENSE`; el dueño debe elegir una antes de publicarlo.
+- **`no such table` o migraciones pendientes:** ejecuta `migrate` y luego `seed_masivo`.
+- **`FERNET_KEY es obligatoria`:** define una clave Fernet cuando `DEBUG=False`; no actives `DEBUG` en producción.
+- **401 al renovar la sesión:** la cookie es `SameSite=Strict`; abre la SPA en `127.0.0.1:3000` y no mezcles `localhost` con `127.0.0.1`. Revisa también `CORS_ALLOWED_ORIGINS`.
+- **Render tarda en responder:** el plan gratuito durmió el servicio; la primera petición puede tardar cerca de un minuto.
+- **Las imágenes desaparecen en Render:** el disco es efímero; usa almacenamiento externo en producción.
+- **Playwright no arranca:** ejecuta `npx playwright install chromium`.
+- **Puerto 3000 ocupado:** Vite usa `strictPort`; libera el puerto o cierra la otra instancia.
 
-El detalle de controles (JWT, cookies, CSP, cifrado Fernet, throttling, permisos
-y validación de archivos) está en [`SEGURIDAD.md`](SEGURIDAD.md).
+## Roadmap
+
+- Integrar una pasarela de pago real con webhooks firmados y conciliación.
+- Añadir administración de usuarios y cambio de contraseña.
+- Enviar correos transaccionales y notificaciones en tiempo real.
+- Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol.
+
+## Contribuir, licencia y autores
+
+Crea una rama desde `main`, mantén los cambios pequeños, añade pruebas, ejecuta los comandos de la sección de pruebas y abre un pull request. No incluyas secretos reales en commits nuevos.
+
+**Licencia:** no hay `LICENSE`;
+
+**Autor:** [`carlos sierra , yerfrreth mejia`](https://github.com/calo159). 

@@ -53,8 +53,10 @@ al menos 100 registros de dominio.
 2. Autoriza Swagger con `Bearer <access>`; **lista productos** → `GET /api/catalog/productos/`. Anota el `id` de un producto y su `id_puesto`.
 3. **Crear pedido** → `POST /api/orders/pedidos/` con
    `{"id_puesto": <id_puesto>, "tipo_entrega": "retiro", "items":[{"id_producto": <id>, "cantidad": 1}]}`.
-4. **Registrar pago** → `POST /api/payments/pagos/` con `{"pedido": <id_pedido>, "metodo_pago": "simulado"}`.
-5. **Aprobar pago (sandbox)** → `POST /api/payments/pagos/{id}/simular/` con `{"accion":"aprobar"}`.
+4. **Registrar pago en efectivo** → `POST /api/payments/pagos/` con
+   `{"pedido": <id_pedido>, "metodo_pago": "efectivo"}`.
+5. **Confirmar el cobro (como vendedor `carmen`)** →
+   `POST /api/payments/pagos/{id}/confirmar-efectivo/` con `{}`.
 6. **Confirmar y entregar (como vendedor `carmen`)** → `POST /api/orders/pedidos/{id}/confirmar/`,
    luego `POST /api/orders/pedidos/{id}/en-preparacion/`, `.../enviar/`, `.../entregar/`.
 

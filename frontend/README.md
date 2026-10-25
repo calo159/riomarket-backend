@@ -13,7 +13,7 @@ Consume la API REST del backend Django/DRF de este repositorio.
 - Tailwind CSS
 - Vitest + Testing Library y Playwright
 
-## Estado
+## Estado de cumplimiento
 
 El alcance y las decisiones del encargo están en
 [`docs/alcance-frontend.md`](../docs/alcance-frontend.md). Las fases 1–7 están
@@ -44,14 +44,16 @@ copy .env.example .env   # Linux/macOS: cp .env.example .env
 npm run dev
 ```
 
-La app queda en <http://127.0.0.1:3000>. Si el backend usa otra URL, cambia
-`VITE_API_URL` en `.env` (sin `/api`).
+La app queda en <http://127.0.0.1:3000>. Por defecto usa el proxy de Vite (`/api`
+y `/media`) hacia el backend en el puerto 8000. Si el frontend se sirve desde
+otro origen, define `VITE_API_URL` en `.env` (sin `/api`); no mezcles
+`localhost` con `127.0.0.1`, porque la cookie de refresh es `SameSite=Strict`.
 
 ## Variables de entorno
 
 | Variable | Uso | Valor por defecto |
 | --- | --- | --- |
-| `VITE_API_URL` | URL base del backend, sin `/api` | `http://127.0.0.1:8000` |
+| `VITE_API_URL` | URL base opcional del backend, sin `/api` | vacío (mismo origen/proxy) |
 | `VITE_DEMO_MODE` | Muestra botones de acceso rápido en `/login` | `true` |
 | `VITE_SANDBOX_PAGOS` | Permite elegir el método de pago sandbox | `true` |
 | `VITE_TARIFA_DOMICILIO` | Tarifa usada en el estimado del checkout | `3000` |

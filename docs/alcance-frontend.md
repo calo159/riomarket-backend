@@ -35,7 +35,8 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 
 ### Fase 1: base
 - `frontend/` con Vite + React + TS + Tailwind. Scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`.
-- `.env` con `VITE_API_URL=http://127.0.0.1:8000`.
+- `.env` con `VITE_API_URL=` vacío para usar el proxy de Vite; se define solo si
+  el frontend se sirve desde otro origen.
 - Cliente HTTP (`src/lib/http.ts`) con interceptores, refresh compartido y logout.
 - `SessionProvider` con estados `cargando`, `anonimo`, `autenticado`; restaura la sesión al cargar usando refresh y `/auth/perfil/`.
 - `RutaProtegida` y matriz de permisos por rol en `src/auth/permisos.ts`.

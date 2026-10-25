@@ -1,101 +1,100 @@
 # RioMarket
 
-Local marketplace for the market stalls of Riohacha, Colombia. This repository
-contains the **Django/DRF REST API** and the **React/Vite SPA**: catalog, orders,
-payments, seller verification, reviews, coupons, notifications and audit logs.
+Local marketplace for the market stalls of Riohacha, Colombia. It contains the
+**Django/DRF REST API** and the **React/Vite SPA**: catalog, orders, payments,
+seller verification, reviews, coupons, notifications and audit logs.
+
+[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/) [![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/) [![DRF](https://img.shields.io/badge/DRF-3.18-red)](https://www.django-rest-framework.org/)
+[![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/)
+
+> Demo: <https://riomarket.onrender.com>. Default Blueprint URL; it may change and
+> the free service sleeps. No live deployment was verified from this environment.
+
+## Overview
+
+RioMarket connects stall vendors with local buyers. One order belongs to **one
+stall**; the server calculates totals and updates stock transactionally. Roles
+are buyer, seller and administrator; sellers must be verified to publish.
+Stack: Python 3.12, Django 5.2, DRF, SimpleJWT, PostgreSQL 16, React 18, strict
+TypeScript, Vite 5, TanStack Query, Tailwind, pytest, ruff and Vitest.
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Session | Ready | Access JWT in memory + refresh in an HttpOnly cookie |
+| Catalog and checkout | Ready | Stalls, products, filters, cart and checkout |
+| Orders and payments | Ready | States, transactional stock and sandbox payments |
+| Reviews and coupons | Ready | Delivered orders only; coupons scoped to a stall |
+| Panels | Ready | Buyer, seller and admin in one SPA |
+Not included: a real payment gateway, user administration and password changes.
 
 ## Quick start
 
+The repository includes a `.env` for the demo; back it up before replacing it.
+
 ```bash
-git clone https://github.com/calo159/riomarket-backend.git
-cd riomarket-backend
-cp .env.example .env          # Windows: copy .env.example .env
+# Docker
+docker compose up --build -d
+docker compose exec web sh -c "python manage.py migrate && python manage.py seed_masivo"
+cd frontend && npm ci && cp .env.example .env && npm run dev
+```
+
+```bash
+# Without Docker; activate the line for your OS
 python -m venv .venv
-source .venv/bin/activate     # Windows: .venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1    # Windows PowerShell
+source .venv/bin/activate     # Linux/macOS
 pip install -r requirements-dev.txt
 python manage.py migrate
 python manage.py seed_masivo
 python manage.py runserver
 ```
 
-The API is available at <http://127.0.0.1:8000>; Swagger is at `/api/docs/`.
-The SPA runs separately with `cd frontend`, `npm ci`, `cp .env.example .env`
-and `npm run dev`, then opens at <http://127.0.0.1:3000>.
+API: <http://127.0.0.1:8000>; SPA: <http://127.0.0.1:3000>; Swagger: `/api/docs/`; health: `/api/health/`.
 
-## Demo users
+## Demo data
 
-Password for all accounts: `RioMarket2026!`.
+Password for all demo accounts: `RioMarket2026!`.
 
 | Role | Email |
 | --- | --- |
 | Administrator | `admin@riomarket.test` |
-| Approved seller | `carmen@riomarket.test` |
-| Approved seller | `diego@riomarket.test` |
+| Approved sellers | `carmen@riomarket.test`, `diego@riomarket.test` |
 | Buyer | `luis@riomarket.test` |
 
-`seed_masivo` creates 15 users and 522 domain records on a clean database.
-`seed_demo` provides a minimal dataset. Render runs `seed_masivo --if-empty`, so
-it only seeds a database with fewer than 100 records.
+`seed_masivo` creates **15 users and 522 domain records** on a clean database; `seed_demo` creates **28 records**. Render runs `seed_masivo --if-empty`.
 
 ## Authentication
 
-- The short-lived **access** token is sent as `Authorization: Bearer` and kept
-  only in memory by the SPA.
-- The **refresh** token lives in the `rm_refresh` cookie: `HttpOnly`,
-  `SameSite=Strict`, `Secure` outside development, path `/api/auth/`. It is not
-  returned in the login response body.
-- Refresh and logout require `X-Requested-With: XMLHttpRequest`; tokens rotate
-  and the previous token is blacklisted.
-- The backend enforces authorization; the frontend only hides routes and actions.
+- The short-lived **access** JWT is sent as `Authorization: Bearer` and kept only in memory by the SPA.
+- The **refresh** token lives in the `rm_refresh` cookie: `HttpOnly`, `SameSite=Strict`, `Secure` outside development, path `/api/auth/`. It is not returned in the login body.
+- Refresh/logout require `X-Requested-With: XMLHttpRequest`; tokens rotate and the previous one is blacklisted. See [`docs/api-ejemplos.md`](docs/api-ejemplos.md).
 
-See [`docs/api-ejemplos.md`](docs/api-ejemplos.md) for the complete `curl` flow.
+## API, frontend and tests
 
-## Tests
+Prefixes: `/api/auth/`, `/api/catalog/`, `/api/orders/`, `/api/payments/`,
+`/api/addresses/`, `/api/verificacion/`, `/api/reviews/`, `/api/promotions/`,
+`/api/notifications/`, `/api/audit/` and `/api/health/`. The SPA lives in
+[`frontend/`](frontend/README.md#estado-de-cumplimiento) and Vite proxies `/api`
+and `/media`; if you set `VITE_API_URL`, keep the same host as the SPA.
 
-Backend:
+Backend: `pytest -q`, ruff, `makemigrations --check --dry-run` and `spectacular --validate`; **483 tests passing**, no pending migrations and one enum warning. Frontend: lint, typecheck, `npm test` and build; **10 tests passing** in 3 files.
 
-```bash
-pytest -q
-ruff check apps config tests --no-cache
-python manage.py makemigrations --check --dry-run
-python manage.py spectacular --file schema.yaml --validate
-```
+## Deployment and security
 
-Current result: **483 backend tests passing**, no pending migrations, and no
-OpenAPI errors (one enum-naming warning). Tests use in-memory SQLite; set
-`TEST_DATABASE_URL` to run against PostgreSQL.
+`render.yaml` creates a Docker web service and a free PostgreSQL 16 database.
+`scripts/render-start.sh` runs `collectstatic`, `migrate`, `seed_masivo --if-empty`
+and gunicorn. The free service sleeps and media is ephemeral; see
+[`docs/despliegue.md`](docs/despliegue.md).
 
-Frontend (`cd frontend`): `npm run lint`, `npm run typecheck`, `npm test` and
-`npm run build`. Current result: **10 tests passing** in 3 files, all green.
-`npm run test:e2e` runs the Playwright smoke tests after `npx playwright install
-chromium`.
-
-## Deployment
-
-`render.yaml` creates a Docker web service and a free PostgreSQL database.
-`scripts/render-start.sh` runs `collectstatic`, `migrate` and
-`seed_masivo --if-empty`, then starts gunicorn. `Dockerfile.render` builds the
-SPA and WhiteNoise serves the assets.
-
-The free plan sleeps after 15 minutes of inactivity, the database expires after
-30 days and uploaded media is lost on redeploy. See
-[`docs/despliegue.md`](docs/despliegue.md) for Supabase and production notes.
+There is no real payment gateway, user administration or password-change endpoint,
+and email delivery is optional. The ID photo is encrypted and served through an
+authorized view. `.env` is committed intentionally for the academic delivery and
+contains demo credentials: rotate the database password or make the repository
+private afterward. There is no `LICENSE` file yet. Maintainer: `calo159`
+(<https://github.com/calo159>).
 
 ## Documentation
 
-- [Documentation index](docs/README.md) and
-  [architecture/permissions](docs/arquitectura.md)
-- [API examples](docs/api-ejemplos.md) and [deployment](docs/despliegue.md)
-- [Frontend scope](docs/alcance-frontend.md) and
-  [maintenance audit](docs/MANTENIMIENTO.md)
-- [Security](SEGURIDAD.md) and [presentation guide](docs/PRESENTACION.md)
-
-## Known limitations
-
-- There is no real payment gateway; only `PasarelaSandbox` exists. Disable
-  `PAYMENTS_SANDBOX_ENABLED` in production.
-- Email delivery is optional and requires SMTP configuration.
-- There is no user-administration or password-change endpoint.
-- `media/` and `media_privado/` use local disk and are ephemeral on Render.
-- `.env` is committed intentionally for the academic delivery and contains
-  Supabase credentials. Rotate them or make the repository private afterwards.
+- [Index](docs/README.md), [architecture](docs/arquitectura.md), [API](docs/api-ejemplos.md), [deployment](docs/despliegue.md)
+- [Frontend scope](docs/alcance-frontend.md), [maintenance](docs/MANTENIMIENTO.md), [security](SEGURIDAD.md), [presentation](docs/PRESENTACION.md)
+- [Delivery guide](entrega/LEEME_ENTREGA.md), [curl flow](entrega/flujo_prueba.curl.md), [Postman](entrega/riomarket_postman.json)
