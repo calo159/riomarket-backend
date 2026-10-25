@@ -300,4 +300,4 @@ Crea una rama desde `main`, mantén los cambios pequeños, añade pruebas, ejecu
 
 **Licencia:** no hay `LICENSE`;
 
-**Autor:** [`carlos sierra , yerfrreth mejia`](https://github.com/calo159). 
+**Autor:** [`carlos sierra , yerfrreth mejia`]. 
