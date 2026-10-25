@@ -25,3 +25,6 @@ CACHES = {
         "LOCATION": env("REDIS_URL", default="redis://localhost:6379/1"),
     }
 }
+
+# Configuración para servir frontend unificado
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

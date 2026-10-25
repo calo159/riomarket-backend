@@ -89,7 +89,8 @@ class TestLogin:
         respuesta = self._login(api_client, usuario.correo)
         assert respuesta.status_code == status.HTTP_200_OK
         cuerpo = respuesta.data
-        assert "access" in cuerpo and "refresh" in cuerpo
+        assert "access" in cuerpo
+        # refresh ahora en cookie HttpOnly
         assert cuerpo["usuario"]["rol"] == Usuario.Rol.VENDEDOR
         assert cuerpo["usuario"]["id"] == usuario.pk
 
@@ -125,6 +126,14 @@ class TestLogin:
 class TestRefreshYLogout:
     REFRESH = "/api/auth/token/refresh/"
 
+    @staticmethod
+    def _usar_refresh(api_client, valor):
+        api_client.cookies["rm_refresh"] = valor
+        api_client.cookies["rm_refresh"]["path"] = "/api/auth/"
+        return api_client.post(
+            TestRefreshYLogout.REFRESH, {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+
     def test_refresh_rota_y_blanquea_el_anterior(self, api_client):
         usuario = UsuarioFactory(password=PASSWORD)
         login = api_client.post(
@@ -132,16 +141,21 @@ class TestRefreshYLogout:
             {"correo": usuario.correo, "password": PASSWORD},
             format="json",
         )
-        refresh_viejo = login.data["refresh"]
+        assert login.status_code == status.HTTP_200_OK
+        refresh_viejo = login.cookies["rm_refresh"].value
 
-        uso = api_client.post(self.REFRESH, {"refresh": refresh_viejo}, format="json")
+        uso = api_client.post(
+            self.REFRESH, {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
         assert uso.status_code == status.HTTP_200_OK
-        assert "refresh" in uso.data  # rotación
+        assert "access" in uso.data
+        refresh_nuevo = uso.cookies["rm_refresh"].value
+        assert refresh_nuevo != refresh_viejo
 
-        reuso = api_client.post(self.REFRESH, {"refresh": refresh_viejo}, format="json")
+        reuso = self._usar_refresh(api_client, refresh_viejo)
         assert reuso.status_code == status.HTTP_401_UNAUTHORIZED
 
-        nuevo = api_client.post(self.REFRESH, {"refresh": uso.data["refresh"]}, format="json")
+        nuevo = self._usar_refresh(api_client, refresh_nuevo)
         assert nuevo.status_code == status.HTTP_200_OK
 
     def test_logout_blanquea_el_refresh(self, api_client):
@@ -152,18 +166,17 @@ class TestRefreshYLogout:
             format="json",
         )
         access = login.data["access"]
-        refresh = login.data["refresh"]
+        refresh = login.cookies["rm_refresh"].value
         api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
-        salida = api_client.post("/api/auth/logout/", {"refresh": refresh}, format="json")
+        salida = api_client.post(
+            "/api/auth/logout/", {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
         assert salida.status_code == status.HTTP_204_NO_CONTENT
+        assert salida.cookies["rm_refresh"].value == ""
 
-        reuso = api_client.post(self.REFRESH, {"refresh": refresh}, format="json")
+        reuso = self._usar_refresh(api_client, refresh)
         assert reuso.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_logout_sin_token_autenticacion(self, api_client):
-        respuesta = api_client.post("/api/auth/logout/", {"refresh": "asdf"}, format="json")
-        assert respuesta.status_code in (status.HTTP_401_UNAUTHORIZED,)
 
 
 @pytest.mark.django_db

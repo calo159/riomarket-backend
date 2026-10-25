@@ -55,7 +55,7 @@ export interface UsuarioSesion {
 
 export interface RespuestaLogin {
   access: string;
-  refresh: string;
+  refresh?: string;
   usuario: UsuarioSesion;
 }
 

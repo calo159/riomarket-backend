@@ -1,5 +1,4 @@
 import axios, { type AxiosAdapter, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
-import { guardarRefresh, leerRefresh, limpiarRefresh } from '../auth/tokens';
 
 declare module 'axios' {
   interface InternalAxiosRequestConfig {
@@ -7,7 +6,7 @@ declare module 'axios' {
   }
 }
 
-export const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const RUTAS_SIN_REFRESH = ['/auth/login/', '/auth/registro/', '/auth/token/refresh/', '/auth/token/verify/'];
 
@@ -28,29 +27,31 @@ export interface ClienteHttp {
 }
 
 export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
-  const { baseURL, obtenerAccess, obtenerRefresh, guardarAccess, guardarRefreshToken } = opciones;
+  const { baseURL, obtenerAccess, guardarAccess } = opciones;
   const api = axios.create({
     baseURL,
     timeout: 20000,
+    withCredentials: true,
     ...(opciones.adaptadorApi ? { adapter: opciones.adaptadorApi } : {}),
   });
   const clienteRefresh =
     opciones.clienteRefresh ??
-    axios.create({ baseURL, timeout: 15000, headers: { 'Content-Type': 'application/json' } });
+    axios.create({ baseURL, timeout: 15000, headers: { 'Content-Type': 'application/json' }, withCredentials: true });
 
   let promesaRefresh: Promise<string> | null = null;
 
   async function refrescar(): Promise<string> {
     if (promesaRefresh) return promesaRefresh;
 
-    const refresh = obtenerRefresh();
-    if (!refresh) return Promise.reject(new Error('No hay token de refresco.'));
-
     promesaRefresh = clienteRefresh
-      .post<{ access: string; refresh?: string }>('/auth/token/refresh/', { refresh })
+      .post<{ access: string; refresh?: string }>(
+        '/auth/token/refresh/',
+        {},
+        { headers: { 'X-Requested-With': 'XMLHttpRequest' } },
+      )
       .then((respuesta) => {
         guardarAccess(respuesta.data.access);
-        if (respuesta.data.refresh) guardarRefreshToken(respuesta.data.refresh);
+        // refresh ahora via cookie HttpOnly
         return respuesta.data.access;
       })
       .finally(() => {
@@ -62,7 +63,14 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
 
   api.interceptors.request.use((config) => {
     const access = obtenerAccess();
-    if (access) config.headers.Authorization = `Bearer ${access}`;
+    if (access) config.headers.Authorization = Bearer ;
+    if (config.method && config.method.toLowerCase() !== 'get' && config.method.toLowerCase() !== 'head') {
+      config.headers = config.headers ?? {};
+      if (!config.headers['X-Requested-With'] && !config.headers['x-requested-with']) {
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      }
+    }
+    config.withCredentials = true;
     return config;
   });
 
@@ -81,10 +89,12 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
       original._reintentada = true;
       try {
         const access = await refrescar();
-        original.headers.Authorization = `Bearer ${access}`;
+        original.headers = original.headers ?? {};
+        original.headers.Authorization = Bearer ;
+        original.headers['X-Requested-With'] = original.headers['X-Requested-With'] || 'XMLHttpRequest';
+        original.withCredentials = true;
         return api(original);
       } catch (errorRefresh) {
-        limpiarRefresh();
         opciones.alPerderSesion();
         throw errorRefresh;
       }
@@ -98,13 +108,15 @@ let accessEnMemoria: string | null = null;
 let manejadorPerdidaSesion: (() => void) | null = null;
 
 const clienteGlobal = crearClienteHttp({
-  baseURL: `${API_BASE}/api`,
+  baseURL: API_BASE ? ${API_BASE}/api : '/api',
   obtenerAccess: () => accessEnMemoria,
-  obtenerRefresh: leerRefresh,
+  obtenerRefresh: () => null, // refresh via cookie
   guardarAccess: (token) => {
     accessEnMemoria = token;
   },
-  guardarRefreshToken: guardarRefresh,
+  guardarRefreshToken: () => {
+    // ya no se guarda en localStorage
+  },
   alPerderSesion: () => manejadorPerdidaSesion?.(),
 });
 
