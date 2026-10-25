@@ -51,3 +51,20 @@ Usa Supabase (free, no caduca):
 
 Redis es opcional: define `REDIS_URL` (Render Key Value) solo si quieres caché
 compartida; sin ella se usa memoria local.
+
+## Montos de la demo
+
+- Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`) y comisión: 5 %
+  (`PLATFORM_COMMISSION_PERCENTAGE`). Se pueden cambiar en Environment.
+- Si cambias la tarifa, actualiza también `VITE_TARIFA_DOMICILIO` en
+  `Dockerfile.render` (vista previa del checkout) y redeploy: el monto final
+  siempre lo calcula el backend.
+- Si editas variables en `render.yaml` después del primer deploy, sincroniza el
+  Blueprint (**Manual Sync**) o cámbialas en Environment; un deploy normal puede
+  no aplicar los cambios del archivo.
+
+## Antes de publicar el repo
+
+`.env` está versionado a propósito para la entrega y contiene credenciales de
+Supabase. Como el repositorio es público, después de la entrega rota la
+contraseña de la base o haz el repo privado.

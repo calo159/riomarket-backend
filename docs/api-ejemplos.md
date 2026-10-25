@@ -13,9 +13,9 @@ usuarios demo son:
 Contraseña por defecto de todos: `RioMarket2026!` (cámbiala con
 `--password`). Base de la API: `http://localhost:8000`.
 
-> Los montos de domicilio usan `DOMICILIO_TARIFA_BASE`, que por defecto es
-> `0.00`. Con la variable sin ajustar verás `tarifa_domicilio` y
-> `total_cobrado` iguales al subtotal.
+> Los montos de domicilio usan `DOMICILIO_TARIFA_BASE` (3000.00 en la demo) y
+> la comisión `PLATFORM_COMMISSION_PERCENTAGE` (5.00). Si el pedido es para
+> retiro, la tarifa es 0.00. En tests ambos valores se fijan en 0.00.
 
 ## 1. Login
 
@@ -186,9 +186,9 @@ curl -s -X POST "$BASE/api/orders/pedidos/" \
   "tipo_entrega": "domicilio",
   "estado": "pendiente",
   "subtotal": "15000.00",
-  "tarifa_domicilio": "0.00",
+  "tarifa_domicilio": "3000.00",
   "descuento_cupon": "0.00",
-  "total": "15000.00",
+  "total": "18000.00",
   "items": [
     {
       "id_producto": 6,
@@ -227,12 +227,12 @@ La respuesta del vendedor incluye `comision_plataforma` y `neto_vendedor`:
   "metodo_pago": "efectivo",
   "estado": "aprobado",
   "subtotal_pedido": "15000.00",
-  "tarifa_domicilio_aplicada": "0.00",
+  "tarifa_domicilio_aplicada": "3000.00",
   "descuento_aplicado": "0.00",
-  "total_cobrado": "15000.00",
+  "total_cobrado": "18000.00",
   "referencia_gateway": "efectivo-cobrado",
-  "comision_plataforma": "0.00",
-  "neto_vendedor": "15000.00"
+  "comision_plataforma": "750.00",
+  "neto_vendedor": "14250.00"
 }
 ```
 

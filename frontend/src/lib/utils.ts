@@ -28,7 +28,7 @@ export function rutaInternaSegura(valor: string | null | undefined): string | nu
 export function urlAbsoluta(url: string | null | undefined): string | null {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
-  const base = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
   return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 

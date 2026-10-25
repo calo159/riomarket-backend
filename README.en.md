@@ -255,6 +255,8 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 | --- | --- | --- |
 | `SECURE_SSL_REDIRECT` | `True` | Redirects everything to HTTPS |
 | `SECURE_HSTS_SECONDS` | `31536000` | HSTS (1 year) |
+| `DOMICILIO_TARIFA_BASE` | `3000.00` | Demo delivery fee (overridable) |
+| `PLATFORM_COMMISSION_PERCENTAGE` | `5.00` | Demo platform fee (overridable) |
 
 ### Tests
 
