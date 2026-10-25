@@ -67,6 +67,15 @@ class TestSeedMasivo:
         assert Producto.objects.count() == 40
         assert Pedido.objects.count() == 30
 
+    def test_if_empty_omite_base_ya_sembrada(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        total = _conteo_total()
+
+        call_command("seed_masivo", "--if-empty", "--password", "OtraClave2!")
+
+        assert _conteo_total() == total
+        assert Usuario.objects.get(correo="admin@riomarket.test").check_password("ClaveSegura1!")
+
     def test_usuarios_tienen_la_contrasena_configurada(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
         admin = Usuario.objects.get(correo="admin@riomarket.test")

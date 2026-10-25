@@ -35,7 +35,7 @@ services:
         value: "https://*.onrender.com"
       - key: SECURE_SSL_REDIRECT
         value: "True"
-      # Crea los usuarios demo en el primer arranque (solo si la BD está vacía).
+      # Carga el seed masivo si la BD tiene menos de 100 registros.
       # admin@riomarket.test / SEED_DEMO_PASSWORD (por defecto RioMarket2026!).
       - key: SEED_DEMO
         value: "true"
