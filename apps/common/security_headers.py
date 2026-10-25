@@ -2,6 +2,62 @@
 
 from django.conf import settings
 
+# Prefijos cuyas plantillas (Swagger UI / Redoc de drf-spectacular) cargan
+# scripts y estilos desde CDN e incluyen un script inline de arranque.
+PREFIJOS_DOCS = ("/api/docs/",)
+# El admin de Django usa scripts inline en formularios, inlines y popups.
+PREFIJOS_ADMIN = ("/admin/",)
+
+
+def _csp(request) -> str:
+    if request.path.startswith(PREFIJOS_ADMIN):
+        return "; ".join(
+            [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline'",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data: blob: https://tile.openstreetmap.org",
+                "font-src 'self' data:",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+            ]
+        )
+
+    if request.path.startswith(PREFIJOS_DOCS):
+        # CSP permisiva solo para la documentación interactiva. La app y la
+        # API mantienen la política estricta de abajo.
+        return "; ".join(
+            [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
+                "https://fonts.googleapis.com",
+                "img-src 'self' data: blob: https://cdn.jsdelivr.net "
+                "https://tile.openstreetmap.org",
+                "font-src 'self' data: https://fonts.gstatic.com",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+            ]
+        )
+
+    return "; ".join(
+        [
+            "default-src 'self'",
+            "script-src 'self'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob: https://tile.openstreetmap.org",
+            "font-src 'self' data:",
+            "connect-src 'self'",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+        ]
+    )
+
 
 class SecurityHeadersMiddleware:
     def __init__(self, get_response):
@@ -26,18 +82,6 @@ class SecurityHeadersMiddleware:
             response["Strict-Transport-Security"] = (
                 f"max-age={settings.SECURE_HSTS_SECONDS}; includeSubDomains; preload"
             )
-        # CSP estricta básica para la app
         if "Content-Security-Policy" not in response:
-            csp = [
-                "default-src 'self'",
-                "script-src 'self'",
-                "style-src 'self' 'unsafe-inline'",
-                "img-src 'self' data: blob: https://tile.openstreetmap.org",
-                "font-src 'self' data:",
-                "connect-src 'self'",
-                "frame-ancestors 'none'",
-                "base-uri 'self'",
-                "form-action 'self'",
-            ]
-            response["Content-Security-Policy"] = "; ".join(csp)
+            response["Content-Security-Policy"] = _csp(request)
         return response

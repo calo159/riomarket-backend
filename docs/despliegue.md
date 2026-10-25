@@ -29,6 +29,9 @@ Antes del primer deploy, en el Blueprint agrega la variable
 `SEED_DEMO_PASSWORD` con tu clave (o cámbiala en Environment y haz "Manual
 Deploy"). El seed solo corre si la base está vacía.
 
+> Si la cambias, los botones de acceso rápido del login (que usan
+> `RioMarket2026!`) dejarán de funcionar: escribe la clave a mano.
+
 ## Límites del plan free (importante)
 
 - El servicio se duerme tras 15 min sin tráfico (despierta en ~1 min).

@@ -1,6 +1,13 @@
 # Dockerfile para Render (multi-stage)
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
+# Flags del build de Vite (Render no expone sus env vars al build de Docker).
+ARG VITE_DEMO_MODE=true
+ARG VITE_SANDBOX_PAGOS=true
+ARG VITE_TARIFA_DOMICILIO=3000
+ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
+ENV VITE_SANDBOX_PAGOS=$VITE_SANDBOX_PAGOS
+ENV VITE_TARIFA_DOMICILIO=$VITE_TARIFA_DOMICILIO
 COPY frontend/package*.json ./
 RUN npm ci || npm install
 COPY frontend/ ./

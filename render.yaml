@@ -38,7 +38,12 @@ services:
       # Crea los usuarios demo en el primer arranque (solo si la BD está vacía).
       # admin@riomarket.test / SEED_DEMO_PASSWORD (por defecto RioMarket2026!).
       - key: SEED_DEMO
-        value: "True"
+        value: "true"
       # Demo: permite simular/autoaprobar pagos. Poner False con pasarela real.
       - key: PAYMENTS_SANDBOX_ENABLED
         value: "True"
+      # Deben coincidir con lo que muestra el frontend (VITE_TARIFA_DOMICILIO).
+      - key: DOMICILIO_TARIFA_BASE
+        value: "3000.00"
+      - key: PLATFORM_COMMISSION_PERCENTAGE
+        value: "5.00"

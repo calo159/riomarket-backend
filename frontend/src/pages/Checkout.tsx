@@ -23,7 +23,7 @@ import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
 
-const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO ?? 3000);
+const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
 
 export function Checkout() {
   const { carrito, subtotal, vaciar } = useCart();
