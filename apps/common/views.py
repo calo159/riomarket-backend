@@ -15,7 +15,10 @@ class HealthCheckView(View):
             db_status = "up"
         except Exception:
             db_status = "down"
-        return JsonResponse({"status": "ok", "database": db_status})
+        return JsonResponse(
+            {"status": "ok" if db_status == "up" else "degraded", "database": db_status},
+            status=200 if db_status == "up" else 503,
+        )
 
 
 class FrontendCatchAllView(View):

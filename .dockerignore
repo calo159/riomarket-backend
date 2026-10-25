@@ -1,6 +1,7 @@
 .git
 .gitignore
 .env
+.env.*
 .venv
 venv
 __pycache__
@@ -8,7 +9,16 @@ __pycache__
 *.pyo
 *.pyd
 .pytest_cache
+.ruff_cache
 .coverage
+coverage.xml
 htmlcov
 media/
+media_privado/
 staticfiles/
+db.sqlite3
+test_media/
+frontend/node_modules/
+frontend/dist/
+entrega/
+docs/

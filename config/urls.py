@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
+from django.views.static import serve as servir_archivo
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -32,13 +33,24 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # En producción no hay servidor de medios: Django entrega las subidas
+    # públicas (avatares/imágenes de producto). El disco de Render es efímero.
+    urlpatterns += [
+        re_path(
+            r"^media/(?P<path>.*)$",
+            servir_archivo,
+            {"document_root": settings.MEDIA_ROOT},
+        ),
+    ]
 
 # Servir SPA
 frontend_dist = settings.BASE_DIR / "frontend" / "dist"
 if frontend_dist.exists():
     urlpatterns += [
         re_path(
-            r"^(?!api/|admin/|static/|media/|schema/|docs/).*$",
+            r"^(?!api/|admin/|static/|media/|assets/|schema/|docs/|theme-init\.js$)"
+            r".*$",
             FrontendCatchAllView.as_view(),
         ),
     ]

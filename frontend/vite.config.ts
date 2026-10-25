@@ -4,6 +4,10 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Evita el polyfill inline para poder usar una CSP estricta (script-src 'self').
+    modulePreload: { polyfill: false },
+  },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },

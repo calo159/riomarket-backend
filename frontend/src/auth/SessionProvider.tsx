@@ -4,19 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, refreshAccessToken, setAccessToken, setSessionLostHandler } from '../lib/http';
-import {
-  CLAVE_REFRESH_TOKEN,
-  guardarAvisoSesion,
-  guardarRefresh,
-  leerRefresh,
-  limpiarRefresh,
-} from './tokens';
+import { guardarAvisoSesion, limpiarRefresh } from './tokens';
 import type { Perfil, RespuestaLogin, Rol, UsuarioSesion } from '../lib/types';
 
 type EstadoSesion = 'cargando' | 'anonimo' | 'autenticado';
@@ -56,9 +49,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
   const [estado, setEstado] = useState<EstadoSesion>('cargando');
-  const usuarioRef = useRef<UsuarioSesion | null>(null);
-
-  usuarioRef.current = usuario;
 
   const limpiarSesionLocal = useCallback(() => {
     setAccessToken(null);
@@ -72,10 +62,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     let activo = true;
 
     async function restaurar() {
-      if (!leerRefresh()) {
-        if (activo) setEstado('anonimo');
-        return;
-      }
       try {
         await refreshAccessToken();
         const { data } = await api.get<Perfil>('/auth/perfil/');
@@ -111,22 +97,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => setSessionLostHandler(null);
   }, [queryClient]);
 
-  useEffect(() => {
-    function alCambiarStorage(evento: StorageEvent) {
-      if (evento.key !== CLAVE_REFRESH_TOKEN) return;
-      if (evento.newValue === null && usuarioRef.current) {
-        limpiarSesionLocal();
-      }
-    }
-    window.addEventListener('storage', alCambiarStorage);
-    return () => window.removeEventListener('storage', alCambiarStorage);
-  }, [limpiarSesionLocal]);
-
   const iniciarSesion = useCallback(
     async (credenciales: Credenciales) => {
       const { data } = await api.post<RespuestaLogin>('/auth/login/', credenciales);
       setAccessToken(data.access);
-      guardarRefresh(data.refresh);
       let sesion: UsuarioSesion = data.usuario;
       try {
         const perfil = await api.get<Perfil>('/auth/perfil/');
@@ -143,13 +117,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const cerrarSesion = useCallback(async () => {
-    const refresh = leerRefresh();
-    if (refresh) {
-      try {
-        await api.post('/auth/logout/', { refresh });
-      } catch {
-        /* el logout local nunca se bloquea por la red */
-      }
+    try {
+      await api.post('/auth/logout/', {});
+    } catch {
+      /* el logout local nunca se bloquea por la red */
     }
     limpiarSesionLocal();
   }, [limpiarSesionLocal]);

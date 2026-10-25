@@ -1,4 +1,5 @@
 import axios, { type AxiosAdapter, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
+import { limpiarRefresh } from '../auth/tokens';
 
 declare module 'axios' {
   interface InternalAxiosRequestConfig {
@@ -13,9 +14,11 @@ const RUTAS_SIN_REFRESH = ['/auth/login/', '/auth/registro/', '/auth/token/refre
 interface OpcionesHttp {
   baseURL: string;
   obtenerAccess: () => string | null;
-  obtenerRefresh: () => string | null;
+  /** @deprecated El refresh viaja en cookie HttpOnly; se mantiene por compatibilidad. */
+  obtenerRefresh?: () => string | null;
   guardarAccess: (token: string) => void;
-  guardarRefreshToken: (token: string) => void;
+  /** @deprecated El refresh viaja en cookie HttpOnly; se mantiene por compatibilidad. */
+  guardarRefreshToken?: (token: string) => void;
   alPerderSesion: () => void;
   clienteRefresh?: AxiosInstance;
   adaptadorApi?: AxiosAdapter;
@@ -36,7 +39,12 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
   });
   const clienteRefresh =
     opciones.clienteRefresh ??
-    axios.create({ baseURL, timeout: 15000, headers: { 'Content-Type': 'application/json' }, withCredentials: true });
+    axios.create({
+      baseURL,
+      timeout: 15000,
+      headers: { 'Content-Type': 'application/json' },
+      withCredentials: true,
+    });
 
   let promesaRefresh: Promise<string> | null = null;
 
@@ -47,11 +55,11 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
       .post<{ access: string; refresh?: string }>(
         '/auth/token/refresh/',
         {},
-        { headers: { 'X-Requested-With': 'XMLHttpRequest' } },
+        { headers: { 'X-Requested-With': 'XMLHttpRequest' }, withCredentials: true },
       )
       .then((respuesta) => {
         guardarAccess(respuesta.data.access);
-        // refresh ahora via cookie HttpOnly
+        if (respuesta.data.refresh) opciones.guardarRefreshToken?.(respuesta.data.refresh);
         return respuesta.data.access;
       })
       .finally(() => {
@@ -63,7 +71,7 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
 
   api.interceptors.request.use((config) => {
     const access = obtenerAccess();
-    if (access) config.headers.Authorization = Bearer ;
+    if (access) config.headers.Authorization = `Bearer ${access}`;
     if (config.method && config.method.toLowerCase() !== 'get' && config.method.toLowerCase() !== 'head') {
       config.headers = config.headers ?? {};
       if (!config.headers['X-Requested-With'] && !config.headers['x-requested-with']) {
@@ -90,11 +98,12 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
       try {
         const access = await refrescar();
         original.headers = original.headers ?? {};
-        original.headers.Authorization = Bearer ;
+        original.headers.Authorization = `Bearer ${access}`;
         original.headers['X-Requested-With'] = original.headers['X-Requested-With'] || 'XMLHttpRequest';
         original.withCredentials = true;
         return api(original);
       } catch (errorRefresh) {
+        limpiarRefresh();
         opciones.alPerderSesion();
         throw errorRefresh;
       }
@@ -108,14 +117,10 @@ let accessEnMemoria: string | null = null;
 let manejadorPerdidaSesion: (() => void) | null = null;
 
 const clienteGlobal = crearClienteHttp({
-  baseURL: API_BASE ? ${API_BASE}/api : '/api',
+  baseURL: `${API_BASE}/api`,
   obtenerAccess: () => accessEnMemoria,
-  obtenerRefresh: () => null, // refresh via cookie
   guardarAccess: (token) => {
     accessEnMemoria = token;
-  },
-  guardarRefreshToken: () => {
-    // ya no se guarda en localStorage
   },
   alPerderSesion: () => manejadorPerdidaSesion?.(),
 });

@@ -1,4 +1,4 @@
-import { lazy } from "react";
+
 
 export function precargarRuta(importador: () => Promise<unknown>) {
   if (typeof window === "undefined") return;

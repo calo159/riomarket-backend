@@ -5,17 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="RioMarket: el mercado de Riohacha en línea." />
     <title>RioMarket · Mercado de Riohacha</title>
-    <script>
-      try {
-        const guardado = localStorage.getItem('riomarket.tema');
-        const oscuro =
-          guardado === 'oscuro' ||
-          (!guardado && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.classList.toggle('dark', oscuro);
-      } catch (_) {
-        /* almacenamiento no disponible */
-      }
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body class="h-full bg-sand-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <div id="root" class="min-h-full"></div>

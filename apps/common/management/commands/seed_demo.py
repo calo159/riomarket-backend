@@ -4,6 +4,8 @@ Idempotente: se puede ejecutar varias veces. NO usar en producción con una
 contraseña por defecto — pásala con ``--password``.
 """
 
+import os
+
 from django.core.management.base import BaseCommand
 
 from apps.accounts.models import Usuario, Vendedor
@@ -25,12 +27,21 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--password",
-            default="RioMarket2026!",
+            default=os.environ.get("SEED_DEMO_PASSWORD", "RioMarket2026!"),
             help="Contraseña única para todos los usuarios demo.",
+        )
+        parser.add_argument(
+            "--if-empty",
+            action="store_true",
+            help="No hace nada si la base ya tiene usuarios (para el arranque).",
         )
 
     def handle(self, *args, **options):
         password = options["password"]
+
+        if options["if_empty"] and Usuario.objects.exists():
+            self.stdout.write("Seed omitido: la base ya tiene usuarios.")
+            return
 
         admin, _ = Usuario.objects.get_or_create(
             correo="admin@riomarket.test",

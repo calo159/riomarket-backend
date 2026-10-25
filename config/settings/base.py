@@ -34,14 +34,20 @@ if not DEBUG and not FERNET_KEY:
 
 if FERNET_KEY:
     from cryptography.fernet import Fernet as _Fernet
-    from django.core.exceptions import ImproperlyConfigured as _ImproperlyConfigured
 
     try:
         _Fernet(FERNET_KEY.encode("ascii"))
-    except Exception as exc:
-        raise _ImproperlyConfigured(
-            "FERNET_KEY no es una clave Fernet válida (32 bytes en base64url)."
-        ) from exc
+    except Exception:
+        # Los secretos generados por la plataforma (Render ``generateValue``)
+        # son base64 de 256 bits pero no siempre cumplen el formato exacto de
+        # Fernet. Se deriva una clave válida y determinista para no bloquear
+        # el arranque; una FERNET_KEY ya válida se usa tal cual.
+        import base64
+        import hashlib
+
+        FERNET_KEY = base64.urlsafe_b64encode(
+            hashlib.sha256(FERNET_KEY.encode("utf-8")).digest()
+        ).decode("ascii")
 
 # ---------------------------------------------------------------------------
 # Aplicaciones

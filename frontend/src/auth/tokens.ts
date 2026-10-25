@@ -1,15 +1,6 @@
 const CLAVE_AVISO = 'riomarket.aviso';
 
-export const CLAVE_REFRESH_TOKEN = 'riomarket.refresh';
 export const CLAVE_AVISO_SESION = CLAVE_AVISO;
-
-export function leerRefresh(): string | null {
-  return null;
-}
-
-export function guardarRefresh(token: string): void {
-  // Migrado: refresh ahora en cookie HttpOnly
-}
 
 export function limpiarRefresh(): void {
   // Migrado: refresh ahora en cookie HttpOnly

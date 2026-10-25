@@ -33,6 +33,15 @@ class TestSeedDemo:
         assert Pedido.objects.count() == 1
         assert Pago.objects.count() == 1
 
+    def test_seed_if_empty_no_toca_una_base_con_usuarios(self):
+        call_command("seed_demo", "--password", "ClaveSegura1!")
+
+        call_command("seed_demo", "--if-empty", "--password", "OtraClave2!")
+
+        admin = Usuario.objects.get(correo="admin@riomarket.test")
+        assert admin.check_password("ClaveSegura1!")
+        assert Usuario.objects.count() == 4
+
     def test_seed_vendedores_pueden_publicar(self):
         call_command("seed_demo", "--password", "ClaveSegura1!")
         for vendedor in Usuario.objects.filter(rol=Usuario.Rol.VENDEDOR):
