@@ -4,8 +4,8 @@ Todo está automatizado en `render.yaml`:
 
 - Render crea el servicio Docker **y la base PostgreSQL** (plan free).
 - Genera `SECRET_KEY` y `FERNET_KEY` solo.
-- Ejecuta `collectstatic`, `migrate` y crea los datos demo en el primer arranque
-  (solo si la base está vacía).
+- Ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty` en el arranque:
+  carga los datos solo si la base tiene menos de 100 registros.
 - Configura HTTPS, `ALLOWED_HOSTS` y CSRF para `*.onrender.com`.
 
 ## Lo único que debes hacer tú
@@ -27,7 +27,7 @@ Verificación rápida:
 
 Antes del primer deploy, en el Blueprint agrega la variable
 `SEED_DEMO_PASSWORD` con tu clave (o cámbiala en Environment y haz "Manual
-Deploy"). El seed solo corre si la base está vacía.
+Deploy"). El seed solo corre si la base tiene menos de 100 registros de dominio.
 
 > Si la cambias, los botones de acceso rápido del login (que usan
 > `RioMarket2026!`) dejarán de funcionar: escribe la clave a mano.
@@ -38,7 +38,8 @@ Deploy"). El seed solo corre si la base está vacía.
 - La base free de Render **caduca a los 30 días** (aviso por correo; 14 días de
   gracia para pasarla a pago).
 - Disco efímero: las imágenes subidas se pierden en cada redeploy.
-- Sin Shell en el plan free: los datos demo se crean solos en el arranque.
+- Sin Shell en el plan free: los datos demo se cargan solos en el arranque con
+  `seed_masivo --if-empty`.
 
 ## Si necesitas que la base dure más de 30 días
 

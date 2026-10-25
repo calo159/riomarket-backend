@@ -1,6 +1,6 @@
 # Ejemplos de uso de la API
 
-Flujo completo probado contra un servidor con `python manage.py seed_demo`. Los
+Flujo completo probado contra un servidor con `python manage.py seed_masivo`. Los
 usuarios demo son:
 
 | Usuario | Correo | Rol |
@@ -22,14 +22,15 @@ Contraseña por defecto de todos: `RioMarket2026!` (cámbiala con
 ```bash
 BASE=http://localhost:8000
 
-curl -s -X POST "$BASE/api/auth/login/" \
+COOKIE=cookies.txt
+
+curl -s -c "$COOKIE" -X POST "$BASE/api/auth/login/" \
   -H "Content-Type: application/json" \
   -d '{"correo":"carmen@riomarket.test","password":"RioMarket2026!"}'
 ```
 
 ```json
 {
-  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "usuario": {
     "id": 4,
@@ -42,7 +43,8 @@ curl -s -X POST "$BASE/api/auth/login/" \
 }
 ```
 
-Guarda el `access` y el `refresh` en variables:
+El `refresh` queda en la cookie `rm_refresh`; no aparece en el JSON. Guarda solo
+el `access` en variables (la cookie se reutiliza con `-b "$COOKIE"`):
 
 ```bash
 TOKEN_COMP=$(curl -s -X POST "$BASE/api/auth/login/" \
@@ -56,17 +58,20 @@ TOKEN_VEND=$(curl -s -X POST "$BASE/api/auth/login/" \
   | python -c "import sys,json;print(json.load(sys.stdin)['access'])")
 ```
 
-Renovar el access y cerrar sesión:
+Renovar el access y cerrar sesión (la cookie y la cabecera CSRF son
+obligatorias):
 
 ```bash
-curl -s -X POST "$BASE/api/auth/token/refresh/" \
+curl -s -b "$COOKIE" -c "$COOKIE" -X POST "$BASE/api/auth/token/refresh/" \
   -H "Content-Type: application/json" \
-  -d '{"refresh":"<refresh>"}'
+  -H "X-Requested-With: XMLHttpRequest" \
+  -d '{}'
 
-curl -s -X POST "$BASE/api/auth/logout/" \
-  -H "Authorization: Bearer $TOKEN_COMP" \
+curl -s -b "$COOKIE" -X POST "$BASE/api/auth/logout/" \
+  -H "Authorization: Bearer $TOKEN_VEND" \
   -H "Content-Type: application/json" \
-  -d '{"refresh":"<refresh>"}'   # 204 No Content (revoca el refresh)
+  -H "X-Requested-With: XMLHttpRequest" \
+  -d '{}'   # 204 No Content (revoca el refresh)
 ```
 
 ## 2. Crear un puesto (vendedor aprobado)
