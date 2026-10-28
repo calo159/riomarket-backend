@@ -45,6 +45,19 @@ class TestPuestos:
         assert activo.pk in ids
         assert suspendido.pk not in ids
 
+    def test_detalle_expone_logo_y_portada(self, cliente_anon, vendedor, tmp_path):
+        with override_settings(MEDIA_ROOT=tmp_path):
+            puesto = PuestoFactory(id_vendedor=vendedor)
+            puesto.logo = SimpleUploadedFile("logo.png", PNG_BYTES, "image/png")
+            puesto.portada = SimpleUploadedFile("portada.png", PNG_BYTES, "image/png")
+            puesto.save()
+
+            respuesta = cliente_anon.get(f"{PUESTOS}{puesto.pk}/")
+
+        assert respuesta.status_code == status.HTTP_200_OK
+        assert respuesta.data["logo"].startswith("/media/")
+        assert respuesta.data["portada"].startswith("/media/")
+
     def test_anonimo_no_crea(self, cliente_anon):
         assert cliente_anon.post(PUESTOS, {}, format="json").status_code == 401
 

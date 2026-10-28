@@ -146,4 +146,11 @@ class TestSeedMasivo:
             call_command("seed_imagenes_demo")
 
         assert ImagenProducto.objects.count() == Producto.objects.count()
-        assert Puesto.objects.filter(portada__isnull=False).exclude(portada="").exists()
+        assert (
+            Puesto.objects.exclude(portada="").exclude(portada__isnull=True).count()
+            == Puesto.objects.count()
+        )
+        assert (
+            Puesto.objects.exclude(logo="").exclude(logo__isnull=True).count()
+            == Puesto.objects.count()
+        )

@@ -128,18 +128,16 @@ class Command(BaseCommand):
         for puesto in Puesto.objects.all():
             clave = None
             nombre = puesto.nombre.lower()
-            if "carmen" in nombre or "palenque" in nombre:
-                clave = "puesto-frutas"
-            elif "tejido" in nombre:
-                clave = "puesto-artesanias"
-            elif "fruta" in nombre:
-                clave = "puesto-frutas"
-            elif "cocina" in nombre:
+            if "palenque" in nombre or "cocina" in nombre or "comida" in nombre:
                 clave = "puesto-comidas"
-            elif "dulce" in nombre:
+            elif "tejido" in nombre or "artesania" in nombre:
+                clave = "puesto-artesanias"
+            elif "fruta" in nombre or "dulce" in nombre:
                 clave = "puesto-frutas"
             elif "pescad" in nombre:
                 clave = "puesto-pescado"
+            elif "aseo" in nombre:
+                clave = "puesto-aseo"
             if not clave:
                 continue
             for campo, suf in [("portada", "-portada.webp"), ("logo", "-logo.webp")]:

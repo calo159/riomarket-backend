@@ -56,8 +56,9 @@ Usa Supabase (free, no caduca):
 
 1. En Supabase Storage crea dos buckets: `productos` (público) y `privado` (privado).
 2. En Supabase → Settings → API/Storage crea claves S3 o usa las credenciales compatibles.
-3. En Render añade las variables: `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY`, `STORAGE_S3_BUCKET_PUBLICO=productos`, `STORAGE_S3_BUCKET_PRIVADO=privado`. Opcional `STORAGE_PUBLIC_BASE_URL`.
+3. En Render añade las variables: `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY`, `STORAGE_S3_BUCKET_PUBLICO=productos`, `STORAGE_S3_BUCKET_PRIVADO=privado`. Opcional `STORAGE_PUBLIC_BASE_URL`: usa la raíz pública (`https://<ref>.supabase.co/storage/v1/object/public`) o la URL que ya incluya el bucket.
 4. Redeploy. Las imágenes subirán al bucket público; las fotos de cédula seguirán en almacén privado. Si no se configuran, se usa disco local (efímero).
+5. Las imágenes demo se generan con `python scripts/generar_placeholders.py`. Para buscar fotos libres sin API key usa `python scripts/buscar_imagenes_libres.py` (Openverse); las candidatas quedan en `seed_images/candidatas/` y sus créditos en `seed_images/CREDITOS.md`.
 
 Redis es opcional: define `REDIS_URL` (Render Key Value) solo si quieres caché
 compartida; sin ella se usa memoria local.

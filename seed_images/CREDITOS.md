@@ -1,7 +1,13 @@
 # Créditos de imágenes demo
 
-Estas imágenes son placeholders generados con Pillow (sin licencia externa).
-Reemplázalas por fotos reales con licencia libre (Pexels/Unsplash) manteniendo el nombre.
+## Placeholders
+
+Los archivos `.webp` de esta carpeta son placeholders generados por
+`scripts/generar_placeholders.py` con Pillow (sin licencia externa). Para
+reemplazarlos por fotos reales, conserva el nombre del archivo o ejecuta
+`scripts/buscar_imagenes_libres.py`: busca candidatas en Openverse sin API key,
+las deja en `seed_images/candidatas/` y registra autor, origen y licencia al
+final de este archivo. Revisa la licencia antes de mover una candidata.
 
 ## Archivos esperados
 

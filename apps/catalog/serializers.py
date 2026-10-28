@@ -26,6 +26,8 @@ class PuestoSerializer(serializers.ModelSerializer):
     """
 
     categorias = serializers.SerializerMethodField()
+    logo = serializers.SerializerMethodField()
+    portada = serializers.SerializerMethodField()
     calificacion_promedio = serializers.FloatField(read_only=True, default=None, allow_null=True)
     cantidad_resenas = serializers.IntegerField(read_only=True, default=0)
 
@@ -45,6 +47,8 @@ class PuestoSerializer(serializers.ModelSerializer):
             "calificacion_promedio",
             "cantidad_resenas",
             "categorias",
+            "logo",
+            "portada",
         )
         read_only_fields = ("id", "id_vendedor", "estado")
 
@@ -53,6 +57,21 @@ class PuestoSerializer(serializers.ModelSerializer):
             [v.id_categoria for v in obj.categorias_asignadas.all()],
             many=True,
         ).data
+
+    def _url_imagen(self, obj, campo: str) -> str | None:
+        archivo = getattr(obj, campo, None)
+        if not archivo:
+            return None
+        try:
+            return archivo.url
+        except Exception:
+            return None
+
+    def get_logo(self, obj) -> str | None:
+        return self._url_imagen(obj, "logo")
+
+    def get_portada(self, obj) -> str | None:
+        return self._url_imagen(obj, "portada")
 
     def create(self, validated_data):
         return services.crear_puesto(usuario=self.context["request"].user, datos=validated_data)
