@@ -6,7 +6,7 @@ python manage.py migrate --noinput
 seed_demo="$(printf '%s' "${SEED_DEMO:-false}" | tr '[:upper:]' '[:lower:]')"
 case "$seed_demo" in
   1 | true | yes)
-    python manage.py seed_masivo --if-empty || true
+    python manage.py seed_masivo || true
     python manage.py seed_imagenes_demo || true
     ;;
 esac

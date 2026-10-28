@@ -27,7 +27,7 @@ services:
         value: "https://*.onrender.com"
       - key: SECURE_SSL_REDIRECT
         value: "True"
-      # Carga el seed masivo si la BD tiene menos de 100 registros.
+      # Carga/actualiza el seed masivo y sus imágenes en cada arranque.
       # admin@riomarket.test / SEED_DEMO_PASSWORD (por defecto RioMarket2026!).
       - key: SEED_DEMO
         value: "true"
