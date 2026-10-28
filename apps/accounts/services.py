@@ -198,7 +198,11 @@ def restablecer_contrasena(*, token: str, nueva: str) -> Usuario:
 
     from apps.accounts.models import TokenRecuperacion
 
-    tr = TokenRecuperacion.objects.filter(token=token[:64], usado=False, expira__gt=timezone.now()).select_related("usuario").first()
+    tr = (
+        TokenRecuperacion.objects.filter(token=token[:64], usado=False, expira__gt=timezone.now())
+        .select_related("usuario")
+        .first()
+    )
     if not tr:
         raise ValidationError({"token": "Token inválido o expirado."})
     password_validation.validate_password(nueva, user=tr.usuario)

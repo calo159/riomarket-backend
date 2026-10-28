@@ -49,7 +49,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Configuración de almacenamiento: S3-compatible (Supabase Storage/R2/AWS) con respaldo local
-_s3_bucket_publico = env("STORAGE_S3_BUCKET_PUBLICO", default="") or env("STORAGE_S3_BUCKET", default="")
+_s3_bucket_publico = env("STORAGE_S3_BUCKET_PUBLICO", default="") or env(
+    "STORAGE_S3_BUCKET", default=""
+)
 _s3_bucket_privado = env("STORAGE_S3_BUCKET_PRIVADO", default="")
 _s3_access_key = env("STORAGE_S3_ACCESS_KEY", default="")
 _s3_secret_key = env("STORAGE_S3_SECRET_KEY", default="")
@@ -70,7 +72,9 @@ if _use_s3:
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     if _s3_public_base_url:
-        AWS_S3_CUSTOM_DOMAIN = _s3_public_base_url.replace("https://", "").replace("http://", "")
+        AWS_S3_CUSTOM_DOMAIN = _s3_public_base_url.replace("https://", "").replace(
+            "http://", ""
+        )
         MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
     else:
         MEDIA_URL = f"{_s3_endpoint}/{_s3_bucket_publico}/"
@@ -91,7 +95,10 @@ if _use_s3:
     }
     logger.info("Almacenamiento de medios configurado con S3-compatible (bucket público).")
 else:
-    logger.warning("medios efímeros: sin variables S3; se usará sistema de archivos local (se perderán en redeploy)")
+    logger.warning(
+        "medios efímeros: sin variables S3; se usará sistema de archivos local "
+        "(se perderán en redeploy)"
+    )
     STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
         "staticfiles": {

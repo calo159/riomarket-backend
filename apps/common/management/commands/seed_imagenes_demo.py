@@ -1,13 +1,11 @@
 """Añade imágenes del seed a productos/puestos si faltan (idempotente)."""
 
-import os
 from pathlib import Path
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
-
 
 SEED_DIR = Path(__file__).resolve().parent.parent.parent.parent / "seed_images"
 
@@ -112,7 +110,7 @@ class Command(BaseCommand):
                     data = fpath.read_bytes()
                     cf = ContentFile(data)
                     cf.name = f"{p.nombre.lower().replace(' ', '_')}.webp"
-                    img = ImagenProducto.objects.create(
+                    ImagenProducto.objects.create(
                         id_producto=p,
                         archivo=cf,
                         orden=1,
