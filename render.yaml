@@ -39,3 +39,22 @@ services:
         value: "3000.00"
       - key: PLATFORM_COMMISSION_PERCENTAGE
         value: "5.00"
+      # Almacenamiento S3-compatible (opcional). Si no se configuran, usa disco local (efímero).
+      - key: STORAGE_S3_ENDPOINT
+        sync: false
+      - key: STORAGE_S3_REGION
+        sync: false
+      - key: STORAGE_S3_ACCESS_KEY
+        sync: false
+      - key: STORAGE_S3_SECRET_KEY
+        sync: false
+      - key: STORAGE_S3_BUCKET_PUBLICO
+        sync: false
+      - key: STORAGE_S3_BUCKET_PRIVADO
+        sync: false
+      - key: STORAGE_S3_BUCKET
+        sync: false
+      - key: STORAGE_PUBLIC_BASE_URL
+        sync: false
+      - key: PEXELS_API_KEY
+        sync: false
