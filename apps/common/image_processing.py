@@ -1,4 +1,4 @@
-﻿"""Procesado de imágenes: sin EXIF, orientación correcta, WebP y miniatura."""
+"""Procesado de imágenes: sin EXIF, orientación correcta, WebP y miniatura."""
 
 import io
 import os

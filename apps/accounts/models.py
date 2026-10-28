@@ -179,9 +179,7 @@ class FavoritoProducto(models.Model):
 
 
 class FavoritoPuesto(models.Model):
-    usuario = models.ForeignKey(
-        Usuario, on_delete=models.CASCADE, related_name="favoritos_puestos"
-    )
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="favoritos_puestos")
     puesto = models.ForeignKey("catalog.Puesto", on_delete=models.CASCADE, related_name="favoritos")
     creado = models.DateTimeField(auto_now_add=True)
 

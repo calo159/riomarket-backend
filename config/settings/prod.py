@@ -72,9 +72,7 @@ if _use_s3:
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     if _s3_public_base_url:
-        AWS_S3_CUSTOM_DOMAIN = _s3_public_base_url.replace("https://", "").replace(
-            "http://", ""
-        )
+        AWS_S3_CUSTOM_DOMAIN = _s3_public_base_url.replace("https://", "").replace("http://", "")
         MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
     else:
         MEDIA_URL = f"{_s3_endpoint}/{_s3_bucket_publico}/"
