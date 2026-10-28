@@ -138,22 +138,58 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         self.save(update_fields=["estado"])
 
     def puede_publicar(self) -> bool:
-        """Regla 1: ¿puede crear/editar su Puesto?
-
-        Requiere cuenta activa + rol vendedor + verificación aprobada cuando
-        la solicitud existe.
-
-        Incremento 2: al registrarse como vendedor se crea la fila ``Vendedor``
-        con estado ``pendiente``, así que publicar exige que un administrador
-        la haya aprobado. La rama "sin solicitud" queda reservada para cuentas
-        legadas creadas antes de este incremento.
-        """
         if not self.is_active or not self.es_vendedor:
             return False
         vendedor = getattr(self, "vendedor", None)
         if vendedor is None:
             return True
         return vendedor.estado_verificacion == vendedor.EstadoVerificacion.APROBADO
+
+
+class TokenRecuperacion(models.Model):
+    usuario = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="tokens_recuperacion"
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    usado = models.BooleanField(default=False)
+    creado = models.DateTimeField(auto_now_add=True)
+    expira = models.DateTimeField()
+
+    class Meta:
+        ordering = ["-creado"]
+
+    def __str__(self):
+        return f"TokenRecuperacion {self.pk}"
+
+
+class FavoritoProducto(models.Model):
+    usuario = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="favoritos_productos"
+    )
+    producto = models.ForeignKey(
+        "catalog.Producto", on_delete=models.CASCADE, related_name="favoritos"
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("usuario", "producto")]
+
+    def __str__(self):
+        return f"FavoritoProducto {self.pk}"
+
+
+class FavoritoPuesto(models.Model):
+    usuario = models.ForeignKey(
+        Usuario, on_delete=models.CASCADE, related_name="favoritos_puestos"
+    )
+    puesto = models.ForeignKey("catalog.Puesto", on_delete=models.CASCADE, related_name="favoritos")
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("usuario", "puesto")]
+
+    def __str__(self):
+        return f"FavoritoPuesto {self.pk}"
 
 
 class Vendedor(models.Model):

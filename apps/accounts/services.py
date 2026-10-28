@@ -162,3 +162,48 @@ def rechazar_verificacion(*, vendedor: Vendedor, revisor: Usuario, motivo: str) 
     vendedor.fecha_revision = timezone.now()
     vendedor.save()
     return vendedor
+
+
+def cambiar_contrasena(*, usuario: Usuario, actual: str, nueva: str) -> Usuario:
+    if not usuario.check_password(actual):
+        raise ValidationError({"actual": "La contraseña actual es incorrecta."})
+    from django.contrib.auth import password_validation
+
+    password_validation.validate_password(nueva, user=usuario)
+    usuario.set_password(nueva)
+    usuario.save(update_fields=["password"])
+    return usuario
+
+
+def solicitar_recuperacion(*, correo: str):
+    import secrets
+    from datetime import timedelta
+
+    from apps.accounts.models import TokenRecuperacion
+
+    correo = Usuario.normalizar_correo(correo)
+    usuario = Usuario.objects.filter(correo=correo).first()
+    if not usuario:
+        return
+    token = secrets.token_urlsafe(32).replace("-", "").replace("_", "")
+    expira = timezone.now() + timedelta(hours=1)
+    TokenRecuperacion.objects.create(usuario=usuario, token=token[:64], expira=expira)
+    import logging
+
+    logging.getLogger(__name__).info("RECUPERACION_TOKEN %s %s", usuario.correo, token[:64])
+
+
+def restablecer_contrasena(*, token: str, nueva: str) -> Usuario:
+    from django.contrib.auth import password_validation
+
+    from apps.accounts.models import TokenRecuperacion
+
+    tr = TokenRecuperacion.objects.filter(token=token[:64], usado=False, expira__gt=timezone.now()).select_related("usuario").first()
+    if not tr:
+        raise ValidationError({"token": "Token inválido o expirado."})
+    password_validation.validate_password(nueva, user=tr.usuario)
+    tr.usuario.set_password(nueva)
+    tr.usuario.save(update_fields=["password"])
+    tr.usado = True
+    tr.save(update_fields=["usado"])
+    return tr.usuario

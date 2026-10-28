@@ -16,10 +16,13 @@ from apps.accounts.auth_cookies import (
 )
 from apps.accounts.permissions import RequiereCabeceraCSRFPersonalizada
 from apps.accounts.serializers import (
+    CambiarContrasenaSerializer,
     LoginSerializer,
     LogoutSerializer,
     PerfilSerializer,
+    RecuperarContrasenaSerializer,
     RegistroSerializer,
+    RestablecerContrasenaSerializer,
 )
 
 
@@ -110,3 +113,37 @@ class PerfilView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class CambiarContrasenaView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CambiarContrasenaSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class RecuperarContrasenaView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
+    serializer_class = RecuperarContrasenaSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class RestablecerContrasenaView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
+    serializer_class = RestablecerContrasenaSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response({"success": True}, status=status.HTTP_200_OK)
