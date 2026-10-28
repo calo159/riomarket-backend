@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Bike,
   ChevronRight,
-  ImageOff,
   MapPin,
   Minus,
   Plus,
@@ -22,6 +21,7 @@ import { ConfirmarModal } from '../components/ui/Modal';
 import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
 import { Estrellas } from '../components/ui/Estrellas';
 import { useSession } from '../auth/SessionProvider';
+import { Imagen } from '../components/Imagen';
 
 export function ProductoDetalle() {
   const { id } = useParams();
@@ -132,19 +132,18 @@ export function ProductoDetalle() {
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="card aspect-square overflow-hidden">
-            {imagen?.url ? (
-              <img src={urlAbsoluta(imagen.url) ?? ''} alt={datos.nombre} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-slate-300 dark:text-slate-700">
-                <ImageOff className="h-16 w-16" />
-              </div>
-            )}
+            <Imagen
+              src={urlAbsoluta((imagen as any)?.url || (imagen as any)?.miniatura)}
+              fallbackNombre={datos.nombre}
+              contenedorClassName="h-full w-full"
+              alt={(imagen as any)?.alt || datos.nombre}
+            />
           </div>
           {imagenes.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {imagenes.map((item, indice) => (
                 <button
-                  key={item.id}
+                  key={(item as any).id}
                   type="button"
                   onClick={() => setImagenActiva(indice)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${
@@ -152,11 +151,11 @@ export function ProductoDetalle() {
                   }`}
                   aria-label={`Ver imagen ${indice + 1}`}
                 >
-                  {item.url ? (
-                    <img src={urlAbsoluta(item.url) ?? ''} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="flex h-full items-center justify-center bg-slate-100 dark:bg-slate-800"><ImageOff className="h-5 w-5" /></span>
-                  )}
+                  <Imagen
+                    src={urlAbsoluta((item as any)?.miniatura || (item as any)?.url)}
+                    fallbackNombre={datos.nombre}
+                    contenedorClassName="h-full w-full"
+                  />
                 </button>
               ))}
             </div>

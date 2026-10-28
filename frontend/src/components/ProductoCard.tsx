@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ImageOff, Loader2, Plus, ShoppingBasket } from 'lucide-react';
+import { Loader2, Plus, ShoppingBasket } from 'lucide-react';
 import type { Producto, Puesto } from '../lib/types';
 import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
@@ -8,6 +8,7 @@ import { useCart } from '../cart/CartProvider';
 import { useToast } from './ui/Toast';
 import { obtenerPuesto } from '../api/catalog';
 import { mensajeDeError } from '../lib/errors';
+import { Imagen } from './Imagen';
 
 export function ImagenProducto({
   producto,
@@ -16,22 +17,15 @@ export function ImagenProducto({
   producto: Producto;
   className?: string;
 }) {
-  const url = urlAbsoluta(producto.imagenes?.[0]?.url);
-  if (!url) {
-    return (
-      <div className={className}>
-        <div className="flex h-full items-center justify-center text-slate-300 dark:text-slate-700">
-          <ImageOff className="h-10 w-10" />
-        </div>
-      </div>
-    );
-  }
+  const img0 = producto.imagenes?.[0] as any;
+  const url = urlAbsoluta(img0?.url || img0?.miniatura);
   return (
-    <img
+    <Imagen
       src={url}
-      alt={producto.nombre}
-      loading="lazy"
-      className={className}
+      fallbackNombre={producto.nombre}
+      contenedorClassName={className}
+      className="transition duration-300 group-hover:scale-105"
+      alt={img0?.alt || producto.nombre}
     />
   );
 }
