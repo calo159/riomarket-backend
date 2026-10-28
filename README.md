@@ -131,7 +131,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo --if-empty`, que siembra únicamente si hay menos de 100 registros.
+`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
@@ -228,7 +228,7 @@ Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conoci
 
 ## Despliegue en Render
 
-`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
+`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
 
 1. Sube el repositorio a GitHub (rama `main`).
 2. En Render, elige **New → Blueprint** y conecta el repositorio.
