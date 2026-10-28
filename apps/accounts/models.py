@@ -63,6 +63,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     rol = models.CharField(max_length=15, choices=Rol.choices, default=Rol.COMPRADOR)
     estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.ACTIVO)
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    avatar = models.ImageField(upload_to="avatars/%Y/%m/", blank=True, null=True)
 
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

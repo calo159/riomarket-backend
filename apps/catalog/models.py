@@ -53,6 +53,9 @@ class Puesto(models.Model):
     horario = models.CharField(max_length=120, blank=True)
     ofrece_domicilio = models.BooleanField(default=False)
     estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.ACTIVO)
+    logo = models.ImageField(upload_to="puestos/logos/%Y/%m/", blank=True, null=True)
+    portada = models.ImageField(upload_to="puestos/portadas/%Y/%m/", blank=True, null=True)
+    acepta_whatsapp = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "puesto"
@@ -85,6 +88,10 @@ class Categoria(models.Model):
         blank=True,
     )
     activa = models.BooleanField(default=True)
+    icono = models.CharField(
+        max_length=40, blank=True, default="", help_text="Clave de ícono lucide-react"
+    )
+    color = models.CharField(max_length=20, blank=True, default="")
 
     class Meta:
         verbose_name = "categoría"
@@ -206,14 +213,17 @@ class Producto(models.Model):
 
 class ImagenProducto(models.Model):
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="imagenes")
-    # El diseño lo llama `url`; aquí es el archivo subido y la API expone
-    # `url` con la ruta pública (ver ADR-002 y el serializer).
     archivo = models.ImageField(
         upload_to="productos/%Y/%m/",
         validators=[validate_image_file],
         help_text="JPEG/PNG/WebP, máximo 2 MB.",
     )
+    miniatura = models.ImageField(upload_to="productos/mini/%Y/%m/", blank=True, null=True)
     orden = models.PositiveIntegerField(default=0)
+    alt = models.CharField(max_length=160, blank=True, default="")
+    es_principal = models.BooleanField(default=False)
+    ancho = models.PositiveIntegerField(null=True, blank=True)
+    alto = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         verbose_name = "imagen de producto"
@@ -221,11 +231,14 @@ class ImagenProducto(models.Model):
         ordering = ["orden", "id"]
 
     def delete(self, *args, **kwargs):
-        """Borra también el archivo físico (Django no lo hace por defecto)."""
         almacen, nombre = self.archivo.storage, self.archivo.name
         resultado = super().delete(*args, **kwargs)
         with contextlib.suppress(OSError):
             almacen.delete(nombre)
+        mini_nombre = getattr(self.miniatura, "name", "")
+        if mini_nombre:
+            with contextlib.suppress(OSError):
+                almacen.delete(mini_nombre)
         return resultado
 
     def __str__(self):

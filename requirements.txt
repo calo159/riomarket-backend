@@ -8,5 +8,7 @@ redis==8.1.0
 drf-spectacular==0.30.0
 cryptography==50.0.2
 Pillow==13.0.0
+django-storages[s3]==1.14.4
+boto3==1.35.99
 gunicorn==23.0.0
 whitenoise==6.8.2

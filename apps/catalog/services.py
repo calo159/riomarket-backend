@@ -16,6 +16,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
+from apps.common.image_processing import make_thumbnail, process_product_image
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
@@ -199,10 +200,50 @@ def _validar_precio(precio) -> None:
 # ---------------------------------------------------------------------------
 # Imágenes de producto
 # ---------------------------------------------------------------------------
-def agregar_imagen(*, producto, archivo) -> ImagenProducto:
-    """Guarda la imagen asignando el siguiente ``orden`` del producto."""
+def agregar_imagen(*, producto, archivo, alt: str = "") -> ImagenProducto:
+    """Guarda la imagen procesada (EXIF eliminado, WebP, miniatura)."""
+    from django.db import transaction
+
     orden = producto.imagenes.aggregate(Max("orden"))["orden__max"] or 0
-    return ImagenProducto.objects.create(id_producto=producto, archivo=archivo, orden=orden + 1)
+    with transaction.atomic():
+        proc, meta = process_product_image(archivo)
+        thumb = make_thumbnail(proc)
+        proc.seek(0)
+        thumb.seek(0)
+        if not alt:
+            alt = producto.nombre or ""
+        imagen = ImagenProducto(
+            id_producto=producto,
+            archivo=proc,
+            miniatura=thumb,
+            orden=orden + 1,
+            alt=alt,
+            es_principal=not producto.imagenes.exists(),
+            ancho=meta.get("ancho"),
+            alto=meta.get("alto"),
+        )
+        imagen.save()
+        return imagen
+
+
+def reordenar_imagenes(*, producto, orden_ids: list) -> list:
+    from django.db import transaction
+
+    with transaction.atomic():
+        for idx, img_id in enumerate(orden_ids):
+            ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
+    return list(producto.imagenes.all())
+
+
+def marcar_imagen_principal(*, producto, imagen_id: int) -> ImagenProducto:
+    from django.db import transaction
+
+    with transaction.atomic():
+        ImagenProducto.objects.filter(id_producto=producto).update(es_principal=False)
+        imagen = ImagenProducto.objects.get(id_producto=producto, pk=imagen_id)
+        imagen.es_principal = True
+        imagen.save(update_fields=["es_principal"])
+    return imagen
 
 
 # ---------------------------------------------------------------------------
