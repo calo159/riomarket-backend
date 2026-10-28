@@ -13,6 +13,7 @@ import {
 } from '../../api/catalog';
 import { miVerificacion } from '../../api/verification';
 import { useSession } from '../../auth/SessionProvider';
+import { Imagen } from '../../components/Imagen';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { Campo, ErrorCampo } from '../../components/ui/Campos';
@@ -255,7 +256,12 @@ export function ProductosVendedor() {
         <div className="flex flex-wrap gap-2">
           {(imagenes?.imagenes ?? []).map((imagen) => (
             <div key={imagen.id} className="relative h-24 w-24 overflow-hidden rounded-lg border">
-              <img src={imagen.url ?? ''} alt="" className="h-full w-full object-cover" />
+              <Imagen
+                src={imagen.url}
+                fallbackNombre={imagenes?.nombre ?? 'Producto'}
+                contenedorClassName="h-full w-full"
+                alt=""
+              />
               <button type="button" className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white" onClick={() => quitarImg.mutate(imagen.id)}><Trash2 className="h-3 w-3" /></button>
             </div>
           ))}

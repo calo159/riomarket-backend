@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ImageOff, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { formatearMoneda } from '../lib/format';
+import { Imagen } from '../components/Imagen';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { EstadoVacio } from '../components/ui/Estado';
 import { ConfirmarModal } from '../components/ui/Modal';
@@ -56,13 +57,12 @@ export function Carrito() {
           {carrito.items.map((item) => (
             <article key={item.productoId} className="card flex gap-3 p-3 sm:gap-4 sm:p-4">
               <Link to={`/productos/${item.productoId}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
-                {item.imagen ? (
-                  <img src={item.imagen} alt={item.nombre} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="flex h-full items-center justify-center bg-slate-100 text-slate-300 dark:bg-slate-800 dark:text-slate-600">
-                    <ImageOff className="h-7 w-7" />
-                  </span>
-                )}
+                <Imagen
+                  src={item.imagen}
+                  fallbackNombre={item.nombre}
+                  contenedorClassName="h-full w-full"
+                  alt={item.nombre}
+                />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">

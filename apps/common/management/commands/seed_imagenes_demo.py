@@ -2,12 +2,13 @@
 
 from pathlib import Path
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
 
-SEED_DIR = Path(__file__).resolve().parent.parent.parent.parent / "seed_images"
+SEED_DIR = Path(settings.BASE_DIR) / "seed_images"
 
 
 class Command(BaseCommand):
@@ -85,6 +86,9 @@ class Command(BaseCommand):
                     "arroz de camarón": "pescado-fresco",
                     "sopa de mariscos": "pescado-fresco",
                     "sancocho": "frijoles-rojos",
+                    "guand": "frijoles-rojos",
+                    "enrollado": "dulces-tipicos",
+                    "bollo": "arepas",
                     "cerdo": "carne-molida",
                     "alegría": "dulces-tipicos",
                     "cocada": "dulces-tipicos",

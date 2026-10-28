@@ -10,11 +10,12 @@ Verifica que:
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 
 from apps.accounts.models import Usuario, Vendedor
 from apps.addresses.models import Direccion
 from apps.audit.models import RegistroAuditoria
-from apps.catalog.models import Categoria, Producto, Puesto
+from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto
 from apps.notifications.models import Notificacion
 from apps.orders.models import ItemPedido, Pedido
 from apps.payments.models import Pago
@@ -82,6 +83,22 @@ class TestSeedMasivo:
         assert admin.check_password("ClaveSegura1!") is True
         assert admin.es_administrador
 
+    def test_seed_actualiza_contrasena_demo_en_base_ya_sembrada(self, api_client, monkeypatch):
+        call_command("seed_masivo", "--password", "OtraClaveVieja1!")
+        assert _conteo_total() > 100
+        admin = Usuario.objects.get(correo="admin@riomarket.test")
+        assert admin.check_password("OtraClaveVieja1!")
+
+        monkeypatch.delenv("SEED_DEMO_PASSWORD", raising=False)
+        call_command("seed_masivo")
+
+        respuesta = api_client.post(
+            "/api/auth/login/",
+            {"correo": "admin@riomarket.test", "password": "RioMarket2026!"},
+            format="json",
+        )
+        assert respuesta.status_code == 200
+
     def test_pedidos_en_estados_variados(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
         estados = set(Pedido.objects.values_list("estado", flat=True))
@@ -113,3 +130,11 @@ class TestSeedMasivo:
                     id_puesto=resena.id_puesto,
                     estado=Pedido.Estado.ENTREGADO,
                 ).exists()
+
+    def test_seed_imagenes_asigna_archivos_del_repo(self, tmp_path):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        with override_settings(MEDIA_ROOT=tmp_path):
+            call_command("seed_imagenes_demo")
+
+        assert ImagenProducto.objects.count() == Producto.objects.count()
+        assert Puesto.objects.filter(portada__isnull=False).exclude(portada="").exists()
