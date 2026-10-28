@@ -132,10 +132,6 @@ export function setAccessToken(token: string | null): void {
   accessEnMemoria = token;
 }
 
-export function getAccessToken(): string | null {
-  return accessEnMemoria;
-}
-
 export function setSessionLostHandler(handler: (() => void) | null): void {
   manejadorPerdidaSesion = handler;
 }

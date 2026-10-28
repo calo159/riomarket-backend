@@ -1,7 +1,8 @@
 # RioMarket — Guía de entrega
 
 Backend de marketplace local de Riohacha (Django 5 + Django REST Framework).
-Incluye 10 apps, documentación Swagger y una base de datos cargada con **522 registros**.
+Incluye 10 apps, documentación Swagger y una base de datos cargada con **522
+registros de dominio** (el volcado SQL incluye además tablas de sistema).
 
 ## 1. Requisitos
 - Python 3.12
@@ -29,6 +30,9 @@ psql "TU_DATABASE_URL" -f entrega/datos_riomarket.sql
 python manage.py seed_masivo
 ```
 
+El arranque de Render usa `seed_masivo --if-empty`: no toca una base que ya tenga
+al menos 100 registros de dominio.
+
 ## 3. URLs
 - Swagger UI: http://127.0.0.1:8000/api/docs/
 - Redoc: http://127.0.0.1:8000/api/docs/redoc/
@@ -49,13 +53,17 @@ python manage.py seed_masivo
 2. Autoriza Swagger con `Bearer <access>`; **lista productos** → `GET /api/catalog/productos/`. Anota el `id` de un producto y su `id_puesto`.
 3. **Crear pedido** → `POST /api/orders/pedidos/` con
    `{"id_puesto": <id_puesto>, "tipo_entrega": "retiro", "items":[{"id_producto": <id>, "cantidad": 1}]}`.
-4. **Registrar pago** → `POST /api/payments/pagos/` con `{"pedido": <id_pedido>, "metodo_pago": "simulado"}`.
-5. **Aprobar pago (sandbox)** → `POST /api/payments/pagos/{id}/simular/` con `{"accion":"aprobar"}`.
+4. **Registrar pago en efectivo** → `POST /api/payments/pagos/` con
+   `{"pedido": <id_pedido>, "metodo_pago": "efectivo"}`.
+5. **Confirmar el cobro (como vendedor `carmen`)** →
+   `POST /api/payments/pagos/{id}/confirmar-efectivo/` con `{}`.
 6. **Confirmar y entregar (como vendedor `carmen`)** → `POST /api/orders/pedidos/{id}/confirmar/`,
    luego `POST /api/orders/pedidos/{id}/en-preparacion/`, `.../enviar/`, `.../entregar/`.
 
 ## 6. Archivos de respaldo
-- `entrega/datos_riomarket.sql` — volcado completo (esquema + datos) de la base cargada.
-- `entrega/datos_riomarket.json` — respaldo de datos (Django `dumpdata`).
+- `entrega/datos_riomarket.sql` — volcado completo (esquema + datos, incluidas
+  tablas de sistema) de la base cargada.
+- `entrega/datos_riomarket.json` — respaldo de datos de dominio (Django
+  `dumpdata`): 522 registros.
 - `entrega/flujo_prueba.curl.md` — mismos 6 pasos con `curl`.
 - `entrega/riomarket_postman.json` — colección Postman opcional.

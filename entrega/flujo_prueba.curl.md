@@ -1,60 +1,74 @@
 # Flujo de prueba con curl (RioMarket)
 
-Base: `http://127.0.0.1:8000`
+Base: `http://127.0.0.1:8000`. Requiere una base sembrada con
+`python manage.py seed_masivo` y `python` disponible para extraer IDs.
 
-## 1. Login (comprador)
+## 1. Login del comprador
+
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/auth/login/ \
+COOKIE_COMP=cookies-comprador.txt
+TOKEN=$(curl -s -c "$COOKIE_COMP" -X POST http://127.0.0.1:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"correo":"luis@riomarket.test","password":"RioMarket2026!"}'
-# Copia el valor de "access" de la respuesta.
+  -d '{"correo":"luis@riomarket.test","password":"RioMarket2026!"}' \
+  | python -c "import sys,json;print(json.load(sys.stdin)['access'])")
 ```
 
-## 2. Listar productos
+## 2. Elegir un producto del puesto 1 (Carmen)
+
 ```bash
-curl -s "http://127.0.0.1:8000/api/catalog/productos/?page=1" \
-  -H "Authorization: Bearer $TOKEN"
-# Anota el id de un producto y su id_puesto.
+PUESTO=1
+PRODUCTO=$(curl -s "http://127.0.0.1:8000/api/catalog/productos/?puesto=1&page_size=1" \
+  -H "Authorization: Bearer $TOKEN" \
+  | python -c "import sys,json;print(json.load(sys.stdin)['results'][0]['id'])")
 ```
 
 ## 3. Crear pedido
+
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/ \
+PEDIDO=$(curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/ \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"id_puesto": 1, "tipo_entrega": "retiro",
-       "items": [{"id_producto": 1, "cantidad": 1}]}'
-# Anota el id del pedido.
+  -d "{\"id_puesto\": $PUESTO, \"tipo_entrega\": \"retiro\",
+       \"items\": [{\"id_producto\": $PRODUCTO, \"cantidad\": 1}]}" \
+  | python -c "import sys,json;print(json.load(sys.stdin)['id'])")
+echo "pedido=$PEDIDO"
 ```
 
-## 4. Registrar pago
+## 4. Registrar pago en efectivo
+
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/payments/pagos/ \
+PAGO=$(curl -s -X POST http://127.0.0.1:8000/api/payments/pagos/ \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"pedido": 1, "metodo_pago": "simulado"}'
-# Anota el id del pago.
+  -d "{\"pedido\": $PEDIDO, \"metodo_pago\": \"efectivo\"}" \
+  | python -c "import sys,json;print(json.load(sys.stdin)['id'])")
+echo "pago=$PAGO"
 ```
 
-## 5. Aprobar pago (sandbox)
-```bash
-curl -s -X POST http://127.0.0.1:8000/api/payments/pagos/1/simular/ \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"accion": "aprobar"}'
-```
+## 5. Login del vendedor y cobro en efectivo
 
-## 6. Confirmar y entregar (vendedor carmen)
 ```bash
-# Login como vendedor
-curl -s -X POST http://127.0.0.1:8000/api/auth/login/ \
+COOKIE_VEND=cookies-vendedor.txt
+TOKEN_VENDEDOR=$(curl -s -c "$COOKIE_VEND" \
+  -X POST http://127.0.0.1:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"correo":"carmen@riomarket.test","password":"RioMarket2026!"}'
-# usa el access como $TOKEN_VENDEDOR
+  -d '{"correo":"carmen@riomarket.test","password":"RioMarket2026!"}' \
+  | python -c "import sys,json;print(json.load(sys.stdin)['access'])")
 
-curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/1/confirmar/ \
-  -H "Authorization: Bearer $TOKEN_VENDEDOR"
-curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/1/en-preparacion/ \
-  -H "Authorization: Bearer $TOKEN_VENDEDOR"
-curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/1/enviar/ \
-  -H "Authorization: Bearer $TOKEN_VENDEDOR"
-curl -s -X POST http://127.0.0.1:8000/api/orders/pedidos/1/entregar/ \
-  -H "Authorization: Bearer $TOKEN_VENDEDOR"
+curl -s -X POST "http://127.0.0.1:8000/api/payments/pagos/$PAGO/confirmar-efectivo/" \
+  -H "Authorization: Bearer $TOKEN_VENDEDOR" \
+  -H "Content-Type: application/json" -d '{}'
 ```
+
+## 6. Confirmar y entregar (vendedor Carmen)
+
+```bash
+for accion in confirmar en-preparacion enviar entregar; do
+  curl -s -X POST "http://127.0.0.1:8000/api/orders/pedidos/$PEDIDO/$accion/" \
+    -H "Authorization: Bearer $TOKEN_VENDEDOR" \
+    -H "Content-Type: application/json" -d '{}'
+  echo
+done
+```
+
+El pedido queda en `entregado` y el pago en `aprobado`. Para renovar el access
+del comprador usa `POST /api/auth/token/refresh/` con `-b "$COOKIE_COMP"` y
+`-H "X-Requested-With: XMLHttpRequest"`.

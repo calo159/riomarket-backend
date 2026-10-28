@@ -1,6 +1,5 @@
 const CLAVE_AVISO = 'riomarket.aviso';
 
-export const CLAVE_AVISO_SESION = CLAVE_AVISO;
 
 export function limpiarRefresh(): void {
   // Migrado: refresh ahora en cookie HttpOnly

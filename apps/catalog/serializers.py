@@ -64,28 +64,56 @@ class PuestoSerializer(serializers.ModelSerializer):
 
 
 class ImagenProductoSerializer(serializers.ModelSerializer):
-    """La API expone ``url`` (ruta pública del archivo subido): el diseño
-    llama ``url`` a este atributo, en BD es el campo ``archivo`` (ADR-002)."""
-
     url = serializers.SerializerMethodField()
+    miniatura = serializers.SerializerMethodField()
     archivo = serializers.ImageField(
-        write_only=True, validators=[validate_image_file], required=True
+        write_only=True, validators=[validate_image_file], required=False
     )
 
     class Meta:
         model = ImagenProducto
-        fields = ("id", "id_producto", "url", "orden", "archivo")
-        read_only_fields = ("id", "orden")
+        fields = (
+            "id",
+            "id_producto",
+            "url",
+            "miniatura",
+            "orden",
+            "archivo",
+            "alt",
+            "es_principal",
+            "ancho",
+            "alto",
+        )
+        read_only_fields = ("id", "url", "miniatura", "ancho", "alto")
 
     def get_url(self, obj) -> str | None:
         if not obj.archivo:
             return None
-        return obj.archivo.url
+        try:
+            return obj.archivo.url
+        except Exception:
+            return None
+
+    def get_miniatura(self, obj) -> str | None:
+        if obj.miniatura:
+            try:
+                return obj.miniatura.url
+            except Exception:
+                pass
+        if obj.archivo:
+            try:
+                return obj.archivo.url
+            except Exception:
+                return None
+        return None
 
     def create(self, validated_data):
         producto = validated_data.pop("id_producto")
-        archivo = validated_data.pop("archivo")
-        return services.agregar_imagen(producto=producto, archivo=archivo)
+        archivo = validated_data.pop("archivo", None)
+        alt = validated_data.pop("alt", "")
+        if not archivo:
+            raise serializers.ValidationError({"archivo": "Este campo es obligatorio."})
+        return services.agregar_imagen(producto=producto, archivo=archivo, alt=alt)
 
 
 class ProductoSerializer(serializers.ModelSerializer):

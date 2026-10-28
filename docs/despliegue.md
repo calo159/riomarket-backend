@@ -4,8 +4,8 @@ Todo está automatizado en `render.yaml`:
 
 - Render crea el servicio Docker **y la base PostgreSQL** (plan free).
 - Genera `SECRET_KEY` y `FERNET_KEY` solo.
-- Ejecuta `collectstatic`, `migrate` y crea los datos demo en el primer arranque
-  (solo si la base está vacía).
+- Ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty` en el arranque:
+  carga los datos solo si la base tiene menos de 100 registros.
 - Configura HTTPS, `ALLOWED_HOSTS` y CSRF para `*.onrender.com`.
 
 ## Lo único que debes hacer tú
@@ -13,7 +13,8 @@ Todo está automatizado en `render.yaml`:
 1. **Subir el repo a GitHub** (rama `main`).
 2. En https://dashboard.render.com → **New → Blueprint** → conectar el repo →
    **Apply**. No hay que escribir ninguna variable.
-3. Esperar el deploy y abrir la URL `https://riomarket.onrender.com`.
+3. Esperar el deploy y abrir la URL que muestre Render (por defecto
+   `https://riomarket.onrender.com`; puede cambiar si el nombre está ocupado).
 
 Usuario demo: `admin@riomarket.test` / `RioMarket2026!`
 (también `carmen@`, `diego@`, `luis@riomarket.test` con la misma clave).
@@ -27,18 +28,19 @@ Verificación rápida:
 
 Antes del primer deploy, en el Blueprint agrega la variable
 `SEED_DEMO_PASSWORD` con tu clave (o cámbiala en Environment y haz "Manual
-Deploy"). El seed solo corre si la base está vacía.
+Deploy"). El seed solo corre si la base tiene menos de 100 registros de dominio.
 
 > Si la cambias, los botones de acceso rápido del login (que usan
 > `RioMarket2026!`) dejarán de funcionar: escribe la clave a mano.
 
 ## Límites del plan free (importante)
 
-- El servicio se duerme tras 15 min sin tráfico (despierta en ~1 min).
+- El servicio se duerme tras 15 min sin tráfico (despierta en ~1 min). Configura un ping gratuito (UptimeRobot o cron-job.org) a `/api/health/` cada 10 minutos.
 - La base free de Render **caduca a los 30 días** (aviso por correo; 14 días de
   gracia para pasarla a pago).
-- Disco efímero: las imágenes subidas se pierden en cada redeploy.
-- Sin Shell en el plan free: los datos demo se crean solos en el arranque.
+- Disco efímero: las imágenes subidas se pierden en cada redeploy. Usa almacenamiento S3-compatible (Supabase Storage/R2/AWS) con las variables `STORAGE_S3_*`.
+- Sin Shell en el plan free: los datos demo se cargan solos en el arranque con
+  `seed_masivo --if-empty` y `seed_imagenes_demo`.
 
 ## Si necesitas que la base dure más de 30 días
 
@@ -48,6 +50,13 @@ Usa Supabase (free, no caduca):
    `?sslmode=require`.
 2. En Render → Environment, reemplaza `DATABASE_URL` por esa cadena y haz
    "Manual Deploy".
+
+## Almacenamiento S3-compatible (persistir imágenes)
+
+1. En Supabase Storage crea dos buckets: `productos` (público) y `privado` (privado).
+2. En Supabase → Settings → API/Storage crea claves S3 o usa las credenciales compatibles.
+3. En Render añade las variables: `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY`, `STORAGE_S3_BUCKET_PUBLICO=productos`, `STORAGE_S3_BUCKET_PRIVADO=privado`. Opcional `STORAGE_PUBLIC_BASE_URL`.
+4. Redeploy. Las imágenes subirán al bucket público; las fotos de cédula seguirán en almacén privado. Si no se configuran, se usa disco local (efímero).
 
 Redis es opcional: define `REDIS_URL` (Render Key Value) solo si quieres caché
 compartida; sin ella se usa memoria local.

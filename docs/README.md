@@ -1,0 +1,42 @@
+# Documentación de RioMarket
+
+Índice de la documentación extendida. El README principal resume instalación,
+stack, pruebas y despliegue.
+
+## Visión general
+
+- [Arquitectura](arquitectura.md): dependencias entre apps, ERD, flujo de
+  estados y matriz de permisos por rol.
+- [Despliegue](despliegue.md): Render, Supabase, límites del plan free y
+  variables de producción.
+- [Auditoría y mantenimiento](MANTENIMIENTO.md): línea base, herramientas,
+  dependencias, datos demo y decisiones de limpieza.
+- [Alcance del frontend](alcance-frontend.md): encargo original y estado actual
+  de la SPA.
+- [Guion de presentación](PRESENTACION.md): demo de 5 minutos y preguntas
+  frecuentes.
+- [Seguridad](../SEGURIDAD.md): controles, riesgos abiertos y checklist.
+
+## API
+
+- [Ejemplos de API](api-ejemplos.md): flujo `curl` completo con autenticación
+  por cookie, pedidos, pagos y errores.
+- Swagger local: <http://127.0.0.1:8000/api/docs/>
+- Esquema OpenAPI: <http://127.0.0.1:8000/api/schema/>
+
+## Decisiones de arquitectura
+
+- [ADR-001: enums y `choices`](ADR-001-enums.md)
+- [ADR-002: media pública y privada](ADR-002-media-publica-y-privada.md)
+- [ADR-003: pagos, montos y comisión](ADR-003-pagos.md)
+- [ADR-004: direcciones y notificaciones](ADR-004-direcciones-y-notificaciones.md)
+- [ADR-005: reputación y reseñas](ADR-005-reputacion-resenas.md)
+- [ADR-006: promociones y cupones](ADR-006-promociones-cupones.md)
+- [ADR-007: auditoría de acciones](ADR-007-auditoria.md)
+
+## Entrega
+
+- [Guía de entrega](../entrega/LEEME_ENTREGA.md)
+- [Flujo de prueba con curl](../entrega/flujo_prueba.curl.md)
+- [Respaldo JSON](../entrega/datos_riomarket.json)
+- [Respaldo SQL](../entrega/datos_riomarket.sql)

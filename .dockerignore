@@ -20,5 +20,9 @@ db.sqlite3
 test_media/
 frontend/node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
 entrega/
 docs/
+.DS_Store
+Thumbs.db

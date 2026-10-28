@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "drf_spectacular",
+    "storages",
     # Apps del proyecto
     "apps.common",
     "apps.accounts",

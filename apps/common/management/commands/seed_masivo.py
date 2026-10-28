@@ -13,8 +13,10 @@ Uso::
 
     python manage.py seed_masivo
     python manage.py seed_masivo --password "OtraClave1!"
+    python manage.py seed_masivo --if-empty
 """
 
+import os
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
@@ -39,6 +41,22 @@ from apps.reviews.models import Resena
 CONTRASENA_POR_DEFECTO = "RioMarket2026!"
 
 TOTAL_MINIMO = 100
+
+MODELOS_CONTEO = (
+    Usuario,
+    Vendedor,
+    Categoria,
+    Puesto,
+    Producto,
+    Direccion,
+    Pedido,
+    ItemPedido,
+    Pago,
+    Cupon,
+    Resena,
+    Notificacion,
+    RegistroAuditoria,
+)
 
 # Coordenadas de referencia en Riohacha (La Guajira).
 LAT_BASE = "11.544440"
@@ -379,12 +397,30 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--password",
-            default=CONTRASENA_POR_DEFECTO,
+            default=os.environ.get("SEED_DEMO_PASSWORD", CONTRASENA_POR_DEFECTO),
             help="Contraseña única para todos los usuarios demo.",
         )
+        parser.add_argument(
+            "--if-empty",
+            action="store_true",
+            help=(
+                "No hace nada si la base ya tiene al menos "
+                f"{TOTAL_MINIMO} registros de dominio (para el arranque)."
+            ),
+        )
+
+    @staticmethod
+    def _total_registros() -> int:
+        return sum(modelo.objects.count() for modelo in MODELOS_CONTEO)
 
     def handle(self, *args, **options):
         self.password = options["password"]
+
+        if options["if_empty"] and self._total_registros() >= TOTAL_MINIMO:
+            self.stdout.write(
+                f"Seed masivo omitido: la base ya tiene al menos {TOTAL_MINIMO} registros."
+            )
+            return
         self.usuarios: dict[str, Usuario] = {}
         self.categorias: dict[str, Categoria] = {}
         self.puestos: dict[str, Puesto] = {}

@@ -44,9 +44,62 @@ else:
 # El index.html lo entrega Django para que apliquen las cabeceras de seguridad.
 WHITENOISE_ROOT = BASE_DIR / "frontend" / "dist"
 
-STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Configuración de almacenamiento: S3-compatible (Supabase Storage/R2/AWS) con respaldo local
+_s3_bucket_publico = env("STORAGE_S3_BUCKET_PUBLICO", default="") or env(
+    "STORAGE_S3_BUCKET", default=""
+)
+_s3_bucket_privado = env("STORAGE_S3_BUCKET_PRIVADO", default="")
+_s3_access_key = env("STORAGE_S3_ACCESS_KEY", default="")
+_s3_secret_key = env("STORAGE_S3_SECRET_KEY", default="")
+_s3_endpoint = env("STORAGE_S3_ENDPOINT", default="")
+_s3_region = env("STORAGE_S3_REGION", default="us-east-1")
+_s3_public_base_url = env("STORAGE_PUBLIC_BASE_URL", default="")
+
+_use_s3 = bool(_s3_bucket_publico and _s3_access_key and _s3_secret_key and _s3_endpoint)
+
+if _use_s3:
+    AWS_ACCESS_KEY_ID = _s3_access_key
+    AWS_SECRET_ACCESS_KEY = _s3_secret_key
+    AWS_STORAGE_BUCKET_NAME = _s3_bucket_publico
+    AWS_S3_ENDPOINT_URL = _s3_endpoint
+    AWS_S3_REGION_NAME = _s3_region
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    if _s3_public_base_url:
+        AWS_S3_CUSTOM_DOMAIN = _s3_public_base_url.replace("https://", "").replace("http://", "")
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    else:
+        MEDIA_URL = f"{_s3_endpoint}/{_s3_bucket_publico}/"
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "bucket_name": _s3_bucket_publico,
+                "default_acl": None,
+                "querystring_auth": False,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+    logger.info("Almacenamiento de medios configurado con S3-compatible (bucket público).")
+else:
+    logger.warning(
+        "medios efímeros: sin variables S3; se usará sistema de archivos local "
+        "(se perderán en redeploy)"
+    )
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }

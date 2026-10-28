@@ -19,12 +19,3 @@ export function EncabezadoPagina({
     </div>
   );
 }
-
-export function SeccionTitulo({ children, accion }: { children: ReactNode; accion?: ReactNode }) {
-  return (
-    <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold">{children}</h2>
-      {accion}
-    </div>
-  );
-}

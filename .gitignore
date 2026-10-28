@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -44,7 +44,18 @@ htmlcov/
 .idea/
 .vscode/
 *.log
+*.bak
+*.orig
+*.rej
+*.swp
 
-# frontend/src/lib es código fuente, no un directorio de build de Python
-!frontend/src/lib/
-!frontend/src/lib/**
+# Frontend
+node_modules/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+schema.yaml
+
+# Sistema
+.DS_Store
+Thumbs.db

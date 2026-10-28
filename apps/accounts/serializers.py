@@ -103,4 +103,32 @@ class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField(
         write_only=True,
         help_text="Token de refresco que se revoca (blacklist).",
+        required=False,
     )
+
+
+class CambiarContrasenaSerializer(serializers.Serializer):
+    actual = serializers.CharField(write_only=True)
+    nueva = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        usuario = self.context["request"].user
+        services.cambiar_contrasena(usuario=usuario, actual=attrs["actual"], nueva=attrs["nueva"])
+        return attrs
+
+
+class RecuperarContrasenaSerializer(serializers.Serializer):
+    correo = serializers.EmailField()
+
+    def validate(self, attrs):
+        services.solicitar_recuperacion(correo=attrs["correo"])
+        return attrs
+
+
+class RestablecerContrasenaSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    nueva = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs):
+        services.restablecer_contrasena(token=attrs["token"], nueva=attrs["nueva"])
+        return attrs

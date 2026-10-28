@@ -176,19 +176,33 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="imagenes")
     def subir_imagen(self, request, pk=None):
-        """``POST /productos/{id}/imagenes/`` (multipart, campo ``archivo``)."""
         producto = self.get_object()
         cuerpo = request.data.copy()
         cuerpo["id_producto"] = producto.pk
         serializer = ImagenProductoSerializer(data=cuerpo, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         imagen = services.agregar_imagen(
-            producto=producto, archivo=serializer.validated_data["archivo"]
+            producto=producto,
+            archivo=serializer.validated_data["archivo"],
+            alt=serializer.validated_data.get("alt") or "",
         )
         return Response(
             ImagenProductoSerializer(imagen).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=True, methods=["post"], url_path="imagenes/reordenar")
+    def reordenar_imagenes(self, request, pk=None):
+        producto = self.get_object()
+        orden_ids = request.data.get("orden") or request.data.get("imagenes") or []
+        imagenes = services.reordenar_imagenes(producto=producto, orden_ids=orden_ids)
+        return Response(ImagenProductoSerializer(imagenes, many=True).data)
+
+    @action(detail=True, methods=["post"], url_path="imagenes/(?P<imagen_id>[^/.]+)/principal")
+    def marcar_principal(self, request, pk=None, imagen_id=None):
+        producto = self.get_object()
+        imagen = services.marcar_imagen_principal(producto=producto, imagen_id=imagen_id)
+        return Response(ImagenProductoSerializer(imagen).data)
 
 
 class ImagenProductoViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,8 @@
-# Prompt de construcción del frontend
+# Alcance y decisiones del frontend
 
-Este documento conserva el encargo original con el que se construyó el frontend de RioMarket.
-El estado de cumplimiento y las limitaciones conocidas se documentan en `frontend/README.md`.
+Este documento conserva el encargo original con el que se construyó el frontend
+de RioMarket y anota los cambios de autenticación aplicados después. El estado
+actual y las limitaciones están en [`frontend/README.md`](../frontend/README.md).
 
 ---
 
@@ -19,7 +20,7 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 
 - TypeScript estricto. Prohibido `any`.
 - TanStack Query para estado del servidor y Axios para HTTP.
-- El access token se guarda solo en memoria. El refresh token va en `localStorage`. Nunca guardes tokens en contexto que se serialice ni los muestres en pantalla.
+- El access token se guarda solo en memoria. El refresh token viaja en una cookie `HttpOnly` (`rm_refresh`); nunca se guarda en `localStorage` ni se muestra en pantalla.
 - Axios con interceptores: añade el access; ante 401 intenta refrescar una sola vez y reintenta. Si el refresh falla, limpia sesión y redirige a `/login`. Implementa refresh compartido: varias peticiones simultáneas con 401 deben compartir una sola promesa de refresh.
 - Rutas protegidas y protección por rol. Si no hay sesión, redirige a `/login?redirect=...`. Si el rol no tiene permiso, a `/403`.
 - Valida formularios con React Hook Form + Zod. Muestra errores del backend mapeados por campo (`errors.campo[0]`).
@@ -34,16 +35,17 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 
 ### Fase 1: base
 - `frontend/` con Vite + React + TS + Tailwind. Scripts `dev`, `build`, `preview`, `lint`, `typecheck`, `test`, `test:e2e`.
-- `.env` con `VITE_API_URL=http://127.0.0.1:8000`.
+- `.env` con `VITE_API_URL=` vacío para usar el proxy de Vite; se define solo si
+  el frontend se sirve desde otro origen.
 - Cliente HTTP (`src/lib/http.ts`) con interceptores, refresh compartido y logout.
 - `SessionProvider` con estados `cargando`, `anonimo`, `autenticado`; restaura la sesión al cargar usando refresh y `/auth/perfil/`.
-- `RutaProtegida`, `Puede` y matriz de permisos por rol en `src/auth/permisos.ts`.
+- `RutaProtegida` y matriz de permisos por rol en `src/auth/permisos.ts`.
 - Layouts público y de panel. Tema claro/oscuro.
 
 ### Fase 2: auth y RBAC
 - Login y registro. Registro permite comprador o vendedor.
 - Redirección al inicio según rol tras login: comprador `/`, vendedor `/vendedor`, admin `/admin`.
-- Logout. Sincroniza el cierre de sesión entre pestañas con `storage`.
+- Logout. La sesión se restaura desde la cookie de refresh al cargar la app.
 - Manejo de sesión expirada sin parpadeo.
 
 ### Fase 3: catálogo público
@@ -85,7 +87,7 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 ### Fase 7: pulido
 - Modo demo en login con botones que rellenan las credenciales de prueba (comprador, vendedor y admin), activado con `VITE_DEMO_MODE=true`.
 - Carga diferida de rutas con `React.lazy` y `Suspense`.
-- Tests unitarios de los interceptores (refresh compartido, reintento, pérdida de sesión) y de rutas protegidas (redirect a login y a `/403`).
+- Tests unitarios de utilidades, interceptores (refresh compartido, reintento, pérdida de sesión) y rutas protegidas (redirect a login y a `/403`).
 - Smoke test con Playwright de la app (login público y navegación básica).
 - Job de frontend en CI: `npm ci`, `lint`, `typecheck`, `test`, `build`.
 - README del frontend y mención en el README principal.
