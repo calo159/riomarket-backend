@@ -73,9 +73,7 @@ if _use_s3:
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_SIGNATURE_VERSION = "s3v4"
-    MEDIA_URL = construir_media_url(
-        _s3_endpoint, _s3_bucket_publico, _s3_public_base_url
-    )
+    MEDIA_URL = construir_media_url(_s3_endpoint, _s3_bucket_publico, _s3_public_base_url)
     AWS_S3_CUSTOM_DOMAIN = MEDIA_URL.split("://", 1)[-1].rstrip("/")
 
     STORAGES = {
