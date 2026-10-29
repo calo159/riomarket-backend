@@ -110,6 +110,17 @@ class Pedido(models.Model):
         default=Decimal("0.00"),
         validators=[MinValueValidator(Decimal("0"))],
     )
+    no_recibido_en = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Cuándo el comprador reportó que no recibió el pedido.",
+    )
+    motivo_no_recibido = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Motivo opcional del reporte de no recibido.",
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

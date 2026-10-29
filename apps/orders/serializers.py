@@ -35,6 +35,17 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "nombre_producto", "unidad_medida", "precio_unitario")
 
 
+class ReportarNoRecibidoSerializer(serializers.Serializer):
+    """Cuerpo opcional del reporte ``/pedidos/{id}/no-recibido/``."""
+
+    motivo = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=200,
+        help_text="Motivo opcional (máximo 200 caracteres).",
+    )
+
+
 class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, allow_empty=False)
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -58,6 +69,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "id_cupon",
             "descuento_cupon",
             "total",
+            "no_recibido_en",
+            "motivo_no_recibido",
             "items",
             "codigo_cupon",
             "fecha_creacion",
@@ -74,6 +87,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "id_cupon",
             "descuento_cupon",
             "total",
+            "no_recibido_en",
+            "motivo_no_recibido",
             "fecha_creacion",
             "fecha_actualizacion",
         )

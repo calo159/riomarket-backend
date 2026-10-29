@@ -63,7 +63,7 @@ stateDiagram-v2
     cancelado --> [*]
 ```
 
-El vendedor confirma y avanza la preparación; el comprador o el vendedor pueden cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
+El vendedor confirma, prepara y marca el pedido como en camino (entregado al domiciliario o listo para retirar). Solo el comprador confirma que lo recibió; si no le llega, puede reportarlo y el administrador resuelve la disputa. Cualquiera de las partes puede cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
 
 ## Stack
 

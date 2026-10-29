@@ -669,7 +669,8 @@ class Command(BaseCommand):
         if estado in ("en_camino", "entregado"):
             orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
         if estado == "entregado":
-            orders_services.marcar_entregado(pedido=pedido, usuario=vendedor)
+            # Solo el comprador confirma la recepción (Fase 1 de RBAC).
+            orders_services.marcar_entregado(pedido=pedido, usuario=comprador)
 
     # ------------------------------------------------------------------
     # Reseñas

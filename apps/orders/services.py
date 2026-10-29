@@ -18,6 +18,7 @@ from decimal import Decimal
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Producto, Puesto
@@ -42,6 +43,7 @@ TRANSICIONES: dict[str, tuple[str, ...]] = {
 
 # Roles por transición (el administrador siempre puede).
 _VENDEDOR = "vendedor"
+_COMPRADOR = "comprador"
 _PARTE = "comprador_o_vendedor"
 
 
@@ -258,6 +260,33 @@ def cancelar_pedido(*, pedido: Pedido, usuario) -> Pedido:
     return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.CANCELADO)
 
 
+def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido:
+    """El comprador avisa que el pedido no le llegó (o no lo pudo retirar).
+
+    No cambia el estado: si el pedido llega después, el comprador todavía puede
+    confirmar la entrega. Solo se permite una vez y mientras esté en camino.
+    """
+    if not (usuario and usuario.is_active):
+        raise PermissionDenied("Se requiere una cuenta activa.")
+    if not usuario.es_administrador and pedido.id_comprador_id != usuario.pk:
+        raise PermissionDenied("Solo el comprador del pedido puede reportar que no lo recibió.")
+    if pedido.estado != Pedido.Estado.EN_CAMINO:
+        raise ValidationError(
+            {"estado": "Solo se puede reportar un pedido que esté en camino."}
+        )
+    if pedido.no_recibido_en is not None:
+        raise ValidationError({"no_recibido": "Ya reportaste que este pedido no te llegó."})
+    motivo = (motivo or "").strip()
+    if len(motivo) > 200:
+        raise ValidationError({"motivo": "El motivo no puede superar 200 caracteres."})
+    pedido.no_recibido_en = timezone.now()
+    pedido.motivo_no_recibido = motivo
+    pedido.save(update_fields=["no_recibido_en", "motivo_no_recibido", "fecha_actualizacion"])
+    _notificar_no_recibido(pedido)
+    _auditar(usuario, "no_recibido", pedido, {"motivo": motivo})
+    return pedido
+
+
 def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
     permitidas = TRANSICIONES[pedido.estado]
     if destino not in permitidas:
@@ -366,9 +395,20 @@ def _notificar_cambio_estado(pedido: Pedido, estado_anterior: str) -> None:
         logger.exception("No se pudo notificar el cambio de estado del pedido %s", pedido.pk)
 
 
+def _notificar_no_recibido(pedido: Pedido) -> None:
+    from apps.notifications import services as notif
+
+    try:
+        notif.notificar_no_recibido(pedido=pedido)
+    except Exception:  # pragma: no cover - la notificación no debe romper el pedido
+        logger.exception("No se pudo notificar el reporte de no recibido del pedido %s", pedido.pk)
+
+
 def _rol_para(destino: str) -> str:
-    if destino in (Pedido.Estado.CANCELADO, Pedido.Estado.ENTREGADO):
+    if destino == Pedido.Estado.CANCELADO:
         return _PARTE
+    if destino == Pedido.Estado.ENTREGADO:
+        return _COMPRADOR
     return _VENDEDOR
 
 
@@ -383,6 +423,10 @@ def _autorizar(pedido: Pedido, usuario, *, quien: str) -> None:
         if es_vendedor:
             return
         raise PermissionDenied("Solo el vendedor del puesto puede realizar esta acción.")
+    if quien == _COMPRADOR:
+        if es_comprador:
+            return
+        raise PermissionDenied("Solo el comprador del pedido puede confirmar la entrega.")
     if es_comprador or es_vendedor:
         return
     raise PermissionDenied("Solo las partes del pedido pueden realizar esta acción.")

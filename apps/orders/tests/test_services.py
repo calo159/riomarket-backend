@@ -326,7 +326,7 @@ class TestRegla5Transiciones:
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
         services.marcar_enviado(pedido=pedido, usuario=vendedor)
-        services.marcar_entregado(pedido=pedido, usuario=vendedor)
+        services.marcar_entregado(pedido=pedido, usuario=comprador)
         with pytest.raises(DjangoValidationError):
             services.cancelar_pedido(pedido=pedido, usuario=vendedor)
 
