@@ -56,14 +56,15 @@ stateDiagram-v2
     pendiente --> cancelado
     confirmado --> en_preparacion
     confirmado --> cancelado
-    en_preparacion --> en_camino
+    en_preparacion --> en_camino: vendedor entrega al domiciliario / listo
     en_preparacion --> cancelado
-    en_camino --> entregado
+    en_camino --> entregado: comprador confirma recepción
+    en_camino --> en_camino: comprador reporta no-recibido
     entregado --> [*]
     cancelado --> [*]
 ```
 
-El vendedor confirma y avanza la preparación; el comprador o el vendedor pueden cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
+El vendedor confirma, pasa a preparación y marca **en camino** (ya entregó el pedido al domiciliario o está listo para retirar); **no** puede marcarlo entregado. Solo el comprador (o el administrador, para resolver disputas) confirma la recepción. Si el pedido está en camino y no llega, el comprador puede reportarlo: el estado no cambia, se registra el aviso y se notifica al vendedor; si luego llega, aún puede confirmarlo. El comprador o el vendedor pueden cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
 
 ## Stack
 
@@ -140,7 +141,7 @@ Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corres
 1. Entra como **comprador** (`luis@riomarket.test`), busca un producto y agrégalo al carrito.
 2. Haz el checkout eligiendo retiro o domicilio y paga (efectivo o simulado).
 3. Entra como **vendedor** (`carmen@riomarket.test`), confirma el pago en efectivo y avanza el pedido: confirmado, en preparación, en camino.
-4. Vuelve como comprador, marca el pedido como entregado y deja una reseña.
+4. Vuelve como comprador, confirma la recepción del pedido (`entregado`) y deja una reseña. Si quieres probar el reporte, antes de confirmar usa **No me ha llegado**: se avisa al vendedor y el pedido sigue en camino.
 5. Entra como **administrador** (`admin@riomarket.test`) y revisa pedidos, pagos y auditoría.
 
 ## Configuración
@@ -199,6 +200,24 @@ La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones 
 
 Vite corre en `127.0.0.1:3000` y hace proxy de `/api` y `/media`. Si defines `VITE_API_URL`, usa el mismo host de la SPA para que la cookie `SameSite=Strict` siga siendo del mismo sitio. El acceso rápido con las cuentas demo del login se activa con `VITE_DEMO_MODE=true`.
 
+### Permisos de pedidos por rol
+
+La fuente de verdad es `apps/orders/permissions.py`; el comprador solo actúa
+sobre **su** pedido y el vendedor sobre los de **su** puesto. El administrador
+resuelve disputas y no crea pedidos. `acciones_permitidas` de la API expone
+esta matriz combinada con el estado actual.
+
+| Acción | Comprador | Vendedor del puesto | Administrador |
+| --- | :---: | :---: | :---: |
+| Crear pedido | ✅ | — | — |
+| Editar dirección/notas (pendiente) | ✅ | — | ✅ |
+| Confirmar pedido | — | ✅ | ✅ |
+| Pasar a preparación | — | ✅ | ✅ |
+| Marcar en camino / listo para retirar | — | ✅ | ✅ |
+| Confirmar recepción (`entregado`) | ✅ | — | ✅ |
+| Reportar `no-recibido` (en camino) | ✅ | — | ✅ |
+| Cancelar | ✅ | ✅ | ✅ |
+
 ## Pruebas
 
 Backend:
@@ -211,7 +230,7 @@ python manage.py makemigrations --check --dry-run
 python manage.py spectacular --file schema.yaml --validate
 ```
 
-Resultado actual: **483 pruebas en verde**, lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
+Resultado actual: **589 pruebas en verde**, lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
 
 Frontend (`cd frontend`):
 
@@ -222,7 +241,7 @@ npm test
 npm run build
 ```
 
-Resultado: **10 pruebas en 3 archivos**, con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
+Resultado: **21 pruebas en 5 archivos**, con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
 
 Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` mantiene **12 avisos** (2 críticos, 2 altos y 8 moderados), principalmente en herramientas de desarrollo; el detalle está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
 

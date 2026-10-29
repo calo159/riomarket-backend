@@ -589,7 +589,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Marca el pedido como entregado (en_camino → entregado). */
+        /** @description El comprador confirma que recibió el pedido (en_camino → entregado). */
         post: operations["orders_pedidos_entregar_create"];
         delete?: never;
         options?: never;
@@ -606,7 +606,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description El pedido sale a domicilio (en_preparacion → en_camino). */
+        /** @description El vendedor ya entregó el pedido al domiciliario o está listo para retirar (en_preparacion → en_camino). */
         post: operations["orders_pedidos_enviar_create"];
         delete?: never;
         options?: never;
@@ -1545,6 +1545,15 @@ export interface components {
             readonly longitud_entrega: string | null;
             /** @description Notas del comprador para el vendedor. */
             notas?: string;
+            /**
+             * Format: date-time
+             * @description Cuándo el comprador reportó que el pedido en camino no le ha llegado.
+             */
+            readonly no_recibido_en: string | null;
+            /** @description Detalle opcional que escribe el comprador al reportar que no le llegó. */
+            readonly motivo_no_recibido: string;
+            /** @description Acciones que el usuario autenticado puede ejecutar ahora sobre este pedido (RBAC + estado): confirmar, en-preparacion, enviar, entregar, no-recibido, cancelar, editar. */
+            readonly acciones_permitidas: string[];
             /** Format: decimal */
             readonly subtotal: string;
             /**

@@ -76,6 +76,16 @@ class Pedido(models.Model):
     latitud_entrega = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitud_entrega = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     notas = models.TextField(blank=True, help_text="Notas del comprador para el vendedor.")
+    no_recibido_en = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Cuándo el comprador reportó que el pedido en camino no le ha llegado.",
+    )
+    motivo_no_recibido = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Detalle opcional que escribe el comprador al reportar que no le llegó.",
+    )
     subtotal = models.DecimalField(
         max_digits=12,
         decimal_places=2,

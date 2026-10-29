@@ -262,7 +262,9 @@ administrador puede todo lo que aparece abajo.
 | Crear pedido | ⬜ | ✅ | ⬜ | ⬜ | ⬜ |
 | Ver/listar pedidos | ⬜ | ✅ (suyos) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
 | Confirmar / preparar / enviar pedido | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |
-| Entregar / cancelar pedido | ⬜ | ✅ (suyo) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
+| Confirmar recepción (`entregado`) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
+| Reportar `no-recibido` (en camino) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
+| Cancelar pedido | ⬜ | ✅ (suyo) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
 | Registrar pago | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Simular pago (sandbox) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Confirmar cobro en efectivo | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |

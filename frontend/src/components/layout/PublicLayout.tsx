@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Menu, Search, ShoppingCart, X } from 'lucide-react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Menu, Search, ShoppingCart, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { useCart } from '../../cart/CartProvider';
-import { inicioPorRol } from '../../auth/permisos';
-import { cn } from '../../lib/utils';
+import { MenuItems } from '../../navigation/MenuItems';
+import { menuCabecera, menuParaRol } from '../../navigation/menu';
+import { useMenuBadges } from '../../navigation/useMenuBadges';
 
 export function PublicLayout() {
   const { autenticado, rol } = useSession();
@@ -16,6 +17,10 @@ export function PublicLayout() {
   const [busqueda, setBusqueda] = useState('');
   const [menuAbierto, setMenuAbierto] = useState(false);
   const navigate = useNavigate();
+  const badges = useMenuBadges();
+
+  const enlacesCabecera = menuCabecera(rol);
+  const enlacesCuenta = [...menuParaRol(rol, 'publico'), ...menuParaRol(rol, 'cuenta')];
 
   const buscar = (evento: FormEvent) => {
     evento.preventDefault();
@@ -24,31 +29,19 @@ export function PublicLayout() {
     setMenuAbierto(false);
   };
 
-  const enlaceClase = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      'rounded-lg px-3 py-2 text-sm font-medium transition',
-      isActive
-        ? 'bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200'
-        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
-    );
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-sand-50/95 backdrop-blur dark:bg-slate-950/95">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Logo />
-          <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Principal">
-            <NavLink to="/catalogo" className={enlaceClase}>
-              Catálogo
-            </NavLink>
-            {rol && rol !== 'comprador' && (
-              <NavLink to={inicioPorRol(rol)} className={enlaceClase}>
-                <span className="inline-flex items-center gap-1.5">
-                  <LayoutDashboard className="h-4 w-4" /> Mi panel
-                </span>
-              </NavLink>
-            )}
-          </nav>
+          <div className="ml-4 hidden md:block">
+            <MenuItems
+              items={enlacesCabecera}
+              variante="horizontal"
+              badges={badges}
+              ariaLabel="Principal"
+            />
+          </div>
 
           <form onSubmit={buscar} className="ml-auto hidden max-w-md flex-1 sm:block" role="search">
             <label className="relative block">
@@ -116,35 +109,23 @@ export function PublicLayout() {
                 />
               </label>
             </form>
-            <nav className="flex flex-col gap-1" aria-label="Menú móvil">
-              <NavLink to="/catalogo" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                Catálogo
-              </NavLink>
-              {autenticado ? (
-                <>
-                  <NavLink to="/mis-pedidos" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                    Mis pedidos
-                  </NavLink>
-                  <NavLink to="/perfil" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                    Mi perfil
-                  </NavLink>
-                  {rol && rol !== 'comprador' && (
-                    <NavLink to={inicioPorRol(rol)} className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                      Mi panel
-                    </NavLink>
-                  )}
-                </>
-              ) : (
-                <div className="mt-2 flex gap-2">
-                  <Link to="/login" className="btn-secondary flex-1" onClick={() => setMenuAbierto(false)}>
-                    Ingresar
-                  </Link>
-                  <Link to="/registro" className="btn-primary flex-1" onClick={() => setMenuAbierto(false)}>
-                    Crear cuenta
-                  </Link>
-                </div>
-              )}
-            </nav>
+            <MenuItems
+              items={enlacesCuenta}
+              variante="movil"
+              badges={badges}
+              onNavegar={() => setMenuAbierto(false)}
+              ariaLabel="Menú móvil"
+            />
+            {!autenticado && (
+              <div className="mt-2 flex gap-2">
+                <Link to="/login" className="btn-secondary flex-1" onClick={() => setMenuAbierto(false)}>
+                  Ingresar
+                </Link>
+                <Link to="/registro" className="btn-primary flex-1" onClick={() => setMenuAbierto(false)}>
+                  Crear cuenta
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -162,12 +143,13 @@ export function PublicLayout() {
             </p>
           </div>
           <div>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Comprar</h2>
-            <ul className="space-y-2 text-sm">
-              <li><Link className="hover:underline" to="/catalogo">Catálogo</Link></li>
-              <li><Link className="hover:underline" to="/carrito">Carrito</Link></li>
-              <li><Link className="hover:underline" to="/mis-pedidos">Mis pedidos</Link></li>
-            </ul>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Navegación</h2>
+            <MenuItems
+              items={enlacesCuenta}
+              variante="movil"
+              mostrarBadges={false}
+              ariaLabel="Navegación del pie"
+            />
           </div>
           <div>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Vender</h2>

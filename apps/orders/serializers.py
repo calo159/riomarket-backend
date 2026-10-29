@@ -6,6 +6,7 @@ Solo validan forma (campos obligatorios, cantidades); las reglas de negocio
 servidor, nunca llegan del cliente.
 """
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.orders import services
@@ -38,6 +39,13 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
 class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, allow_empty=False)
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    acciones_permitidas = serializers.SerializerMethodField(
+        help_text=(
+            "Acciones que el usuario autenticado puede ejecutar ahora sobre este pedido "
+            "(RBAC + estado): confirmar, en-preparacion, enviar, entregar, no-recibido, "
+            "cancelar, editar."
+        )
+    )
 
     class Meta:
         model = Pedido
@@ -53,6 +61,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "latitud_entrega",
             "longitud_entrega",
             "notas",
+            "no_recibido_en",
+            "motivo_no_recibido",
             "subtotal",
             "tarifa_domicilio",
             "id_cupon",
@@ -60,6 +70,7 @@ class PedidoSerializer(serializers.ModelSerializer):
             "total",
             "items",
             "codigo_cupon",
+            "acciones_permitidas",
             "fecha_creacion",
             "fecha_actualizacion",
         )
@@ -69,6 +80,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "estado",
             "latitud_entrega",
             "longitud_entrega",
+            "no_recibido_en",
+            "motivo_no_recibido",
             "subtotal",
             "tarifa_domicilio",
             "id_cupon",
@@ -77,6 +90,12 @@ class PedidoSerializer(serializers.ModelSerializer):
             "fecha_creacion",
             "fecha_actualizacion",
         )
+
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    def get_acciones_permitidas(self, pedido) -> list[str]:
+        request = self.context.get("request")
+        usuario = getattr(request, "user", None)
+        return services.acciones_disponibles(pedido, usuario)
 
     def create(self, validated_data):
         items = validated_data.pop("items", [])

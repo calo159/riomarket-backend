@@ -35,7 +35,8 @@ _PLANTILLAS = {
     "en_camino": (
         Notificacion.Tipo.PEDIDO_EN_CAMINO,
         "Pedido en camino",
-        "Tu pedido #{pedido} va en camino.",
+        "Tu pedido #{pedido} va en camino o está listo para retirar. "
+        "Cuando lo recibas, confírmalo en la app.",
     ),
     "entregado": (
         Notificacion.Tipo.PEDIDO_ENTREGADO,
@@ -82,6 +83,22 @@ def notificar_pedido_creado(*, pedido):
             tipo=Notificacion.Tipo.PEDIDO_CREADO,
             titulo="Nuevo pedido",
             mensaje=f"Recibiste el pedido #{pedido.pk}.",
+            id_pedido=pedido,
+        )
+    ]
+
+
+def notificar_no_recibido(*, pedido):
+    """Avisa al vendedor que el comprador reportó que el pedido no le ha llegado."""
+    return [
+        crear_notificacion(
+            usuario=pedido.id_puesto.id_vendedor,
+            tipo=Notificacion.Tipo.GENERAL,
+            titulo="El comprador no ha recibido el pedido",
+            mensaje=(
+                f"El comprador del pedido #{pedido.pk} reporta que aún no le llega."
+                + (f" Detalle: {pedido.motivo_no_recibido}" if pedido.motivo_no_recibido else "")
+            ),
             id_pedido=pedido,
         )
     ]

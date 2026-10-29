@@ -58,15 +58,20 @@ curl -s -X POST "http://127.0.0.1:8000/api/payments/pagos/$PAGO/confirmar-efecti
   -H "Content-Type: application/json" -d '{}'
 ```
 
-## 6. Confirmar y entregar (vendedor Carmen)
+## 6. Confirmar y enviar (vendedor Carmen) y recibir (comprador)
 
 ```bash
-for accion in confirmar en-preparacion enviar entregar; do
+for accion in confirmar en-preparacion enviar; do
   curl -s -X POST "http://127.0.0.1:8000/api/orders/pedidos/$PEDIDO/$accion/" \
     -H "Authorization: Bearer $TOKEN_VENDEDOR" \
     -H "Content-Type: application/json" -d '{}'
   echo
 done
+
+# Solo el comprador confirma que recibió el pedido
+curl -s -X POST "http://127.0.0.1:8000/api/orders/pedidos/$PEDIDO/entregar/" \
+  -H "Authorization: Bearer $TOKEN_COMPRADOR" \
+  -H "Content-Type: application/json" -d '{}'
 ```
 
 El pedido queda en `entregado` y el pago en `aprobado`. Para renovar el access

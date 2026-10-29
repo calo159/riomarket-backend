@@ -222,6 +222,46 @@ class TestTransiciones:
         pedido.refresh_from_db()
         assert pedido.estado == Pedido.Estado.ENTREGADO
 
+    def test_vendedor_no_entrega_por_api(
+        self, cliente_vendedor, cliente_comprador, comprador, puesto, producto, aprobar_pago
+    ):
+        pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
+        for accion in ("confirmar", "en-preparacion", "enviar"):
+            assert cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/{accion}/").status_code == 200
+        assert cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/entregar/").status_code == 403
+        pedido.refresh_from_db()
+        assert pedido.estado == Pedido.Estado.EN_CAMINO
+        assert cliente_comprador.post(f"{PEDIDOS}{pedido.pk}/entregar/").status_code == 200
+
+    def test_no_recibido_por_api(
+        self, cliente_vendedor, cliente_comprador, comprador, puesto, producto, aprobar_pago
+    ):
+        pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
+        for accion in ("confirmar", "en-preparacion", "enviar"):
+            cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/{accion}/")
+        url = f"{PEDIDOS}{pedido.pk}/no-recibido/"
+        assert cliente_vendedor.post(url, {"motivo": "x"}, format="json").status_code == 403
+        respuesta = cliente_comprador.post(url, {"motivo": "No contesta"}, format="json")
+        assert respuesta.status_code == status.HTTP_200_OK
+        assert respuesta.data["estado"] == "en_camino"
+        assert respuesta.data["no_recibido_en"] is not None
+        assert respuesta.data["motivo_no_recibido"] == "No contesta"
+        assert cliente_comprador.post(url, {}, format="json").status_code == 400
+
+    def test_no_recibido_motivo_largo_400(
+        self, cliente_vendedor, cliente_comprador, comprador, puesto, producto, aprobar_pago
+    ):
+        pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
+        aprobar_pago(pedido, comprador)
+        for accion in ("confirmar", "en-preparacion", "enviar"):
+            cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/{accion}/")
+        respuesta = cliente_comprador.post(
+            f"{PEDIDOS}{pedido.pk}/no-recibido/", {"motivo": "x" * 201}, format="json"
+        )
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_salto_de_estado_400(self, cliente_vendedor, comprador, puesto, producto):
         pedido = services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))
         respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/enviar/")

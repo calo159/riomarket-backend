@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Bike,
   CheckCircle2,
+  AlertTriangle,
   Clock,
   CreditCard,
   MapPin,
@@ -12,7 +13,7 @@ import {
   Store,
   XCircle,
 } from 'lucide-react';
-import { ejecutarAccionPedido, obtenerPedido, type AccionPedido } from '../api/orders';
+import { ejecutarAccionPedido, obtenerPedido, reportarNoRecibido, type AccionPedido } from '../api/orders';
 import { confirmarEfectivo, crearPago, listarPagos, simularPago } from '../api/payments';
 import { crearResena, listarResenas } from '../api/reviews';
 import { useSession } from '../auth/SessionProvider';
@@ -39,6 +40,8 @@ export function PedidoDetalle() {
 
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [confirmarEntregar, setConfirmarEntregar] = useState(false);
+  const [modalNoRecibido, setModalNoRecibido] = useState(false);
+  const [motivoNoRecibido, setMotivoNoRecibido] = useState('');
   const [modalPago, setModalPago] = useState(false);
   const [metodo, setMetodo] = useState(SANDBOX_PAGOS ? 'simulado' : 'efectivo');
   const [errorPago, setErrorPago] = useState('');
@@ -86,9 +89,20 @@ export function PedidoDetalle() {
         tipo === 'cancelar'
           ? 'Pedido cancelado y stock repuesto.'
           : tipo === 'entregar'
-            ? 'Pedido marcado como entregado.'
+            ? '¡Listo! Confirmaste que recibiste el pedido.'
             : 'Estado del pedido actualizado.',
       );
+    },
+    onError: (error) => toast.error(mensajeDeError(error)),
+  });
+
+  const noRecibido = useMutation({
+    mutationFn: () => reportarNoRecibido(Number(id), motivoNoRecibido.trim()),
+    onSuccess: () => {
+      invalidar();
+      setModalNoRecibido(false);
+      setMotivoNoRecibido('');
+      toast.exito('Avisamos al vendedor que tu pedido no te ha llegado.');
     },
     onError: (error) => toast.error(mensajeDeError(error)),
   });
@@ -179,9 +193,11 @@ export function PedidoDetalle() {
   const pasoActual = PASOS.indexOf(datos.estado);
   const resenaPropia = resenas.data?.results.find((resena) => resena.id_pedido === datos.id && resena.id_usuario === usuario?.id);
 
-  const puedeCancelar =
-    ['pendiente', 'confirmado', 'en_preparacion'].includes(datos.estado) && (esComprador || esVendedor || esAdmin);
-  const puedeEntregar = datos.estado === 'en_camino' && (esVendedor || esAdmin || esComprador);
+  // RBAC: la API dice qué puede hacer ESTE usuario sobre ESTE pedido en su estado actual.
+  const permitidas = datos.acciones_permitidas ?? [];
+  const puedeCancelar = permitidas.includes('cancelar');
+  const puedeEntregar = permitidas.includes('entregar');
+  const puedeReportarNoRecibido = permitidas.includes('no-recibido');
   const puedeConfirmarEfectivo =
     (esVendedor || esAdmin) &&
     pagoVigente?.metodo_pago === 'efectivo' &&
@@ -218,7 +234,16 @@ export function PedidoDetalle() {
           )}
           {puedeEntregar && (
             <button type="button" className="btn-primary" onClick={() => setConfirmarEntregar(true)}>
-              <CheckCircle2 className="h-4 w-4" /> Marcar entregado
+              <CheckCircle2 className="h-4 w-4" /> {esComprador ? 'Ya recibí mi pedido' : 'Marcar entregado'}
+            </button>
+          )}
+          {puedeReportarNoRecibido && (
+            <button
+              type="button"
+              className="btn-secondary text-amber-700 dark:text-amber-300"
+              onClick={() => setModalNoRecibido(true)}
+            >
+              <AlertTriangle className="h-4 w-4" /> No me ha llegado
             </button>
           )}
           {puedeCancelar && (
@@ -228,6 +253,32 @@ export function PedidoDetalle() {
           )}
         </div>
       </div>
+
+      {datos.estado === 'en_camino' && (
+        <div
+          className={cn(
+            'mt-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm',
+            datos.no_recibido_en
+              ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200'
+              : 'border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200',
+          )}
+        >
+          {datos.no_recibido_en ? (
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          ) : (
+            <Bike className="mt-0.5 h-4 w-4 shrink-0" />
+          )}
+          <p>
+            {datos.no_recibido_en
+              ? esComprador
+                ? `Avisaste el ${formatearFechaHora(datos.no_recibido_en)} que no te ha llegado y ya notificamos al vendedor. Si el pedido llega, confírmalo con el botón de arriba.`
+                : `El comprador reportó el ${formatearFechaHora(datos.no_recibido_en)} que no ha recibido el pedido.${datos.motivo_no_recibido ? ` Detalle: ${datos.motivo_no_recibido}` : ''}`
+              : esComprador
+                ? 'El vendedor ya entregó tu pedido al domiciliario o está listo para retirar. Cuando lo tengas en tus manos, confírmalo.'
+                : 'Esperando que el comprador confirme que recibió el pedido.'}
+          </p>
+        </div>
+      )}
 
       {datos.estado !== 'cancelado' && (
         <ol className="mt-6 grid gap-2 sm:grid-cols-5" aria-label="Estado del pedido">
@@ -459,13 +510,42 @@ export function PedidoDetalle() {
       <ConfirmarModal
         abierto={confirmarEntregar}
         titulo="¿Marcar el pedido como entregado?"
-        descripcion="Confirma solo si el comprador ya recibió el pedido."
-        textoConfirmar="Sí, fue entregado"
+        descripcion={
+          esComprador
+            ? 'Confirma solo si ya tienes tu pedido en las manos.'
+            : 'Confirma solo si tienes certeza de que el comprador recibió el pedido.'
+        }
+        textoConfirmar={esComprador ? 'Sí, ya lo recibí' : 'Sí, fue entregado'}
         peligro={false}
         cargando={accion.isPending}
         onConfirmar={() => accion.mutate('entregar')}
         onCerrar={() => setConfirmarEntregar(false)}
       />
+
+      <Modal abierto={modalNoRecibido} onCerrar={() => setModalNoRecibido(false)} titulo="No me ha llegado">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Le avisaremos al vendedor que tu pedido sigue sin llegar. El pedido seguirá en camino y podrás confirmarlo cuando lo recibas.
+        </p>
+        <Campo etiqueta="¿Qué pasó? (opcional)" htmlFor="motivo-no-recibido" className="mt-4">
+          <textarea
+            id="motivo-no-recibido"
+            rows={3}
+            maxLength={200}
+            className="input resize-y"
+            value={motivoNoRecibido}
+            onChange={(evento) => setMotivoNoRecibido(evento.target.value)}
+            placeholder="Ej. El domiciliario no contesta."
+          />
+        </Campo>
+        <div className="mt-4 flex justify-end gap-2">
+          <button type="button" className="btn-secondary" onClick={() => setModalNoRecibido(false)}>
+            Volver
+          </button>
+          <button type="button" className="btn-primary" onClick={() => noRecibido.mutate()} disabled={noRecibido.isPending}>
+            {noRecibido.isPending ? 'Enviando…' : 'Avisar al vendedor'}
+          </button>
+        </div>
+      </Modal>
 
       <Modal abierto={modalPago} onCerrar={() => setModalPago(false)} titulo="Registrar pago">
         <p className="text-sm text-slate-600 dark:text-slate-300">

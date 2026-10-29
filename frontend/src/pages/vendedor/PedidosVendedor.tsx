@@ -18,8 +18,9 @@ const TAMANO = 12;
 const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono: typeof CheckCircle2 } | null> = {
   pendiente: { accion: 'confirmar', etiqueta: 'Confirmar pedido', icono: CheckCircle2 },
   confirmado: { accion: 'en-preparacion', etiqueta: 'Pasar a preparación', icono: Package },
-  en_preparacion: { accion: 'enviar', etiqueta: 'Marcar en camino', icono: Truck },
-  en_camino: { accion: 'entregar', etiqueta: 'Marcar entregado', icono: CheckCircle2 },
+  en_preparacion: { accion: 'enviar', etiqueta: 'Entregado al domiciliario / listo', icono: Truck },
+  // En camino: ya no hay acción del vendedor; solo el comprador confirma la recepción.
+  en_camino: null,
   entregado: null,
   cancelado: null,
 };
@@ -47,6 +48,7 @@ export function PedidosVendedor() {
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+      void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       setCancelar(null);
       toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');
     },
@@ -92,8 +94,10 @@ export function PedidosVendedor() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const siguiente = SIGUIENTE[pedido.estado];
-              const puedeCancelar = ['pendiente', 'confirmado', 'en_preparacion'].includes(pedido.estado);
+              const permitidas = pedido.acciones_permitidas ?? [];
+              const candidata = SIGUIENTE[pedido.estado];
+              const siguiente = candidata && permitidas.includes(candidata.accion) ? candidata : null;
+              const puedeCancelar = permitidas.includes('cancelar');
               const Icono = siguiente?.icono;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
@@ -114,6 +118,19 @@ export function PedidosVendedor() {
                     <Link to={`/pedidos/${pedido.id}`} className="btn-secondary py-1.5 text-xs">
                       Ver detalle <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
+                    {pedido.estado === 'en_camino' && (
+                      <p
+                        className={
+                          pedido.no_recibido_en
+                            ? 'self-center rounded-lg bg-rose-50 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                            : 'self-center text-xs text-slate-500 dark:text-slate-400'
+                        }
+                      >
+                        {pedido.no_recibido_en
+                          ? 'El comprador reporta que no le ha llegado'
+                          : 'Esperando que el comprador confirme'}
+                      </p>
+                    )}
                     {siguiente && Icono && (
                       <button
                         type="button"

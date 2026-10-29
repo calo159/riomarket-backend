@@ -669,7 +669,7 @@ class Command(BaseCommand):
         if estado in ("en_camino", "entregado"):
             orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
         if estado == "entregado":
-            orders_services.marcar_entregado(pedido=pedido, usuario=vendedor)
+            orders_services.marcar_entregado(pedido=pedido, usuario=comprador)
 
     # ------------------------------------------------------------------
     # Reseñas

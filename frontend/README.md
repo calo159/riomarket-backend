@@ -25,7 +25,7 @@ Verificación local:
 ```text
 npm run lint       sin errores ni warnings
 npm run typecheck  sin errores
-npm test           3 archivos, 10 pruebas
+npm test           5 archivos, 21 pruebas
 npm run build      build de producción correcto
 ```
 
@@ -168,8 +168,9 @@ frontend/
 
 ## Pruebas
 
-- `npm test`: 10 pruebas de utilidades, interceptores HTTP (refresh compartido,
-  reintento y pérdida de sesión) y rutas protegidas (login y `/403`).
+- `npm test`: 21 pruebas de utilidades, interceptores HTTP (refresh compartido,
+  reintento y pérdida de sesión), rutas protegidas (login y `/403`) y menú
+  dinámico por rol con badges.
 - `npm run test:e2e`: smoke de portada, login y navegación al registro.
 - `npm run lint`, `npm run typecheck` y `npm run build` también corren en CI.
 

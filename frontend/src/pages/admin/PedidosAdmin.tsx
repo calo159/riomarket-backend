@@ -18,7 +18,7 @@ const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono:
   pendiente: { accion: 'confirmar', etiqueta: 'Confirmar', icono: CheckCircle2 },
   confirmado: { accion: 'en-preparacion', etiqueta: 'En preparación', icono: Package },
   en_preparacion: { accion: 'enviar', etiqueta: 'En camino', icono: Truck },
-  en_camino: { accion: 'entregar', etiqueta: 'Entregar', icono: CheckCircle2 },
+  en_camino: { accion: 'entregar', etiqueta: 'Marcar entregado', icono: CheckCircle2 },
   entregado: null,
   cancelado: null,
 };
@@ -45,6 +45,7 @@ export function PedidosAdmin() {
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+      void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
       setCancelar(null);
       toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');
     },
@@ -90,8 +91,10 @@ export function PedidosAdmin() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const siguiente = SIGUIENTE[pedido.estado];
-              const puedeCancelar = ['pendiente', 'confirmado', 'en_preparacion'].includes(pedido.estado);
+              const permitidas = pedido.acciones_permitidas ?? [];
+              const candidata = SIGUIENTE[pedido.estado];
+              const siguiente = candidata && permitidas.includes(candidata.accion) ? candidata : null;
+              const puedeCancelar = permitidas.includes('cancelar');
               const Icono = siguiente?.icono;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">

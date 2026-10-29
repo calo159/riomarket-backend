@@ -256,12 +256,31 @@ En sandbox también puedes simular con `POST /api/payments/pagos/29/simular/`
 Confirmar exige un pago en estado `aprobado`.
 
 ```bash
-for accion in confirmar en-preparacion enviar entregar; do
+for accion in confirmar en-preparacion enviar; do
   curl -s -X POST "$BASE/api/orders/pedidos/31/$accion/" \
     -H "Authorization: Bearer $TOKEN_VEND" \
     -H "Content-Type: application/json" -d '{}'
   echo
 done
+```
+
+`enviar` significa que el vendedor ya entregó el pedido al domiciliario (o está
+listo para retirar). Solo el **comprador** confirma la recepción; si el vendedor
+intenta `entregar` recibe `403`:
+
+```bash
+curl -s -X POST "$BASE/api/orders/pedidos/31/entregar/" \
+  -H "Authorization: Bearer $TOKEN_COMP" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+Si el pedido va en camino y no le llega, el comprador lo reporta (el estado
+sigue en `en_camino` y el vendedor recibe una notificación):
+
+```bash
+curl -s -X POST "$BASE/api/orders/pedidos/31/no-recibido/" \
+  -H "Authorization: Bearer $TOKEN_COMP" \
+  -H "Content-Type: application/json" -d '{"motivo":"El domiciliario no contesta"}'
 ```
 
 Secuencia de `estado`: `pendiente → confirmado → en_preparacion → en_camino →

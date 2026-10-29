@@ -1,61 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import {
-  BadgeCheck,
-  BookOpenCheck,
-  ClipboardList,
-  CreditCard,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Package,
-  Percent,
-  ShieldCheck,
-  Star,
-  Store,
-  Ticket,
-  X,
-  type LucideIcon,
-} from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LogOut, Menu, Store, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { ETIQUETAS_ROL } from '../../lib/format';
-import { iniciales, cn } from '../../lib/utils';
-
-interface EnlacePanel {
-  to: string;
-  etiqueta: string;
-  icono: LucideIcon;
-  fin?: boolean;
-}
-
-const ENLACES_VENDEDOR: EnlacePanel[] = [
-  { to: '/vendedor', etiqueta: 'Resumen', icono: LayoutDashboard, fin: true },
-  { to: '/vendedor/verificacion', etiqueta: 'Verificación', icono: BadgeCheck },
-  { to: '/vendedor/puestos', etiqueta: 'Mis puestos', icono: Store },
-  { to: '/vendedor/productos', etiqueta: 'Productos', icono: Package },
-  { to: '/vendedor/pedidos', etiqueta: 'Pedidos', icono: ClipboardList },
-  { to: '/vendedor/cupones', etiqueta: 'Cupones', icono: Ticket },
-  { to: '/vendedor/resenas', etiqueta: 'Reseñas', icono: Star },
-];
-
-const ENLACES_ADMIN: EnlacePanel[] = [
-  { to: '/admin', etiqueta: 'Resumen', icono: LayoutDashboard, fin: true },
-  { to: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: ShieldCheck },
-  { to: '/admin/pedidos', etiqueta: 'Pedidos', icono: ClipboardList },
-  { to: '/admin/puestos', etiqueta: 'Puestos', icono: Store },
-  { to: '/admin/pagos', etiqueta: 'Pagos', icono: CreditCard },
-  { to: '/admin/cupones', etiqueta: 'Cupones', icono: Percent },
-  { to: '/admin/auditoria', etiqueta: 'Auditoría', icono: BookOpenCheck },
-];
+import { iniciales } from '../../lib/utils';
+import { MenuItems } from '../../navigation/MenuItems';
+import { menuPanel, tituloPanel } from '../../navigation/menu';
+import { useMenuBadges } from '../../navigation/useMenuBadges';
 
 export function PanelLayout() {
   const { usuario, rol, cerrarSesion } = useSession();
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const badges = useMenuBadges();
 
   useEffect(() => {
     setAbierto(false);
@@ -63,8 +24,8 @@ export function PanelLayout() {
 
   if (!usuario) return null;
 
-  const enlaces = rol === 'administrador' ? ENLACES_ADMIN : ENLACES_VENDEDOR;
-  const tituloPanel = rol === 'administrador' ? 'Administración' : 'Panel de vendedor';
+  const enlaces = menuPanel(rol);
+  const titulo = tituloPanel(rol);
 
   const salir = async () => {
     await cerrarSesion();
@@ -77,30 +38,19 @@ export function PanelLayout() {
         <Logo />
       </div>
       <div className="border-b px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{tituloPanel}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</p>
         <p className="mt-1 truncate text-sm font-semibold">{usuario.nombre}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">{ETIQUETAS_ROL[usuario.rol]}</p>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Navegación del panel">
-        {enlaces.map(({ to, etiqueta, icono: Icono, fin }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={fin}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                isActive
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
-              )
-            }
-          >
-            <Icono className="h-4 w-4 shrink-0" />
-            {etiqueta}
-          </NavLink>
-        ))}
-      </nav>
+      <div className="flex-1 overflow-y-auto p-3">
+        <MenuItems
+          items={enlaces}
+          variante="vertical"
+          badges={badges}
+          onNavegar={() => setAbierto(false)}
+          ariaLabel="Navegación del panel"
+        />
+      </div>
       <div className="space-y-1 border-t p-3">
         <Link
           to="/"
@@ -158,7 +108,7 @@ export function PanelLayout() {
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{tituloPanel}</p>
+            <p className="truncate text-sm font-semibold">{titulo}</p>
             <p className="truncate text-xs text-slate-500 dark:text-slate-400">
               {usuario.correo}
             </p>

@@ -4,9 +4,11 @@
    suficiente. Al crearlo el stock se descuenta de forma atómica (bloqueo de
    filas) y los precios se congelan en los ítems; al cancelar se repone.
 5. El estado solo avanza por transiciones válidas y quien puede ejecutarlas
-   depende del rol: el vendedor dueño confirma y avanza la preparación, el
-   comprador puede cancelar mientras el pedido no salga del puesto, y el
-   administrador puede todo.
+   depende del rol: el vendedor dueño confirma, prepara y marca "en camino"
+   (ya lo entregó al domiciliario o está listo para retirar); SOLO el
+   comprador confirma que lo recibió (``entregado``) o reporta que no le ha
+   llegado; el comprador también puede cancelar mientras el pedido no salga
+   del puesto, y el administrador puede todo (resuelve disputas).
 
 Las autorizaciones viven aquí (``PermissionDenied`` → 403 en la API) para
 que sean verificables aisladas desde tests, igual que las del catálogo.
@@ -15,15 +17,17 @@ que sean verificables aisladas desde tests, igual que las del catálogo.
 import logging
 from decimal import Decimal
 
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 
-from apps.accounts.models import Usuario
 from apps.catalog.models import Producto, Puesto
 from apps.common import pricing
 from apps.common.query import parametro_entero, validar_estado_parametro
+from apps.orders import permissions as rbac
 from apps.orders.models import ItemPedido, Pedido
+from apps.orders.permissions import Accion
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +44,16 @@ TRANSICIONES: dict[str, tuple[str, ...]] = {
     Pedido.Estado.CANCELADO: (),
 }
 
-# Roles por transición (el administrador siempre puede).
-_VENDEDOR = "vendedor"
-_PARTE = "comprador_o_vendedor"
+# Qué acción RBAC (apps.orders.permissions) corresponde a cada estado destino.
+ACCION_POR_DESTINO: dict[str, str] = {
+    Pedido.Estado.CONFIRMADO: Accion.CONFIRMAR,
+    Pedido.Estado.EN_PREPARACION: Accion.EN_PREPARACION,
+    Pedido.Estado.EN_CAMINO: Accion.ENVIAR,
+    Pedido.Estado.ENTREGADO: Accion.ENTREGAR,
+    Pedido.Estado.CANCELADO: Accion.CANCELAR,
+}
+
+MOTIVO_NO_RECIBIDO_MAX = 200
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +66,14 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     ``direccion_entrega``, ``referencia_entrega``, ``notas`` e ``items``
     (lista de ``{"id_producto": Producto, "cantidad": int}``).
     """
-    _autorizar_creacion(usuario)
+    if not rbac.puede(usuario, Accion.CREAR):
+        raise ValidationError(
+            {
+                "no_autorizado": (
+                    "Solo los compradores activos pueden crear pedidos (regla de negocio 4)."
+                )
+            }
+        )
     lineas = _normalizar_items(datos.get("items"))
     puesto = datos.get("id_puesto")
     if puesto is None:
@@ -142,9 +160,7 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
 
 def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     """El comprador edita dirección/referencia/notas mientras sea pendiente."""
-    _autorizar(pedido, usuario, quien=_PARTE)
-    if not usuario.es_administrador and pedido.id_comprador_id != usuario.pk:
-        raise PermissionDenied("Solo el comprador puede editar su pedido.")
+    rbac.exigir(usuario, Accion.EDITAR, pedido)
     if pedido.estado != Pedido.Estado.PENDIENTE:
         raise ValidationError({"estado": "Solo se puede editar un pedido pendiente."})
     permitidos = ("direccion_entrega", "referencia_entrega", "notas")
@@ -171,17 +187,6 @@ def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     pedido.full_clean()
     pedido.save()
     return pedido
-
-
-def _autorizar_creacion(usuario) -> None:
-    if not (usuario and usuario.is_active and usuario.rol == Usuario.Rol.COMPRADOR):
-        raise ValidationError(
-            {
-                "no_autorizado": (
-                    "Solo los compradores activos pueden crear pedidos (regla de negocio 4)."
-                )
-            }
-        )
 
 
 def _normalizar_items(items) -> list[tuple]:
@@ -251,7 +256,34 @@ def marcar_enviado(*, pedido: Pedido, usuario) -> Pedido:
 
 
 def marcar_entregado(*, pedido: Pedido, usuario) -> Pedido:
+    """Solo el comprador (o el administrador) confirma que recibió el pedido."""
     return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.ENTREGADO)
+
+
+def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido:
+    """El comprador avisa que el pedido "en camino" todavía no le llega.
+
+    No cambia el estado: el pedido sigue ``en_camino`` (si llega tarde, el
+    comprador aún puede confirmarlo). Queda registrado y se avisa al vendedor.
+    """
+    rbac.exigir(usuario, Accion.NO_RECIBIDO, pedido)
+    if pedido.estado != Pedido.Estado.EN_CAMINO:
+        raise ValidationError(
+            {"estado": "Solo puedes reportar que no te llegó un pedido que va en camino."}
+        )
+    if pedido.no_recibido_en is not None:
+        raise ValidationError({"estado": "Ya reportaste que este pedido no te ha llegado."})
+    motivo = (motivo or "").strip()
+    if len(motivo) > MOTIVO_NO_RECIBIDO_MAX:
+        raise ValidationError(
+            {"motivo": f"El motivo no puede superar {MOTIVO_NO_RECIBIDO_MAX} caracteres."}
+        )
+    pedido.no_recibido_en = timezone.now()
+    pedido.motivo_no_recibido = motivo
+    pedido.save(update_fields=["no_recibido_en", "motivo_no_recibido", "fecha_actualizacion"])
+    _notificar_no_recibido(pedido)
+    _auditar(usuario, "no_recibido", pedido, {"motivo": motivo})
+    return pedido
 
 
 def cancelar_pedido(*, pedido: Pedido, usuario) -> Pedido:
@@ -269,7 +301,7 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
                 )
             }
         )
-    _autorizar(pedido, usuario, quien=_rol_para(destino))
+    rbac.exigir(usuario, ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
         _exigir_pago_aprobado(pedido)
     estado_anterior = pedido.estado
@@ -366,26 +398,36 @@ def _notificar_cambio_estado(pedido: Pedido, estado_anterior: str) -> None:
         logger.exception("No se pudo notificar el cambio de estado del pedido %s", pedido.pk)
 
 
-def _rol_para(destino: str) -> str:
-    if destino in (Pedido.Estado.CANCELADO, Pedido.Estado.ENTREGADO):
-        return _PARTE
-    return _VENDEDOR
+def _notificar_no_recibido(pedido: Pedido) -> None:
+    from apps.notifications import services as notif
+
+    try:
+        notif.notificar_no_recibido(pedido=pedido)
+    except Exception:  # pragma: no cover - la notificación no debe romper el pedido
+        logger.exception("No se pudo notificar el reporte de no recibido del pedido %s", pedido.pk)
 
 
-def _autorizar(pedido: Pedido, usuario, *, quien: str) -> None:
-    if not (usuario and usuario.is_active):
-        raise PermissionDenied("Se requiere una cuenta activa.")
-    if usuario.es_administrador:
-        return
-    es_comprador = pedido.id_comprador_id == usuario.pk
-    es_vendedor = pedido.id_puesto.id_vendedor_id == usuario.pk
-    if quien == _VENDEDOR:
-        if es_vendedor:
-            return
-        raise PermissionDenied("Solo el vendedor del puesto puede realizar esta acción.")
-    if es_comprador or es_vendedor:
-        return
-    raise PermissionDenied("Solo las partes del pedido pueden realizar esta acción.")
+def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
+    """Acciones que ``usuario`` puede ejecutar AHORA sobre ``pedido``.
+
+    Cruza el RBAC (rol + relación con el pedido) con el estado actual, de modo
+    que el frontend muestre solo botones que la API aceptaría. No sustituye la
+    validación de cada acción: la API sigue siendo la autoridad.
+    """
+    disponibles = []
+    for destino in TRANSICIONES[pedido.estado]:
+        accion = ACCION_POR_DESTINO[destino]
+        if rbac.puede(usuario, accion, pedido):
+            disponibles.append(str(accion))
+    if pedido.estado == Pedido.Estado.PENDIENTE and rbac.puede(usuario, Accion.EDITAR, pedido):
+        disponibles.append(str(Accion.EDITAR))
+    if (
+        pedido.estado == Pedido.Estado.EN_CAMINO
+        and pedido.no_recibido_en is None
+        and rbac.puede(usuario, Accion.NO_RECIBIDO, pedido)
+    ):
+        disponibles.append(str(Accion.NO_RECIBIDO))
+    return disponibles
 
 
 # ---------------------------------------------------------------------------

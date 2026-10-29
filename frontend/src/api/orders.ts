@@ -50,3 +50,9 @@ export async function ejecutarAccionPedido(id: number, accion: AccionPedido): Pr
   const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/${accion}/`, {});
   return data;
 }
+
+/** El comprador avisa que el pedido en camino todavía no le llega. */
+export async function reportarNoRecibido(id: number, motivo = ''): Promise<Pedido> {
+  const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/no-recibido/`, { motivo });
+  return data;
+}

@@ -28,7 +28,7 @@ usuarios: `RioMarket2026!`.
 3. **Pago sandbox** (1 min): registrar pago, aprobarlo desde el detalle y mostrar
    los montos calculados por el backend (subtotal, domicilio, comisión y neto).
 4. **Vendedor** (1 min): login como Carmen, confirmar el pedido, pasarlo a
-   preparación, enviarlo y entregarlo. Mostrar que sin pago aprobado no confirma.
+   preparación y marcarlo en camino. Mostrar que sin pago aprobado no confirma y que el vendedor no puede marcarlo entregado: lo confirma el comprador.
 5. **Administrador** (1 min): login como admin, revisar una verificación, el
    listado global de pagos y un registro de auditoría.
 6. **Cierre** (30 s): recordar que la API es la autoridad, el frontend solo oculta
