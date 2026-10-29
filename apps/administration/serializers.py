@@ -70,3 +70,19 @@ class CambiarRolSerializer(serializers.Serializer):
 
 class SuspenderSerializer(serializers.Serializer):
     motivo = serializers.CharField(min_length=services.MOTIVO_MIN, max_length=300)
+
+
+class MenuEnlaceSerializer(serializers.Serializer):
+    to = serializers.CharField()
+    etiqueta = serializers.CharField()
+    icono = serializers.CharField()
+    fin = serializers.BooleanField(required=False)
+
+
+class MenuSerializer(serializers.Serializer):
+    rol = serializers.CharField()
+    inicio = serializers.CharField()
+    principal = MenuEnlaceSerializer(many=True)
+    cuenta = MenuEnlaceSerializer(many=True)
+    panel = MenuEnlaceSerializer(many=True)
+    panel_titulo = serializers.CharField(allow_null=True)

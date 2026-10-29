@@ -13,12 +13,14 @@ from apps.accounts.views import (
     RegistroView,
     RestablecerContrasenaView,
 )
+from apps.administration.views import MenuView
 
 urlpatterns = [
     path("registro/", RegistroView.as_view(), name="auth-registro"),
     path("login/", LoginView.as_view(), name="auth-login"),
     path("logout/", LogoutView.as_view(), name="auth-logout"),
     path("perfil/", PerfilView.as_view(), name="auth-perfil"),
+    path("menu/", MenuView.as_view(), name="auth-menu"),
     path(
         "perfil/cambiar-contrasena/",
         CambiarContrasenaView.as_view(),

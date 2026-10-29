@@ -3,12 +3,15 @@
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.administration import services
+from apps.administration.menu import menu_para
 from apps.administration.serializers import (
     CambiarRolSerializer,
+    MenuSerializer,
     SuspenderSerializer,
     UsuarioAdminSerializer,
 )
@@ -95,3 +98,13 @@ class ResumenAdminView(APIView):
     @extend_schema(responses={200: OpenApiTypes.OBJECT})
     def get(self, request):
         return Response(services.resumen(), status=status.HTTP_200_OK)
+
+
+class MenuView(APIView):
+    """``GET /api/auth/menu/`` — menú del usuario según su rol."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses={200: MenuSerializer})
+    def get(self, request):
+        return Response(MenuSerializer(menu_para(request.user)).data)
