@@ -24,6 +24,8 @@ from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto
 from apps.catalog.serializers import (
     CategoriaSerializer,
     ImagenProductoSerializer,
+    ModerarProductoSerializer,
+    ModerarPuestoSerializer,
     ProductoSerializer,
     PuestoSerializer,
 )
@@ -96,6 +98,8 @@ class PuestoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
+        if self.action == "moderar":
+            return [EsAdministrador()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]
@@ -144,6 +148,21 @@ class PuestoViewSet(viewsets.ModelViewSet):
         numero = parametro_entero({"categoria_id": categoria_id}, "categoria_id")
         return get_object_or_404(Categoria, id=numero or 0)
 
+    @extend_schema(
+        request=ModerarPuestoSerializer,
+        responses=PuestoSerializer,
+        description="Suspende, reactiva o inactiva un puesto (solo administrador).",
+    )
+    @action(detail=True, methods=["post"])
+    def moderar(self, request, pk=None):
+        puesto = self.get_object()
+        serializer = ModerarPuestoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        puesto = services.moderar_puesto(
+            puesto=puesto, actor=request.user, **serializer.validated_data
+        )
+        return Response(self._serializar_refrescado(puesto))
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -161,6 +180,8 @@ class ProductoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
+        if self.action == "moderar":
+            return [EsAdministrador()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]
@@ -203,6 +224,22 @@ class ProductoViewSet(viewsets.ModelViewSet):
         producto = self.get_object()
         imagen = services.marcar_imagen_principal(producto=producto, imagen_id=imagen_id)
         return Response(ImagenProductoSerializer(imagen).data)
+
+    @extend_schema(
+        request=ModerarProductoSerializer,
+        responses=ProductoSerializer,
+        description="Bloquea o reactiva un producto (solo administrador).",
+    )
+    @action(detail=True, methods=["post"])
+    def moderar(self, request, pk=None):
+        producto = self.get_object()
+        serializer = ModerarProductoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        producto = services.moderar_producto(
+            producto=producto, actor=request.user, **serializer.validated_data
+        )
+        producto = self.get_queryset().get(pk=producto.pk)
+        return Response(self.get_serializer(producto).data)
 
 
 class ImagenProductoViewSet(viewsets.ModelViewSet):

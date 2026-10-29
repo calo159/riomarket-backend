@@ -18,6 +18,19 @@ class CategoriaSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
+class ModerarSerializer(serializers.Serializer):
+    estado = serializers.CharField()
+    motivo = serializers.CharField(required=False, allow_blank=True, max_length=300)
+
+
+class ModerarPuestoSerializer(ModerarSerializer):
+    estado = serializers.ChoiceField(choices=Puesto.Estado.values)
+
+
+class ModerarProductoSerializer(ModerarSerializer):
+    estado = serializers.ChoiceField(choices=Producto.Estado.values)
+
+
 class PuestoSerializer(serializers.ModelSerializer):
     """Puesto público/vendedor.
 

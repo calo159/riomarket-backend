@@ -11,7 +11,7 @@ aisladamente desde tests y reutilizables por otras capas (admin, comandos):
 
 from decimal import Decimal
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 
@@ -178,6 +178,16 @@ def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
     if "precio" in datos:
         _validar_precio(datos["precio"])
 
+    if not usuario.es_administrador and (
+        datos.get("estado") == Producto.Estado.BLOQUEADO
+        or (
+            producto.estado == Producto.Estado.BLOQUEADO
+            and "estado" in datos
+            and datos["estado"] != Producto.Estado.BLOQUEADO
+        )
+    ):
+        raise PermissionDenied("Solo un administrador puede bloquear o desbloquear productos.")
+
     for atributo, valor in datos.items():
         setattr(producto, atributo, valor)
     producto.full_clean()
@@ -195,6 +205,81 @@ def _validar_precio(precio) -> None:
         raise ValidationError({"precio": "El precio no es un número válido."}) from exc
     if precio < Decimal("0"):
         raise ValidationError({"precio": "El precio no puede ser negativo."})
+
+
+# ---------------------------------------------------------------------------
+# Moderación (solo administradores)
+# ---------------------------------------------------------------------------
+def _exigir_moderador(actor) -> None:
+    if not (actor and actor.is_authenticated and actor.es_administrador):
+        raise PermissionDenied("Solo un administrador puede moderar el catálogo.")
+    if not actor.is_active:
+        raise PermissionDenied("La cuenta administradora está suspendida.")
+
+
+def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
+    from apps.notifications.models import Notificacion
+    from apps.notifications.services import crear_notificacion
+
+    try:
+        crear_notificacion(
+            usuario=usuario,
+            tipo=Notificacion.Tipo.GENERAL,
+            titulo=titulo,
+            mensaje=mensaje,
+        )
+    except Exception:  # pragma: no cover - la notificación no rompe la moderación
+        import logging
+
+        logging.getLogger(__name__).exception("No se pudo notificar al vendedor %s", usuario.pk)
+
+
+def _auditar_moderacion(actor, entidad: str, id_entidad: int, anterior: str, nuevo: str):
+    from apps.audit.services import registrar
+
+    registrar(
+        usuario=actor,
+        accion="actualizar",
+        entidad=entidad,
+        id_entidad=id_entidad,
+        detalle={"campo": "estado", "de": anterior, "a": nuevo},
+    )
+
+
+def moderar_puesto(*, puesto: Puesto, actor, estado: str, motivo: str = "") -> Puesto:
+    """Suspende o reactiva un puesto (solo administradores)."""
+    _exigir_moderador(actor)
+    if estado not in Puesto.Estado.values:
+        raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
+    if puesto.estado == estado:
+        raise ValidationError({"estado": "El puesto ya tiene ese estado."})
+    anterior = puesto.estado
+    puesto.estado = estado
+    puesto.save(update_fields=["estado"])
+    mensaje = f"Tu puesto {puesto.nombre} pasó de {anterior} a {estado}."
+    if motivo:
+        mensaje += f" Motivo: {motivo}"
+    _notificar_propietario(puesto.id_vendedor, "Cambio en tu puesto", mensaje)
+    _auditar_moderacion(actor, "puesto", puesto.pk, anterior, estado)
+    return puesto
+
+
+def moderar_producto(*, producto: Producto, actor, estado: str, motivo: str = "") -> Producto:
+    """Bloquea o reactiva un producto (solo administradores)."""
+    _exigir_moderador(actor)
+    if estado not in Producto.Estado.values:
+        raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
+    if producto.estado == estado:
+        raise ValidationError({"estado": "El producto ya tiene ese estado."})
+    anterior = producto.estado
+    producto.estado = estado
+    producto.save(update_fields=["estado"])
+    mensaje = f"Tu producto {producto.nombre} pasó de {anterior} a {estado}."
+    if motivo:
+        mensaje += f" Motivo: {motivo}"
+    _notificar_propietario(producto.id_puesto.id_vendedor, "Cambio en tu producto", mensaje)
+    _auditar_moderacion(actor, "producto", producto.pk, anterior, estado)
+    return producto
 
 
 # ---------------------------------------------------------------------------
