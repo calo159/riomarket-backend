@@ -153,13 +153,12 @@ class TestRegla4Creacion:
         assert pedido.direccion_entrega == "Calle 9 #4-20"
 
     def test_no_comprador_no_crea(self, vendedor, puesto, producto):
-        with pytest.raises(DjangoValidationError) as error:
+        with pytest.raises(PermissionDenied):
             services.crear_pedido(usuario=vendedor, datos=datos_pedido(puesto, [(producto, 1)]))
-        assert "no_autorizado" in error.value.message_dict
 
     def test_comprador_suspendido_no_crea(self, comprador, puesto, producto):
         comprador.suspendir()
-        with pytest.raises(DjangoValidationError):
+        with pytest.raises(PermissionDenied):
             services.crear_pedido(usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)]))
 
     def test_puesto_faltante_rechazado(self, comprador, producto):

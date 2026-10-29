@@ -15,15 +15,15 @@ que sean verificables aisladas desde tests, igual que las del catálogo.
 import logging
 from decimal import Decimal
 
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
-from apps.accounts.models import Usuario
 from apps.catalog.models import Producto, Puesto
 from apps.common import pricing
 from apps.common.query import parametro_entero, validar_estado_parametro
+from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
 
 logger = logging.getLogger(__name__)
@@ -41,12 +41,6 @@ TRANSICIONES: dict[str, tuple[str, ...]] = {
     Pedido.Estado.CANCELADO: (),
 }
 
-# Roles por transición (el administrador siempre puede).
-_VENDEDOR = "vendedor"
-_COMPRADOR = "comprador"
-_PARTE = "comprador_o_vendedor"
-
-
 # ---------------------------------------------------------------------------
 # Regla 4: creación
 # ---------------------------------------------------------------------------
@@ -57,7 +51,11 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     ``direccion_entrega``, ``referencia_entrega``, ``notas`` e ``items``
     (lista de ``{"id_producto": Producto, "cantidad": int}``).
     """
-    _autorizar_creacion(usuario)
+    permissions.exigir(
+        usuario,
+        permissions.Accion.CREAR,
+        mensaje="Solo los compradores activos pueden crear pedidos.",
+    )
     lineas = _normalizar_items(datos.get("items"))
     puesto = datos.get("id_puesto")
     if puesto is None:
@@ -144,9 +142,7 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
 
 def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     """El comprador edita dirección/referencia/notas mientras sea pendiente."""
-    _autorizar(pedido, usuario, quien=_PARTE)
-    if not usuario.es_administrador and pedido.id_comprador_id != usuario.pk:
-        raise PermissionDenied("Solo el comprador puede editar su pedido.")
+    permissions.exigir(usuario, permissions.Accion.EDITAR, pedido)
     if pedido.estado != Pedido.Estado.PENDIENTE:
         raise ValidationError({"estado": "Solo se puede editar un pedido pendiente."})
     permitidos = ("direccion_entrega", "referencia_entrega", "notas")
@@ -173,17 +169,6 @@ def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     pedido.full_clean()
     pedido.save()
     return pedido
-
-
-def _autorizar_creacion(usuario) -> None:
-    if not (usuario and usuario.is_active and usuario.rol == Usuario.Rol.COMPRADOR):
-        raise ValidationError(
-            {
-                "no_autorizado": (
-                    "Solo los compradores activos pueden crear pedidos (regla de negocio 4)."
-                )
-            }
-        )
 
 
 def _normalizar_items(items) -> list[tuple]:
@@ -266,10 +251,12 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
     No cambia el estado: si el pedido llega después, el comprador todavía puede
     confirmar la entrega. Solo se permite una vez y mientras esté en camino.
     """
-    if not (usuario and usuario.is_active):
-        raise PermissionDenied("Se requiere una cuenta activa.")
-    if not usuario.es_administrador and pedido.id_comprador_id != usuario.pk:
-        raise PermissionDenied("Solo el comprador del pedido puede reportar que no lo recibió.")
+    permissions.exigir(
+        usuario,
+        permissions.Accion.NO_RECIBIDO,
+        pedido,
+        mensaje="Solo el comprador del pedido puede reportar que no lo recibió.",
+    )
     if pedido.estado != Pedido.Estado.EN_CAMINO:
         raise ValidationError(
             {"estado": "Solo se puede reportar un pedido que esté en camino."}
@@ -298,7 +285,7 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
                 )
             }
         )
-    _autorizar(pedido, usuario, quien=_rol_para(destino))
+    permissions.exigir(usuario, permissions.ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
         _exigir_pago_aprobado(pedido)
     estado_anterior = pedido.estado
@@ -404,32 +391,25 @@ def _notificar_no_recibido(pedido: Pedido) -> None:
         logger.exception("No se pudo notificar el reporte de no recibido del pedido %s", pedido.pk)
 
 
-def _rol_para(destino: str) -> str:
-    if destino == Pedido.Estado.CANCELADO:
-        return _PARTE
-    if destino == Pedido.Estado.ENTREGADO:
-        return _COMPRADOR
-    return _VENDEDOR
-
-
-def _autorizar(pedido: Pedido, usuario, *, quien: str) -> None:
-    if not (usuario and usuario.is_active):
-        raise PermissionDenied("Se requiere una cuenta activa.")
-    if usuario.es_administrador:
-        return
-    es_comprador = pedido.id_comprador_id == usuario.pk
-    es_vendedor = pedido.id_puesto.id_vendedor_id == usuario.pk
-    if quien == _VENDEDOR:
-        if es_vendedor:
-            return
-        raise PermissionDenied("Solo el vendedor del puesto puede realizar esta acción.")
-    if quien == _COMPRADOR:
-        if es_comprador:
-            return
-        raise PermissionDenied("Solo el comprador del pedido puede confirmar la entrega.")
-    if es_comprador or es_vendedor:
-        return
-    raise PermissionDenied("Solo las partes del pedido pueden realizar esta acción.")
+def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
+    """Acciones que ``usuario`` puede ejecutar ahora (RBAC segun el estado)."""
+    acciones: list[str] = []
+    if (
+        pedido.estado == Pedido.Estado.PENDIENTE
+        and permissions.puede(usuario, permissions.Accion.EDITAR, pedido)
+    ):
+        acciones.append(permissions.Accion.EDITAR.value)
+    for destino in TRANSICIONES.get(pedido.estado, ()):
+        accion = permissions.ACCION_POR_DESTINO[destino]
+        if permissions.puede(usuario, accion, pedido):
+            acciones.append(accion)
+    if (
+        pedido.estado == Pedido.Estado.EN_CAMINO
+        and pedido.no_recibido_en is None
+        and permissions.puede(usuario, permissions.Accion.NO_RECIBIDO, pedido)
+    ):
+        acciones.append(permissions.Accion.NO_RECIBIDO.value)
+    return acciones
 
 
 # ---------------------------------------------------------------------------

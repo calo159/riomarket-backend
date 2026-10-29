@@ -49,6 +49,7 @@ class ReportarNoRecibidoSerializer(serializers.Serializer):
 class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, allow_empty=False)
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    acciones_permitidas = serializers.SerializerMethodField()
 
     class Meta:
         model = Pedido
@@ -71,6 +72,7 @@ class PedidoSerializer(serializers.ModelSerializer):
             "total",
             "no_recibido_en",
             "motivo_no_recibido",
+            "acciones_permitidas",
             "items",
             "codigo_cupon",
             "fecha_creacion",
@@ -92,6 +94,12 @@ class PedidoSerializer(serializers.ModelSerializer):
             "fecha_creacion",
             "fecha_actualizacion",
         )
+
+    def get_acciones_permitidas(self, obj) -> list[str]:
+        request = self.context.get("request")
+        if request is None:
+            return []
+        return services.acciones_disponibles(obj, request.user)
 
     def create(self, validated_data):
         items = validated_data.pop("items", [])
