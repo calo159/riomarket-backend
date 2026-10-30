@@ -62,6 +62,10 @@ al menos 100 registros de dominio.
    `POST /api/orders/pedidos/{id}/entregar/`; si no llegó, `.../no-recibido/` con `{"motivo":"..."}`.
 
 ## 6. Archivos de respaldo
+
+> Los volcados son de la entrega original (anteriores al RBAC con roles y recursos): no incluyen las
+> tablas `rbac_*`. Para datos al día usa `python manage.py migrate` y `python manage.py seed_masivo`.
+> Traen los *hashes* de las cuentas demo; no los uses con datos reales.
 - `entrega/datos_riomarket.sql` — volcado completo (esquema + datos, incluidas
   tablas de sistema) de la base cargada.
 - `entrega/datos_riomarket.json` — respaldo de datos de dominio (Django
