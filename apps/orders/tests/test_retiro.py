@@ -300,6 +300,19 @@ class TestEntregaConCobro:
         assert pedido.estado == E.LISTO_PARA_RECOGER
         assert pago.estado == Pago.Estado.PENDIENTE
 
+    def test_acciones_con_efectivo_pendiente_solo_el_vendedor_y_admin_entregan(
+        self, comprador, vendedor, admin, puesto, producto
+    ):
+        pedido, pago = _retiro_efectivo_listo(comprador, vendedor, puesto, producto)
+        assert "entregar" not in services.acciones_disponibles(pedido, comprador)
+        assert "entregar" in services.acciones_disponibles(pedido, vendedor)
+        assert "entregar" in services.acciones_disponibles(pedido, admin)
+        assert "confirmar-pago" in services.acciones_disponibles(pedido, vendedor)
+        # Ya cobrado: el comprador también puede cerrar la entrega.
+        pagos_services.confirmar_efectivo(pago=pago, usuario=vendedor)
+        pedido.refresh_from_db()
+        assert "entregar" in services.acciones_disponibles(pedido, comprador)
+
     def test_comprador_entrega_si_el_efectivo_ya_fue_cobrado(
         self, comprador, vendedor, puesto, producto
     ):
@@ -345,7 +358,10 @@ class TestEntregaConCobro:
             assert respuesta.status_code == status.HTTP_200_OK, respuesta.data
         detalle = cliente_comprador.get(f"{PEDIDOS}{pedido.pk}/").data
         assert detalle["estado"] == "listo_para_recoger"
-        assert "entregar" in detalle["acciones_permitidas"]
+        assert "entregar" not in detalle["acciones_permitidas"]  # efectivo sin cobrar
+        detalle_vendedor = cliente_vendedor.get(f"{PEDIDOS}{pedido.pk}/").data
+        assert "entregar" in detalle_vendedor["acciones_permitidas"]
+        assert "confirmar-pago" in detalle_vendedor["acciones_permitidas"]
         respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/entregar/")
         assert respuesta.status_code == status.HTTP_200_OK, respuesta.data
         assert respuesta.data["estado"] == "entregado"

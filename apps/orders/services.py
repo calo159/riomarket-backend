@@ -402,7 +402,7 @@ def _cerrar_cobro_en_mano(pedido: Pedido, usuario) -> None:
         or pago.estado not in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
     ):
         return
-    if not (usuario.es_administrador or pedido.id_puesto.id_vendedor_id == usuario.pk):
+    if not _puede_cobrar(pedido, usuario):
         raise ValidationError(
             {"pago": "El pago en efectivo sigue pendiente: el vendedor debe confirmar el cobro."}
         )
@@ -488,8 +488,17 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
         acciones.append(permissions.Accion.EDITAR.value)
     for destino in transiciones_de(pedido).get(pedido.estado, ()):
         accion = permissions.ACCION_POR_DESTINO[destino]
-        if permissions.puede(usuario, accion, pedido):
-            acciones.append(accion)
+        if not permissions.puede(usuario, accion, pedido):
+            continue
+        if (
+            destino == Pedido.Estado.ENTREGADO
+            and _cobro_en_mano_pendiente(pedido)
+            and not _puede_cobrar(pedido, usuario)
+        ):
+            # El comprador no cierra su propio efectivo: se le oculta el botón (el servicio
+            # igualmente lo rechazaría) y el vendedor entrega y cobra.
+            continue
+        acciones.append(accion)
     if (
         pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO
         and pedido.estado == Pedido.Estado.EN_CAMINO
@@ -499,6 +508,22 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
         acciones.append(permissions.Accion.NO_RECIBIDO.value)
     acciones.extend(_acciones_de_pago(pedido, usuario))
     return acciones
+
+
+def _cobro_en_mano_pendiente(pedido: Pedido) -> bool:
+    """Retiro con pago en efectivo aún sin cobrar (pendiente o procesando)."""
+    pago = getattr(pedido, "pago", None)
+    return (
+        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        and pago is not None
+        and pago.metodo_pago == "efectivo"
+        and pago.estado in ("pendiente", "procesando")
+    )
+
+
+def _puede_cobrar(pedido: Pedido, usuario) -> bool:
+    """Quién cierra el cobro en mano: el administrador o el vendedor dueño del puesto."""
+    return usuario.es_administrador or pedido.id_puesto.id_vendedor_id == usuario.pk
 
 
 def _acciones_de_pago(pedido: Pedido, usuario) -> list[str]:
