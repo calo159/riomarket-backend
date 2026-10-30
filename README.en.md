@@ -49,7 +49,7 @@ OpenAPI validation and the frontend lint, typecheck, tests and build.
 ## Deployment (Render + Supabase)
 
 `render.yaml` builds `Dockerfile.render`; `scripts/render-start.sh` runs `collectstatic`, `migrate`,
-`createcachetable` and (if `SEED_DEMO=true`) the demo seed. Set `DATABASE_URL`, `SECRET_KEY`,
+(if `SEED_DEMO=true`) the demo seed. Set `DATABASE_URL`, `SECRET_KEY`,
 `FERNET_KEY` and optionally the `STORAGE_S3_*` variables (a private bucket keeps the ID photos).
 See `docs/despliegue.md` and `docs/AUDITORIA.md` (security notes and pending proposals).
 
