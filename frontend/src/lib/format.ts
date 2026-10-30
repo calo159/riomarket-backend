@@ -15,6 +15,11 @@ const fechaHora = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
 });
 
+/** Fecha de hoy (AAAA-MM-DD) en Bogotá: ``toISOString`` usa UTC y después de las 19:00 ya es "mañana". */
+export function hoyBogota(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+}
+
 export function formatearMoneda(valor: string | number | null | undefined): string {
   const numero = Number(valor ?? 0);
   return moneda.format(Number.isFinite(numero) ? numero : 0);

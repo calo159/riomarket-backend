@@ -10,11 +10,11 @@ import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Es
 import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { ConfirmarModal, Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
-import { formatearFecha, formatearMoneda } from '../../lib/format';
+import { formatearFecha, formatearMoneda, hoyBogota } from '../../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Cupon } from '../../lib/types';
 
-const HOY = new Date().toISOString().slice(0, 10);
+const HOY = hoyBogota();
 
 const VACIO: DatosCupon = {
   codigo: '',
