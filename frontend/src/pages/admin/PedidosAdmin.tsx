@@ -136,7 +136,7 @@ export function PedidosAdmin() {
                       {pedido.items.length === 1 ? 'producto' : 'productos'} · Puesto #{pedido.id_puesto}
                     </p>
                     {pedido.estado === 'en_camino' && pedido.no_recibido_en && (
-                      <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">
+                      <p className="mt-1 rounded-lg bg-sol-50 px-2 py-1 text-xs font-semibold text-sol-800 dark:bg-sol-950/60 dark:text-sol-200">
                         Disputa: el comprador reportó que no le llegó el {formatearFechaHora(pedido.no_recibido_en)}.
                         {pedido.motivo_no_recibido ? ` Motivo: ${pedido.motivo_no_recibido}.` : ''} Revisa y resuelve con "Marcar entregado" o cancela/reembolsa.
                       </p>
@@ -160,7 +160,7 @@ export function PedidosAdmin() {
                     {puedeCancelar && (
                       <button
                         type="button"
-                        className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400"
+                        className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400"
                         onClick={() => setCancelar(pedido.id)}
                       >
                         <XCircle className="h-3.5 w-3.5" /> Cancelar

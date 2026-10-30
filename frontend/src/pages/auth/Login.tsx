@@ -135,7 +135,7 @@ export function Login() {
           </p>
 
           {(aviso || expirada) && (
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+            <div className="mt-5 flex items-start gap-2 rounded-xl border border-sol-300 bg-sol-50 px-4 py-3 text-sm text-sol-900 dark:border-sol-800 dark:bg-sol-950/50 dark:text-sol-200">
               <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
               <p>{aviso ?? 'Tu sesión expiró. Inicia sesión de nuevo.'}</p>
             </div>
@@ -143,7 +143,7 @@ export function Login() {
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (
-              <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200" role="alert">
+              <div className="flex items-start gap-2 rounded-xl border border-rojo-300 bg-rojo-50 px-4 py-3 text-sm text-rojo-900 dark:border-rojo-800 dark:bg-rojo-950/50 dark:text-rojo-200" role="alert">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{errors.root.message}</p>
               </div>

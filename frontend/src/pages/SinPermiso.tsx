@@ -7,7 +7,7 @@ export function SinPermiso() {
   const { rol } = useSession();
   return (
     <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rojo-100 text-rojo-700 dark:bg-rojo-950 dark:text-rojo-300">
         <ShieldX className="h-8 w-8" />
       </span>
       <h1 className="mt-4 text-2xl font-bold">No tienes permiso para entrar aquí</h1>

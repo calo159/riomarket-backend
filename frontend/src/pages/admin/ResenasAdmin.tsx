@@ -102,7 +102,7 @@ export function ResenasAdmin() {
                 </div>
                 <button
                   type="button"
-                  className="btn-ghost shrink-0 py-1.5 text-xs text-rose-600 dark:text-rose-400"
+                  className="btn-ghost shrink-0 py-1.5 text-xs text-rojo-600 dark:text-rojo-400"
                   onClick={() => setEliminar(resena)}
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar

@@ -38,8 +38,8 @@ function advertenciaRol(rol: Rol): string {
 function EstadoUsuarioBadge({ estado }: { estado: string }) {
   const clase =
     estado === 'activo'
-      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+      ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300'
+      : 'bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300';
   return <span className={`badge ${clase}`}>{estado}</span>;
 }
 
@@ -175,7 +175,7 @@ export function Usuarios() {
                     <td className="p-3"><EstadoUsuarioBadge estado={usuario.estado} /></td>
                     <td className="p-3 text-xs text-slate-500">
                       {usuario.pedidos_como_comprador} como comprador
-                      {usuario.pedidos_activos > 0 && <span className="ml-1 font-semibold text-amber-700 dark:text-amber-300">({usuario.pedidos_activos} activos)</span>}
+                      {usuario.pedidos_activos > 0 && <span className="ml-1 font-semibold text-sol-700 dark:text-sol-300">({usuario.pedidos_activos} activos)</span>}
                     </td>
                     <td className="p-3 text-xs text-slate-500">
                       {usuario.puestos.length === 0 ? '—' : (
@@ -333,7 +333,7 @@ function GestionarAcceso({
               ))}
             </select>
           </Campo>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          <div className="rounded-xl border border-sol-200 bg-sol-50 p-3 text-xs text-sol-900 dark:border-sol-900 dark:bg-sol-950/40 dark:text-sol-200">
             {advertenciaRol(nuevoRol)}
             {usuario.pedidos_activos > 0 && (
               <p className="mt-1 font-semibold">Esta cuenta tiene {usuario.pedidos_activos} pedido(s) activo(s); el cambio se rechazará hasta resolverlos.</p>
@@ -377,7 +377,7 @@ function GestionarAcceso({
                       }
                     />
                     {opcion.nombre}
-                    {!opcion.activo && <span className="text-xs text-amber-600">(inactivo: no otorga nada)</span>}
+                    {!opcion.activo && <span className="text-xs text-sol-600">(inactivo: no otorga nada)</span>}
                   </label>
                 </li>
               ))}

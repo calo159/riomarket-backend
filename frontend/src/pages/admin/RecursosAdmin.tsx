@@ -130,8 +130,8 @@ export function RecursosAdmin() {
                     <p className="flex items-center gap-1.5 font-medium">
                       {recurso.nombre}
                       {recurso.es_sistema && <Lock className="h-3 w-3 text-slate-400" aria-label="Recurso de sistema" />}
-                      {!recurso.activo && <span className="badge bg-amber-100 text-amber-800">Inactivo</span>}
-                      {recurso.es_publico && <span className="badge bg-sky-100 text-sky-800">Público</span>}
+                      {!recurso.activo && <span className="badge bg-sol-100 text-sol-800">Inactivo</span>}
+                      {recurso.es_publico && <span className="badge bg-brand-100 text-brand-800">Público</span>}
                     </p>
                     <p className="text-xs text-slate-400">{recurso.codigo}</p>
                   </td>
@@ -149,7 +149,7 @@ export function RecursosAdmin() {
                       {!recurso.es_sistema && (
                         <button
                           type="button"
-                          className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400"
+                          className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400"
                           onClick={() => {
                             setErrorEliminar('');
                             setAEliminar(recurso);

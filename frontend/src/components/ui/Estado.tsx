@@ -52,7 +52,7 @@ export function EstadoError({
   onReintentar?: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
+    <div className="rounded-2xl border border-rojo-200 bg-rojo-50 p-5 text-rojo-900 dark:border-rojo-900 dark:bg-rojo-950/50 dark:text-rojo-200">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
         <div>

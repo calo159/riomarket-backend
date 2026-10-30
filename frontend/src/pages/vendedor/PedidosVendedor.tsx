@@ -110,7 +110,7 @@ export function PedidosVendedor() {
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length} {pedido.items.length === 1 ? 'producto' : 'productos'}
                     </p>
                     {pedido.estado === 'en_camino' && (
-                      <p className={`mt-1 text-xs ${pedido.no_recibido_en ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                      <p className={`mt-1 text-xs ${pedido.no_recibido_en ? 'font-semibold text-sol-700 dark:text-sol-300' : 'text-slate-500 dark:text-slate-400'}`}>
                         {pedido.no_recibido_en
                           ? 'El comprador reportó que no le ha llegado. Espera la resolución del administrador.'
                           : 'Esperando que el comprador confirme la recepción.'}
@@ -135,7 +135,7 @@ export function PedidosVendedor() {
                     {puedeCancelar && (
                       <button
                         type="button"
-                        className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400"
+                        className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400"
                         onClick={() => setCancelar(pedido.id)}
                       >
                         <XCircle className="h-3.5 w-3.5" /> Cancelar

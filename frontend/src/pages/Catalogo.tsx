@@ -174,7 +174,7 @@ export function Catalogo() {
       </div>
 
       {hayFiltros && (
-        <button type="button" onClick={limpiar} className="btn-ghost w-full text-rose-600 dark:text-rose-400">
+        <button type="button" onClick={limpiar} className="btn-ghost w-full text-rojo-600 dark:text-rojo-400">
           <X className="h-4 w-4" /> Limpiar filtros
         </button>
       )}

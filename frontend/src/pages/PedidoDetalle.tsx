@@ -161,14 +161,14 @@ export function PedidoDetalle() {
           {puedeReportar && (
             <button
               type="button"
-              className="btn-secondary text-amber-700 dark:text-amber-300"
+              className="btn-secondary text-sol-700 dark:text-sol-300"
               onClick={() => setModalNoRecibido(true)}
             >
               <Clock className="h-4 w-4" /> No me ha llegado
             </button>
           )}
           {puedeCancelar && (
-            <button type="button" className="btn-secondary text-rose-600 dark:text-rose-400" onClick={() => setConfirmarCancelar(true)}>
+            <button type="button" className="btn-secondary text-rojo-600 dark:text-rojo-400" onClick={() => setConfirmarCancelar(true)}>
               <XCircle className="h-4 w-4" /> Cancelar
             </button>
           )}

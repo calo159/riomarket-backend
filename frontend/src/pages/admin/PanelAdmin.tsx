@@ -71,7 +71,7 @@ export function PanelAdmin() {
 
       <section className="mb-8">
         <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
-          <AlertTriangle className="h-5 w-5 text-amber-500" /> Requiere atención
+          <AlertTriangle className="h-5 w-5 text-sol-500" /> Requiere atención
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {atencion.map(({ etiqueta, valor, icono: Icono, to }) => (
@@ -79,9 +79,9 @@ export function PanelAdmin() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
-                  <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-amber-700 dark:text-amber-300' : ''}`}>{valor}</p>
+                  <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-sol-700 dark:text-sol-300' : ''}`}>{valor}</p>
                 </div>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sol-100 text-sol-800 dark:bg-sol-950 dark:text-sol-200">
                   <Icono className="h-5 w-5" />
                 </span>
               </div>

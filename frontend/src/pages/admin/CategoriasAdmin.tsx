@@ -143,7 +143,7 @@ export function CategoriasAdmin() {
                   <td className="p-3 font-medium">{categoria.nombre}</td>
                   <td className="p-3 text-slate-500">{nombreDe(categoria.id_categoria_padre)}</td>
                   <td className="p-3">
-                    <span className={`badge ${categoria.activa ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                    <span className={`badge ${categoria.activa ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                       {categoria.activa ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
@@ -152,7 +152,7 @@ export function CategoriasAdmin() {
                       <button type="button" className="btn-ghost p-2" onClick={() => abrirEditar(categoria)} aria-label={`Editar ${categoria.nombre}`}>
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button type="button" className="btn-ghost p-2 text-rose-600 dark:text-rose-400" onClick={() => setEliminar(categoria)} aria-label={`Eliminar ${categoria.nombre}`}>
+                      <button type="button" className="btn-ghost p-2 text-rojo-600 dark:text-rojo-400" onClick={() => setEliminar(categoria)} aria-label={`Eliminar ${categoria.nombre}`}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

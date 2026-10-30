@@ -141,8 +141,8 @@ export function Cupones() {
         }
       />
 
-      {!verificado && <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">Necesitas verificación aprobada para crear cupones.</p>}
-      {verificado && puestosMios.length === 0 && <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">Primero crea un puesto.</p>}
+      {!verificado && <p className="mb-4 text-sm text-sol-700 dark:text-sol-400">Necesitas verificación aprobada para crear cupones.</p>}
+      {verificado && puestosMios.length === 0 && <p className="mb-4 text-sm text-sol-700 dark:text-sol-400">Primero crea un puesto.</p>}
 
       {cupones.isLoading && <CargandoBloque mensaje="Cargando cupones…" />}
       {cupones.isError && <EstadoError mensaje="No pudimos cargar cupones." onReintentar={() => void cupones.refetch()} />}
@@ -158,7 +158,7 @@ export function Cupones() {
                 <Ticket className="h-4 w-4 text-brand-600" />
                 <p className="font-bold tracking-wider">{cupon.codigo}</p>
               </div>
-              <span className={cupon.activo ? 'badge bg-emerald-100 text-emerald-800' : 'badge bg-slate-100 text-slate-600'}>{cupon.activo ? 'Activo' : 'Inactivo'}</span>
+              <span className={cupon.activo ? 'badge bg-verde-100 text-verde-800' : 'badge bg-slate-100 text-slate-600'}>{cupon.activo ? 'Activo' : 'Inactivo'}</span>
             </div>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
               {cupon.tipo_descuento === 'porcentaje' ? `${cupon.valor}%` : formatearMoneda(cupon.valor)}
@@ -171,7 +171,7 @@ export function Cupones() {
             {(cupon.fecha_inicio || cupon.fecha_fin) && <p className="mt-1 text-xs text-slate-500">Vigencia: {formatearFecha(cupon.fecha_inicio)} - {formatearFecha(cupon.fecha_fin)}</p>}
             <div className="mt-3 flex gap-1">
               <button type="button" className="btn-ghost py-1.5 text-xs" onClick={() => abrirEditar(cupon)}><Pencil className="h-3.5 w-3.5" /> Editar</button>
-              <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600" onClick={() => setEliminar(cupon)}><Trash2 className="h-3.5 w-3.5" /> Eliminar</button>
+              <button type="button" className="btn-ghost py-1.5 text-xs text-rojo-600" onClick={() => setEliminar(cupon)}><Trash2 className="h-3.5 w-3.5" /> Eliminar</button>
             </div>
           </article>
         ))}

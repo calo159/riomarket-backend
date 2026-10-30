@@ -126,7 +126,7 @@ export function Verificaciones() {
                         <>
                           <button
                             type="button"
-                            className="btn-ghost p-2 text-emerald-600"
+                            className="btn-ghost p-2 text-verde-600"
                             onClick={() => setAprobar({ id: sol.id, nombre: sol.nombre_usuario })}
                             title="Aprobar"
                             aria-label={`Aprobar a ${sol.nombre_usuario}`}
@@ -135,7 +135,7 @@ export function Verificaciones() {
                           </button>
                           <button
                             type="button"
-                            className="btn-ghost p-2 text-rose-600"
+                            className="btn-ghost p-2 text-rojo-600"
                             onClick={() => setRechazar(sol.id)}
                             title="Rechazar"
                             aria-label={`Rechazar a ${sol.nombre_usuario}`}

@@ -374,7 +374,7 @@ export function Checkout() {
               </div>
               {errorCupon && <p className="field-error">{errorCupon}</p>}
               {cupon && (
-                <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-verde-700 dark:text-verde-400">
                   <CheckCircle2 className="h-4 w-4" /> Cupón aplicado: {formatearMoneda(cupon.descuento)} de descuento.
                 </p>
               )}
@@ -399,7 +399,7 @@ export function Checkout() {
             <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">Subtotal</span><span>{formatearMoneda(subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">Domicilio</span><span>{tarifa ? formatearMoneda(tarifa) : '—'}</span></div>
             {descuento > 0 && (
-              <div className="flex justify-between text-emerald-700 dark:text-emerald-400"><span>Descuento</span><span>− {formatearMoneda(descuento)}</span></div>
+              <div className="flex justify-between text-verde-700 dark:text-verde-400"><span>Descuento</span><span>− {formatearMoneda(descuento)}</span></div>
             )}
           </div>
           <div className="my-4 border-t" />

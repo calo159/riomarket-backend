@@ -154,7 +154,7 @@ export function Registro() {
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (
-              <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200" role="alert">
+              <div className="flex items-start gap-2 rounded-xl border border-rojo-300 bg-rojo-50 px-4 py-3 text-sm text-rojo-900 dark:border-rojo-800 dark:bg-rojo-950/50 dark:text-rojo-200" role="alert">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{errors.root.message}</p>
               </div>

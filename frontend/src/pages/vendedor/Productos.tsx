@@ -168,8 +168,8 @@ export function ProductosVendedor() {
         acciones={<button type="button" className="btn-primary" onClick={abrirNuevo} disabled={!verificado || (puestos.data?.results.length ?? 0) === 0}><Plus className="h-4 w-4" /> Nuevo producto</button>}
       />
 
-      {!verificado && <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">Necesitas verificación aprobada para crear productos.</p>}
-      {verificado && (puestos.data?.results.length ?? 0) === 0 && <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">Primero crea un puesto y asígnale categorías.</p>}
+      {!verificado && <p className="mb-4 text-sm text-sol-700 dark:text-sol-400">Necesitas verificación aprobada para crear productos.</p>}
+      {verificado && (puestos.data?.results.length ?? 0) === 0 && <p className="mb-4 text-sm text-sol-700 dark:text-sol-400">Primero crea un puesto y asígnale categorías.</p>}
 
       {productos.isLoading && <CargandoBloque mensaje="Cargando productos…" />}
       {productos.isError && <EstadoError mensaje="No pudimos cargar productos." onReintentar={() => void productos.refetch()} />}
@@ -204,7 +204,7 @@ export function ProductosVendedor() {
                   <div className="flex justify-end gap-1">
                     <button type="button" className="btn-ghost p-2" onClick={() => setImagenes(producto)} title="Imágenes"><ImagePlus className="h-4 w-4" /></button>
                     <button type="button" className="btn-ghost p-2" onClick={() => abrirEditar(producto)} title="Editar"><Pencil className="h-4 w-4" /></button>
-                    <button type="button" className="btn-ghost p-2 text-rose-600" onClick={() => setEliminar(producto)} title="Eliminar"><Trash2 className="h-4 w-4" /></button>
+                    <button type="button" className="btn-ghost p-2 text-rojo-600" onClick={() => setEliminar(producto)} title="Eliminar"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </td>
               </tr>

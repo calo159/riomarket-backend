@@ -145,7 +145,7 @@ export function PagosAdmin() {
                       <>
                         <button
                           type="button"
-                          className="btn-ghost p-2 text-emerald-600"
+                          className="btn-ghost p-2 text-verde-600"
                           onClick={() => simular.mutate({ id: pago.id, accion: 'aprobar' })}
                           disabled={simular.isPending}
                           title="Aprobar en sandbox"
@@ -155,7 +155,7 @@ export function PagosAdmin() {
                         </button>
                         <button
                           type="button"
-                          className="btn-ghost p-2 text-rose-600"
+                          className="btn-ghost p-2 text-rojo-600"
                           onClick={() => simular.mutate({ id: pago.id, accion: 'rechazar' })}
                           disabled={simular.isPending}
                           title="Rechazar en sandbox"
@@ -169,7 +169,7 @@ export function PagosAdmin() {
                       <button type="button" className="btn-ghost p-2" onClick={() => setPendiente({ id: pago.id, accion: 'reembolsar' })} title="Reembolsar" aria-label={`Reembolsar el pago #${pago.id}`}><RefreshCw className="h-4 w-4" /></button>
                     )}
                     {!['aprobado', 'reembolsado'].includes(pago.estado) && (
-                      <button type="button" className="btn-ghost p-2 text-rose-600" onClick={() => setPendiente({ id: pago.id, accion: 'anular' })} title="Anular" aria-label={`Anular el pago #${pago.id}`}><XOctagon className="h-4 w-4" /></button>
+                      <button type="button" className="btn-ghost p-2 text-rojo-600" onClick={() => setPendiente({ id: pago.id, accion: 'anular' })} title="Anular" aria-label={`Anular el pago #${pago.id}`}><XOctagon className="h-4 w-4" /></button>
                     )}
                   </div>
                 </td>

@@ -137,7 +137,7 @@ export function RolesAdmin() {
                         <Lock className="h-3 w-3" /> Sistema
                       </span>
                     )}
-                    {!rol.activo && <span className="badge bg-amber-100 text-amber-800">Inactivo</span>}
+                    {!rol.activo && <span className="badge bg-sol-100 text-sol-800">Inactivo</span>}
                   </h2>
                   {rol.descripcion && <p className="text-sm text-slate-500 dark:text-slate-400">{rol.descripcion}</p>}
                 </div>
@@ -155,7 +155,7 @@ export function RolesAdmin() {
                 {!rol.es_sistema && (
                   <button
                     type="button"
-                    className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400"
+                    className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400"
                     onClick={() => {
                       setErrorEliminar('');
                       setAEliminar(rol);
@@ -413,7 +413,7 @@ function PermisosModal({
   return (
     <Modal abierto onCerrar={onCerrar} titulo={`Permisos de «${rol.nombre}»`} ancho="max-w-2xl">
       {hayObligatorios && (
-        <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+        <p className="mb-3 rounded-xl border border-sol-200 bg-sol-50 p-3 text-xs text-sol-900 dark:border-sol-900 dark:bg-sol-950/40 dark:text-sol-200">
           Los recursos con candado son obligatorios para el rol administrador: sin ellos nadie podría seguir administrando el sistema.
         </p>
       )}
@@ -444,7 +444,7 @@ function PermisosModal({
                         />
                         {recurso.nombre}
                         {bloqueado && <Lock className="h-3 w-3 text-slate-400" aria-label="Obligatorio" />}
-                        {!recurso.activo && <span className="text-xs text-amber-600">(inactivo)</span>}
+                        {!recurso.activo && <span className="text-xs text-sol-600">(inactivo)</span>}
                       </label>
                     </li>
                   );

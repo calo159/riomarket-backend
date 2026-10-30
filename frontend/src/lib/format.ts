@@ -92,26 +92,26 @@ export function etiquetaEstado(estado: string | null | undefined): string {
   return ETIQUETAS_PEDIDO[estado] ?? ETIQUETAS_PAGO[estado] ?? ETIQUETAS_VERIFICACION[estado] ?? estado;
 }
 
+/** Chips de estado macizos: verde = bien, amarillo = espera, azul = en curso, rojo = problema. */
 export function colorEstado(estado: string | null | undefined): string {
   switch (estado) {
     case 'entregado':
     case 'aprobado':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+      return 'bg-verde-600 text-white';
     case 'pendiente':
     case 'procesando':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+      return 'bg-sol-400 text-slate-950';
     case 'confirmado':
     case 'en_preparacion':
-      return 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300';
     case 'en_camino':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300';
+      return 'bg-brand-600 text-white dark:bg-brand-500';
     case 'cancelado':
     case 'rechazado':
     case 'anulado':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+      return 'bg-rojo-600 text-white';
     case 'reembolsado':
-      return 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300';
+      return 'bg-slate-600 text-white';
     default:
-      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+      return 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100';
   }
 }

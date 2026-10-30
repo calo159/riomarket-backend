@@ -153,7 +153,7 @@ export function Direcciones() {
                   </p>
                   {direccion.referencia && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{direccion.referencia}</p>}
                 </div>
-                {direccion.es_predeterminada && <Star className="h-5 w-5 shrink-0 fill-amber-400 text-amber-400" />}
+                {direccion.es_predeterminada && <Star className="h-5 w-5 shrink-0 fill-sol-400 text-sol-400" />}
               </div>
               <div className="mt-auto flex flex-wrap gap-2 pt-4">
                 {!direccion.es_predeterminada && (
@@ -169,7 +169,7 @@ export function Direcciones() {
                 <button type="button" className="btn-ghost py-1.5 text-xs" onClick={() => abrirEditar(direccion)}>
                   <Pencil className="h-3.5 w-3.5" /> Editar
                 </button>
-                <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400" onClick={() => setEliminar(direccion)}>
+                <button type="button" className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400" onClick={() => setEliminar(direccion)}>
                   <Trash2 className="h-3.5 w-3.5" /> Eliminar
                 </button>
               </div>

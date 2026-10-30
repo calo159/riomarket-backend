@@ -69,7 +69,7 @@ export function MenuItems({
               <span className="min-w-0 flex-1 truncate">{item.nombre}</span>
               {badge && (
                 <span
-                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white"
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rojo-600 px-1 text-[10px] font-bold text-white"
                   aria-label={`${badge} pendientes`}
                 >
                   {badge}

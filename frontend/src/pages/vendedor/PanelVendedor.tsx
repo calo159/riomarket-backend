@@ -53,10 +53,10 @@ export function PanelVendedor() {
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
 
   const tarjetas = [
-    { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300' },
+    { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
     { etiqueta: 'Productos', valor: productos.data?.count ?? 0, icono: Package, to: '/vendedor/productos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
-    { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' },
-    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+    { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-sol-100 text-sol-700 dark:bg-sol-950 dark:text-sol-300' },
+    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-verde-100 text-verde-700 dark:bg-verde-950 dark:text-verde-300' },
   ];
 
   return (
@@ -78,7 +78,7 @@ export function PanelVendedor() {
       />
 
       {!verificacion.isLoading && !verificado && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100 sm:flex-row sm:items-center">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-sol-300 bg-sol-50 p-4 text-sol-950 dark:border-sol-800 dark:bg-sol-950/40 dark:text-sol-100 sm:flex-row sm:items-center">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <div className="flex-1 text-sm">
             <p className="font-semibold">

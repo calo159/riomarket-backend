@@ -1,3 +1,13 @@
+@font-face {
+  font-family: 'Rubik Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 900;
+  src: url('../node_modules/@fontsource-variable/rubik/files/rubik-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,90 +15,159 @@
 @layer base {
   :root {
     color-scheme: light;
+    --reticula: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Crect x='2' y='3' width='24' height='8' rx='4'/%3E%3C/svg%3E");
   }
   .dark {
     color-scheme: dark;
   }
   * {
-    @apply border-slate-200 dark:border-slate-800;
+    @apply border-slate-200 dark:border-slate-700;
   }
   html {
     scroll-behavior: smooth;
+    text-underline-offset: 3px;
+    scrollbar-color: theme('colors.slate.400') transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  .dark html,
+  html.dark {
+    scrollbar-color: theme('colors.slate.600') transparent;
   }
   body {
-    @apply bg-sand-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-white font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+    caret-color: theme('colors.brand.600');
+  }
+  .dark body {
+    caret-color: theme('colors.sol.400');
+  }
+  ::selection {
+    background: theme('colors.sol.400');
+    color: theme('colors.slate.950');
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-extrabold;
+    text-wrap: balance;
   }
   :focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-sand-50 dark:ring-offset-slate-950;
+    @apply outline-none ring-2 ring-brand-600 ring-offset-2 ring-offset-white dark:ring-sol-400 dark:ring-offset-slate-950;
   }
   img {
     @apply bg-slate-100 dark:bg-slate-900;
+  }
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='range'] {
+    accent-color: theme('colors.brand.600');
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-md bg-slate-300 dark:bg-slate-700;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition focus-visible:ring-2 focus-visible:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  @media (pointer: coarse) {
+    .btn {
+      min-height: 44px;
+    }
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800;
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800 dark:bg-brand-500 dark:hover:bg-brand-600;
   }
   .btn-secondary {
-    @apply btn border bg-white text-slate-800 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800;
+    @apply btn border-2 border-slate-900 bg-white text-slate-900 hover:bg-slate-100 dark:border-slate-300 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800;
   }
   .btn-ghost {
-    @apply btn text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800;
+    @apply btn text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800;
   }
   .btn-danger {
-    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+    @apply btn bg-rojo-600 text-white hover:bg-rojo-700;
+  }
+  .btn-sol {
+    @apply btn bg-sol-400 text-slate-950 hover:bg-sol-300;
   }
   .input {
-    @apply w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:bg-slate-100 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:disabled:bg-slate-800;
+    @apply w-full rounded-lg border border-slate-400 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30 disabled:bg-slate-100 dark:border-slate-500 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-sol-400 dark:focus:ring-sol-400/30 dark:disabled:bg-slate-800;
   }
   .label {
-    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300;
+    @apply mb-1.5 block text-sm font-medium text-slate-800 dark:text-slate-200;
   }
   .card {
-    @apply rounded-2xl border bg-white shadow-card dark:bg-slate-900;
+    @apply rounded-xl border bg-white dark:bg-slate-900;
   }
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold;
   }
   .link {
-    @apply font-medium text-brand-700 underline-offset-4 hover:underline dark:text-brand-300;
+    @apply font-medium text-brand-700 underline underline-offset-4 hover:text-brand-900 dark:text-brand-300 dark:hover:text-brand-200;
   }
   .skeleton {
-    @apply animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800;
+    @apply rounded-md bg-slate-200 dark:bg-slate-800;
   }
   .field-error {
-    @apply mt-1 text-xs font-medium text-rose-600 dark:text-rose-400;
+    @apply mt-1 text-xs font-medium text-rojo-700 dark:text-rojo-300;
   }
   .table-wrap {
-    @apply overflow-x-auto rounded-2xl border bg-white dark:bg-slate-900;
+    @apply overflow-x-auto rounded-xl border bg-white dark:bg-slate-900;
   }
   .table {
-    @apply min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800;
+    @apply min-w-full divide-y divide-slate-200 text-sm tabular-nums dark:divide-slate-700;
   }
   .table thead {
-    @apply bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900/70 dark:text-slate-400;
+    @apply bg-slate-100 text-left text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300;
   }
   .table th {
-    @apply px-4 py-3 font-semibold;
+    @apply px-3 py-2 font-semibold;
   }
   .table td {
-    @apply px-4 py-3 align-middle;
+    @apply px-3 py-2 align-middle;
   }
   .table tbody {
     @apply divide-y divide-slate-100 dark:divide-slate-800;
   }
+  .table tbody tr:hover {
+    @apply bg-slate-50 dark:bg-slate-800/50;
+  }
+
+  /* Retícula: filas de ranuras redondeadas, como el costado de una canasta.
+     Es un adorno de borde o de fallback: nunca va debajo de texto. */
+  .reticula {
+    display: block;
+    background-color: currentColor;
+    -webkit-mask: var(--reticula) 0 0 / 28px 14px repeat;
+    mask: var(--reticula) 0 0 / 28px 14px repeat;
+  }
+  /* Asa: ranura recortada en el borde superior de un bloque. */
+  .asa {
+    @apply absolute left-1/2 top-2 h-3 w-16 -translate-x-1/2 rounded-full bg-white dark:bg-slate-950;
+  }
 }
-/* Sistema de diseño - tokens básicos */
-:root {
-  --color-brand: #22c55e;
-  --color-sand: #f5f3ef;
-  --color-terracota: #d97757;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.02), 0 1px 3px 0 rgb(0 0 0 / 0.1);
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
 }

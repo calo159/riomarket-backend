@@ -20,9 +20,9 @@ const Contexto = createContext<ContextoToast | null>(null);
 let contador = 0;
 
 const ESTILOS: Record<TipoToast, string> = {
-  exito: 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100',
-  error: 'border-rose-300 bg-rose-50 text-rose-950 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100',
-  info: 'border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100',
+  exito: 'border-verde-300 bg-verde-50 text-verde-950 dark:border-verde-800 dark:bg-verde-950 dark:text-verde-100',
+  error: 'border-rojo-300 bg-rojo-50 text-rojo-950 dark:border-rojo-800 dark:bg-rojo-950 dark:text-rojo-100',
+  info: 'border-brand-300 bg-brand-50 text-brand-950 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100',
 };
 
 const ICONOS: Record<TipoToast, ReactNode> = {

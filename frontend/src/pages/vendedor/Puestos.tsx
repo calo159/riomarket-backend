@@ -157,7 +157,7 @@ export function Puestos() {
       />
 
       {!verificacion.isLoading && !verificado && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100 sm:flex-row sm:items-center">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-sol-300 bg-sol-50 p-4 text-sm text-sol-900 dark:border-sol-800 dark:bg-sol-950/40 dark:text-sol-100 sm:flex-row sm:items-center">
           <BadgeCheck className="h-5 w-5 shrink-0" />
           <p className="flex-1">Necesitas la verificación aprobada para crear puestos. Mientras tanto puedes revisar los existentes.</p>
           <Link to="/vendedor/verificacion" className="btn-secondary shrink-0">Verificarme</Link>
@@ -189,7 +189,7 @@ export function Puestos() {
                 </p>
                 {puesto.horario && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{puesto.horario}</p>}
                 {puesto.ofrece_domicilio && (
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-verde-700 dark:text-verde-400">
                     <Bike className="h-3.5 w-3.5" /> Ofrece domicilio
                   </p>
                 )}
@@ -201,7 +201,7 @@ export function Puestos() {
 
             <div className="mt-3 flex flex-wrap gap-1.5">
               {categoriasAsignadas(puesto).length === 0 ? (
-                <span className="text-xs text-amber-700 dark:text-amber-400">Sin categorías asignadas</span>
+                <span className="text-xs text-sol-700 dark:text-sol-400">Sin categorías asignadas</span>
               ) : (
                 categoriasAsignadas(puesto).map((categoria) => (
                   <span key={categoria.id} className="badge bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200">{categoria.nombre}</span>
@@ -217,7 +217,7 @@ export function Puestos() {
               <button type="button" className="btn-ghost py-1.5 text-xs" onClick={() => setCategoriasDe(puesto)}>
                 <Tags className="h-3.5 w-3.5" /> Categorías
               </button>
-              <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400" onClick={() => setEliminar(puesto)}>
+              <button type="button" className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400" onClick={() => setEliminar(puesto)}>
                 <Trash2 className="h-3.5 w-3.5" /> Eliminar
               </button>
             </div>

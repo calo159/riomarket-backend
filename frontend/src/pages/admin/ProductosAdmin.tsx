@@ -142,7 +142,7 @@ export function ProductosAdmin() {
                     <td className="p-3">{formatearMoneda(producto.precio)}</td>
                     <td className="p-3">{producto.stock}</td>
                     <td className="p-3">
-                      <span className={`badge ${producto.estado === 'bloqueado' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : producto.estado === 'activo' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                      <span className={`badge ${producto.estado === 'bloqueado' ? 'bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300' : producto.estado === 'activo' ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                         {producto.estado}
                       </span>
                     </td>
@@ -152,7 +152,7 @@ export function ProductosAdmin() {
                           <Unlock className="h-3.5 w-3.5" /> Desbloquear
                         </button>
                       ) : (
-                        <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400" onClick={() => abrir(producto, 'bloqueado')}>
+                        <button type="button" className="btn-ghost py-1.5 text-xs text-rojo-600 dark:text-rojo-400" onClick={() => abrir(producto, 'bloqueado')}>
                           <Lock className="h-3.5 w-3.5" /> Bloquear
                         </button>
                       )}

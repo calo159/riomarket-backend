@@ -1,40 +1,32 @@
-import { ImageOff } from 'lucide-react';
+import { clasesDeCategoria } from '../lib/categoria';
+import { cn } from '../lib/utils';
+import { Reticula } from './Reticula';
 
-const COLORES = [
-  'from-brand-100 to-brand-200 dark:from-brand-950 dark:to-brand-900',
-  'from-sand-100 to-sand-200 dark:from-slate-800 dark:to-slate-900',
-  'from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900',
-  'from-amber-100 to-amber-200 dark:from-amber-950 dark:to-amber-900',
-  'from-cyan-100 to-cyan-200 dark:from-cyan-950 dark:to-cyan-900',
-];
-
-function hash(str: string) {
+/** Sin categoría conocida (logos, portadas): el color sale del nombre, siempre el mismo. */
+function nombreAId(nombre: string): number {
   let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < nombre.length; i++) h = (h * 31 + nombre.charCodeAt(i)) >>> 0;
   return h;
 }
 
+/** Sin foto: bloque del color de la categoría con la inicial grande y la retícula abajo. */
 export function ReservaImagen({
   nombre,
+  categoriaId,
   className = '',
 }: {
   nombre: string;
+  categoriaId?: number | null;
   className?: string;
 }) {
-  const idx = hash(nombre || 'riomarket') % COLORES.length;
-  const iniciales = (nombre || 'RM')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((x) => x[0]?.toUpperCase() || '')
-    .join('');
+  const clases = clasesDeCategoria(categoriaId ?? nombreAId(nombre));
+  const inicial = (nombre || 'R').trim().charAt(0).toUpperCase();
   return (
-    <div
-      className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${COLORES[idx]} ${className}`}
-    >
-      <div className="flex flex-col items-center gap-2 text-slate-600 dark:text-slate-300">
-        <ImageOff className="h-10 w-10" />
-        {iniciales && <span className="text-lg font-bold">{iniciales}</span>}
-      </div>
+    <div className={cn('relative flex h-full w-full items-center justify-center overflow-hidden', clases.bloque, className)}>
+      <span aria-hidden="true" className="text-5xl font-extrabold leading-none sm:text-6xl">
+        {inicial}
+      </span>
+      <Reticula className={cn('absolute inset-x-0 bottom-0 h-7', clases.ranuras)} />
     </div>
   );
 }

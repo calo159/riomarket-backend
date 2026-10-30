@@ -105,7 +105,7 @@ export function PuestoDetalle() {
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-3xl font-bold">{tienda.nombre}</h1>
                 {tienda.estado !== 'activo' && (
-                  <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                  <span className="badge bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300">
                     Puesto {tienda.estado}
                   </span>
                 )}
@@ -113,7 +113,7 @@ export function PuestoDetalle() {
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
                 <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {tienda.direccion}</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star className="h-4 w-4 fill-sol-400 text-sol-400" />
                   {formatearCalificacion(tienda.calificacion_promedio)}
                   {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
                 </span>

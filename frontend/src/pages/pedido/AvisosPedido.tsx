@@ -13,7 +13,7 @@ export function AvisosPedido({ datos, esNuevo, esComprador }: Props) {
   return (
     <>
       {esNuevo && datos.estado === 'pendiente' && (
-        <div className="mb-5 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-verde-300 bg-verde-50 px-4 py-3 text-sm text-verde-900 dark:border-verde-800 dark:bg-verde-950/50 dark:text-verde-200">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <p>Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.</p>
         </div>
@@ -22,7 +22,7 @@ export function AvisosPedido({ datos, esNuevo, esComprador }: Props) {
       {datos.estado === 'en_camino' && (
         <div className="mb-5 space-y-2">
           {datos.no_recibido_en && (
-            <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+            <div className="flex items-start gap-2 rounded-xl border border-sol-300 bg-sol-50 px-4 py-3 text-sm text-sol-900 dark:border-sol-800 dark:bg-sol-950/50 dark:text-sol-200">
               <Clock className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
                 {esComprador ? 'Ya avisaste que no te ha llegado' : 'El comprador reportó que no le ha llegado'}
@@ -33,7 +33,7 @@ export function AvisosPedido({ datos, esNuevo, esComprador }: Props) {
             </div>
           )}
           {!datos.no_recibido_en && esComprador && (
-            <div className="flex items-start gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-200">
+            <div className="flex items-start gap-2 rounded-xl border border-brand-300 bg-brand-50 px-4 py-3 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-200">
               <Package className="mt-0.5 h-4 w-4 shrink-0" />
               <p>El vendedor ya entregó tu pedido al domiciliario o está listo para retirar. Confírmalo cuando lo tengas.</p>
             </div>

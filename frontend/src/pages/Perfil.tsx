@@ -99,14 +99,14 @@ export function Perfil() {
               {ETIQUETAS_ROL[datos.rol] ?? datos.rol}
             </span>
             {datos.estado === 'activo' ? (
-              <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              <span className="badge bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300">
                 <BadgeCheck className="mr-1 h-3 w-3" /> Cuenta activa
               </span>
             ) : (
-              <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Suspendida</span>
+              <span className="badge bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300">Suspendida</span>
             )}
             {esVendedor && datos.estado_verificacion && (
-              <span className="badge bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              <span className="badge bg-sol-100 text-sol-800 dark:bg-sol-950 dark:text-sol-300">
                 <ShieldCheck className="mr-1 h-3 w-3" /> Verificación: {datos.estado_verificacion}
               </span>
             )}

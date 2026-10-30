@@ -46,7 +46,7 @@ export function Carrito() {
         titulo="Tu carrito"
         descripcion={`${totalItems} ${totalItems === 1 ? 'producto' : 'productos'} de ${carrito.puestoNombre}.`}
         acciones={
-          <button type="button" className="btn-ghost text-rose-600 dark:text-rose-400" onClick={() => setConfirmarVaciar(true)}>
+          <button type="button" className="btn-ghost text-rojo-600 dark:text-rojo-400" onClick={() => setConfirmarVaciar(true)}>
             <Trash2 className="h-4 w-4" /> Vaciar
           </button>
         }
@@ -79,7 +79,7 @@ export function Carrito() {
                   <button
                     type="button"
                     onClick={() => quitar(item.productoId)}
-                    className="btn-ghost shrink-0 p-2 text-slate-500 hover:text-rose-600"
+                    className="btn-ghost shrink-0 p-2 text-slate-500 hover:text-rojo-600"
                     aria-label={`Quitar ${item.nombre}`}
                   >
                     <Trash2 className="h-4 w-4" />
