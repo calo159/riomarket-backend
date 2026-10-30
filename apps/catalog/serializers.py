@@ -56,6 +56,7 @@ class PuestoSerializer(serializers.ModelSerializer):
     portada = serializers.SerializerMethodField()
     calificacion_promedio = serializers.FloatField(read_only=True, default=None, allow_null=True)
     cantidad_resenas = serializers.IntegerField(read_only=True, default=0)
+    whatsapp = serializers.SerializerMethodField()
 
     class Meta:
         model = Puesto
@@ -69,6 +70,8 @@ class PuestoSerializer(serializers.ModelSerializer):
             "longitud",
             "horario",
             "ofrece_domicilio",
+            "acepta_whatsapp",
+            "whatsapp",
             "estado",
             "calificacion_promedio",
             "cantidad_resenas",
@@ -77,6 +80,10 @@ class PuestoSerializer(serializers.ModelSerializer):
             "portada",
         )
         read_only_fields = ("id", "id_vendedor", "estado")
+
+    def get_whatsapp(self, obj) -> str | None:
+        """Número para WhatsApp (``57`` + celular), o ``None`` si no debe publicarse."""
+        return services.numero_whatsapp_publico(obj)
 
     def get_categorias(self, obj) -> list[dict]:
         return CategoriaSerializer(

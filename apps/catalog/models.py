@@ -55,7 +55,11 @@ class Puesto(models.Model):
     estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.ACTIVO)
     logo = models.ImageField(upload_to="puestos/logos/%Y/%m/", blank=True, null=True)
     portada = models.ImageField(upload_to="puestos/portadas/%Y/%m/", blank=True, null=True)
-    acepta_whatsapp = models.BooleanField(default=True)
+    # Privacidad: el celular del vendedor solo se publica si él lo activa (por defecto, no).
+    acepta_whatsapp = models.BooleanField(
+        default=False,
+        help_text="Si está activo, el celular del vendedor se muestra a los compradores.",
+    )
 
     class Meta:
         verbose_name = "puesto"
