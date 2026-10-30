@@ -61,6 +61,8 @@ class Puesto(models.Model):
         verbose_name = "puesto"
         verbose_name_plural = "puestos"
         ordering = ["nombre"]
+        # El listado público filtra por estado y ordena por nombre.
+        indexes = [models.Index(fields=["estado", "nombre"], name="puesto_estado_nombre_idx")]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(estado__in=["activo", "inactivo", "suspendido"]),
