@@ -122,35 +122,34 @@ export function Registro() {
   };
 
   return (
-    <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl lg:grid-cols-[1fr_1.1fr]">
-      <div className="relative hidden overflow-hidden bg-brand-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute -right-24 top-10 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
+    <div className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-[1240px] gap-0 px-3 py-5 sm:px-5 lg:grid-cols-[1fr_1.1fr] lg:py-8">
+      <div className="relative hidden overflow-hidden rounded-l-xl bg-brand-600 p-12 text-white dark:bg-brand-900 lg:flex lg:flex-col lg:justify-between">
         <div className="relative">
-          <Logo className="[&_span:last-child]:text-white" />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-tight">
+          <Logo sobreMarca />
+          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
             Únete a la comunidad que mueve a Riohacha.
           </h1>
-          <p className="mt-4 max-w-md text-brand-100">
+          <p className="mt-4 max-w-md text-lg text-brand-50">
             Compra a tus vecinos o abre tu propio puesto y llega a más clientes.
           </p>
         </div>
         <div className="relative space-y-3 text-sm">
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3">
-            <ShoppingBag className="h-5 w-5 text-sand-300" /> Compra fácil y recibe donde estés.
+          <div className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3">
+            <ShoppingBag className="h-5 w-5 text-amarillo" /> Compra fácil y recibe donde estés.
           </div>
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3">
-            <Store className="h-5 w-5 text-sand-300" /> Vende con verificación de identidad.
+          <div className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3">
+            <Store className="h-5 w-5 text-amarillo" /> Vende con verificación de identidad.
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-center px-4 py-10 sm:px-8">
+      <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-10 sm:px-8 lg:rounded-l-none lg:rounded-r-xl dark:border-slate-800 dark:bg-slate-900">
         <div className="w-full max-w-lg">
           <div className="mb-6 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-bold">Crea tu cuenta</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Es gratis y toma menos de un minuto.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">Crea tu cuenta</h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Toma menos de un minuto.</p>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (

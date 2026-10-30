@@ -64,7 +64,7 @@ export function Modal({
   if (!abierto) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 animate-fadein sm:items-center sm:p-4">
       <button
         type="button"
         className="absolute inset-0 cursor-default"
@@ -80,12 +80,12 @@ export function Modal({
         aria-labelledby={tituloId}
         tabIndex={-1}
         className={cn(
-          'relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border bg-white p-5 shadow-2xl outline-none dark:bg-slate-900 sm:rounded-2xl',
+          'relative z-10 max-h-[92vh] w-full animate-sheet overflow-y-auto rounded-t-xl border bg-white p-5 shadow-menu outline-none dark:bg-slate-900 sm:animate-fadezoom sm:rounded-xl',
           ancho,
         )}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 id={tituloId} className="text-lg font-semibold">
+          <h2 id={tituloId} className="text-lg font-bold">
             {titulo}
           </h2>
           <button type="button" onClick={onCerrar} className="btn-ghost -mr-2 -mt-1 p-2" aria-label="Cerrar">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
-export function ThemeToggle() {
+export function ThemeToggle({ variante = 'normal' }: { variante?: 'normal' | 'encabezado' }) {
   const [oscuro, setOscuro] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="btn-ghost p-2.5"
+      className={variante === 'encabezado' ? 'acto-encabezado' : 'btn-ghost p-2.5'}
       onClick={() => setOscuro((valor) => !valor)}
       aria-label={oscuro ? 'Activar modo claro' : 'Activar modo oscuro'}
       title={oscuro ? 'Modo claro' : 'Modo oscuro'}

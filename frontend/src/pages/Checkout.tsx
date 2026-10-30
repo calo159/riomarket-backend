@@ -178,11 +178,11 @@ export function Checkout() {
   const ofreceDomicilio = puesto.data?.ofrece_domicilio ?? carrito.ofreceDomicilio;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <EncabezadoPagina titulo="Finalizar compra" descripcion="Revisa la entrega y confirma tu pedido." />
+    <div className="mx-auto max-w-[1240px] px-3 pb-28 pt-5 sm:px-5 lg:pb-8">
+      <EncabezadoPagina titulo="Finalizar compra" descripcion={`Pedido a ${carrito.puestoNombre}. Revisa la entrega y confirma.`} />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-5">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-4">
           <section className="card p-5">
             <h2 className="text-lg font-bold">1. Tipo de entrega</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -382,8 +382,9 @@ export function Checkout() {
           </section>
         </div>
 
-        <aside className="card h-fit p-5 lg:sticky lg:top-24">
-          <h2 className="text-lg font-bold">Tu pedido</h2>
+        <aside className="card h-fit p-5 lg:sticky lg:top-4">
+          <h2 className="text-xl font-bold">Tu pedido</h2>
+          <p className="text-sm font-semibold text-brand-600 dark:text-brand-300">{carrito.puestoNombre}</p>
           <div className="mt-3 space-y-2">
             {carrito.items.map((item) => (
               <div key={item.productoId} className="flex justify-between gap-2 text-sm">
@@ -405,14 +406,14 @@ export function Checkout() {
           <div className="my-4 border-t" />
           <div className="flex items-center justify-between">
             <span className="font-semibold">Total</span>
-            <span className="text-xl font-extrabold text-brand-800 dark:text-brand-300">{formatearMoneda(total)}</span>
+            <span className="precio text-2xl">{formatearMoneda(total)}</span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             El servidor confirma los montos finales al crear el pedido. El pago se registra en el siguiente paso.
           </p>
           <button
             type="button"
-            className="btn-primary mt-4 w-full py-3"
+            className="btn-primary mt-4 min-h-[48px] w-full text-base max-lg:hidden"
             onClick={enviar}
             disabled={crear.isPending}
           >
@@ -422,6 +423,16 @@ export function Checkout() {
             <Trash2 className="h-4 w-4" /> Volver al carrito
           </Link>
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-16 z-30 flex items-center gap-3 border-t border-slate-200 bg-white px-4 py-2.5 lg:hidden dark:border-slate-800 dark:bg-slate-900">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
+          <p className="precio text-xl">{formatearMoneda(total)}</p>
+        </div>
+        <button type="button" className="btn-primary min-h-[48px] px-6 text-base" onClick={enviar} disabled={crear.isPending}>
+          {crear.isPending ? 'Creando pedido…' : 'Confirmar pedido'}
+        </button>
       </div>
     </div>
   );

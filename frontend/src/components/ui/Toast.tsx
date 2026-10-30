@@ -20,15 +20,15 @@ const Contexto = createContext<ContextoToast | null>(null);
 let contador = 0;
 
 const ESTILOS: Record<TipoToast, string> = {
-  exito: 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100',
-  error: 'border-rose-300 bg-rose-50 text-rose-950 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100',
-  info: 'border-sky-300 bg-sky-50 text-sky-950 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100',
+  exito: 'border-pie bg-pie text-white',
+  error: 'border-rose-900 bg-pie text-white',
+  info: 'border-pie bg-pie text-white',
 };
 
 const ICONOS: Record<TipoToast, ReactNode> = {
-  exito: <CheckCircle2 className="h-5 w-5 shrink-0" />,
-  error: <XCircle className="h-5 w-5 shrink-0" />,
-  info: <Info className="h-5 w-5 shrink-0" />,
+  exito: <CheckCircle2 className="h-5 w-5 shrink-0 text-[#7CE0A6]" />,
+  error: <XCircle className="h-5 w-5 shrink-0 text-[#FF9B86]" />,
+  info: <Info className="h-5 w-5 shrink-0 text-[#8FD3F4]" />,
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -61,15 +61,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <Contexto.Provider value={valor}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-4 bottom-4 z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:items-end"
+        className="pointer-events-none fixed inset-x-4 bottom-20 z-[100] md:bottom-6 flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:items-end"
         role="status"
         aria-live="polite"
+        aria-atomic="false"
       >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg',
+              'pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-menu',
               ESTILOS[toast.tipo],
             )}
           >
@@ -78,7 +79,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => quitar(toast.id)}
-              className="rounded p-0.5 opacity-70 hover:opacity-100"
+              className="-mr-1 grid h-8 w-8 place-items-center rounded opacity-80 hover:opacity-100"
               aria-label="Cerrar aviso"
             >
               <X className="h-4 w-4" />

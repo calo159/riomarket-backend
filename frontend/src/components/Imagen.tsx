@@ -5,6 +5,7 @@ interface Props extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src?: string | null;
   miniatura?: string | null;
   fallbackNombre?: string;
+  categoria?: string | null;
   contenedorClassName?: string;
 }
 
@@ -12,6 +13,7 @@ export function Imagen({
   src,
   miniatura,
   fallbackNombre = '',
+  categoria,
   contenedorClassName = '',
   className = '',
   alt = '',
@@ -26,14 +28,14 @@ export function Imagen({
   if (!url || error) {
     return (
       <div className={`relative overflow-hidden ${contenedorClassName}`}>
-        <ReservaImagen nombre={fallbackNombre} className="h-full w-full" />
+        <ReservaImagen nombre={fallbackNombre} categoria={categoria} className="h-full w-full" />
       </div>
     );
   }
 
   return (
     <div className={`relative overflow-hidden ${contenedorClassName}`}>
-      {cargando && <ReservaImagen nombre={fallbackNombre} className="absolute inset-0 h-full w-full" />}
+      {cargando && <ReservaImagen nombre={fallbackNombre} categoria={categoria} className="absolute inset-0 h-full w-full" />}
       <img
         {...rest}
         src={url}

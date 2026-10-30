@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Bike, Clock, MapPin, PackageSearch, Star, Store } from 'lucide-react';
+import { Bike, Clock, MapPin, PackageSearch, Star } from 'lucide-react';
 import { listarProductos, obtenerPuesto } from '../api/catalog';
 import { listarResenas } from '../api/reviews';
 import { ProductoCard } from '../components/ProductoCard';
 import { Imagen } from '../components/Imagen';
+import { LogoPuesto } from '../components/PuestoCard';
 import { urlAbsoluta } from '../lib/utils';
+import { GRID_PRODUCTOS } from '../lib/estilos';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
@@ -62,7 +64,6 @@ export function PuestoDetalle() {
   const tienda = puesto.data;
   const categorias = tienda.categorias as unknown as { id: number; nombre: string }[];
   const portada = urlAbsoluta(tienda.portada);
-  const logo = urlAbsoluta(tienda.logo);
 
   const cambiarCategoria = (nueva: number | null) => {
     setCategoria(nueva);
@@ -71,10 +72,10 @@ export function PuestoDetalle() {
 
   return (
     <div>
-      <section className="border-b bg-white dark:bg-slate-900">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-          {portada && (
-            <div className="mb-6 aspect-[3/1] w-full overflow-hidden rounded-2xl">
+      <div className="mx-auto max-w-[1240px] px-3 pt-4 sm:px-5">
+        <section className="card overflow-hidden">
+          <div className="h-32 w-full overflow-hidden bg-brand-600 sm:h-48 dark:bg-brand-800">
+            {portada && (
               <Imagen
                 src={portada}
                 fallbackNombre={tienda.nombre}
@@ -84,26 +85,17 @@ export function PuestoDetalle() {
                 height={400}
                 loading="eager" // portada del puesto: visible al abrir la página
               />
-            </div>
-          )}
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-            {logo ? (
-              <Imagen
-                src={logo}
-                fallbackNombre={tienda.nombre}
-                contenedorClassName="h-20 w-20 shrink-0 rounded-2xl"
-                alt={`Logo de ${tienda.nombre}`}
-                width={80}
-                height={80}
-              />
-            ) : (
-              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                <Store className="h-10 w-10" />
-              </span>
             )}
-            <div className="min-w-0 flex-1">
+          </div>
+          <div className="flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-start sm:px-6">
+            <LogoPuesto
+              nombre={tienda.nombre}
+              logo={tienda.logo}
+              className="-mt-10 h-20 w-20 text-2xl sm:-mt-12 sm:h-24 sm:w-24"
+            />
+            <div className="min-w-0 flex-1 sm:pt-3">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-bold">{tienda.nombre}</h1>
+                <h1 className="text-2xl font-extrabold tracking-tight">{tienda.nombre}</h1>
                 {tienda.estado !== 'activo' && (
                   <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                     Puesto {tienda.estado}
@@ -111,28 +103,29 @@ export function PuestoDetalle() {
                 )}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
-                <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {tienda.direccion}</span>
+                <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" aria-hidden="true" /> {tienda.direccion}</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star className="h-4 w-4 fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400" aria-hidden="true" />
                   {formatearCalificacion(tienda.calificacion_promedio)}
                   {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
                 </span>
-                {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" /> {tienda.horario}</span>}
-                <span className="inline-flex items-center gap-1.5">
-                  <Bike className="h-4 w-4" /> {tienda.ofrece_domicilio ? 'Ofrece domicilio' : 'Solo retiro en el puesto'}
+                {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" aria-hidden="true" /> {tienda.horario}</span>}
+                <span className={`inline-flex items-center gap-1.5 font-semibold ${tienda.ofrece_domicilio ? 'text-exito dark:text-[#6FD596]' : ''}`}>
+                  <Bike className="h-4 w-4" aria-hidden="true" /> {tienda.ofrece_domicilio ? 'Ofrece domicilio' : 'Solo retiro en el puesto'}
                 </span>
               </div>
               {tienda.descripcion && <p className="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">{tienda.descripcion}</p>}
-              <div className="mt-4 flex flex-wrap gap-1.5">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {categorias.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => cambiarCategoria(item.id)}
-                    className={`badge transition ${
+                    aria-pressed={categoria === item.id}
+                    className={`inline-flex min-h-[44px] items-center rounded-full border px-3.5 text-sm font-semibold transition-colors md:min-h-[36px] ${
                       categoria === item.id
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                        ? 'border-brand-600 bg-brand-600 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-brand-600 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
                     }`}
                   >
                     {item.nombre}
@@ -141,13 +134,13 @@ export function PuestoDetalle() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto max-w-[1240px] px-3 py-6 sm:px-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold">Productos</h2>
+            <h2 className="text-[23px] font-bold tracking-tight">Productos</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {categoria ? categorias.find((item) => item.id === categoria)?.nombre : 'Todo el puesto'}
             </p>
@@ -171,7 +164,7 @@ export function PuestoDetalle() {
         )}
         {productos.data && productos.data.results.length > 0 && (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className={GRID_PRODUCTOS}>
               {productos.data.results.map((producto) => (
                 <ProductoCard key={producto.id} producto={producto} puesto={tienda} />
               ))}
@@ -187,10 +180,10 @@ export function PuestoDetalle() {
         )}
 
         <section className="mt-12">
-          <h2 className="text-2xl font-bold">Reseñas</h2>
+          <h2 className="text-[23px] font-bold tracking-tight">Reseñas del puesto</h2>
           {resenas.isLoading && <p className="mt-2 text-sm text-slate-500">Cargando reseñas…</p>}
           {resenas.data && resenas.data.results.length === 0 && (
-            <p className="mt-3 rounded-xl border border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            <p className="card mt-3 border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               Este puesto aún no tiene reseñas. Compra y sé el primero en opinar.
             </p>
           )}

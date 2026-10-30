@@ -25,7 +25,7 @@ export function Estrellas({
           return (
             <Star
               key={numero}
-              className={cn(tamano, llena ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-600')}
+              className={cn(tamano, llena ? 'fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600')}
               aria-hidden="true"
             />
           );
@@ -41,7 +41,7 @@ export function Estrellas({
             className="rounded p-0.5"
           >
             <Star
-              className={cn(tamano, llena ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-600')}
+              className={cn(tamano, llena ? 'fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600')}
             />
           </button>
         );

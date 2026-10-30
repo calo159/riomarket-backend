@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils';
 import { iconoDe } from '../../navigation/iconos';
 import { agruparItems, type MenuItem } from '../../navigation/tipos';
 
-type Variante = 'horizontal' | 'vertical' | 'cuenta';
+type Variante = 'horizontal' | 'vertical' | 'cuenta' | 'encabezado';
 
 function textoBadge(valor: number | undefined): string | null {
   if (!valor || valor <= 0) return null;
@@ -12,22 +12,31 @@ function textoBadge(valor: number | undefined): string | null {
 
 function enlaceClase(variante: Variante) {
   return ({ isActive }: { isActive: boolean }) => {
+    if (variante === 'encabezado') {
+      // Sobre el encabezado turquesa: texto claro, activo con subrayado amarillo.
+      return cn(
+        'inline-flex min-h-[32px] items-center border-b-2 py-1 text-sm font-medium transition-colors',
+        isActive
+          ? 'border-amarillo text-white'
+          : 'border-transparent text-[#E2F3F5] hover:text-white',
+      );
+    }
     if (variante === 'horizontal') {
       return cn(
-        'rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+        'rounded-lg px-3 py-2.5 text-sm font-semibold transition',
         isActive
-          ? 'bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
+          ? 'bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200'
+          : 'text-slate-700 hover:bg-slate-100 hover:text-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
       );
     }
     if (variante === 'cuenta') {
-      return 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500';
+      return 'flex min-h-[44px] items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-slate-800 dark:hover:text-brand-200 md:min-h-[40px]';
     }
     return cn(
-      'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+      'relative flex min-h-[44px] items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors md:min-h-[40px]',
       isActive
-        ? 'bg-brand-600 text-white shadow-sm'
-        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+        ? 'bg-brand-50 text-brand-700 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-r before:bg-brand-600 dark:bg-slate-800 dark:text-brand-200 dark:before:bg-brand-300'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
     );
   };
 }
@@ -65,11 +74,11 @@ export function MenuItems({
             onClick={onNavegar}
           >
             <span className="inline-flex w-full items-center gap-2">
-              <Icono className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {variante !== 'encabezado' && <Icono className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />}
               <span className="min-w-0 flex-1 truncate">{item.nombre}</span>
               {badge && (
                 <span
-                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white"
+                  className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accion px-1 text-[11px] font-bold text-white"
                   aria-label={`${badge} pendientes`}
                 >
                   {badge}
@@ -98,7 +107,7 @@ export function MenuPanel({
       {agruparItems(items).map((grupo, indice) => (
         <div key={grupo.grupo ?? `grupo-${indice}`} className="space-y-1">
           {grupo.grupo && (
-            <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <p className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               {grupo.grupo}
             </p>
           )}

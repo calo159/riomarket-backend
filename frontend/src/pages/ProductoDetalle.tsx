@@ -1,19 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Bike,
   ChevronRight,
-  MapPin,
   Minus,
   Plus,
   ShoppingCart,
-  Star,
-  Store,
+  Truck,
 } from 'lucide-react';
 import { listarResenas } from '../api/reviews';
-import { obtenerProducto, obtenerPuesto } from '../api/catalog';
-import { formatearCalificacion, formatearMoneda } from '../lib/format';
+import { listarCategorias, listarProductos, obtenerProducto, obtenerPuesto } from '../api/catalog';
+import { LogoPuesto } from '../components/PuestoCard';
+import { volarAlCarrito } from '../lib/volarAlCarrito';
+import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { useCart } from '../cart/CartProvider';
 import { useToast } from '../components/ui/Toast';
@@ -33,6 +32,8 @@ export function ProductoDetalle() {
   const [imagenActiva, setImagenActiva] = useState(0);
   const [cantidad, setCantidad] = useState(1);
   const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
+  const [agregado, setAgregado] = useState(false);
+  const botonAgregar = useRef<HTMLButtonElement>(null);
   const [accionPendiente, setAccionPendiente] = useState<'agregar' | 'comprar'>('agregar');
 
   const producto = useQuery({
@@ -44,6 +45,13 @@ export function ProductoDetalle() {
   const puesto = useQuery({
     queryKey: claves.puesto(producto.data?.id_puesto),
     queryFn: () => obtenerPuesto(producto.data!.id_puesto),
+    enabled: Boolean(producto.data?.id_puesto),
+  });
+
+  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
+  const masDelPuesto = useQuery({
+    queryKey: [...claves.productos.todos, 'mas-del-puesto', producto.data?.id_puesto] as const,
+    queryFn: () => listarProductos({ puesto: producto.data!.id_puesto, page: 1, page_size: 5 }),
     enabled: Boolean(producto.data?.id_puesto),
   });
 
@@ -87,7 +95,10 @@ export function ProductoDetalle() {
       return;
     }
     for (let i = 0; i < cantidad; i += 1) agregar(datos, tienda);
+    volarAlCarrito(botonAgregar.current, urlAbsoluta(imagen?.miniatura || imagen?.url));
     toast.exito(`${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${datos.nombre} en el carrito.`);
+    setAgregado(true);
+    window.setTimeout(() => setAgregado(false), 1500);
   };
 
   const reemplazar = () => {
@@ -113,199 +124,217 @@ export function ProductoDetalle() {
     else navigate('/checkout');
   };
 
+  const categoriaNombre = categorias.data?.find((c) => c.id === datos.id_categoria)?.nombre ?? null;
+  const otros = (masDelPuesto.data?.results ?? []).filter((p) => p.id !== datos.id).slice(0, 4);
+  const calificacion = tienda?.calificacion_promedio ?? datos.puesto_calificacion;
+  const nombrePuesto = tienda?.nombre ?? datos.puesto_nombre;
+  const domicilio = tienda ? tienda.ofrece_domicilio : datos.puesto_ofrece_domicilio;
+  const quedan = !agotado && stockMax <= 5;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <nav className="mb-5 flex flex-wrap items-center gap-1 text-sm text-slate-500 dark:text-slate-400" aria-label="Ruta de navegación">
-        <Link to="/" className="hover:underline">Inicio</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/catalogo" className="hover:underline">Catálogo</Link>
-        {tienda && (
-          <>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <Link to={`/puestos/${tienda.id}`} className="hover:underline">{tienda.nombre}</Link>
-          </>
-        )}
-        <ChevronRight className="h-3.5 w-3.5" />
+    <div className="mx-auto max-w-[1240px] px-3 pb-8 sm:px-5">
+      <nav className="flex flex-wrap items-center gap-1 py-3 text-[13px] text-slate-500 dark:text-slate-400" aria-label="Ruta de navegación">
+        <Link to="/" className="link">Inicio</Link>
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+        <Link to={categoriaNombre ? `/catalogo?categoria=${datos.id_categoria}` : '/catalogo'} className="link">
+          {categoriaNombre ?? 'Catálogo'}
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="truncate text-slate-800 dark:text-slate-200">{datos.nombre}</span>
       </nav>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div>
-          <div className="card aspect-square overflow-hidden">
-            <Imagen
-              src={urlAbsoluta(imagen?.url || imagen?.miniatura)}
-              fallbackNombre={datos.nombre}
-              contenedorClassName="h-full w-full"
-              alt={imagen?.alt || datos.nombre}
-              width={imagen?.ancho ?? undefined}
-              height={imagen?.alto ?? undefined}
-              loading="eager" // es la imagen principal, visible al abrir la página
-            />
-          </div>
-          {imagenes.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {imagenes.map((item, indice) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setImagenActiva(indice)}
-                  className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${
-                    indice === imagenActiva ? 'border-brand-600' : 'border-transparent opacity-70 hover:opacity-100'
-                  }`}
-                  aria-label={`Ver imagen ${indice + 1}`}
-                >
-                  <Imagen
-                    src={urlAbsoluta(item.miniatura || item.url)}
-                    fallbackNombre={datos.nombre}
-                    width={80}
-                    height={80}
-                    contenedorClassName="h-full w-full"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+      <div className={`card grid gap-4 p-3 md:p-5 ${imagenes.length > 1 ? 'lg:grid-cols-[76px_minmax(0,1fr)_372px]' : 'lg:grid-cols-[minmax(0,1fr)_372px]'}`}>
+        {imagenes.length > 1 && (
+        <div className="order-2 flex gap-2 overflow-x-auto lg:order-none lg:flex-col lg:overflow-visible">
+          {imagenes.map((item, indice) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setImagenActiva(indice)}
+                aria-pressed={indice === imagenActiva}
+                className={`h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[7px] border-2 bg-white p-0 transition-colors ${
+                  indice === imagenActiva ? 'border-brand-600 dark:border-brand-300' : 'border-slate-200 hover:border-brand-300 dark:border-slate-700'
+                }`}
+                aria-label={`Ver foto ${indice + 1}`}
+              >
+                <Imagen
+                  src={urlAbsoluta(item.miniatura || item.url)}
+                  fallbackNombre={datos.nombre}
+                  categoria={categoriaNombre}
+                  width={72}
+                  height={72}
+                  contenedorClassName="h-full w-full"
+                />
+              </button>
+            ))}
+        </div>
+        )}
+
+        <div className="group aspect-square max-h-[520px] w-full cursor-zoom-in overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-800">
+          <Imagen
+            key={imagenActiva}
+            src={urlAbsoluta(imagen?.url || imagen?.miniatura)}
+            fallbackNombre={datos.nombre}
+            categoria={categoriaNombre}
+            contenedorClassName="h-full w-full"
+            className="animate-fadein transition-transform duration-[350ms] ease-out group-hover:scale-150"
+            alt={imagen?.alt || datos.nombre}
+            width={imagen?.ancho ?? undefined}
+            height={imagen?.alto ?? undefined}
+            loading="eager" // es la imagen principal, visible al abrir la página
+          />
         </div>
 
-        <div>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold">{datos.nombre}</h1>
-              {tienda && (
-                <Link to={`/puestos/${tienda.id}`} className="link mt-1 inline-flex items-center gap-1 text-sm">
-                  <Store className="h-4 w-4" /> {tienda.nombre}
-                </Link>
-              )}
-            </div>
+        <aside className="flex flex-col gap-2.5 self-start rounded-xl border border-slate-200 p-4 dark:border-slate-700 md:p-[18px]" aria-label="Comprar">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400">
+            {agotado ? 'Agotado por ahora' : quedan ? `Quedan ${stockMax}` : `${stockMax} disponibles`}
             {datos.estado !== 'activo' && (
-              <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                Producto {datos.estado}
-              </span>
+              <span className="badge ml-2 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Producto {datos.estado}</span>
             )}
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-            {tienda && (
-              <span className="inline-flex items-center gap-1">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                {formatearCalificacion(tienda.calificacion_promedio)}
-                {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas})`}
-              </span>
-            )}
-            {tienda?.ofrece_domicilio && (
-              <span className="inline-flex items-center gap-1 text-brand-700 dark:text-brand-300">
-                <Bike className="h-4 w-4" /> Domicilio disponible
-              </span>
-            )}
-          </div>
-
-          <p className="mt-6 text-4xl font-extrabold text-brand-800 dark:text-brand-300">
-            {formatearMoneda(datos.precio)}
-            <span className="ml-1 text-base font-medium text-slate-500 dark:text-slate-400">
-              / {datos.unidad_medida ?? 'unidad'}
-            </span>
           </p>
-          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-            {agotado ? 'Agotado por ahora' : `${stockMax} disponibles`}
+          <h1 className="text-2xl font-bold leading-tight tracking-tight">{datos.nombre}</h1>
+          {calificacion ? (
+            <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+              <span className="font-bold text-estrella dark:text-amber-400">★ {calificacion.toFixed(1)}</span>
+              {tienda && tienda.cantidad_resenas > 0 && `${tienda.cantidad_resenas} ${tienda.cantidad_resenas === 1 ? 'reseña' : 'reseñas'} del puesto`}
+            </p>
+          ) : null}
+          <p className="precio text-[34px] leading-none md:text-[38px]">
+            {formatearMoneda(Number(datos.precio) * cantidad)}{' '}
+            <small className="text-[15px] font-medium tracking-normal text-slate-500 dark:text-slate-400">
+              {cantidad > 1 ? `por ${cantidad} ${datos.unidad_medida ?? 'unidad'}` : `/ ${datos.unidad_medida ?? 'unidad'}`}
+            </small>
           </p>
-
-          {datos.descripcion && (
-            <div className="mt-6">
-              <h2 className="font-semibold">Descripción</h2>
-              <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                {datos.descripcion}
-              </p>
-            </div>
+          {domicilio !== undefined && (
+            <p className={`flex items-center gap-1.5 text-sm font-semibold ${domicilio ? 'text-exito dark:text-[#6FD596]' : 'text-slate-500 dark:text-slate-400'}`}>
+              <Truck className="h-[18px] w-[18px]" aria-hidden="true" />
+              {domicilio ? 'Domicilio en Riohacha o retiro en el puesto' : 'Retiro en el puesto'}
+            </p>
           )}
 
-          <div className="mt-6 flex items-center gap-3">
-            <div className="inline-flex items-center rounded-xl border">
+          <div className="flex items-center gap-3 text-sm">
+            Cantidad
+            <div className="inline-flex items-center overflow-hidden rounded-[7px] border border-slate-300 dark:border-slate-600">
               <button
                 type="button"
-                className="p-3 text-slate-600 disabled:opacity-40 dark:text-slate-300"
+                className="grid h-11 w-11 place-items-center text-brand-600 transition-colors hover:bg-brand-50 disabled:opacity-40 dark:text-brand-200 dark:hover:bg-slate-800"
                 onClick={() => setCantidad((valor) => Math.max(1, valor - 1))}
                 disabled={cantidad <= 1}
                 aria-label="Quitar una unidad"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-4 w-4" aria-hidden="true" />
               </button>
-              <span className="w-10 text-center font-semibold" aria-live="polite">{cantidad}</span>
+              <span className="w-[42px] text-center font-bold tabular-nums" aria-live="polite">{cantidad}</span>
               <button
                 type="button"
-                className="p-3 text-slate-600 disabled:opacity-40 dark:text-slate-300"
+                className="grid h-11 w-11 place-items-center text-brand-600 transition-colors hover:bg-brand-50 disabled:opacity-40 dark:text-brand-200 dark:hover:bg-slate-800"
                 onClick={() => setCantidad((valor) => Math.min(stockMax, valor + 1))}
                 disabled={cantidad >= stockMax}
                 aria-label="Agregar una unidad"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Total: <strong className="text-slate-800 dark:text-slate-200">{formatearMoneda(Number(datos.precio) * cantidad)}</strong>
-            </p>
+            {datos.unidad_medida ?? 'unidad'}
           </div>
 
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-            <button type="button" className="btn-primary flex-1 py-3" onClick={agregarAlCarrito} disabled={agotado || !tienda}>
-              <ShoppingCart className="h-5 w-5" /> Agregar al carrito
-            </button>
-            <button type="button" className="btn-secondary flex-1 py-3" onClick={comprarAhora} disabled={agotado || !tienda}>
-              Comprar ahora
-            </button>
-          </div>
+          <button type="button" className="btn-primary min-h-[48px] text-base" onClick={comprarAhora} disabled={agotado || !tienda}>
+            Comprar ahora
+          </button>
+          <button
+            ref={botonAgregar}
+            type="button"
+            className={`btn min-h-[48px] text-base ${agregado ? 'bg-exito text-white' : 'btn-marca'}`}
+            onClick={agregarAlCarrito}
+            disabled={agotado || !tienda}
+          >
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" /> {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
+          </button>
 
-          {tienda && (
-            <div className="card mt-6 p-5">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                  <Store className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <Link to={`/puestos/${tienda.id}`} className="font-semibold hover:underline">{tienda.nombre}</Link>
-                  <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-                    <MapPin className="h-3.5 w-3.5" /> {tienda.direccion}
-                  </p>
-                  {tienda.horario && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Horario: {tienda.horario}</p>}
-                </div>
+          {nombrePuesto && (
+            <div className="mt-0.5 flex items-center gap-2.5 border-t border-slate-200 pt-3 dark:border-slate-700">
+              {tienda ? <LogoPuesto nombre={tienda.nombre} logo={tienda.logo} className="h-11 w-11 text-base" /> : null}
+              <div className="min-w-0">
+                <Link to={`/puestos/${datos.id_puesto}`} className="font-bold hover:underline">{nombrePuesto}</Link>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">
+                  {tienda?.horario ? `${tienda.horario} · ` : ''}
+                  {tienda?.direccion}
+                </p>
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
 
-      <section className="mt-12">
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Reseñas del puesto</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Opiniones de compradores reales.</p>
-          </div>
-        </div>
-        {resenas.isLoading && <p className="text-sm text-slate-500">Cargando reseñas…</p>}
-        {resenas.data && resenas.data.results.length === 0 && (
-          <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            Este puesto aún no tiene reseñas.
+      {datos.descripcion && (
+        <section className="card mt-3.5 p-5">
+          <h2 className="mb-2 text-xl font-bold">Descripción</h2>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">{datos.descripcion}</p>
+        </section>
+      )}
+
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_372px]">
+        <section className="card p-5" aria-label="Reseñas del puesto">
+          <h2 className="mb-1 text-xl font-bold">Reseñas del puesto</h2>
+          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+            Opiniones sobre {nombrePuesto ?? 'el puesto'}, de compradores que recibieron su pedido.
           </p>
-        )}
-        {resenas.data && resenas.data.results.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2">
-            {resenas.data.results.map((resena) => (
-              <article key={resena.id} className="card p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold">{resena.usuario_nombre}</p>
-                  <Estrellas valor={resena.calificacion} />
+          {calificacion ? (
+            <div className="mb-2 flex items-center gap-4">
+              <span className="text-[42px] font-bold leading-none">{calificacion.toFixed(1)}</span>
+              <div>
+                <Estrellas valor={calificacion} tamano="h-5 w-5" etiqueta={`Calificación del puesto: ${calificacion.toFixed(1)} de 5`} />
+                {tienda && <p className="text-[13px] text-slate-500 dark:text-slate-400">{tienda.cantidad_resenas} reseñas</p>}
+              </div>
+            </div>
+          ) : null}
+          {resenas.isLoading && <p className="text-sm text-slate-500">Cargando reseñas…</p>}
+          {resenas.data && resenas.data.results.length === 0 && (
+            <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              Este puesto aún no tiene reseñas.
+            </p>
+          )}
+          {resenas.data?.results.map((resena) => (
+            <article key={resena.id} className="border-t border-slate-100 py-3 dark:border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-bold">{resena.usuario_nombre}</p>
+                <Estrellas valor={resena.calificacion} />
+              </div>
+              {resena.comentario && <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{resena.comentario}</p>}
+              {resena.respuesta && (
+                <div className="mt-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
+                  <p className="text-xs font-bold text-brand-700 dark:text-brand-300">Respuesta del vendedor</p>
+                  <p className="mt-1 text-slate-600 dark:text-slate-300">{resena.respuesta}</p>
                 </div>
-                {resena.comentario && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{resena.comentario}</p>}
-                {resena.respuesta && (
-                  <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
-                    <p className="text-xs font-semibold text-brand-700 dark:text-brand-300">Respuesta del vendedor</p>
-                    <p className="mt-1 text-slate-600 dark:text-slate-300">{resena.respuesta}</p>
-                  </div>
-                )}
-              </article>
+              )}
+            </article>
+          ))}
+        </section>
+
+        {otros.length > 0 && (
+          <aside className="card self-start p-5" aria-label="Más de este puesto">
+            <h2 className="mb-2.5 text-xl font-bold">Más de este puesto</h2>
+            {otros.map((otro) => (
+              <Link
+                key={otro.id}
+                to={`/productos/${otro.id}`}
+                className="flex items-center gap-2.5 border-t border-slate-100 py-2.5 text-tinta transition-colors first:border-t-0 hover:text-brand-600 dark:border-slate-800 dark:text-slate-100 dark:hover:text-brand-300"
+              >
+                <Imagen
+                  src={urlAbsoluta(otro.imagenes?.[0]?.miniatura || otro.imagenes?.[0]?.url)}
+                  fallbackNombre={otro.nombre}
+                  categoria={categoriaNombre}
+                  contenedorClassName="h-[58px] w-[58px] shrink-0 rounded-[7px]"
+                />
+                <span className="min-w-0">
+                  <b className="block">{formatearMoneda(otro.precio)}</b>
+                  <span className="line-clamp-2 text-sm">{otro.nombre}</span>
+                </span>
+              </Link>
             ))}
-          </div>
+          </aside>
         )}
-      </section>
+      </div>
 
       <ConfirmarModal
         abierto={confirmarReemplazo}
