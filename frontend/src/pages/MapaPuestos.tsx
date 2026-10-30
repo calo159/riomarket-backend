@@ -75,9 +75,6 @@ export function MapaPuestos() {
                 etiqueta="Mapa de puestos de Riohacha"
               />
             </div>
-            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-              Mapa © <a className="link" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors
-            </p>
           </div>
 
           <section

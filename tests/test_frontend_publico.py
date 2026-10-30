@@ -56,3 +56,11 @@ def test_si_el_archivo_falta_da_404_y_no_el_index(dist):
 def test_no_sale_de_la_carpeta_del_build(dist):
     with pytest.raises((Http404, SuspiciousFileOperation)):
         _pedir("../../../manage.py")
+
+
+def test_whitenoise_conoce_el_tipo_del_manifest(settings):
+    from whitenoise.media_types import MediaTypes
+
+    tipos = MediaTypes(extra_types=settings.WHITENOISE_MIMETYPES)
+    assert tipos.get_type("/dist/manifest.webmanifest") == "application/manifest+json"
+    assert tipos.get_type("/dist/sw.js") == "text/javascript"

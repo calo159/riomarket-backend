@@ -2195,7 +2195,7 @@ export interface components {
             horario?: string;
             ofrece_domicilio?: boolean;
             acepta_whatsapp?: boolean;
-            /** @description Número internacional (57 + celular) si el vendedor aceptó mostrarlo. */
+            /** @description Número para WhatsApp (``57`` + celular), o ``None`` si no debe publicarse. */
             readonly whatsapp: string | null;
             readonly estado: components["schemas"]["PuestoEstadoEnum"];
             /** Format: double */

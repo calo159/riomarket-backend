@@ -30,6 +30,10 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
 | Paneles | Listo | Comprador, vendedor y administrador en una sola SPA |
 | Administración y RBAC | Listo | Usuarios (rol base, roles adicionales y baneo), roles, recursos, menú dinámico por recursos, moderación de puestos/productos, categorías, reseñas y resumen, todo con auditoría |
+| Contacto por WhatsApp | Listo | Botón «Escribir por WhatsApp» en el puesto y el producto; **apagado por defecto**: el vendedor lo activa y solo se publica con puesto activo y vendedor verificado ([ADR-010](docs/ADR-010-contacto-mapa-y-pwa.md)) |
+| Mapa de puestos | Listo | `/mapa` con Leaflet y OpenStreetMap (chunk diferido), mini-mapa y «Cómo llegar» en cada puesto |
+| Volver a pedir | Listo | Repite un pedido entregado o cancelado con el stock y los productos actuales |
+| App instalable (PWA) | Listo | Manifest, íconos y service worker mínimo que solo muestra una página sin conexión; no guarda en caché la app ni la API |
 | Pasarela y contraseñas | No incluido | Sin pago real ni cambio de contraseña |
 
 ## Arquitectura
@@ -348,7 +352,8 @@ curl http://127.0.0.1:8000/api/auth/menu/ -H "Authorization: Bearer $TOKEN"
 La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones están en [`frontend/README.md#estado-de-cumplimiento`](frontend/README.md#estado-de-cumplimiento). Los comandos de arranque están en [Inicio rápido](#2-frontend-otra-terminal).
 
 - **Landing** (`/`): presentación para compradores y vendedores; con sesión iniciada redirige al inicio del rol.
-- **Comprador** (`/tienda`): catálogo, carrito, checkout, pedidos, direcciones y perfil.
+- **Comprador** (`/tienda`): catálogo, carrito, checkout, pedidos (con «Volver a pedir»), direcciones y perfil.
+- **Mapa público** (`/mapa`): los puestos con ubicación sobre OpenStreetMap, con lista accesible; en cada puesto, mini-mapa, «Cómo llegar» y WhatsApp si el vendedor lo activó.
 - **Vendedor** (`/vendedor`): puestos, productos, pedidos, cupones, reseñas y verificación.
 - **Administrador** (`/admin`): resumen con alertas, usuarios, verificaciones, pedidos, puestos, productos, categorías, reseñas, pagos, cupones y auditoría. El menú y los accesos se generan desde el backend.
 

@@ -56,10 +56,15 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 - Carrito persistente en `localStorage`. Un carrito solo puede tener productos de un mismo puesto; si se agrega otro, pregunta antes de vaciar.
 - Indicador de carrito en el header.
 
+### Fase 3b: contacto, mapa y app instalable
+- WhatsApp: botón «Escribir por WhatsApp» en el detalle de puesto y de producto; el vendedor lo activa con un interruptor en «Mis puestos». Sin número publicado, no se dibuja nada.
+- Mapa: ruta pública `/mapa` (Leaflet + OpenStreetMap, cargado en un chunk diferido), lista accesible con los mismos puestos, mini-mapa y «Cómo llegar» en el puesto. Si el mapa no carga, queda la lista con un aviso.
+- App instalable: `manifest.webmanifest`, íconos y `sw.js`, que solo guarda la página `offline.html` y se registra únicamente en producción.
+
 ### Fase 4: comprador
 - Checkout: elegir o crear dirección, notas, cupón de descuento, tipo de entrega (retiro/domicilio), resumen de totales.
 - Crear pedido. Luego gestionar pago en el detalle del pedido.
-- Mis pedidos con filtros por estado.
+- Mis pedidos con filtros por estado y «Volver a pedir» en pedidos entregados o cancelados (consulta cada producto, respeta el stock y el carrito de un solo puesto, y avisa lo que ya no está).
 - Detalle de pedido con línea de tiempo de estado, ítems, entrega, pagos y acciones disponibles.
 - Direcciones: CRUD, predeterminada.
 - Notificaciones: listado, filtro no leídas, marcar leída/todas.

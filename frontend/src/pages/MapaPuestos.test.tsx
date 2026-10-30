@@ -68,7 +68,6 @@ describe('MapaPuestos', () => {
     expect(within(items[1]).getByRole('link', { name: 'Puesto 2' })).toHaveAttribute('href', '/puestos/2');
     expect(within(items[1]).getByText('Ofrece domicilio')).toBeInTheDocument();
     expect(within(items[0]).getByText('Solo retiro en el puesto')).toBeInTheDocument();
-    expect(screen.getByText(/OpenStreetMap/)).toBeInTheDocument();
   });
 
   it('la lista se usa con teclado: «Ver en el mapa» selecciona el puesto', async () => {

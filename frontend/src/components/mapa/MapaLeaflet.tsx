@@ -84,6 +84,8 @@ export default function MapaLeaflet({ puestos, seleccion, onAbrirPuesto, compact
       dragging: !(compacto && L.Browser.mobile),
       zoomControl: true,
     });
+    // Sin la bandera del prefijo por defecto: solo el nombre de la biblioteca y la atribución de OSM.
+    instancia.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: ATRIBUCION,

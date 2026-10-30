@@ -152,6 +152,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# WhiteNoise no conoce .webmanifest y lo serviría como application/octet-stream.
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
