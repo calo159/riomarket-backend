@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2, RefreshCw, XCircle, XOctagon } from 'lucide-react';
 import { anularPago, listarPagos, reembolsarPago, simularPago } from '../../api/payments';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -6,15 +7,52 @@ import { CargandoBloque, EstadoError } from '../../components/ui/Estado';
 import { formatearFechaHora, formatearMoneda, ETIQUETAS_PAGO } from '../../lib/format';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
+import { invalidarMenu } from '../../navigation/useMenu';
 
 const SANDBOX = import.meta.env.VITE_SANDBOX_PAGOS === 'true';
 
 export function PagosAdmin() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const pagos = useQuery({ queryKey: ['pagos', 'admin', 'list'], queryFn: () => listarPagos({ page_size: 100, ordering: '-fecha_creacion' }) });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const estado = searchParams.get('estado') ?? '';
+  const porConfirmar = searchParams.get('por_confirmar') === 'true';
 
-  const invalidar = () => void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+  const cambiarEstado = (valor: string) => {
+    const siguiente = new URLSearchParams(searchParams);
+    if (valor) siguiente.set('estado', valor);
+    else siguiente.delete('estado');
+    if (valor) siguiente.delete('por_confirmar');
+    setSearchParams(siguiente, { replace: true });
+  };
+
+  const alternarPorConfirmar = (activo: boolean) => {
+    const siguiente = new URLSearchParams(searchParams);
+    if (activo) {
+      siguiente.set('por_confirmar', 'true');
+      siguiente.delete('estado');
+    } else {
+      siguiente.delete('por_confirmar');
+    }
+    setSearchParams(siguiente, { replace: true });
+  };
+
+  const pagos = useQuery({
+    queryKey: ['pagos', 'admin', 'list', estado, porConfirmar],
+    queryFn: () =>
+      listarPagos({
+        page_size: 100,
+        ordering: '-fecha_creacion',
+        estado: estado || undefined,
+        por_confirmar: porConfirmar ? true : undefined,
+      }),
+  });
+
+  const invalidar = () => {
+    void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+    void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+    void invalidarMenu(queryClient);
+  };
 
   const reembolsar = useMutation({
     mutationFn: (id: number) => reembolsarPago(id),
@@ -39,7 +77,36 @@ export function PagosAdmin() {
 
   return (
     <div>
-      <EncabezadoPagina titulo="Pagos" descripcion="Seguimiento y gestión administrativa de pagos." />
+      <EncabezadoPagina
+        titulo="Pagos"
+        descripcion="Seguimiento y gestión administrativa de pagos."
+        acciones={
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className="input w-auto"
+              value={porConfirmar ? '' : estado}
+              onChange={(evento) => cambiarEstado(evento.target.value)}
+              aria-label="Filtrar por estado"
+            >
+              <option value="">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="procesando">Procesando</option>
+              <option value="aprobado">Aprobados</option>
+              <option value="rechazado">Rechazados</option>
+              <option value="reembolsado">Reembolsados</option>
+              <option value="anulado">Anulados</option>
+            </select>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={porConfirmar}
+                onChange={(evento) => alternarPorConfirmar(evento.target.checked)}
+              />
+              Solo por confirmar
+            </label>
+          </div>
+        }
+      />
       {pagos.isLoading && <CargandoBloque mensaje="Cargando pagos…" />}
       {pagos.isError && <EstadoError mensaje="No pudimos cargar pagos." onReintentar={() => void pagos.refetch()} />}
       <div className="overflow-x-auto card">

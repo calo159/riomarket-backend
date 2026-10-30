@@ -1,18 +1,31 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Bike, Search, Star, Store } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Bike, RotateCcw, Search, ShieldOff, Star, Store } from 'lucide-react';
 import { listarPuestos } from '../../api/catalog';
+import { moderarPuesto } from '../../api/admin';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { Paginacion } from '../../components/ui/Paginacion';
+import { Modal } from '../../components/ui/Modal';
+import { Campo, ErrorCampo } from '../../components/ui/Campos';
+import { useToast } from '../../components/ui/Toast';
+import { mensajeDeError } from '../../lib/errors';
+import type { Puesto } from '../../lib/types';
 
 const TAMANO = 15;
 
 export function PuestosAdmin() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const [params] = useSearchParams();
   const [pagina, setPagina] = useState(1);
   const [busqueda, setBusqueda] = useState('');
-  const [estado, setEstado] = useState('');
+  const [estado, setEstado] = useState(params.get('estado') ?? '');
+  const [objetivo, setObjetivo] = useState<Puesto | null>(null);
+  const [destino, setDestino] = useState<'activo' | 'suspendido'>('suspendido');
+  const [motivo, setMotivo] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     document.title = 'Puestos · Administración · RioMarket';
@@ -30,11 +43,41 @@ export function PuestosAdmin() {
     placeholderData: (anterior) => anterior,
   });
 
+  const moderar = useMutation({
+    mutationFn: ({ id, nuevo }: { id: number; nuevo: 'activo' | 'suspendido' }) =>
+      moderarPuesto(id, { estado: nuevo, motivo: motivo.trim() }),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['puestos'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+      setObjetivo(null);
+      setMotivo('');
+      setError('');
+      toast.exito(variables.nuevo === 'suspendido' ? 'Puesto suspendido.' : 'Puesto reactivado.');
+    },
+    onError: (fallo) => setError(mensajeDeError(fallo)),
+  });
+
+  const abrir = (puesto: Puesto, nuevo: 'activo' | 'suspendido') => {
+    setObjetivo(puesto);
+    setDestino(nuevo);
+    setMotivo('');
+    setError('');
+  };
+
+  const enviar = () => {
+    if (!objetivo) return;
+    if (motivo.trim().length < 5) {
+      setError('Indica un motivo de al menos 5 caracteres.');
+      return;
+    }
+    moderar.mutate({ id: objetivo.id, nuevo: destino });
+  };
+
   return (
     <div>
       <EncabezadoPagina
         titulo="Puestos"
-        descripcion="Directorio global de puestos. La API actual no permite moderar su estado desde el frontend."
+        descripcion="Supervisa y modera los puestos del marketplace. Suspender un puesto no cancela sus pedidos en curso."
         acciones={
           <div className="flex flex-wrap gap-2">
             <div className="relative">
@@ -89,11 +132,13 @@ export function PuestosAdmin() {
                   <th className="p-3">Estado</th>
                   <th className="p-3">Domicilio</th>
                   <th className="p-3">Calificación</th>
+                  <th className="p-3 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {puestos.data.results.map((puesto) => {
                   const categorias = puesto.categorias as { id: number; nombre: string }[];
+                  const suspendido = puesto.estado === 'suspendido';
                   return (
                     <tr key={puesto.id} className="border-b last:border-0">
                       <td className="p-3">
@@ -114,7 +159,7 @@ export function PuestosAdmin() {
                         </div>
                       </td>
                       <td className="p-3">
-                        <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        <span className={`badge ${suspendido ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : puesto.estado === 'activo' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                           {puesto.estado}
                         </span>
                       </td>
@@ -134,6 +179,17 @@ export function PuestosAdmin() {
                           <span className="text-xs text-slate-400">({puesto.cantidad_resenas})</span>
                         </span>
                       </td>
+                      <td className="p-3 text-right">
+                        {suspendido ? (
+                          <button type="button" className="btn-primary py-1.5 text-xs" onClick={() => abrir(puesto, 'activo')}>
+                            <RotateCcw className="h-3.5 w-3.5" /> Reactivar
+                          </button>
+                        ) : (
+                          <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400" onClick={() => abrir(puesto, 'suspendido')}>
+                            <ShieldOff className="h-3.5 w-3.5" /> Suspender
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -143,6 +199,28 @@ export function PuestosAdmin() {
           <Paginacion pagina={pagina} total={puestos.data.count} tamano={TAMANO} onCambiar={setPagina} cargando={puestos.isFetching} />
         </>
       )}
+
+      <Modal
+        abierto={Boolean(objetivo)}
+        onCerrar={() => setObjetivo(null)}
+        titulo={destino === 'suspendido' ? `Suspender ${objetivo?.nombre ?? ''}` : `Reactivar ${objetivo?.nombre ?? ''}`}
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {destino === 'suspendido'
+            ? 'El puesto saldrá del catálogo y no recibirá pedidos nuevos. Los pedidos en curso continúan su flujo normal.'
+            : 'El puesto volverá a mostrarse en el catálogo y podrá recibir pedidos.'}
+        </p>
+        <Campo etiqueta="Motivo (obligatorio)" htmlFor="motivo-puesto" className="mt-3">
+          <textarea id="motivo-puesto" rows={3} className="input" value={motivo} onChange={(evento) => setMotivo(evento.target.value)} placeholder="Explica la decisión (mínimo 5 caracteres)." />
+        </Campo>
+        <ErrorCampo mensaje={error} />
+        <div className="mt-4 flex justify-end gap-2">
+          <button type="button" className="btn-secondary" onClick={() => setObjetivo(null)} disabled={moderar.isPending}>Cancelar</button>
+          <button type="button" className={destino === 'suspendido' ? 'btn-danger' : 'btn-primary'} onClick={enviar} disabled={moderar.isPending}>
+            {moderar.isPending ? 'Guardando…' : destino === 'suspendido' ? 'Suspender' : 'Reactivar'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

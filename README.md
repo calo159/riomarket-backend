@@ -29,7 +29,8 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
 | Paneles | Listo | Comprador, vendedor y administrador en una sola SPA |
-| Usuarios y pasarela | No incluido | Sin CRUD de usuarios, cambio de clave ni pago real |
+| Administración | Listo | Usuarios (rol y suspensión con auditoría), menú dinámico, moderación de puestos/productos, categorías, reseñas y resumen |
+| Pasarela y contraseñas | No incluido | Sin pago real ni cambio de contraseña |
 
 ## Arquitectura
 
@@ -140,8 +141,8 @@ Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corres
 1. Entra como **comprador** (`luis@riomarket.test`), busca un producto y agrégalo al carrito.
 2. Haz el checkout eligiendo retiro o domicilio y paga (efectivo o simulado).
 3. Entra como **vendedor** (`carmen@riomarket.test`), confirma el pago en efectivo y avanza el pedido: confirmado, en preparación, en camino.
-4. Vuelve como comprador, marca el pedido como entregado y deja una reseña.
-5. Entra como **administrador** (`admin@riomarket.test`) y revisa pedidos, pagos y auditoría.
+4. Vuelve como comprador: si no llegó, usa "No me ha llegado"; cuando lo recibas confirma "Ya recibí mi pedido" y deja una reseña.
+5. Entra como **administrador** (`admin@riomarket.test`) y revisa el resumen, usuarios, pedidos, pagos y auditoría.
 
 ## Configuración
 
@@ -170,7 +171,20 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - El `refresh` viaja en la cookie `rm_refresh`: `HttpOnly`, `SameSite=Strict`, `Secure` fuera de desarrollo y `path=/api/auth/`. **No** se devuelve en el cuerpo del login.
 - Renovar y cerrar sesión exigen la cabecera `X-Requested-With: XMLHttpRequest`; el frontend la envía automáticamente. El refresh rota y el anterior queda en lista negra.
 - El login devuelve `{access, usuario}`. Si el refresh falla, la SPA limpia la sesión y redirige a `/login?expirada=1`.
-- **Comprador:** compra, direcciones y reseñas. **Vendedor:** catálogo propio, pedidos y cupones. **Administrador:** verificaciones, pagos, catálogo y auditoría.
+- **Comprador:** compra, direcciones y reseñas. **Vendedor:** catálogo propio, pedidos y cupones. **Administrador:** usuarios, verificaciones, moderación, pagos y auditoría.
+- El menú de la SPA sale de `GET /api/auth/menu/` según el rol y la cuenta activa; si el administrador cambia el rol, el menú cambia al volver a entrar.
+
+### RBAC de pedidos
+
+Cada pedido incluye `acciones_permitidas` (RBAC × estado) y el frontend solo pinta botones desde esa lista.
+
+| Acción | Comprador del pedido | Vendedor del puesto | Administrador |
+| --- | --- | --- | --- |
+| Crear | Sí | No | No |
+| Editar / cancelar | Sí (mientras no salga) | Sí (mientras no salga) | Sí |
+| Confirmar / preparación / enviar | No | Sí | Sí |
+| Entregar | Sí (confirma recepción) | No | Sí (resuelve disputas) |
+| Reportar "no me llegó" | Sí (en camino, una vez) | No | No |
 
 El flujo completo con `curl` y respuestas reales está en [`docs/api-ejemplos.md`](docs/api-ejemplos.md); la demo de 6 pasos, en [`entrega/flujo_prueba.curl.md`](entrega/flujo_prueba.curl.md).
 
@@ -189,13 +203,41 @@ La API está documentada con OpenAPI (Swagger en `/api/docs/`). Módulos princip
 
 La paginación usa `page`, `page_size` (máximo 100) y `ordering` con listas blancas por módulo. Los errores tienen siempre la forma `{"success": false, "status_code": 400, "errors": {...}}`.
 
+## Administración
+
+Los endpoints de `/api/admin/` exigen un administrador activo. Cambiar rol o suspender exige `motivo` (mínimo 5 caracteres), invalida las sesiones del afectado y deja un registro de auditoría.
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| GET | `/api/admin/usuarios/` | Listado con filtros `rol`, `estado`, `q` y `ordering`; incluye `acciones_permitidas` |
+| POST | `/api/admin/usuarios/{id}/cambiar-rol/` | `{rol, motivo}` entre comprador, vendedor y administrador |
+| POST | `/api/admin/usuarios/{id}/suspender/` | `{motivo}`: ban lógico; conserva rol e historial |
+| POST | `/api/admin/usuarios/{id}/reactivar/` | Devuelve la cuenta a activa (los puestos se reactivan aparte) |
+| GET | `/api/admin/resumen/` | Métricas del panel y alertas de atención |
+| POST | `/api/catalog/puestos/{id}/moderar/` | `{estado: activo\|suspendido, motivo}` |
+| POST | `/api/catalog/productos/{id}/moderar/` | `{estado: activo\|bloqueado, motivo}` |
+| GET | `/api/auth/menu/` | Menú público del rol actual; no requiere autenticación |
+
+```bash
+TOKEN="<access del administrador>"
+curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/cambiar-rol/ \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"rol": "vendedor", "motivo": "Solicitó publicar sus productos"}'
+
+curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/suspender/ \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"motivo": "Incumplimiento reiterado de las normas"}'
+
+curl http://127.0.0.1:8000/api/auth/menu/
+```
+
 ## Frontend
 
 La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones están en [`frontend/README.md#estado-de-cumplimiento`](frontend/README.md#estado-de-cumplimiento). Los comandos de arranque están en [Inicio rápido](#2-frontend-otra-terminal).
 
 - **Comprador** (`/`): catálogo, carrito, checkout, pedidos, direcciones y perfil.
 - **Vendedor** (`/vendedor`): puestos, productos, pedidos, cupones, reseñas y verificación.
-- **Administrador** (`/admin`): verificaciones, pedidos, pagos, puestos, cupones y auditoría.
+- **Administrador** (`/admin`): resumen con alertas, usuarios, verificaciones, pedidos, puestos, productos, categorías, reseñas, pagos, cupones y auditoría. El menú y los accesos se generan desde el backend.
 
 Vite corre en `127.0.0.1:3000` y hace proxy de `/api` y `/media`. Si defines `VITE_API_URL`, usa el mismo host de la SPA para que la cookie `SameSite=Strict` siga siendo del mismo sitio. El acceso rápido con las cuentas demo del login se activa con `VITE_DEMO_MODE=true`.
 
@@ -241,7 +283,7 @@ La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.o
 
 - No hay pasarela de pago real: solo existe `PasarelaSandbox`. En producción real hay que desactivar `PAYMENTS_SANDBOX_ENABLED` e integrar un proveedor.
 - El correo es opcional y depende de SMTP; la demo usa solo avisos dentro de la aplicación.
-- No hay administración de usuarios ni cambio de contraseña.
+- No se crean ni eliminan usuarios desde el panel (solo cambian de rol o se suspenden) y no hay cambio de contraseña.
 - `media/` y `media_privado/` usan disco local, que es efímero en Render. La foto de la cédula se cifra y se sirve solo por una vista autorizada.
 - Las imágenes y la cédula se validan por tipo y tamaño; los tokens y secretos no se registran en los logs.
 - **`.env` está versionado a propósito para la entrega** y contiene credenciales de la demo. El repositorio es público: cuando termine la calificación, rota la contraseña de la base o haz el repositorio privado.
@@ -290,7 +332,7 @@ riomarket-backend/
 ## Roadmap
 
 - Integrar una pasarela de pago real con webhooks firmados y conciliación.
-- Añadir administración de usuarios y cambio de contraseña.
+- Añadir alta de usuarios y cambio de contraseña desde el panel.
 - Enviar correos transaccionales y notificaciones en tiempo real.
 - Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol.
 

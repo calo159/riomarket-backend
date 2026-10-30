@@ -26,6 +26,10 @@ const PedidosVendedor = lazy(() => import('./pages/vendedor/PedidosVendedor').th
 const Cupones = lazy(() => import('./pages/vendedor/Cupones').then((modulo) => ({ default: modulo.Cupones })));
 const ResenasVendedor = lazy(() => import('./pages/vendedor/ResenasVendedor').then((modulo) => ({ default: modulo.ResenasVendedor })));
 const PanelAdmin = lazy(() => import('./pages/admin/PanelAdmin').then((modulo) => ({ default: modulo.PanelAdmin })));
+const Usuarios = lazy(() => import('./pages/admin/Usuarios').then((modulo) => ({ default: modulo.Usuarios })));
+const ProductosAdmin = lazy(() => import('./pages/admin/ProductosAdmin').then((modulo) => ({ default: modulo.ProductosAdmin })));
+const CategoriasAdmin = lazy(() => import('./pages/admin/CategoriasAdmin').then((modulo) => ({ default: modulo.CategoriasAdmin })));
+const ResenasAdmin = lazy(() => import('./pages/admin/ResenasAdmin').then((modulo) => ({ default: modulo.ResenasAdmin })));
 const Verificaciones = lazy(() => import('./pages/admin/Verificaciones').then((modulo) => ({ default: modulo.Verificaciones })));
 const PedidosAdmin = lazy(() => import('./pages/admin/PedidosAdmin').then((modulo) => ({ default: modulo.PedidosAdmin })));
 const PuestosAdmin = lazy(() => import('./pages/admin/PuestosAdmin').then((modulo) => ({ default: modulo.PuestosAdmin })));
@@ -83,9 +87,13 @@ export function App() {
           <Route element={<RutaProtegida roles={['administrador']} />}>
             <Route path="admin" element={<PanelLayout />}>
               <Route index element={<PanelAdmin />} />
+              <Route path="usuarios" element={<Usuarios />} />
               <Route path="verificaciones" element={<Verificaciones />} />
               <Route path="pedidos" element={<PedidosAdmin />} />
               <Route path="puestos" element={<PuestosAdmin />} />
+              <Route path="productos" element={<ProductosAdmin />} />
+              <Route path="categorias" element={<CategoriasAdmin />} />
+              <Route path="resenas" element={<ResenasAdmin />} />
               <Route path="pagos" element={<PagosAdmin />} />
               <Route path="cupones" element={<CuponesAdmin />} />
               <Route path="auditoria" element={<Auditoria />} />

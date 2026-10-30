@@ -53,6 +53,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/resumen/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Métricas globales del marketplace para el panel de administración. */
+        get: operations["admin_resumen_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/usuarios/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuentas del marketplace con sus métricas y acciones de administración. */
+        get: operations["admin_usuarios_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/usuarios/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuentas del marketplace con sus métricas y acciones de administración. */
+        get: operations["admin_usuarios_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/usuarios/{id}/cambiar-rol/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Cambia el rol de una cuenta (no el propio, no el último admin). */
+        post: operations["admin_usuarios_cambiar_rol_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/usuarios/{id}/reactivar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reactiva una cuenta suspendida (los puestos se reactivan aparte). */
+        post: operations["admin_usuarios_reactivar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/usuarios/{id}/suspender/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Suspende una cuenta, sus puestos activos y sus sesiones. */
+        post: operations["admin_usuarios_suspender_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit/registros/": {
         parameters: {
             query?: never;
@@ -94,7 +196,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description ``POST /api/auth/login/`` — devuelve access/refresh + datos del usuario. */
+        /**
+         * @description Takes a set of user credentials and returns an access and refresh JSON web
+         *     token pair to prove the authentication of those credentials.
+         */
         post: operations["auth_login_create"];
         delete?: never;
         options?: never;
@@ -111,8 +216,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description ``POST /api/auth/logout/`` — revoca el refresh (blacklist). */
         post: operations["auth_logout_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/menu/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ``GET /api/auth/menu/`` — menú del usuario según su rol (público). */
+        get: operations["auth_menu_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -126,16 +247,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description ``GET/PATCH /api/auth/perfil/`` — el propio usuario autenticado. */
         get: operations["auth_perfil_retrieve"];
-        /** @description ``GET/PATCH /api/auth/perfil/`` — el propio usuario autenticado. */
         put: operations["auth_perfil_update"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description ``GET/PATCH /api/auth/perfil/`` — el propio usuario autenticado. */
         patch: operations["auth_perfil_partial_update"];
+        trace?: never;
+    };
+    "/api/auth/perfil/cambiar-contrasena/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_perfil_cambiar_contrasena_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/recuperar-contrasena/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_recuperar_contrasena_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/auth/registro/": {
@@ -147,8 +297,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description ``POST /api/auth/registro/`` — crea una cuenta pública. */
         post: operations["auth_registro_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/restablecer-contrasena/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_restablecer_contrasena_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -316,8 +481,59 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description ``POST /productos/{id}/imagenes/`` (multipart, campo ``archivo``). */
+        /** @description Productos a la venta. La regla 2 se valida en la capa de servicios. */
         post: operations["catalog_productos_imagenes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/productos/{id}/imagenes/{imagen_id}/principal/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Productos a la venta. La regla 2 se valida en la capa de servicios. */
+        post: operations["catalog_productos_imagenes_principal_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/productos/{id}/imagenes/reordenar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Productos a la venta. La regla 2 se valida en la capa de servicios. */
+        post: operations["catalog_productos_imagenes_reordenar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/productos/{id}/moderar/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Bloquea o reactiva un producto (solo administrador). */
+        post: operations["catalog_productos_moderar_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -396,17 +612,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/health/": {
+    "/api/catalog/puestos/{id}/moderar/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description Endpoint de salud para Docker/monitoreo: ``GET /api/health/``. */
-        get: operations["health_retrieve"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** @description Suspende, reactiva o inactiva un puesto (solo administrador). */
+        post: operations["catalog_puestos_moderar_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -589,7 +805,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Marca el pedido como entregado (en_camino → entregado). */
+        /** @description El comprador confirma que recibió el pedido (en_camino → entregado). El vendedor no puede marcar entregado; el administrador solo para resolver disputas. */
         post: operations["orders_pedidos_entregar_create"];
         delete?: never;
         options?: never;
@@ -606,8 +822,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description El pedido sale a domicilio (en_preparacion → en_camino). */
+        /** @description El vendedor marca que entregó el pedido al domiciliario o que está listo para retirar (en_preparacion → en_camino). */
         post: operations["orders_pedidos_enviar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/pedidos/{id}/no-recibido/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description El comprador reporta que no recibió el pedido en camino. No cambia el estado, notifica al vendedor y solo se permite una vez. */
+        post: operations["orders_pedidos_no_recibido_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -907,6 +1140,21 @@ export interface components {
         AnularPagoRequest: {
             notas?: string;
         };
+        CambiarContrasenaRequest: {
+            actual: string;
+            nueva: string;
+        };
+        CambiarRolRequest: {
+            rol: components["schemas"]["CambiarRolRolEnum"];
+            motivo: string;
+        };
+        /**
+         * @description * `comprador` - comprador
+         *     * `vendedor` - vendedor
+         *     * `administrador` - administrador
+         * @enum {string}
+         */
+        CambiarRolRolEnum: "comprador" | "vendedor" | "administrador";
         Categoria: {
             readonly id: number;
             nombre: string;
@@ -1018,7 +1266,8 @@ export interface components {
             latitud?: string | null;
             /** Format: decimal */
             longitud?: string | null;
-            es_predeterminada?: boolean;
+            /** @default false */
+            es_predeterminada: boolean;
             activa?: boolean;
             /** Format: date-time */
             readonly fecha_creacion: string;
@@ -1066,6 +1315,12 @@ export interface components {
             };
         };
         /**
+         * @description * `activo` - Activo
+         *     * `suspendido` - Suspendido
+         * @enum {string}
+         */
+        EstadoB1eEnum: "activo" | "suspendido";
+        /**
          * @description * `aprobado` - aprobado
          *     * `rechazado` - rechazado
          * @enum {string}
@@ -1078,33 +1333,24 @@ export interface components {
          * @enum {string}
          */
         EstadoVerificacionEnum: "pendiente" | "aprobado" | "rechazado";
-        /** @description Respuesta de ``GET /api/health/``. */
-        Health: {
-            /** @description ok | degraded */
-            status: string;
-            /** @description up | down */
-            database: string;
-            /** @description Modo DEBUG del entorno */
-            debug: boolean;
-        };
-        /**
-         * @description La API expone ``url`` (ruta pública del archivo subido): el diseño
-         *     llama ``url`` a este atributo, en BD es el campo ``archivo`` (ADR-002).
-         */
         ImagenProducto: {
             readonly id: number;
             id_producto: number;
             readonly url: string | null;
-            readonly orden: number;
+            readonly miniatura: string | null;
+            orden?: number;
+            alt?: string;
+            es_principal?: boolean;
+            readonly ancho: number | null;
+            readonly alto: number | null;
         };
-        /**
-         * @description La API expone ``url`` (ruta pública del archivo subido): el diseño
-         *     llama ``url`` a este atributo, en BD es el campo ``archivo`` (ADR-002).
-         */
         ImagenProductoRequest: {
             id_producto: number;
+            orden?: number;
             /** Format: binary */
-            archivo: string;
+            archivo?: string;
+            alt?: string;
+            es_principal?: boolean;
         };
         /**
          * @description Línea de pedido: el cliente envía producto + cantidad.
@@ -1148,10 +1394,32 @@ export interface components {
         };
         LogoutRequest: {
             /** @description Token de refresco que se revoca (blacklist). */
-            refresh: string;
+            refresh?: string;
         };
         MarcarTodasResponse: {
             marcadas: number;
+        };
+        Menu: {
+            rol: string;
+            inicio: string;
+            publico: components["schemas"]["MenuEnlace"][];
+            cuenta: components["schemas"]["MenuEnlace"][];
+            panel: components["schemas"]["MenuGrupo"][];
+            panel_titulo: string | null;
+            badges: {
+                [key: string]: number;
+            };
+        };
+        MenuEnlace: {
+            to: string;
+            etiqueta: string;
+            icono: string;
+            fin?: boolean;
+            badge?: string;
+        };
+        MenuGrupo: {
+            grupo: string | null;
+            items: components["schemas"]["MenuEnlace"][];
         };
         /**
          * @description * `efectivo` - Efectivo
@@ -1173,6 +1441,28 @@ export interface components {
             readonly fecha_solicitud: string;
             /** Format: date-time */
             readonly fecha_revision: string | null;
+        };
+        /**
+         * @description * `activo` - activo
+         *     * `inactivo` - inactivo
+         *     * `bloqueado` - bloqueado
+         * @enum {string}
+         */
+        ModerarProductoEstadoEnum: "activo" | "inactivo" | "bloqueado";
+        ModerarProductoRequest: {
+            estado: components["schemas"]["ModerarProductoEstadoEnum"];
+            motivo?: string;
+        };
+        /**
+         * @description * `activo` - activo
+         *     * `inactivo` - inactivo
+         *     * `suspendido` - suspendido
+         * @enum {string}
+         */
+        ModerarPuestoEstadoEnum: "activo" | "inactivo" | "suspendido";
+        ModerarPuestoRequest: {
+            estado: components["schemas"]["ModerarPuestoEstadoEnum"];
+            motivo?: string;
         };
         Notificacion: {
             readonly id: number;
@@ -1353,6 +1643,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Resena"][];
+        };
+        PaginatedUsuarioAdminList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["UsuarioAdmin"][];
         };
         PaginatedVerificacionAdminListList: {
             /** @example 123 */
@@ -1561,6 +1866,14 @@ export interface components {
             readonly descuento_cupon: string;
             /** Format: decimal */
             readonly total: string;
+            /**
+             * Format: date-time
+             * @description Cuándo el comprador reportó que no recibió el pedido.
+             */
+            readonly no_recibido_en: string | null;
+            /** @description Motivo opcional del reporte de no recibido. */
+            readonly motivo_no_recibido: string;
+            readonly acciones_permitidas: string[];
             items: components["schemas"]["ItemPedido"][];
             /** Format: date-time */
             readonly fecha_creacion: string;
@@ -1601,31 +1914,18 @@ export interface components {
             /** Format: email */
             correo: string;
             celular: string;
-            readonly rol: components["schemas"]["PerfilRolEnum"];
-            readonly estado: components["schemas"]["PerfilEstadoEnum"];
+            readonly rol: components["schemas"]["Rol9f8Enum"];
+            readonly estado: components["schemas"]["EstadoB1eEnum"];
             readonly estado_verificacion: string;
             /** Format: date-time */
             readonly fecha_registro: string;
         };
-        /**
-         * @description * `activo` - Activo
-         *     * `suspendido` - Suspendido
-         * @enum {string}
-         */
-        PerfilEstadoEnum: "activo" | "suspendido";
         PerfilRequest: {
             nombre: string;
             /** Format: email */
             correo: string;
             celular: string;
         };
-        /**
-         * @description * `comprador` - Comprador
-         *     * `vendedor` - Vendedor
-         *     * `administrador` - Administrador
-         * @enum {string}
-         */
-        PerfilRolEnum: "comprador" | "vendedor" | "administrador";
         Producto: {
             readonly id: number;
             id_puesto: number;
@@ -1708,6 +2008,14 @@ export interface components {
             horario?: string;
             ofrece_domicilio?: boolean;
         };
+        RecuperarContrasena: {
+            /** Format: email */
+            correo: string;
+        };
+        RecuperarContrasenaRequest: {
+            /** Format: email */
+            correo: string;
+        };
         ReembolsarPagoRequest: {
             notas?: string;
         };
@@ -1760,6 +2068,11 @@ export interface components {
          * @enum {string}
          */
         RegistroRolEnum: "comprador" | "vendedor";
+        /** @description Cuerpo opcional del reporte ``/pedidos/{id}/no-recibido/``. */
+        ReportarNoRecibidoRequest: {
+            /** @description Motivo opcional (máximo 200 caracteres). */
+            motivo?: string;
+        };
         Resena: {
             readonly id: number;
             /** Comprador */
@@ -1800,6 +2113,20 @@ export interface components {
         RespuestaRequest: {
             respuesta: string;
         };
+        RestablecerContrasena: {
+            token: string;
+        };
+        RestablecerContrasenaRequest: {
+            token: string;
+            nueva: string;
+        };
+        /**
+         * @description * `comprador` - Comprador
+         *     * `vendedor` - Vendedor
+         *     * `administrador` - Administrador
+         * @enum {string}
+         */
+        Rol9f8Enum: "comprador" | "vendedor" | "administrador";
         /**
          * @description * `aprobar` - aprobar
          *     * `rechazar` - rechazar
@@ -1818,6 +2145,9 @@ export interface components {
             numero_cedula: string;
             /** Format: binary */
             foto_cedula: string;
+        };
+        SuspenderRequest: {
+            motivo: string;
         };
         /**
          * @description * `porcentaje` - Porcentaje
@@ -1865,6 +2195,26 @@ export interface components {
          * @enum {string}
          */
         UnidadMedidaEnum: "kg" | "libra" | "unidad" | "docena" | "litro" | "porcion";
+        UsuarioAdmin: {
+            readonly id: number;
+            nombre: string;
+            /** Format: email */
+            correo: string;
+            celular: string;
+            rol?: components["schemas"]["Rol9f8Enum"];
+            estado?: components["schemas"]["EstadoB1eEnum"];
+            /** Format: date-time */
+            readonly fecha_registro: string;
+            readonly estado_verificacion: string;
+            readonly pedidos_como_comprador: number;
+            readonly pedidos_activos: number;
+            readonly puestos: {
+                [key: string]: unknown;
+            };
+            readonly acciones_permitidas: {
+                [key: string]: unknown;
+            };
+        };
         /** @description Fila de la cola de revisión: identifica al vendedor sin datos sensibles. */
         VerificacionAdminList: {
             readonly id: number;
@@ -2071,6 +2421,156 @@ export interface operations {
             };
         };
     };
+    admin_resumen_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    admin_usuarios_list: {
+        parameters: {
+            query?: {
+                estado?: "activo" | "suspendido";
+                ordering?: "-correo" | "-fecha_registro" | "-id" | "-nombre" | "correo" | "fecha_registro" | "id" | "nombre";
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Nombre, correo o celular */
+                q?: string;
+                rol?: "administrador" | "comprador" | "vendedor";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedUsuarioAdminList"];
+                };
+            };
+        };
+    };
+    admin_usuarios_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este usuario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+        };
+    };
+    admin_usuarios_cambiar_rol_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este usuario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiarRolRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CambiarRolRequest"];
+                "multipart/form-data": components["schemas"]["CambiarRolRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+        };
+    };
+    admin_usuarios_reactivar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este usuario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+        };
+    };
+    admin_usuarios_suspender_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este usuario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspenderRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SuspenderRequest"];
+                "multipart/form-data": components["schemas"]["SuspenderRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+        };
+    };
     audit_registros_list: {
         parameters: {
             query?: {
@@ -2148,7 +2648,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["LogoutRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["LogoutRequest"];
@@ -2162,6 +2662,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    auth_menu_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Menu"];
+                };
             };
         };
     };
@@ -2234,6 +2753,55 @@ export interface operations {
             };
         };
     };
+    auth_perfil_cambiar_contrasena_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiarContrasenaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CambiarContrasenaRequest"];
+                "multipart/form-data": components["schemas"]["CambiarContrasenaRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_recuperar_contrasena_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecuperarContrasenaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecuperarContrasenaRequest"];
+                "multipart/form-data": components["schemas"]["RecuperarContrasenaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecuperarContrasena"];
+                };
+            };
+        };
+    };
     auth_registro_create: {
         parameters: {
             query?: never;
@@ -2255,6 +2823,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Registro"];
+                };
+            };
+        };
+    };
+    auth_restablecer_contrasena_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestablecerContrasenaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RestablecerContrasenaRequest"];
+                "multipart/form-data": components["schemas"]["RestablecerContrasenaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestablecerContrasena"];
                 };
             };
         };
@@ -2734,6 +3327,91 @@ export interface operations {
             };
         };
     };
+    catalog_productos_imagenes_principal_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este producto. */
+                id: number;
+                imagen_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProductoRequest"];
+                "multipart/form-data": components["schemas"]["ProductoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+        };
+    };
+    catalog_productos_imagenes_reordenar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este producto. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProductoRequest"];
+                "multipart/form-data": components["schemas"]["ProductoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+        };
+    };
+    catalog_productos_moderar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este producto. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerarProductoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ModerarProductoRequest"];
+                "multipart/form-data": components["schemas"]["ModerarProductoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Producto"];
+                };
+            };
+        };
+    };
     catalog_puestos_list: {
         parameters: {
             query?: {
@@ -2941,21 +3619,30 @@ export interface operations {
             };
         };
     };
-    health_retrieve: {
+    catalog_puestos_moderar_create: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este puesto. */
+                id: number;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerarPuestoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ModerarPuestoRequest"];
+                "multipart/form-data": components["schemas"]["ModerarPuestoRequest"];
+            };
+        };
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Health"];
+                    "application/json": components["schemas"]["Puesto"];
                 };
             };
         };
@@ -3298,6 +3985,34 @@ export interface operations {
                 "application/json": components["schemas"]["PedidoRequest"];
                 "application/x-www-form-urlencoded": components["schemas"]["PedidoRequest"];
                 "multipart/form-data": components["schemas"]["PedidoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Pedido"];
+                };
+            };
+        };
+    };
+    orders_pedidos_no_recibido_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este pedido. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReportarNoRecibidoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReportarNoRecibidoRequest"];
+                "multipart/form-data": components["schemas"]["ReportarNoRecibidoRequest"];
             };
         };
         responses: {

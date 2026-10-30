@@ -77,12 +77,19 @@ class MenuEnlaceSerializer(serializers.Serializer):
     etiqueta = serializers.CharField()
     icono = serializers.CharField()
     fin = serializers.BooleanField(required=False)
+    badge = serializers.CharField(required=False)
+
+
+class MenuGrupoSerializer(serializers.Serializer):
+    grupo = serializers.CharField(allow_null=True)
+    items = MenuEnlaceSerializer(many=True)
 
 
 class MenuSerializer(serializers.Serializer):
     rol = serializers.CharField()
     inicio = serializers.CharField()
-    principal = MenuEnlaceSerializer(many=True)
+    publico = MenuEnlaceSerializer(many=True)
     cuenta = MenuEnlaceSerializer(many=True)
-    panel = MenuEnlaceSerializer(many=True)
+    panel = MenuGrupoSerializer(many=True)
     panel_titulo = serializers.CharField(allow_null=True)
+    badges = serializers.DictField(child=serializers.IntegerField())

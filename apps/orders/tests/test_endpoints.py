@@ -1,6 +1,7 @@
 """Pruebas de los endpoints de pedidos (permisos, reglas y filtros)."""
 
 import pytest
+from django.utils import timezone
 from rest_framework import status
 
 from apps.catalog.models import Producto
@@ -111,6 +112,20 @@ class TestListado:
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         respuesta = cliente_comprador.get(PEDIDOS, {"estado": "confirmado"})
         assert [p["id"] for p in respuesta.data["results"]] == [pedido.pk]
+
+    def test_filtro_con_no_recibido(self, cliente_admin):
+        reportado = PedidoFactory(
+            estado=Pedido.Estado.EN_CAMINO, no_recibido_en=timezone.now()
+        )
+        sin_reporte = PedidoFactory(estado=Pedido.Estado.EN_CAMINO)
+        respuesta = cliente_admin.get(PEDIDOS, {"con_no_recibido": "true"})
+        assert [p["id"] for p in respuesta.data["results"]] == [reportado.pk]
+        respuesta = cliente_admin.get(PEDIDOS, {"con_no_recibido": "false"})
+        assert [p["id"] for p in respuesta.data["results"]] == [sin_reporte.pk]
+
+    def test_filtro_con_no_recibido_invalido_400(self, cliente_admin):
+        respuesta = cliente_admin.get(PEDIDOS, {"con_no_recibido": "quizas"})
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_ordering_invalido_400(self, cliente_comprador, comprador, puesto, producto):
         services.crear_pedido(usuario=comprador, datos=_datos(puesto, producto))

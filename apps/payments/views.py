@@ -39,6 +39,11 @@ from apps.payments.serializers import (
 
 PARAMETROS_PAGO = [
     OpenApiParameter(name="estado", enum=Pago.Estado.values),
+    OpenApiParameter(
+        name="por_confirmar",
+        type=OpenApiTypes.BOOL,
+        description="Solo pagos pendientes o procesando",
+    ),
     OpenApiParameter(name="metodo_pago", enum=Pago.MetodoPago.values),
     OpenApiParameter(name="pedido", type=OpenApiTypes.INT, description="ID del pedido"),
     OpenApiParameter(name="ordering", enum=list(services.ORDENAMIENTO_PAGO)),

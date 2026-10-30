@@ -27,6 +27,10 @@ export async function crearResena(datos: {
   return data;
 }
 
+export async function eliminarResena(id: number): Promise<void> {
+  await api.delete(`/reviews/resenas/${id}/`);
+}
+
 export async function responderResena(id: number, respuesta: string): Promise<Resena> {
   const { data } = await api.post<Resena>(`/reviews/resenas/${id}/responder/`, { respuesta });
   return data;

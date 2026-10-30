@@ -29,6 +29,26 @@ export async function listarCategorias(): Promise<Categoria[]> {
   return data.results;
 }
 
+export interface DatosCategoria {
+  nombre: string;
+  id_categoria_padre?: number | null;
+  activa?: boolean;
+}
+
+export async function crearCategoria(datos: DatosCategoria): Promise<Categoria> {
+  const { data } = await api.post<Categoria>('/catalog/categorias/', datos);
+  return data;
+}
+
+export async function actualizarCategoria(id: number, datos: Partial<DatosCategoria>): Promise<Categoria> {
+  const { data } = await api.patch<Categoria>(`/catalog/categorias/${id}/`, datos);
+  return data;
+}
+
+export async function eliminarCategoria(id: number): Promise<void> {
+  await api.delete(`/catalog/categorias/${id}/`);
+}
+
 export async function listarProductos(filtros: FiltrosProducto = {}): Promise<Paginado<Producto>> {
   const { data } = await api.get<Paginado<Producto>>('/catalog/productos/', { params: filtros });
   return data;

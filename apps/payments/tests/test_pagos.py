@@ -378,10 +378,13 @@ def test_filtrar_pagos(comprador, pedido):
     pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
     qs = Pago.objects.all()
     assert list(pagos_services.filtrar_pagos(qs, {"estado": "pendiente"})) == [pago]
+    assert list(pagos_services.filtrar_pagos(qs, {"por_confirmar": "true"})) == [pago]
     assert list(pagos_services.filtrar_pagos(qs, {"metodo_pago": "simulado"})) == [pago]
     assert list(pagos_services.filtrar_pagos(qs, {"pedido": pedido.pk})) == [pago]
     with pytest.raises(DjangoValidationError):
         pagos_services.filtrar_pagos(qs, {"pedido": "mucho"})
+    with pytest.raises(DjangoValidationError):
+        pagos_services.filtrar_pagos(qs, {"por_confirmar": "quizas"})
 
 
 @pytest.mark.django_db

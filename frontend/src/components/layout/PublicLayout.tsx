@@ -1,17 +1,18 @@
 import { useState, type FormEvent } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Menu, Search, ShoppingCart, X } from 'lucide-react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Menu, Search, ShoppingCart, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
+import { MenuEnlaces } from './MenuItems';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { useCart } from '../../cart/CartProvider';
-import { inicioPorRol } from '../../auth/permisos';
-import { cn } from '../../lib/utils';
+import { useMenu } from '../../navigation/useMenu';
 
 export function PublicLayout() {
-  const { autenticado, rol } = useSession();
+  const { autenticado } = useSession();
+  const { menu, badges } = useMenu();
   const { totalItems } = useCart();
   const [busqueda, setBusqueda] = useState('');
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -24,30 +25,13 @@ export function PublicLayout() {
     setMenuAbierto(false);
   };
 
-  const enlaceClase = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      'rounded-lg px-3 py-2 text-sm font-medium transition',
-      isActive
-        ? 'bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200'
-        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
-    );
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-sand-50/95 backdrop-blur dark:bg-slate-950/95">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Logo />
           <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Principal">
-            <NavLink to="/catalogo" className={enlaceClase}>
-              Catálogo
-            </NavLink>
-            {rol && rol !== 'comprador' && (
-              <NavLink to={inicioPorRol(rol)} className={enlaceClase}>
-                <span className="inline-flex items-center gap-1.5">
-                  <LayoutDashboard className="h-4 w-4" /> Mi panel
-                </span>
-              </NavLink>
-            )}
+            <MenuEnlaces items={menu.publico} badges={badges} variante="horizontal" />
           </nav>
 
           <form onSubmit={buscar} className="ml-auto hidden max-w-md flex-1 sm:block" role="search">
@@ -117,23 +101,19 @@ export function PublicLayout() {
               </label>
             </form>
             <nav className="flex flex-col gap-1" aria-label="Menú móvil">
-              <NavLink to="/catalogo" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                Catálogo
-              </NavLink>
+              <MenuEnlaces
+                items={menu.publico}
+                badges={badges}
+                variante="horizontal"
+                onNavegar={() => setMenuAbierto(false)}
+              />
               {autenticado ? (
-                <>
-                  <NavLink to="/mis-pedidos" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                    Mis pedidos
-                  </NavLink>
-                  <NavLink to="/perfil" className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                    Mi perfil
-                  </NavLink>
-                  {rol && rol !== 'comprador' && (
-                    <NavLink to={inicioPorRol(rol)} className={enlaceClase} onClick={() => setMenuAbierto(false)}>
-                      Mi panel
-                    </NavLink>
-                  )}
-                </>
+                <MenuEnlaces
+                  items={menu.cuenta}
+                  badges={badges}
+                  variante="horizontal"
+                  onNavegar={() => setMenuAbierto(false)}
+                />
               ) : (
                 <div className="mt-2 flex gap-2">
                   <Link to="/login" className="btn-secondary flex-1" onClick={() => setMenuAbierto(false)}>

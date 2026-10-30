@@ -3,6 +3,7 @@ import type { Paginado, Pago, PagoVendedor } from '../lib/types';
 
 export interface FiltrosPago {
   estado?: string;
+  por_confirmar?: boolean | string;
   metodo_pago?: string;
   pedido?: number | string;
   ordering?: string;

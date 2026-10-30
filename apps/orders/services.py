@@ -22,7 +22,7 @@ from django.utils import timezone
 
 from apps.catalog.models import Producto, Puesto
 from apps.common import pricing
-from apps.common.query import parametro_entero, validar_estado_parametro
+from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
 from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
 
@@ -444,4 +444,8 @@ def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     puesto = parametro_entero(params, "puesto")
     if puesto:
         queryset = queryset.filter(id_puesto=puesto)
+
+    con_no_recibido = parametro_booleano(params, "con_no_recibido")
+    if con_no_recibido is not None:
+        queryset = queryset.filter(no_recibido_en__isnull=not con_no_recibido)
     return queryset

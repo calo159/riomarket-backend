@@ -19,7 +19,7 @@ from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.common import pricing
-from apps.common.query import parametro_entero
+from apps.common.query import parametro_booleano, parametro_entero
 from apps.orders.models import Pedido
 from apps.payments.models import Pago
 
@@ -327,6 +327,9 @@ def filtrar_pagos(qs: QuerySet[Pago], params: dict) -> QuerySet[Pago]:
     estado = params.get("estado")
     if estado and estado in Pago.Estado.values:
         qs = qs.filter(estado=estado)
+    por_confirmar = parametro_booleano(params, "por_confirmar")
+    if por_confirmar:
+        qs = qs.filter(estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO))
     metodo = params.get("metodo_pago")
     if metodo and metodo in Pago.MetodoPago.values:
         qs = qs.filter(metodo_pago=metodo)

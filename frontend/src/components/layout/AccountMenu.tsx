@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, LayoutDashboard, LogOut, MapPin, Package, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, LogOut } from 'lucide-react';
 import { useSession } from '../../auth/SessionProvider';
-import { inicioPorRol } from '../../auth/permisos';
+import { useMenu } from '../../navigation/useMenu';
+import { MenuEnlaces } from './MenuItems';
 import { iniciales } from '../../lib/utils';
 import { ETIQUETAS_ROL } from '../../lib/format';
 
 export function AccountMenu() {
   const { usuario, rol, cerrarSesion } = useSession();
+  const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -65,24 +67,7 @@ export function AccountMenu() {
             </span>
           </div>
           <div className="p-1.5" onClick={() => setAbierto(false)}>
-            <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" to="/perfil">
-              <User className="h-4 w-4" /> Mi perfil
-            </Link>
-            {rol === 'comprador' && (
-              <>
-                <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" to="/mis-pedidos">
-                  <Package className="h-4 w-4" /> Mis pedidos
-                </Link>
-                <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" to="/direcciones">
-                  <MapPin className="h-4 w-4" /> Direcciones
-                </Link>
-              </>
-            )}
-            {rol !== 'comprador' && (
-              <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" to={inicioPorRol(rol)}>
-                <LayoutDashboard className="h-4 w-4" /> Mi panel
-              </Link>
-            )}
+            <MenuEnlaces items={menu.cuenta} badges={badges} variante="cuenta" />
           </div>
           <div className="border-t p-1.5">
             <button

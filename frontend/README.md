@@ -25,7 +25,7 @@ Verificación local:
 ```text
 npm run lint       sin errores ni warnings
 npm run typecheck  sin errores
-npm test           3 archivos, 10 pruebas
+npm test           6 archivos, 18 pruebas
 npm run build      build de producción correcto
 ```
 
@@ -110,7 +110,10 @@ frontend (`src/auth/permisos.ts`) solo controla qué rutas y acciones se muestra
 | --- | --- | --- |
 | Comprador | `/` | `/catalogo`, `/carrito`, `/checkout`, `/mis-pedidos`, `/direcciones`, `/notificaciones`, `/perfil` |
 | Vendedor | `/vendedor` | `/vendedor/verificacion`, `/vendedor/puestos`, `/vendedor/productos`, `/vendedor/pedidos`, `/vendedor/cupones`, `/vendedor/resenas` |
-| Administrador | `/admin` | `/admin/verificaciones`, `/admin/pedidos`, `/admin/puestos`, `/admin/pagos`, `/admin/cupones`, `/admin/auditoria` |
+| Administrador | `/admin` | `/admin` (resumen), `/admin/usuarios`, `/admin/verificaciones`, `/admin/pedidos`, `/admin/puestos`, `/admin/productos`, `/admin/categorias`, `/admin/resenas`, `/admin/pagos`, `/admin/cupones`, `/admin/auditoria` |
+
+El menú de los layouts se obtiene de `GET /api/auth/menu/`; los botones de pedido
+se pintan desde `acciones_permitidas` del backend, no desde reglas locales.
 
 Rutas protegidas:
 
@@ -138,9 +141,11 @@ credenciales de comprador, vendedor y administrador.
    dirección manual, notas y un cupón opcional.
 3. Al crear el pedido se abre el detalle para registrar el pago.
 4. El vendedor confirma el pedido (el backend exige pago aprobado), lo pasa a
-   preparación, lo envía y lo entrega.
-5. El comprador puede reseñar el pedido entregado.
-6. Los pagos en efectivo los confirma el vendedor; los sandbox se aprueban o
+   preparación y lo entrega al domiciliario (en camino). El comprador confirma
+   «Ya recibí mi pedido»; si no llega, reporta «No me ha llegado».
+5. El administrador puede resolver la disputa marcando el pedido como entregado.
+6. El comprador puede reseñar el pedido entregado.
+7. Los pagos en efectivo los confirma el vendedor; los sandbox se aprueban o
    rechazan desde el detalle cuando el sandbox está habilitado.
 
 ## Estructura
@@ -156,6 +161,7 @@ frontend/
 │   │   ├── layout/          # layouts y navegación
 │   │   └── ui/              # componentes reutilizables
 │   ├── lib/                 # HTTP, tipos, formato, errores, utilidades
+│   ├── navigation/          # menú dinámico y fallback
 │   ├── pages/
 │   │   ├── admin/           # panel administrador
 │   │   ├── auth/            # login y registro
@@ -168,17 +174,18 @@ frontend/
 
 ## Pruebas
 
-- `npm test`: 10 pruebas de utilidades, interceptores HTTP (refresh compartido,
-  reintento y pérdida de sesión) y rutas protegidas (login y `/403`).
+- `npm test`: 18 pruebas de utilidades, interceptores HTTP (refresh compartido,
+  reintento y pérdida de sesión), rutas protegidas, menú dinámico con fallback y
+  modales de moderación de usuarios.
 - `npm run test:e2e`: smoke de portada, login y navegación al registro.
 - `npm run lint`, `npm run typecheck` y `npm run build` también corren en CI.
 
 ## Limitaciones conocidas
 
-- No hay endpoint de administración de usuarios ni de cambio de contraseña; el
-  perfil solo permite editar nombre, correo y celular.
-- `Puesto.estado` es de solo lectura en la API: el administrador puede consultar
-  el puesto, pero no suspenderlo desde el frontend.
+- No se crean ni eliminan usuarios desde el panel: solo se cambia el rol o se
+  suspende la cuenta. Tampoco hay cambio de contraseña.
+- Si `GET /api/auth/menu/` falla, el menú cae a un conjunto mínimo (catálogo,
+  carrito e ingreso) hasta que la API vuelva.
 - El pago sandbox solo funciona si backend y frontend tienen habilitado el
   sandbox.
 - Una dirección escrita manualmente en el checkout solo pasa a la libreta si se

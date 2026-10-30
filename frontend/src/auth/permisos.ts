@@ -21,7 +21,10 @@ export type Capacidad =
   | 'gestionarPagos'
   | 'verAuditoria'
   | 'moderarPuestos'
-  | 'verUsuarios';
+  | 'verUsuarios'
+  | 'moderarProductos'
+  | 'gestionarCategorias'
+  | 'moderarResenas';
 
 const CAPACIDADES_PUBLICAS: Capacidad[] = ['verCatalogo'];
 
@@ -57,6 +60,9 @@ const ADMINISTRADOR: Capacidad[] = [
   'verAuditoria',
   'moderarPuestos',
   'verUsuarios',
+  'moderarProductos',
+  'gestionarCategorias',
+  'moderarResenas',
   'gestionarCupones',
   'gestionarPedidosVendedor',
   'verNotificaciones',
