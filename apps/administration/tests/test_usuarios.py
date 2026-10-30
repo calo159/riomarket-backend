@@ -245,6 +245,6 @@ class TestResumen:
         assert respuesta.data["resenas"]["ocultas"] == 1
         assert respuesta.data["cupones"]["activos"] == 1
         assert respuesta.data["productos"]["bloqueados"] == 0
-        assert len(respuesta.data["pedidos"]["por_estado"]) == 6
+        assert len(respuesta.data["pedidos"]["por_estado"]) == 7
         assert len(respuesta.data["usuarios"]["por_rol"]) == 3
         assert len(respuesta.data["puestos"]["por_estado"]) == 3

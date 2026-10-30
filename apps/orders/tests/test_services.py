@@ -235,7 +235,7 @@ class TestRegla5Transiciones:
         aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
+        services.marcar_listo_para_recoger(pedido=pedido, usuario=vendedor)
         services.marcar_entregado(pedido=pedido, usuario=comprador)
         assert pedido.estado == Pedido.Estado.ENTREGADO
         assert pedido.es_final
@@ -324,7 +324,7 @@ class TestRegla5Transiciones:
         aprobar_pago(pedido, comprador)
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
+        services.marcar_listo_para_recoger(pedido=pedido, usuario=vendedor)
         services.marcar_entregado(pedido=pedido, usuario=comprador)
         with pytest.raises(DjangoValidationError):
             services.cancelar_pedido(pedido=pedido, usuario=vendedor)

@@ -8,6 +8,8 @@ Reglas:
 - Anónimo o cuenta suspendida: nunca puede.
 - El comprador actúa sobre SU pedido; el vendedor sobre los de SU puesto.
 - El administrador puede todo menos crear pedidos (eso es del comprador).
+- Entregar: el comprador y el administrador siempre; el vendedor del puesto
+  solo en pedidos de retiro (en persona entrega y cobra). En domicilio no.
 """
 
 from django.core.exceptions import PermissionDenied
@@ -22,6 +24,7 @@ class Accion(models.TextChoices):
     CONFIRMAR = "confirmar", "Confirmar"
     EN_PREPARACION = "en-preparacion", "Pasar a preparación"
     ENVIAR = "enviar", "Enviar"
+    LISTO = "listo-para-recoger", "Marcar listo para recoger"
     ENTREGAR = "entregar", "Confirmar entrega"
     NO_RECIBIDO = "no-recibido", "Reportar no recibido"
     CANCELAR = "cancelar", "Cancelar"
@@ -30,6 +33,10 @@ class Accion(models.TextChoices):
 class Relacion(models.TextChoices):
     COMPRADOR_DEL_PEDIDO = "comprador_del_pedido", "Comprador del pedido"
     VENDEDOR_DEL_PUESTO = "vendedor_del_puesto", "Vendedor del puesto"
+    VENDEDOR_DEL_PUESTO_EN_RETIRO = (
+        "vendedor_del_puesto_en_retiro",
+        "Vendedor del puesto, solo en pedidos de retiro",
+    )
 
 
 PERMISOS: dict[str, dict[str, str | None]] = {
@@ -44,6 +51,9 @@ PERMISOS: dict[str, dict[str, str | None]] = {
         Accion.CONFIRMAR: Relacion.VENDEDOR_DEL_PUESTO,
         Accion.EN_PREPARACION: Relacion.VENDEDOR_DEL_PUESTO,
         Accion.ENVIAR: Relacion.VENDEDOR_DEL_PUESTO,
+        Accion.LISTO: Relacion.VENDEDOR_DEL_PUESTO,
+        # En persona el vendedor entrega y cobra; en domicilio solo confirma el comprador.
+        Accion.ENTREGAR: Relacion.VENDEDOR_DEL_PUESTO_EN_RETIRO,
         Accion.CANCELAR: Relacion.VENDEDOR_DEL_PUESTO,
     },
     Usuario.Rol.ADMINISTRADOR: {
@@ -51,6 +61,7 @@ PERMISOS: dict[str, dict[str, str | None]] = {
         Accion.CONFIRMAR: None,
         Accion.EN_PREPARACION: None,
         Accion.ENVIAR: None,
+        Accion.LISTO: None,
         Accion.ENTREGAR: None,
         Accion.NO_RECIBIDO: None,
         Accion.CANCELAR: None,
@@ -61,6 +72,7 @@ ACCION_POR_DESTINO: dict[str, str] = {
     "confirmado": Accion.CONFIRMAR,
     "en_preparacion": Accion.EN_PREPARACION,
     "en_camino": Accion.ENVIAR,
+    "listo_para_recoger": Accion.LISTO,
     "entregado": Accion.ENTREGAR,
     "cancelado": Accion.CANCELAR,
 }
@@ -71,8 +83,10 @@ def _relacion_cumplida(usuario, pedido, relacion: str) -> bool:
         return False
     if relacion == Relacion.COMPRADOR_DEL_PEDIDO:
         return pedido.id_comprador_id == usuario.pk
-    if relacion == Relacion.VENDEDOR_DEL_PUESTO:
-        return pedido.id_puesto_id is not None and pedido.id_puesto.id_vendedor_id == usuario.pk
+    if relacion in (Relacion.VENDEDOR_DEL_PUESTO, Relacion.VENDEDOR_DEL_PUESTO_EN_RETIRO):
+        if pedido.id_puesto_id is None or pedido.id_puesto.id_vendedor_id != usuario.pk:
+            return False
+        return relacion == Relacion.VENDEDOR_DEL_PUESTO or pedido.tipo_entrega == "retiro"
     return False
 
 

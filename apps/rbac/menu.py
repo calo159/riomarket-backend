@@ -17,7 +17,8 @@ def _badges(usuario, codigos: set[str]) -> dict[str, int]:
     badges: dict[str, int] = {}
     if "mis_pedidos" in codigos:
         badges["mis_pedidos"] = Pedido.objects.filter(
-            id_comprador=usuario, estado=Pedido.Estado.EN_CAMINO
+            id_comprador=usuario,
+            estado__in=(Pedido.Estado.EN_CAMINO, Pedido.Estado.LISTO_PARA_RECOGER),
         ).count()
     if "notificaciones" in codigos:
         badges["notificaciones"] = Notificacion.objects.filter(

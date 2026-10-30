@@ -227,7 +227,7 @@ class TestTransiciones:
         for accion, cliente in (
             ("confirmar", cliente_vendedor),
             ("en-preparacion", cliente_vendedor),
-            ("enviar", cliente_vendedor),
+            ("listo-para-recoger", cliente_vendedor),
             ("entregar", cliente_comprador),
         ):
             respuesta = cliente.post(f"{PEDIDOS}{pedido.pk}/{accion}/")

@@ -33,6 +33,7 @@ class Pedido(models.Model):
         CONFIRMADO = "confirmado", "Confirmado"
         EN_PREPARACION = "en_preparacion", "En preparación"
         EN_CAMINO = "en_camino", "En camino"
+        LISTO_PARA_RECOGER = "listo_para_recoger", "Listo para recoger"
         ENTREGADO = "entregado", "Entregado"
         CANCELADO = "cancelado", "Cancelado"
 
@@ -53,7 +54,7 @@ class Pedido(models.Model):
     tipo_entrega = models.CharField(
         max_length=15, choices=TipoEntrega.choices, default=TipoEntrega.RETIRO
     )
-    estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.PENDIENTE)
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
     direccion_entrega = models.CharField(
         max_length=200,
         blank=True,
@@ -140,6 +141,7 @@ class Pedido(models.Model):
                         "confirmado",
                         "en_preparacion",
                         "en_camino",
+                        "listo_para_recoger",
                         "entregado",
                         "cancelado",
                     ]
