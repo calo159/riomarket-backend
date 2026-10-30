@@ -42,6 +42,15 @@ interface ContextoCarrito {
   subtotal: number;
   agregar: (producto: Producto, puesto: Puesto) => 'agregado' | 'otro_puesto';
   reemplazarCon: (producto: Producto, puesto: Puesto, cantidad?: number) => void;
+  /**
+   * Agrega varios productos de un mismo puesto con su cantidad (limitada al stock). Si el carrito
+   * es de otro puesto no hace nada y devuelve ``otro_puesto``, salvo con ``reemplazar``.
+   */
+  agregarLineas: (
+    puesto: Puesto,
+    lineas: { producto: Producto; cantidad: number }[],
+    opciones?: { reemplazar?: boolean },
+  ) => 'agregado' | 'otro_puesto';
   cambiarCantidad: (productoId: number, cantidad: number) => void;
   quitar: (productoId: number) => void;
   vaciar: () => void;
@@ -129,6 +138,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [crearItem],
   );
 
+  const agregarLineas = useCallback(
+    (
+      puesto: Puesto,
+      lineas: { producto: Producto; cantidad: number }[],
+      opciones: { reemplazar?: boolean } = {},
+    ): 'agregado' | 'otro_puesto' => {
+      if (carrito && carrito.puestoId !== puesto.id && !opciones.reemplazar) return 'otro_puesto';
+      const base: Carrito | null =
+        carrito && carrito.puestoId === puesto.id && !opciones.reemplazar ? carrito : null;
+      const items = [...(base?.items ?? [])];
+      for (const { producto, cantidad } of lineas) {
+        const tope = producto.stock ?? cantidad;
+        const indice = items.findIndex((item) => item.productoId === producto.id);
+        if (indice >= 0) {
+          const total = Math.min(items[indice].cantidad + cantidad, tope);
+          items[indice] = { ...items[indice], cantidad: Math.max(1, total), stock: tope };
+        } else if (tope > 0) {
+          items.push(crearItem(producto, Math.max(1, Math.min(cantidad, tope))));
+        }
+      }
+      if (items.length === 0) return 'agregado';
+      setCarrito({
+        puestoId: puesto.id,
+        puestoNombre: puesto.nombre,
+        ofreceDomicilio: Boolean(puesto.ofrece_domicilio),
+        items,
+      });
+      return 'agregado';
+    },
+    [carrito, crearItem],
+  );
+
   const cambiarCantidad = useCallback((productoId: number, cantidad: number) => {
     setCarrito((actual) => {
       if (!actual) return actual;
@@ -159,8 +200,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const subtotal = carrito?.items.reduce((total, item) => total + numero(item.precio) * item.cantidad, 0) ?? 0;
 
   const valor = useMemo<ContextoCarrito>(
-    () => ({ carrito, totalItems, subtotal, agregar, reemplazarCon, cambiarCantidad, quitar, vaciar }),
-    [carrito, totalItems, subtotal, agregar, reemplazarCon, cambiarCantidad, quitar, vaciar],
+    () => ({
+      carrito,
+      totalItems,
+      subtotal,
+      agregar,
+      reemplazarCon,
+      agregarLineas,
+      cambiarCantidad,
+      quitar,
+      vaciar,
+    }),
+    [carrito, totalItems, subtotal, agregar, reemplazarCon, agregarLineas, cambiarCantidad, quitar, vaciar],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

@@ -66,4 +66,49 @@ describe('CartProvider', () => {
     rerender();
     expect(result.current.totalItems).toBe(1);
   });
+
+  it('agregarLineas suma varias líneas del mismo puesto con su cantidad y el tope de stock', () => {
+    const { result } = montar();
+    act(() => {
+      result.current.agregar(producto(1, 10), puesto(1));
+    });
+    let respuesta = '';
+    act(() => {
+      respuesta = result.current.agregarLineas(puesto(1), [
+        { producto: producto(1, 10), cantidad: 3 },
+        { producto: producto(2, 4), cantidad: 9 },
+      ]);
+    });
+    expect(respuesta).toBe('agregado');
+    expect(result.current.carrito?.items.map((i) => [i.productoId, i.cantidad])).toEqual([
+      [1, 4],
+      [2, 4],
+    ]);
+  });
+
+  it('agregarLineas no pisa en silencio el carrito de otro puesto', () => {
+    const { result } = montar();
+    act(() => {
+      result.current.agregar(producto(1), puesto(1));
+    });
+    let respuesta = '';
+    act(() => {
+      respuesta = result.current.agregarLineas(puesto(2), [{ producto: producto(5), cantidad: 2 }]);
+    });
+    expect(respuesta).toBe('otro_puesto');
+    expect(result.current.carrito?.puestoId).toBe(1);
+    expect(result.current.totalItems).toBe(1);
+  });
+
+  it('agregarLineas con reemplazar cambia el carrito al nuevo puesto', () => {
+    const { result } = montar();
+    act(() => {
+      result.current.agregar(producto(1), puesto(1));
+    });
+    act(() => {
+      result.current.agregarLineas(puesto(2), [{ producto: producto(5), cantidad: 2 }], { reemplazar: true });
+    });
+    expect(result.current.carrito?.puestoId).toBe(2);
+    expect(result.current.totalItems).toBe(2);
+  });
 });

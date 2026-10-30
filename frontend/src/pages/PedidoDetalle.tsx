@@ -10,6 +10,7 @@ import { useToast } from '../components/ui/Toast';
 import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
 import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
 import { ConfirmarModal } from '../components/ui/Modal';
+import { BotonVolverAPedir } from '../components/BotonVolverAPedir';
 import { formatearFechaHora } from '../lib/format';
 import { mensajeDeError } from '../lib/errors';
 import { invalidarMenu } from '../navigation/useMenu';
@@ -160,6 +161,7 @@ export function PedidoDetalle() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {esComprador && <BotonVolverAPedir pedido={datos} />}
           {puedePagar && (
             <button type="button" className="btn-primary" onClick={() => setModalPago(true)}>
               <CreditCard className="h-4 w-4" /> Pagar pedido
