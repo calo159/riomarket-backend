@@ -125,7 +125,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
               <div className="relative flex h-full max-w-[58%] flex-col items-start justify-center gap-1.5 pb-6 md:max-w-[520px] md:gap-2.5 md:pb-10">
                 <h2
                   className={cn(
-                    'line-clamp-3 text-2xl font-extrabold leading-[1.08] tracking-[-0.02em] md:text-[43px] md:leading-[1.05] md:tracking-[-0.025em]',
+                    'line-clamp-2 text-2xl font-extrabold md:line-clamp-3 leading-[1.08] tracking-[-0.02em] md:text-[43px] md:leading-[1.05] md:tracking-[-0.025em]',
                     ENTRADA,
                     activa && '!translate-y-0 !opacity-100',
                   )}
@@ -134,7 +134,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
                 </h2>
                 <p
                   className={cn(
-                    'line-clamp-2 max-w-[440px] text-sm md:line-clamp-3 md:text-lg',
+                    'line-clamp-1 max-w-[440px] text-sm md:line-clamp-3 md:text-lg',
                     ENTRADA,
                     activa && '!translate-y-0 !opacity-100 [transition-delay:.08s]',
                   )}

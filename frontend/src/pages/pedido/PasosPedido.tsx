@@ -52,10 +52,10 @@ export function PasosPedido({ estado }: { estado: string }) {
           >
             <span
               className={cn(
-                'grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 bg-white transition-colors dark:bg-slate-900',
+                'grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 transition-colors',
                 alcanzado
                   ? 'border-brand-600 bg-brand-600 text-white dark:border-brand-300 dark:bg-brand-300 dark:text-slate-950'
-                  : 'border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400',
+                  : 'border-slate-300 bg-white text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400',
                 esActual && 'animate-pulsepaso',
               )}
             >

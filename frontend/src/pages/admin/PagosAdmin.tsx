@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CheckCircle2, RefreshCw, XCircle, XOctagon } from 'lucide-react';
 import { anularPago, listarPagos, reembolsarPago, simularPago } from '../../api/payments';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { ConfirmarModal } from '../../components/ui/Modal';
-import { formatearFechaHora, formatearMoneda, ETIQUETAS_PAGO } from '../../lib/format';
+import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
@@ -136,7 +137,7 @@ export function PagosAdmin() {
                 <td className="p-3">#{pago.id}</td>
                 <td className="p-3">#{pago.id_pedido}</td>
                 <td className="p-3">{pago.metodo_pago}</td>
-                <td className="p-3">{ETIQUETAS_PAGO[pago.estado] ?? pago.estado}</td>
+                <td className="p-3"><EtiquetaEstado estado={pago.estado} /></td>
                 <td className="p-3 font-semibold">{formatearMoneda(pago.total_cobrado)}</td>
                 <td className="p-3 text-xs text-slate-500">{formatearFechaHora(pago.fecha_creacion)}</td>
                 <td className="p-3 text-right">

@@ -27,7 +27,7 @@ export function MisPedidos() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1240px] px-3 py-5 sm:px-5">
       <EncabezadoPagina
         titulo="Mis pedidos"
         descripcion="Sigue el estado de tus compras y vuelve a pedir tus favoritos."
@@ -83,7 +83,7 @@ export function MisPedidos() {
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>
-                  <ChevronRight className="h-5 w-5 text-slate-400" />
+                  <ChevronRight className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                 </div>
               </Link>
             ))}

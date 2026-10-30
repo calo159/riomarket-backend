@@ -96,6 +96,8 @@ export function colorEstado(estado: string | null | undefined): string {
   switch (estado) {
     case 'entregado':
     case 'aprobado':
+    case 'activo':
+    case 'activa':
       return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
     case 'pendiente':
     case 'procesando':
@@ -108,6 +110,8 @@ export function colorEstado(estado: string | null | undefined): string {
     case 'cancelado':
     case 'rechazado':
     case 'anulado':
+    case 'suspendido':
+    case 'bloqueado':
       return 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
     case 'reembolsado':
       return 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300';

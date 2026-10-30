@@ -60,7 +60,7 @@ export function Notificaciones() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl px-3 py-5 sm:px-5">
       <EncabezadoPagina
         titulo="Notificaciones"
         descripcion="Novedades sobre tus pedidos, pagos y verificaciones."
@@ -120,7 +120,7 @@ export function Notificaciones() {
                       {!notificacion.leida && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600" aria-label="Sin leer" />}
                     </div>
                     <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{notificacion.mensaje}</p>
-                    <p className="mt-1 text-xs text-slate-400">{formatearFechaHora(notificacion.fecha_creacion)}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatearFechaHora(notificacion.fecha_creacion)}</p>
                   </div>
                 </>
               );

@@ -176,7 +176,7 @@ export function Registro() {
                     )}
                   >
                     <input type="radio" value={valor} className="sr-only" {...register('rol')} />
-                    <Icono className={cn('h-5 w-5', rol === valor ? 'text-brand-700 dark:text-brand-300' : 'text-slate-400')} />
+                    <Icono className={cn('h-5 w-5', rol === valor ? 'text-brand-700 dark:text-brand-300' : 'text-slate-500 dark:text-slate-400')} />
                     <span className="text-sm font-semibold">{titulo}</span>
                   </label>
                 ))}

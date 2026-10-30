@@ -24,7 +24,7 @@ export default {
         amarillo: '#FFD166',
         azul: { DEFAULT: '#0D5C8A', suave: '#DFF1FA' },
         exito: { DEFAULT: '#0B7A3E', suave: '#E2F4E7' },
-        estrella: '#B26A00',
+        estrella: '#9A5B00',
         tinta: '#1B2A33',
         fondo: '#EDF1F3',
         pie: '#17313B',

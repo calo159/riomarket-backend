@@ -83,7 +83,7 @@ export function RecursosAdmin() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             className="input w-64 pl-9"
             placeholder="Código o nombre"
@@ -129,11 +129,11 @@ export function RecursosAdmin() {
                   <td className="p-3">
                     <p className="flex items-center gap-1.5 font-medium">
                       {recurso.nombre}
-                      {recurso.es_sistema && <Lock className="h-3 w-3 text-slate-400" aria-label="Recurso de sistema" />}
+                      {recurso.es_sistema && <Lock className="h-3 w-3 text-slate-500 dark:text-slate-400" aria-label="Recurso de sistema" />}
                       {!recurso.activo && <span className="badge bg-amber-100 text-amber-800">Inactivo</span>}
                       {recurso.es_publico && <span className="badge bg-sky-100 text-sky-800">Público</span>}
                     </p>
-                    <p className="text-xs text-slate-400">{recurso.codigo}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{recurso.codigo}</p>
                   </td>
                   <td className="p-3 text-xs text-slate-500">
                     {ETIQUETAS_AMBITO[recurso.ambito]}

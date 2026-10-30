@@ -84,7 +84,7 @@ export function Perfil() {
   const esVendedor = datos.rol === 'vendedor';
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl px-3 py-5 sm:px-5">
       <EncabezadoPagina titulo="Mi perfil" descripcion="Gestiona tus datos de contacto y revisa el estado de tu cuenta." />
 
       <section className="card mb-6 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
@@ -125,19 +125,19 @@ export function Perfil() {
         <div className="mt-4 space-y-3">
           <Campo etiqueta="Nombre completo" htmlFor="nombre" error={errores.nombre}>
             <div className="relative">
-              <UserRound className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <UserRound className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
               <input id="nombre" className="input pl-9" value={nombre} onChange={(evento) => setNombre(evento.target.value)} autoComplete="name" />
             </div>
           </Campo>
           <Campo etiqueta="Correo" htmlFor="correo" error={errores.correo}>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Mail className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
               <input id="correo" type="email" className="input pl-9" value={correo} onChange={(evento) => setCorreo(evento.target.value)} autoComplete="email" />
             </div>
           </Campo>
           <Campo etiqueta="Celular" htmlFor="celular" error={errores.celular}>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Phone className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500 dark:text-slate-400" />
               <input id="celular" type="tel" className="input pl-9" value={celular} onChange={(evento) => setCelular(evento.target.value)} autoComplete="tel" />
             </div>
           </Campo>

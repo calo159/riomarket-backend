@@ -80,7 +80,7 @@ export function PublicLayout() {
                   type="search"
                   value={busqueda}
                   onChange={(evento) => setBusqueda(evento.target.value)}
-                  placeholder="Buscar productos, puestos y categorías"
+                  placeholder="Buscar productos y puestos"
                   className="h-[46px] w-full min-w-0 border-0 bg-transparent px-4 text-base text-tinta outline-none placeholder:text-slate-500 md:h-[48px]"
                 />
               </label>

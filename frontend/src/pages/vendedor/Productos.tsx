@@ -1,3 +1,4 @@
+import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -199,7 +200,7 @@ export function ProductosVendedor() {
                 <td className="p-3">{puestoPorId.get(producto.id_puesto)?.nombre ?? '—'}</td>
                 <td className="p-3 font-semibold">{formatearMoneda(producto.precio)}</td>
                 <td className="p-3">{producto.stock}</td>
-                <td className="p-3">{producto.estado}</td>
+                <td className="p-3"><EtiquetaEstado estado={producto.estado} /></td>
                 <td className="p-3 text-right">
                   <div className="flex justify-end gap-1">
                     <button type="button" className="btn-ghost p-2" onClick={() => setImagenes(producto)} title="Imágenes"><ImagePlus className="h-4 w-4" /></button>

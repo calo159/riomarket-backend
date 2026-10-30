@@ -188,7 +188,7 @@ export function RolesAdmin() {
                     <tr key={recurso.id} className="border-b last:border-0">
                       <td className="p-3">
                         <p className="font-medium">{recurso.nombre}</p>
-                        <p className="text-xs text-slate-400">{recurso.codigo}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{recurso.codigo}</p>
                       </td>
                       {roles.data.map((rol) => {
                         const bloqueado = esObligatorio(rol, recurso);
@@ -443,7 +443,7 @@ function PermisosModal({
                           onChange={(evento) => alternar(recurso.id, evento.target.checked)}
                         />
                         {recurso.nombre}
-                        {bloqueado && <Lock className="h-3 w-3 text-slate-400" aria-label="Obligatorio" />}
+                        {bloqueado && <Lock className="h-3 w-3 text-slate-500 dark:text-slate-400" aria-label="Obligatorio" />}
                         {!recurso.activo && <span className="text-xs text-amber-600">(inactivo)</span>}
                       </label>
                     </li>

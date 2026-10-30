@@ -30,6 +30,7 @@
     @apply bg-fondo text-tinta dark:bg-slate-950 dark:text-slate-100;
     font-size: 15px;
     line-height: 1.4;
+    text-wrap: pretty;
   }
   :focus-visible {
     @apply outline-none ring-[3px] ring-[#FFB703] ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
