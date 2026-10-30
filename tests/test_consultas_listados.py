@@ -89,3 +89,30 @@ def test_pedidos_de_vendedor_y_admin_no_crecen(rol):
     muchas = _contar(cliente, "/api/orders/pedidos/")
     print(f"MEDICION pedidos ({rol}): 2 filas={pocas}, 10 filas={muchas}")
     assert muchas == pocas
+
+
+def test_producto_trae_datos_del_puesto_para_las_tarjetas():
+    """El listado de productos expone nombre, domicilio y calificación del puesto (solo lectura)."""
+    vendedor = UsuarioFactory(rol="vendedor")
+    VendedorFactory(id_usuario=vendedor)
+    puesto = PuestoFactory(
+        id_vendedor=vendedor,
+        nombre="Frutas del Caribe",
+        ofrece_domicilio=True,
+        latitud="11.544000",
+        longitud="-72.907000",
+    )
+    ProductoFactory(id_puesto=puesto)
+    sin_resenas = PuestoFactory(id_vendedor=vendedor, nombre="Sin reseñas", ofrece_domicilio=False)
+    ProductoFactory(id_puesto=sin_resenas)
+    ResenaFactory(id_puesto=puesto, calificacion=5)
+    ResenaFactory(id_puesto=puesto, calificacion=4)
+
+    respuesta = _cliente().get("/api/catalog/productos/")
+
+    assert respuesta.status_code == 200
+    por_puesto = {p["puesto_nombre"]: p for p in respuesta.data["results"]}
+    assert por_puesto["Frutas del Caribe"]["puesto_ofrece_domicilio"] is True
+    assert por_puesto["Frutas del Caribe"]["puesto_calificacion"] == 4.5
+    assert por_puesto["Sin reseñas"]["puesto_ofrece_domicilio"] is False
+    assert por_puesto["Sin reseñas"]["puesto_calificacion"] is None

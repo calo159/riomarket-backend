@@ -163,6 +163,13 @@ class ImagenProductoSerializer(serializers.ModelSerializer):
 
 class ProductoSerializer(serializers.ModelSerializer):
     imagenes = ImagenProductoSerializer(many=True, read_only=True)
+    # Datos del puesto para las tarjetas del listado (solo lectura, sin consultas extra:
+    # el puesto ya viene con select_related y la calificación se anota en la vista).
+    puesto_nombre = serializers.CharField(source="id_puesto.nombre", read_only=True)
+    puesto_ofrece_domicilio = serializers.BooleanField(
+        source="id_puesto.ofrece_domicilio", read_only=True
+    )
+    puesto_calificacion = serializers.FloatField(read_only=True, default=None, allow_null=True)
 
     class Meta:
         model = Producto
@@ -177,6 +184,9 @@ class ProductoSerializer(serializers.ModelSerializer):
             "unidad_medida",
             "estado",
             "imagenes",
+            "puesto_nombre",
+            "puesto_ofrece_domicilio",
+            "puesto_calificacion",
         )
         read_only_fields = ("id",)
 

@@ -185,3 +185,15 @@ def anotar_reputacion(qs: QuerySet[Puesto]) -> QuerySet[Puesto]:
             Subquery(visibles.annotate(total=Count("pk")).values("total")), 0
         ),
     )
+
+
+def anotar_calificacion_del_puesto(qs):
+    """Añade ``puesto_calificacion`` (promedio de reseñas visibles del puesto del producto)."""
+    visibles = (
+        Resena.objects.filter(id_puesto=OuterRef("id_puesto"), visible=True)
+        .order_by()
+        .values("id_puesto")
+    )
+    return qs.annotate(
+        puesto_calificacion=Subquery(visibles.annotate(valor=Avg("calificacion")).values("valor"))
+    )
