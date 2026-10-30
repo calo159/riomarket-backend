@@ -32,15 +32,34 @@ logger = logging.getLogger(__name__)
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección).
 ORDENAMIENTO_PEDIDO = ("fecha_creacion", "-fecha_creacion", "total", "-total", "id", "-id")
 
-# Máquina de estados de la regla 5: destino -> transiciones permitidas desde él.
-TRANSICIONES: dict[str, tuple[str, ...]] = {
-    Pedido.Estado.PENDIENTE: (Pedido.Estado.CONFIRMADO, Pedido.Estado.CANCELADO),
-    Pedido.Estado.CONFIRMADO: (Pedido.Estado.EN_PREPARACION, Pedido.Estado.CANCELADO),
-    Pedido.Estado.EN_PREPARACION: (Pedido.Estado.EN_CAMINO, Pedido.Estado.CANCELADO),
-    Pedido.Estado.EN_CAMINO: (Pedido.Estado.ENTREGADO,),
-    Pedido.Estado.ENTREGADO: (),
-    Pedido.Estado.CANCELADO: (),
+# Máquina de estados de la regla 5: tipo de entrega -> estado -> destinos permitidos.
+# Domicilio sale del puesto «en camino»; en retiro nadie lo lleva: queda «listo para
+# recoger» hasta que el cliente pasa por el puesto (ver docs/ADR-009).
+TRANSICIONES_POR_TIPO: dict[str, dict[str, tuple[str, ...]]] = {
+    Pedido.TipoEntrega.DOMICILIO: {
+        Pedido.Estado.PENDIENTE: (Pedido.Estado.CONFIRMADO, Pedido.Estado.CANCELADO),
+        Pedido.Estado.CONFIRMADO: (Pedido.Estado.EN_PREPARACION, Pedido.Estado.CANCELADO),
+        Pedido.Estado.EN_PREPARACION: (Pedido.Estado.EN_CAMINO, Pedido.Estado.CANCELADO),
+        Pedido.Estado.EN_CAMINO: (Pedido.Estado.ENTREGADO,),
+        Pedido.Estado.LISTO_PARA_RECOGER: (),
+        Pedido.Estado.ENTREGADO: (),
+        Pedido.Estado.CANCELADO: (),
+    },
+    Pedido.TipoEntrega.RETIRO: {
+        Pedido.Estado.PENDIENTE: (Pedido.Estado.CONFIRMADO, Pedido.Estado.CANCELADO),
+        Pedido.Estado.CONFIRMADO: (Pedido.Estado.EN_PREPARACION, Pedido.Estado.CANCELADO),
+        Pedido.Estado.EN_PREPARACION: (Pedido.Estado.LISTO_PARA_RECOGER, Pedido.Estado.CANCELADO),
+        Pedido.Estado.EN_CAMINO: (),
+        Pedido.Estado.LISTO_PARA_RECOGER: (Pedido.Estado.ENTREGADO, Pedido.Estado.CANCELADO),
+        Pedido.Estado.ENTREGADO: (),
+        Pedido.Estado.CANCELADO: (),
+    },
 }
+
+
+def transiciones_de(pedido: Pedido) -> dict[str, tuple[str, ...]]:
+    """Tabla de transiciones (estado -> destinos) que aplica al tipo de entrega del pedido."""
+    return TRANSICIONES_POR_TIPO[pedido.tipo_entrega]
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +270,10 @@ def marcar_enviado(*, pedido: Pedido, usuario) -> Pedido:
     return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.EN_CAMINO)
 
 
+def marcar_listo_para_recoger(*, pedido: Pedido, usuario) -> Pedido:
+    return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.LISTO_PARA_RECOGER)
+
+
 def marcar_entregado(*, pedido: Pedido, usuario) -> Pedido:
     return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.ENTREGADO)
 
@@ -260,10 +283,11 @@ def cancelar_pedido(*, pedido: Pedido, usuario) -> Pedido:
 
 
 def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido:
-    """El comprador avisa que el pedido no le llegó (o no lo pudo retirar).
+    """El comprador avisa que el pedido a domicilio no le llegó.
 
     No cambia el estado: si el pedido llega después, el comprador todavía puede
-    confirmar la entrega. Solo se permite una vez y mientras esté en camino.
+    confirmar la entrega. Solo se permite una vez y mientras esté en camino; un
+    retiro no lo admite (el cliente va al puesto y el vendedor lo entrega en mano).
     """
     permissions.exigir(
         usuario,
@@ -271,6 +295,8 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
         pedido,
         mensaje="Solo el comprador del pedido puede reportar que no lo recibió.",
     )
+    if pedido.tipo_entrega != Pedido.TipoEntrega.DOMICILIO:
+        raise ValidationError({"estado": "Solo se puede reportar un pedido a domicilio."})
     if pedido.estado != Pedido.Estado.EN_CAMINO:
         raise ValidationError({"estado": "Solo se puede reportar un pedido que esté en camino."})
     if pedido.no_recibido_en is not None:
@@ -287,7 +313,7 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
 
 
 def _validar_transicion(pedido: Pedido, destino: str) -> None:
-    permitidas = TRANSICIONES[pedido.estado]
+    permitidas = transiciones_de(pedido)[pedido.estado]
     if destino not in permitidas:
         raise ValidationError(
             {
@@ -303,7 +329,7 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
     _validar_transicion(pedido, destino)
     permissions.exigir(usuario, permissions.ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
-        _exigir_pago_aprobado(pedido)
+        _exigir_pago_para_confirmar(pedido)
     estado_anterior = pedido.estado
     # Stock + estado en una sola transacción: o pasa todo o no pasa nada. El pedido se
     # bloquea y se relee: dos peticiones simultáneas (o una instancia vieja) no repiten
@@ -314,6 +340,8 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
             pedido.estado = actual.estado
             _validar_transicion(pedido, destino)
             estado_anterior = pedido.estado
+        if destino == Pedido.Estado.ENTREGADO and pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO:
+            _cerrar_cobro_en_mano(pedido, usuario)
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
             _liberar_cupon(pedido)
@@ -325,12 +353,17 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
     return pedido
 
 
-def _exigir_pago_aprobado(pedido: Pedido) -> None:
+def _exigir_pago_para_confirmar(pedido: Pedido) -> None:
     """Regla de negocio (Fase 4): para confirmar, el pago debe estar aprobado.
 
     Aplica a todos los métodos: en efectivo el vendedor/admin aprueba el cobro
     con ``payments.confirmar_efectivo``; con pasarela, el pago se aprueba al
     simular (sandbox) o vía webhook.
+
+    Excepción (pagar al recoger, ADR-009): un RETIRO con pago en efectivo
+    registrado (pendiente o procesando) se puede confirmar sin cobro previo; el
+    vendedor cobra al entregar. Cualquier otro método, y todo domicilio, exige el
+    pago aprobado.
     """
     from apps.payments.models import Pago
 
@@ -339,10 +372,41 @@ def _exigir_pago_aprobado(pedido: Pedido) -> None:
         raise ValidationError(
             {"pago": "El pedido requiere un pago registrado y aprobado antes de confirmarse."}
         )
-    if pago.estado != Pago.Estado.APROBADO:
+    if pago.estado == Pago.Estado.APROBADO:
+        return
+    if (
+        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        and pago.metodo_pago == Pago.MetodoPago.EFECTIVO
+        and pago.estado in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
+    ):
+        return
+    raise ValidationError(
+        {"pago": f"El pago está en estado '{pago.estado}': debe estar aprobado para confirmar."}
+    )
+
+
+def _cerrar_cobro_en_mano(pedido: Pedido, usuario) -> None:
+    """Al entregar un retiro pagado en efectivo, el vendedor (o admin) confirma el cobro.
+
+    Corre dentro de la transacción de la transición: si el cobro falla, el pedido no
+    queda entregado. El comprador no puede aprobar su propio efectivo: si el pago
+    sigue pendiente, debe entregarlo el vendedor.
+    """
+    from apps.payments import services as pagos_services
+    from apps.payments.models import Pago
+
+    pago = Pago.objects.filter(id_pedido=pedido).first()
+    if (
+        pago is None
+        or pago.metodo_pago != Pago.MetodoPago.EFECTIVO
+        or pago.estado not in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
+    ):
+        return
+    if not _puede_cobrar(pedido, usuario):
         raise ValidationError(
-            {"pago": f"El pago está en estado '{pago.estado}': debe estar aprobado para confirmar."}
+            {"pago": "El pago en efectivo sigue pendiente: el vendedor debe confirmar el cobro."}
         )
+    pagos_services.confirmar_efectivo(pago=pago, usuario=usuario)
 
 
 def _reembolsar_o_anular_pago(pedido: Pedido) -> None:
@@ -422,18 +486,44 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
         usuario, permissions.Accion.EDITAR, pedido
     ):
         acciones.append(permissions.Accion.EDITAR.value)
-    for destino in TRANSICIONES.get(pedido.estado, ()):
+    for destino in transiciones_de(pedido).get(pedido.estado, ()):
         accion = permissions.ACCION_POR_DESTINO[destino]
-        if permissions.puede(usuario, accion, pedido):
-            acciones.append(accion)
+        if not permissions.puede(usuario, accion, pedido):
+            continue
+        if (
+            destino == Pedido.Estado.ENTREGADO
+            and _cobro_en_mano_pendiente(pedido)
+            and not _puede_cobrar(pedido, usuario)
+        ):
+            # El comprador no cierra su propio efectivo: se le oculta el botón (el servicio
+            # igualmente lo rechazaría) y el vendedor entrega y cobra.
+            continue
+        acciones.append(accion)
     if (
-        pedido.estado == Pedido.Estado.EN_CAMINO
+        pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO
+        and pedido.estado == Pedido.Estado.EN_CAMINO
         and pedido.no_recibido_en is None
         and permissions.puede(usuario, permissions.Accion.NO_RECIBIDO, pedido)
     ):
         acciones.append(permissions.Accion.NO_RECIBIDO.value)
     acciones.extend(_acciones_de_pago(pedido, usuario))
     return acciones
+
+
+def _cobro_en_mano_pendiente(pedido: Pedido) -> bool:
+    """Retiro con pago en efectivo aún sin cobrar (pendiente o procesando)."""
+    pago = getattr(pedido, "pago", None)
+    return (
+        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        and pago is not None
+        and pago.metodo_pago == "efectivo"
+        and pago.estado in ("pendiente", "procesando")
+    )
+
+
+def _puede_cobrar(pedido: Pedido, usuario) -> bool:
+    """Quién cierra el cobro en mano: el administrador o el vendedor dueño del puesto."""
+    return usuario.es_administrador or pedido.id_puesto.id_vendedor_id == usuario.pk
 
 
 def _acciones_de_pago(pedido: Pedido, usuario) -> list[str]:

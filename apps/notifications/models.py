@@ -14,6 +14,7 @@ class Notificacion(models.Model):
         PEDIDO_CONFIRMADO = "pedido_confirmado", "Pedido confirmado"
         PEDIDO_EN_PREPARACION = "pedido_en_preparacion", "Pedido en preparación"
         PEDIDO_EN_CAMINO = "pedido_en_camino", "Pedido en camino"
+        PEDIDO_LISTO_PARA_RECOGER = "pedido_listo_para_recoger", "Pedido listo para recoger"
         PEDIDO_ENTREGADO = "pedido_entregado", "Pedido entregado"
         PEDIDO_CANCELADO = "pedido_cancelado", "Pedido cancelado"
         PAGO_APROBADO = "pago_aprobado", "Pago aprobado"
@@ -55,6 +56,7 @@ class Notificacion(models.Model):
                         "pedido_confirmado",
                         "pedido_en_preparacion",
                         "pedido_en_camino",
+                        "pedido_listo_para_recoger",
                         "pedido_entregado",
                         "pedido_cancelado",
                         "pago_aprobado",

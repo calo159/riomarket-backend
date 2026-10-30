@@ -346,10 +346,10 @@ PEDIDOS = [
     # 2 confirmados
     ("SM-26", 5, "cocina", [(6, 1)], "confirmado", "domicilio", True, "simulado", True, None),
     ("SM-27", 6, "pescaderia", [(2, 1)], "confirmado", "retiro", True, "transferencia", True, None),
-    # 2 en preparación
-    ("SM-28", 7, "dulces", [(2, 3)], "en_preparacion", "retiro", True, "simulado", True, None),
+    # 1 en preparación y 1 listo para recoger (retiro pagado al recoger: efectivo sin cobrar)
+    ("SM-28", 7, "dulces", [(2, 3)], "listo_para_recoger", "retiro", True, "efectivo", False, None),
     ("SM-29", 8, "palenque", [(2, 1)], "en_preparacion", "retiro", True, "efectivo", True, None),
-    # 1 en camino
+    # 1 en camino (domicilio)
     ("SM-30", 9, "palenque", [(0, 1)], "en_camino", "domicilio", True, "simulado", True, None),
     # 4 pendientes (2 con pago pendiente, 2 sin pago)
     ("SM-22", 1, "frutas", [(3, 1)], "pendiente", "retiro", True, "simulado", False, None),
@@ -667,18 +667,26 @@ class Command(BaseCommand):
             )
 
     def _avanzar_estado(self, *, pedido, estado, vendedor, comprador):
+        """Recorre los estados válidos del tipo de entrega del pedido (ver ADR-009)."""
         if estado == "cancelado":
             orders_services.cancelar_pedido(pedido=pedido, usuario=comprador)
             return
-        if estado in ("confirmado", "en_preparacion", "en_camino", "entregado"):
+        es_retiro = pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        salida = "listo_para_recoger" if es_retiro else "en_camino"
+        if estado in ("confirmado", "en_preparacion", salida, "entregado"):
             orders_services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        if estado in ("en_preparacion", "en_camino", "entregado"):
+        if estado in ("en_preparacion", salida, "entregado"):
             orders_services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        if estado in ("en_camino", "entregado"):
-            orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
+        if estado in (salida, "entregado"):
+            if es_retiro:
+                orders_services.marcar_listo_para_recoger(pedido=pedido, usuario=vendedor)
+            else:
+                orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
         if estado == "entregado":
-            # Solo el comprador confirma la recepción (Fase 1 de RBAC).
-            orders_services.marcar_entregado(pedido=pedido, usuario=comprador)
+            # Domicilio: lo confirma el comprador. Retiro: el vendedor entrega y cobra en mano.
+            orders_services.marcar_entregado(
+                pedido=pedido, usuario=vendedor if es_retiro else comprador
+            )
 
     # ------------------------------------------------------------------
     # Reseñas

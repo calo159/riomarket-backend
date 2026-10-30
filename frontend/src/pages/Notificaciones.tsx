@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, CheckCircle2, CreditCard, Package, ShieldCheck, Truck } from 'lucide-react';
+import { Bell, CheckCheck, CheckCircle2, CreditCard, Package, ShieldCheck, Store, Truck } from 'lucide-react';
 import { listarNotificaciones, marcarLeida, marcarTodasLeidas } from '../api/notifications';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
@@ -55,6 +55,7 @@ export function Notificaciones() {
     if (tipo === 'pago_aprobado' || tipo === 'pago_rechazado') return <CreditCard className="h-5 w-5" />;
     if (tipo === 'verificacion') return <ShieldCheck className="h-5 w-5" />;
     if (tipo === 'pedido_en_camino') return <Truck className="h-5 w-5" />;
+    if (tipo === 'pedido_listo_para_recoger') return <Store className="h-5 w-5" />;
     if (tipo === 'pedido_entregado') return <CheckCircle2 className="h-5 w-5" />;
     return <Package className="h-5 w-5" />;
   };

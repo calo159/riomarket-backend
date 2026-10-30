@@ -253,10 +253,11 @@ En sandbox también puedes simular con `POST /api/payments/pagos/29/simular/`
 
 ## 7. Avanzar el pedido
 
-Confirmar exige un pago en estado `aprobado`.
+Confirmar exige un pago en estado `aprobado` (excepción: un retiro con pago en
+efectivo registrado se confirma sin cobrar; ver más abajo).
 
 ```bash
-# El vendedor confirma, prepara y lo marca en camino.
+# El vendedor confirma, prepara y lo marca en camino (domicilio).
 for accion in confirmar en-preparacion enviar; do
   curl -s -X POST "$BASE/api/orders/pedidos/31/$accion/" \
     -H "Authorization: Bearer $TOKEN_VEND" \
@@ -264,16 +265,41 @@ for accion in confirmar en-preparacion enviar; do
   echo
 done
 
-# Solo el comprador confirma la recepción.
+# Solo el comprador confirma la recepción de un domicilio.
 curl -s -X POST "$BASE/api/orders/pedidos/31/entregar/" \
   -H "Authorization: Bearer $TOKEN_COMP" \
   -H "Content-Type: application/json" -d '{}'
 ```
 
-Secuencia de `estado`: `pendiente ��' confirmado ��' en_preparacion ��' en_camino ��'
-entregado`. Si no llega, el comprador puede usar
+Secuencia de `estado` en un **domicilio**: `pendiente → confirmado →
+en_preparacion → en_camino → entregado`. Si no llega, el comprador puede usar
 `POST /api/orders/pedidos/31/no-recibido/` con `{"motivo": "..."}` (opcional); el
-pedido sigue en `en_camino` y el comprador aún puede confirmarlo después.
+pedido sigue en `en_camino` y el comprador aún puede confirmarlo después. El
+vendedor no puede entregar un domicilio (`403`).
+
+### Pedido de retiro: «listo para recoger» y pagar al recoger
+
+En un **retiro** nadie lleva el pedido, así que no pasa por `en_camino` ni admite
+`no-recibido` (`400`). La secuencia es `pendiente → confirmado → en_preparacion →
+listo_para_recoger → entregado`, y se confirma sin pago aprobado si el pago es en
+efectivo (se cobra al recoger):
+
+```bash
+# El comprador registra el pago en efectivo (queda pendiente).
+curl -s -X POST "$BASE/api/payments/pagos/" -H "Authorization: Bearer $TOKEN_COMP"   -H "Content-Type: application/json" -d '{"pedido": 32, "metodo_pago": "efectivo"}'
+
+# El vendedor confirma, prepara y avisa que está listo para recoger.
+for accion in confirmar en-preparacion listo-para-recoger; do
+  curl -s -X POST "$BASE/api/orders/pedidos/32/$accion/"     -H "Authorization: Bearer $TOKEN_VEND" -H "Content-Type: application/json" -d '{}'
+done
+
+# Al entregar en persona, el vendedor cobra: el pago pasa a `aprobado` en la misma operación.
+curl -s -X POST "$BASE/api/orders/pedidos/32/entregar/"   -H "Authorization: Bearer $TOKEN_VEND" -H "Content-Type: application/json" -d '{}'
+```
+
+Si el comprador intenta `entregar` mientras el efectivo sigue pendiente, la API
+responde `400` («el vendedor debe confirmar el cobro») y el pedido no cambia. Más
+detalle en [ADR-009](ADR-009-retiro-y-pago-al-recoger.md).
 
 ## 8. Formato de error
 

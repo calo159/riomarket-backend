@@ -1,4 +1,5 @@
 import { api } from '../lib/http';
+import { crearPago } from './payments';
 import type { Paginado, Pedido } from '../lib/types';
 
 interface FiltrosPedido {
@@ -37,10 +38,28 @@ export async function crearPedido(datos: DatosPedido): Promise<Pedido> {
   return data;
 }
 
+/**
+ * Crea el pedido y, si es de retiro, registra el pago en efectivo (se paga en el puesto al
+ * recoger). Si el pago falla, el pedido ya existe: se devuelve igual y en su detalle sigue
+ * disponible «Pagar pedido».
+ */
+export async function crearPedidoConPagoAlRecoger(datos: DatosPedido): Promise<Pedido> {
+  const pedido = await crearPedido(datos);
+  if (datos.tipo_entrega === 'retiro') {
+    try {
+      await crearPago({ pedido: pedido.id, metodo_pago: 'efectivo' });
+    } catch {
+      // El comprador podrá pagar desde el detalle del pedido.
+    }
+  }
+  return pedido;
+}
+
 export type AccionPedido =
   | 'confirmar'
   | 'en-preparacion'
   | 'enviar'
+  | 'listo-para-recoger'
   | 'entregar'
   | 'cancelar';
 

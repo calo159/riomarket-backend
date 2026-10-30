@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, ClipboardList, Package, Truck, XCircle } from 'lucide-react';
+import { ArrowRight, ClipboardList, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
 import { useSession } from '../../auth/SessionProvider';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -14,17 +14,9 @@ import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { ICONOS_SIGUIENTE, siguienteAccion } from '../pedido/siguienteAccion';
 
 const TAMANO = 12;
-
-const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono: typeof CheckCircle2 } | null> = {
-  pendiente: { accion: 'confirmar', etiqueta: 'Confirmar pedido', icono: CheckCircle2 },
-  confirmado: { accion: 'en-preparacion', etiqueta: 'Pasar a preparación', icono: Package },
-  en_preparacion: { accion: 'enviar', etiqueta: 'Entregado al domiciliario / listo', icono: Truck },
-  en_camino: null,
-  entregado: null,
-  cancelado: null,
-};
 
 export function PedidosVendedor() {
   const { usuario } = useSession();
@@ -60,7 +52,7 @@ export function PedidosVendedor() {
     <div>
       <EncabezadoPagina
         titulo="Pedidos"
-        descripcion="Confirma, prepara y entrega los pedidos. El comprador confirma la recepción final."
+        descripcion="Confirma, prepara y entrega los pedidos. En domicilio, el comprador confirma la recepción; en retiro, tú entregas y cobras en el puesto."
         acciones={
           <select
             className="input w-auto"
@@ -92,10 +84,9 @@ export function PedidosVendedor() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const siguiente = SIGUIENTE[pedido.estado];
-              const siguientePermitido = siguiente && pedido.acciones_permitidas?.includes(siguiente.accion) ? siguiente : null;
+              const siguientePermitido = siguienteAccion(pedido, 'vendedor');
               const puedeCancelar = pedido.acciones_permitidas?.includes('cancelar');
-              const Icono = siguientePermitido?.icono;
+              const Icono = siguientePermitido ? ICONOS_SIGUIENTE[siguientePermitido.icono] : null;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
@@ -109,6 +100,13 @@ export function PedidosVendedor() {
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length} {pedido.items.length === 1 ? 'producto' : 'productos'}
                     </p>
+                    {pedido.estado === 'listo_para_recoger' && (
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {pedido.acciones_permitidas?.includes('confirmar-pago')
+                          ? 'Esperando al cliente en el puesto. Entrega el pedido y cobra en efectivo.'
+                          : 'Esperando al cliente en el puesto. Entrega el pedido cuando llegue.'}
+                      </p>
+                    )}
                     {pedido.estado === 'en_camino' && (
                       <p className={`mt-1 text-xs ${pedido.no_recibido_en ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}>
                         {pedido.no_recibido_en

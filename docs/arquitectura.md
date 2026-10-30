@@ -261,9 +261,9 @@ administrador puede todo lo que aparece abajo.
 | Gestionar categorías | ⬜ | ⬜ | ⬜ | ⬜ | ✅ |
 | Crear pedido | ⬜ | ✅ | ⬜ | ⬜ | ⬜ |
 | Ver/listar pedidos | ⬜ | ✅ (suyos) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
-| Confirmar / preparar / enviar pedido | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |
-| Confirmar recepción (`entregado`) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
-| Reportar `no-recibido` (en camino) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
+| Confirmar / preparar / enviar (domicilio) / marcar listo para recoger (retiro) | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |
+| Confirmar recepción (`entregado`) | ⬜ | ✅ (suyo; en retiro con efectivo sin cobrar no) | ⬜ | ✅ (solo retiro: entrega y cobra) | ✅ |
+| Reportar `no-recibido` (domicilio en camino) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Cancelar pedido | ⬜ | ✅ (suyo) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
 | Registrar pago | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Simular pago (sandbox) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |

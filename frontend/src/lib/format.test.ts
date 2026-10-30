@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatearCalificacion, hoyBogota, OPCIONES_FILTRO_PEDIDO, ETIQUETAS_PEDIDO } from './format';
+import { colorEstado, etiquetaEstado, formatearCalificacion, hoyBogota, OPCIONES_FILTRO_PEDIDO, ETIQUETAS_PEDIDO } from './format';
 
 describe('hoyBogota', () => {
   afterEach(() => vi.useRealTimers());
@@ -28,5 +28,14 @@ describe('formatearCalificacion', () => {
 describe('OPCIONES_FILTRO_PEDIDO', () => {
   it('cubre todos los estados de pedido, en el mismo orden', () => {
     expect(OPCIONES_FILTRO_PEDIDO.map((o) => o.valor)).toEqual(Object.keys(ETIQUETAS_PEDIDO));
+  });
+});
+
+describe('estado listo para recoger', () => {
+  it('tiene etiqueta, opción de filtro y color propio', () => {
+    expect(etiquetaEstado('listo_para_recoger')).toBe('Listo para recoger');
+    expect(OPCIONES_FILTRO_PEDIDO.find((o) => o.valor === 'listo_para_recoger')?.etiqueta).toBe('Listos para recoger');
+    expect(colorEstado('listo_para_recoger')).not.toBe(colorEstado('en_camino'));
+    expect(colorEstado('listo_para_recoger')).toContain('teal');
   });
 });

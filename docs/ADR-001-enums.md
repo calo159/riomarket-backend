@@ -44,3 +44,11 @@ El campo `password_hash` del modelo lógico se implementa con el campo
 `password` de `AbstractBaseUser`: ahí Django almacena el hash PBKDF2 (nunca
 texto plano). Renombrarlo rompería `set_password`/`check_password`, el admin
 y `django.contrib.auth`. Se documenta como equivalente 1:1.
+
+## Nota: estado `listo_para_recoger` (ADR-009)
+
+El `choices` y el `CheckConstraint` de `Pedido.estado` incluyen `listo_para_recoger`
+(sustituye a `en_camino` en los pedidos de retiro). Es el ejemplo de la ventaja
+elegida: agregar un valor fue una migración normal (más una migración de datos
+reversible), sin `ALTER TYPE`. El campo pasó de 15 a 20 caracteres. Ver
+[ADR-009](ADR-009-retiro-y-pago-al-recoger.md).

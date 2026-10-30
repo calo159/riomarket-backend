@@ -25,12 +25,15 @@ usuarios: `RioMarket2026!`.
    filtros y un producto de un puesto.
 2. **Compra como Luis** (1 min): login, agregar al carrito, checkout con retiro y
    cupón si aplica, crear pedido.
-3. **Pago sandbox** (1 min): registrar pago, aprobarlo desde el detalle y mostrar
-   los montos calculados por el backend (subtotal, domicilio, comisión y neto).
+3. **Pago al recoger** (1 min): al elegir retiro el checkout deja el pago en
+   efectivo registrado («Pagas en el puesto al recoger»). Para un domicilio,
+   registrar el pago sandbox y mostrar los montos calculados por el backend
+   (subtotal, domicilio, comisión y neto).
 4. **Vendedor** (1 min): login como Carmen, confirmar el pedido, pasarlo a
-   preparación y marcarlo en camino (no puede entregarlo). Volver como Luis
-   para confirmar la recepción o reportar que no llegó. Mostrar que sin pago
-   aprobado no confirma.
+   preparación y marcarlo «listo para recoger»; al llegar el cliente,
+   «Entregar y cobrar» (el pago pasa a aprobado). En un domicilio se marca en
+   camino y solo el comprador confirma la recepción (o reporta que no llegó).
+   Mostrar que un domicilio sin pago aprobado no se confirma.
 5. **Administrador** (1 min): login como admin, revisar una verificación, el
    listado global de pagos y un registro de auditoría.
 6. **Cierre** (30 s): recordar que la API es la autoridad, el frontend solo oculta

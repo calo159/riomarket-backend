@@ -32,7 +32,10 @@ def _flujo_entregado(pedido, comprador, vendedor):
     pagos_services.simular_pago(pago=pago, usuario=comprador, datos={"accion": "aprobar"})
     orders_services.confirmar_pedido(pedido=pedido, usuario=vendedor)
     orders_services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-    orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
+    if pedido.tipo_entrega == pedido.TipoEntrega.RETIRO:
+        orders_services.marcar_listo_para_recoger(pedido=pedido, usuario=vendedor)
+    else:
+        orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
     orders_services.marcar_entregado(pedido=pedido, usuario=comprador)
     return pedido
 

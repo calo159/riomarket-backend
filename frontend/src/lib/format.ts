@@ -52,6 +52,7 @@ export const ETIQUETAS_PEDIDO: Record<string, string> = {
   confirmado: 'Confirmado',
   en_preparacion: 'En preparación',
   en_camino: 'En camino',
+  listo_para_recoger: 'Listo para recoger',
   entregado: 'Entregado',
   cancelado: 'Cancelado',
 };
@@ -62,6 +63,7 @@ export const OPCIONES_FILTRO_PEDIDO: { valor: string; etiqueta: string }[] = [
   { valor: 'confirmado', etiqueta: 'Confirmados' },
   { valor: 'en_preparacion', etiqueta: 'En preparación' },
   { valor: 'en_camino', etiqueta: 'En camino' },
+  { valor: 'listo_para_recoger', etiqueta: 'Listos para recoger' },
   { valor: 'entregado', etiqueta: 'Entregados' },
   { valor: 'cancelado', etiqueta: 'Cancelados' },
 ];
@@ -105,6 +107,8 @@ export function colorEstado(estado: string | null | undefined): string {
     case 'confirmado':
     case 'en_preparacion':
       return 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300';
+    case 'listo_para_recoger':
+      return 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300';
     case 'en_camino':
       return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300';
     case 'cancelado':

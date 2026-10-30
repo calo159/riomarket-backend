@@ -18,6 +18,7 @@ def _pedido_en_camino(comprador, puesto, **extra):
     return PedidoFactory(
         id_comprador=comprador,
         id_puesto=puesto,
+        tipo_entrega=Pedido.TipoEntrega.DOMICILIO,
         estado=Pedido.Estado.EN_CAMINO,
         **extra,
     )

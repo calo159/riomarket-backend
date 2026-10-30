@@ -116,4 +116,77 @@ describe('PedidoDetalle: los botones de pago salen de acciones_permitidas', () =
     await screen.findByText(/Pedido #9/);
     expect(screen.queryByRole('button', { name: /Pagar pedido/ })).not.toBeInTheDocument();
   });
+
+  describe('retiro en el puesto', () => {
+    const LISTO = { ...PEDIDO, estado: 'listo_para_recoger', tipo_entrega: 'retiro' };
+
+    it('el vendedor ve «Entregar y cobrar» con efectivo sin cobrar', async () => {
+      mocks.sesion.usuario = { id: 1, rol: 'vendedor' };
+      mocks.sesion.rol = 'vendedor';
+      mocks.obtenerPedido.mockResolvedValue({ ...LISTO, acciones_permitidas: ['entregar', 'cancelar', 'confirmar-pago'] });
+      renderizar();
+      expect(await screen.findByRole('button', { name: /Entregar y cobrar/ })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /No me ha llegado/ })).not.toBeInTheDocument();
+    });
+
+    it('el vendedor ve «Marcar entregado» si el pago ya está cobrado', async () => {
+      mocks.sesion.usuario = { id: 1, rol: 'vendedor' };
+      mocks.sesion.rol = 'vendedor';
+      mocks.listarPagos.mockResolvedValue({
+        count: 1,
+        next: null,
+        previous: null,
+        results: [{ ...PAGO_EFECTIVO, estado: 'aprobado' }],
+      });
+      mocks.obtenerPedido.mockResolvedValue({ ...LISTO, acciones_permitidas: ['entregar', 'cancelar'] });
+      renderizar();
+      expect(await screen.findByRole('button', { name: /Marcar entregado/ })).toBeInTheDocument();
+    });
+
+    it('el comprador ve «Ya recogí mi pedido» y nunca «No me ha llegado»', async () => {
+      mocks.sesion.usuario = { id: 2, rol: 'comprador' };
+      mocks.sesion.rol = 'comprador';
+      mocks.obtenerPedido.mockResolvedValue({ ...LISTO, acciones_permitidas: ['entregar', 'cancelar'] });
+      renderizar();
+      expect(await screen.findByRole('button', { name: /Ya recogí mi pedido/ })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /No me ha llegado/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Ya recibí/ })).not.toBeInTheDocument();
+    });
+
+    it('con efectivo pendiente el comprador no ve botón de entrega y lee «Pagas ahí»', async () => {
+      mocks.sesion.usuario = { id: 2, rol: 'comprador' };
+      mocks.sesion.rol = 'comprador';
+      mocks.obtenerPedido.mockResolvedValue({ ...PEDIDO, estado: 'en_preparacion', acciones_permitidas: ['cancelar'] });
+      renderizar();
+      expect(await screen.findByText('Pasa por el puesto cuando esté listo. Pagas ahí.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Ya recogí/ })).not.toBeInTheDocument();
+    });
+
+    it('los pasos del seguimiento son los del retiro', async () => {
+      mocks.sesion.usuario = { id: 2, rol: 'comprador' };
+      mocks.sesion.rol = 'comprador';
+      mocks.obtenerPedido.mockResolvedValue({ ...LISTO, acciones_permitidas: [] });
+      renderizar();
+      const pasos = await screen.findByRole('list', { name: 'Estado del pedido' });
+      expect(pasos).toHaveTextContent('Listo para recoger');
+      expect(pasos).not.toHaveTextContent('En camino');
+    });
+  });
+
+  describe('domicilio', () => {
+    it('el comprador ve «Ya recibí mi pedido» y «No me ha llegado»', async () => {
+      mocks.sesion.usuario = { id: 2, rol: 'comprador' };
+      mocks.sesion.rol = 'comprador';
+      mocks.obtenerPedido.mockResolvedValue({
+        ...PEDIDO,
+        estado: 'en_camino',
+        tipo_entrega: 'domicilio',
+        acciones_permitidas: ['entregar', 'no-recibido'],
+      });
+      renderizar();
+      expect(await screen.findByRole('button', { name: /Ya recibí mi pedido/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /No me ha llegado/ })).toBeInTheDocument();
+      expect(screen.getByRole('list', { name: 'Estado del pedido' })).toHaveTextContent('En camino');
+    });
+  });
 });

@@ -96,8 +96,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         description=(
-            "El vendedor marca que entregó el pedido al domiciliario o que está "
-            "listo para retirar (en_preparacion → en_camino)."
+            "El vendedor marca que entregó el pedido a domicilio al repartidor "
+            "(en_preparacion → en_camino). Solo pedidos a domicilio."
         ),
         responses=PedidoSerializer,
     )
@@ -108,21 +108,36 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         description=(
-            "El comprador confirma que recibió el pedido (en_camino → entregado). "
-            "El vendedor no puede marcar entregado; el administrador solo para resolver disputas."
+            "El vendedor avisa que el pedido de retiro está listo para recoger "
+            "(en_preparacion → listo_para_recoger). Solo pedidos de retiro."
+        ),
+        responses=PedidoSerializer,
+    )
+    @action(detail=True, methods=["post"], url_path="listo-para-recoger")
+    def listo_para_recoger(self, request, pk=None):
+        """``POST /pedidos/{id}/listo-para-recoger/`` (vendedor dueño o administrador)."""
+        return self._ejecutar_transicion(request, services.marcar_listo_para_recoger)
+
+    @extend_schema(
+        description=(
+            "Cierra la entrega. Domicilio: el comprador confirma que lo recibió "
+            "(en_camino → entregado); el vendedor no puede. Retiro: desde "
+            "listo_para_recoger puede el vendedor del puesto, el comprador o el "
+            "administrador; si el pago es en efectivo y sigue pendiente, solo el vendedor o "
+            "el administrador (cobran en mano y el pago pasa a aprobado)."
         ),
         responses=PedidoSerializer,
     )
     @action(detail=True, methods=["post"])
     def entregar(self, request, pk=None):
-        """``POST /pedidos/{id}/entregar/`` (comprador del pedido o administrador)."""
+        """``POST /pedidos/{id}/entregar/`` (comprador, administrador o vendedor en retiro)."""
         return self._ejecutar_transicion(request, services.marcar_entregado)
 
     @extend_schema(
         request=ReportarNoRecibidoSerializer,
         description=(
-            "El comprador reporta que no recibió el pedido en camino. No cambia el "
-            "estado, notifica al vendedor y solo se permite una vez."
+            "El comprador reporta que no recibió el pedido a domicilio en camino. No cambia "
+            "el estado, notifica al vendedor y solo se permite una vez. No aplica a retiros."
         ),
         responses=PedidoSerializer,
     )

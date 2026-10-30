@@ -60,7 +60,7 @@ export function PagosPedido({
               Total cobrado: <strong>{formatearMoneda(pago.total_cobrado)}</strong>
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {sandbox && puedeSimular && ['pendiente', 'procesando'].includes(pago.estado) && (
+              {sandbox && puedeSimular && pago.metodo_pago === 'simulado' && ['pendiente', 'procesando'].includes(pago.estado) && (
                 <>
                   <button
                     type="button"

@@ -139,10 +139,14 @@ credenciales de comprador, vendedor y administrador.
 1. El comprador arma el carrito. Solo admite productos de un puesto.
 2. En el checkout elige retiro o domicilio, una dirección guardada o una
    dirección manual, notas y un cupón opcional.
-3. Al crear el pedido se abre el detalle para registrar el pago.
-4. El vendedor confirma el pedido (el backend exige pago aprobado), lo pasa a
-   preparación y lo entrega al domiciliario (en camino). El comprador confirma
-   «Ya recibí mi pedido»; si no llega, reporta «No me ha llegado».
+3. Al crear el pedido se abre el detalle: en domicilio, para registrar el pago; en
+   retiro el checkout ya deja el pago en efectivo registrado («Pagas en el puesto
+   al recoger»).
+4. El vendedor confirma el pedido (el backend exige pago aprobado; un retiro con
+   efectivo se confirma sin cobrar) y lo pasa a preparación. En domicilio lo
+   entrega al domiciliario (en camino) y el comprador confirma «Ya recibí mi
+   pedido»; si no llega, reporta «No me ha llegado». En retiro lo marca «Listo
+   para recoger» y, cuando el cliente llega, pulsa «Entregar y cobrar».
 5. El administrador puede resolver la disputa marcando el pedido como entregado.
 6. El comprador puede reseñar el pedido entregado.
 7. Los pagos en efectivo los confirma el vendedor; los sandbox se aprueban o

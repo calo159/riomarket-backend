@@ -116,10 +116,28 @@ class TestSeedMasivo:
             "confirmado",
             "en_preparacion",
             "en_camino",
+            "listo_para_recoger",
             "entregado",
             "cancelado",
         }
         assert Pedido.objects.filter(estado="entregado").count() >= 15
+
+    def test_el_seed_respeta_el_flujo_por_tipo_de_entrega(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        # Nadie lleva un retiro: jamás «en camino»; y el domicilio no se «recoge».
+        assert not Pedido.objects.filter(tipo_entrega="retiro", estado="en_camino").exists()
+        assert not Pedido.objects.filter(
+            tipo_entrega="domicilio", estado="listo_para_recoger"
+        ).exists()
+        assert Pedido.objects.filter(tipo_entrega="retiro", estado="listo_para_recoger").exists()
+        assert Pedido.objects.filter(tipo_entrega="domicilio", estado="en_camino").exists()
+
+    def test_retiro_en_efectivo_se_paga_al_recoger(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        pedido = Pedido.objects.get(notas__startswith="[SM-28]")
+        assert pedido.estado == "listo_para_recoger"
+        assert pedido.pago.metodo_pago == "efectivo"
+        assert pedido.pago.estado == "pendiente"
 
     def test_pagos_en_varios_estados(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")

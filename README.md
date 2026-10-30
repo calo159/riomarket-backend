@@ -50,22 +50,27 @@ flowchart LR
 
 ### Flujo de un pedido
 
+Los pedidos de **domicilio** y de **retiro en el puesto** siguen caminos distintos (ver [ADR-009](docs/ADR-009-retiro-y-pago-al-recoger.md)):
+
 ```mermaid
 stateDiagram-v2
     [*] --> pendiente
-    pendiente --> confirmado: pago aprobado
+    pendiente --> confirmado: vendedor (pago aprobado; en retiro basta efectivo registrado)
     pendiente --> cancelado
     confirmado --> en_preparacion
     confirmado --> cancelado
-    en_preparacion --> en_camino: vendedor entrega al domiciliario / listo
+    en_preparacion --> en_camino: domicilio, vendedor entrega al domiciliario
+    en_preparacion --> listo_para_recoger: retiro, vendedor avisa
     en_preparacion --> cancelado
-    en_camino --> entregado: comprador confirma recepción
-    en_camino --> en_camino: comprador reporta no-recibido
+    en_camino --> entregado: domicilio, comprador confirma recepción
+    en_camino --> en_camino: comprador reporta no-recibido (solo domicilio)
+    listo_para_recoger --> entregado: retiro, vendedor entrega y cobra (o comprador/admin)
+    listo_para_recoger --> cancelado
     entregado --> [*]
     cancelado --> [*]
 ```
 
-El vendedor confirma, prepara y marca el pedido como en camino (entregado al domiciliario o listo para retirar). Solo el comprador confirma que lo recibió; si no le llega, puede reportarlo y el administrador resuelve la disputa. Cualquiera de las partes puede cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
+El vendedor confirma y prepara el pedido. En **domicilio** lo marca en camino y solo el comprador confirma que lo recibió (si no le llega, puede reportarlo y el administrador resuelve la disputa). En **retiro** nadie lo lleva: el vendedor lo marca «listo para recoger» y, cuando el cliente pasa por el puesto, lo entrega y cobra en mano (el comprador y el administrador también pueden cerrar la entrega, pero un efectivo sin cobrar solo lo cierra el vendedor o el administrador).  Cualquiera de las partes puede cancelar mientras el pedido no haya salido del puesto. Al cancelar se repone el stock y se reembolsa o anula el pago. El comprador paga `subtotal + domicilio - descuento` y la comisión de la plataforma se descuenta al vendedor.
 
 ## Stack
 
@@ -133,7 +138,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
+`seed_masivo` es idempotente y, en una base limpia, crea **503 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 30 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar), 28 pagos, 124 notificaciones y 171 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
@@ -141,8 +146,8 @@ Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corres
 
 1. Entra como **comprador** (`luis@riomarket.test`), busca un producto y agrégalo al carrito.
 2. Haz el checkout eligiendo retiro o domicilio y paga (efectivo o simulado).
-3. Entra como **vendedor** (`carmen@riomarket.test`), confirma el pago en efectivo y avanza el pedido: confirmado, en preparación, en camino.
-4. Vuelve como comprador: si no llegó, usa "No me ha llegado"; cuando lo recibas confirma "Ya recibí mi pedido" y deja una reseña.
+3. Entra como **vendedor** (`carmen@riomarket.test`), confirma el pedido (en retiro basta el pago en efectivo registrado: se cobra al recoger) y avánzalo: confirmado, en preparación y listo para recoger (en domicilio, en camino); en retiro, «Entregar y cobrar».
+4. Vuelve como comprador: en domicilio, si no llegó usa "No me ha llegado" y, cuando lo recibas, confirma "Ya recibí mi pedido"; en retiro el vendedor te entrega y cobra en el puesto. Después deja una reseña.
 5. Entra como **administrador** (`admin@riomarket.test`) y revisa el resumen, usuarios, pedidos, pagos y auditoría.
 
 ## Configuración
@@ -183,9 +188,9 @@ Cada pedido incluye `acciones_permitidas` (RBAC × estado) y el frontend solo pi
 | --- | --- | --- | --- |
 | Crear | Sí | No | No |
 | Editar / cancelar | Sí (mientras no salga) | Sí (mientras no salga) | Sí |
-| Confirmar / preparación / enviar | No | Sí | Sí |
-| Entregar | Sí (confirma recepción) | No | Sí (resuelve disputas) |
-| Reportar "no me llegó" | Sí (en camino, una vez) | No | No |
+| Confirmar / preparación / enviar (domicilio) / marcar listo para recoger (retiro) | No | Sí | Sí |
+| Entregar | Sí (confirma recepción; en retiro con efectivo sin cobrar, no) | Solo en retiro (entrega y cobra) | Sí (resuelve disputas) |
+| Reportar "no me llegó" | Sí (solo domicilio en camino, una vez) | No | No |
 
 El flujo completo con `curl` y respuestas reales está en [`docs/api-ejemplos.md`](docs/api-ejemplos.md); la demo de 6 pasos, en [`entrega/flujo_prueba.curl.md`](entrega/flujo_prueba.curl.md).
 
@@ -283,12 +288,15 @@ stateDiagram-v2
     [*] --> pendiente: comprador crea
     pendiente --> confirmado: vendedor
     confirmado --> en_preparacion: vendedor
-    en_preparacion --> en_camino: vendedor ("ya lo entregué al domiciliario / lo vinieron a buscar")
-    en_camino --> entregado: comprador (o administrador en disputas)
-    en_camino --> en_camino: comprador reporta "no me ha llegado" (una vez, no cambia el estado)
+    en_preparacion --> en_camino: vendedor, solo domicilio ("ya lo entregué al domiciliario")
+    en_preparacion --> listo_para_recoger: vendedor, solo retiro
+    en_camino --> entregado: comprador (o administrador en disputas), solo domicilio
+    listo_para_recoger --> entregado: vendedor del puesto, comprador o administrador (retiro)
+    en_camino --> en_camino: comprador reporta "no me ha llegado" (solo domicilio, una vez, no cambia el estado)
     pendiente --> cancelado: comprador / vendedor / administrador
     confirmado --> cancelado: comprador / vendedor / administrador
     en_preparacion --> cancelado: comprador / vendedor / administrador
+    listo_para_recoger --> cancelado: comprador / vendedor / administrador (solo retiro)
 ```
 
 ### Endpoints
@@ -359,9 +367,10 @@ esta matriz combinada con el estado actual.
 | Editar dirección/notas (pendiente) | ✅ | — | ✅ |
 | Confirmar pedido | — | ✅ | ✅ |
 | Pasar a preparación | — | ✅ | ✅ |
-| Marcar en camino / listo para retirar | — | ✅ | ✅ |
-| Confirmar recepción (`entregado`) | ✅ | — | ✅ |
-| Reportar `no-recibido` (en camino) | ✅ | — | ✅ |
+| Marcar en camino (domicilio) | — | ✅ | ✅ |
+| Marcar listo para recoger (retiro) | — | ✅ | ✅ |
+| Confirmar recepción (`entregado`) | ✅ (en retiro con efectivo sin cobrar, no) | ✅ (solo retiro; cobra el efectivo) | ✅ |
+| Reportar `no-recibido` (domicilio en camino) | ✅ | — | ✅ |
 | Cancelar | ✅ | ✅ | ✅ |
 
 ## Pruebas

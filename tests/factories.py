@@ -126,6 +126,12 @@ class PedidoFactory(factory.django.DjangoModelFactory):
     id_comprador = factory.SubFactory(UsuarioFactory)
     id_puesto = factory.SubFactory(PuestoFactory)
     tipo_entrega = Pedido.TipoEntrega.RETIRO
+    # Un domicilio exige dirección (CHECK en la base): se rellena sola.
+    direccion_entrega = factory.LazyAttribute(
+        lambda pedido: (
+            "Calle 15 #7-42" if pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO else ""
+        )
+    )
     estado = Pedido.Estado.PENDIENTE
     subtotal = Decimal("0.00")
     tarifa_domicilio = Decimal("0.00")

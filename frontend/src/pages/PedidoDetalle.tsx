@@ -128,6 +128,18 @@ export function PedidoDetalle() {
   const puedeEntregar = permitidas.includes('entregar');
   const puedeReportar = permitidas.includes('no-recibido') && !datos.no_recibido_en;
   const puedeConfirmarEfectivo = permitidas.includes('confirmar-pago');
+  const esRetiro = datos.tipo_entrega === 'retiro';
+  // Retiro con efectivo sin cobrar: quien entrega (vendedor o admin) también cobra en mano.
+  const entregaCobrando = esRetiro && puedeEntregar && puedeConfirmarEfectivo;
+  const efectivoPendiente =
+    pagoVigente?.metodo_pago === 'efectivo' && ['pendiente', 'procesando'].includes(pagoVigente.estado);
+  const etiquetaEntregar = esComprador
+    ? esRetiro
+      ? 'Ya recogí mi pedido'
+      : 'Ya recibí mi pedido'
+    : entregaCobrando
+      ? 'Entregar y cobrar'
+      : 'Marcar entregado';
 
   return (
     <div className="mx-auto max-w-[1240px] px-3 py-5 sm:px-5">
@@ -135,7 +147,7 @@ export function PedidoDetalle() {
         <ArrowLeft className="h-4 w-4" /> Volver
       </Link>
 
-      <AvisosPedido datos={datos} esNuevo={esNuevo} esComprador={esComprador} />
+      <AvisosPedido datos={datos} esNuevo={esNuevo} esComprador={esComprador} efectivoPendiente={efectivoPendiente} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -155,7 +167,7 @@ export function PedidoDetalle() {
           )}
           {puedeEntregar && (
             <button type="button" className="btn-primary" onClick={() => setConfirmarEntregar(true)}>
-              <CheckCircle2 className="h-4 w-4" /> {esComprador ? 'Ya recibí mi pedido' : 'Marcar entregado'}
+              <CheckCircle2 className="h-4 w-4" /> {etiquetaEntregar}
             </button>
           )}
           {puedeReportar && (
@@ -175,7 +187,7 @@ export function PedidoDetalle() {
         </div>
       </div>
 
-      <PasosPedido estado={datos.estado} />
+      <PasosPedido estado={datos.estado} tipoEntrega={datos.tipo_entrega} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-5">
@@ -213,9 +225,25 @@ export function PedidoDetalle() {
 
       <ConfirmarModal
         abierto={confirmarEntregar}
-        titulo={esComprador ? '¿Ya recibiste tu pedido?' : '¿Marcar el pedido como entregado?'}
-        descripcion={esComprador ? 'Confirma solo si ya tienes el pedido en tus manos. Después podrás calificar el puesto.' : 'Como administrador, usa esta acción para resolver una disputa cuando el comprador no puede confirmar.'}
-        textoConfirmar={esComprador ? 'Sí, lo recibí' : 'Sí, fue entregado'}
+        titulo={
+          esComprador
+            ? esRetiro
+              ? '¿Ya recogiste tu pedido?'
+              : '¿Ya recibiste tu pedido?'
+            : entregaCobrando
+              ? '¿Entregar el pedido y cobrar?'
+              : '¿Marcar el pedido como entregado?'
+        }
+        descripcion={
+          esComprador
+            ? 'Confirma solo si ya tienes el pedido en tus manos. Después podrás calificar el puesto.'
+            : entregaCobrando
+              ? 'Confirmas que entregaste el pedido y que cobraste el efectivo. El pago quedará aprobado.'
+              : esRetiro
+                ? 'Confirmas que el cliente ya recogió su pedido en el puesto.'
+                : 'Como administrador, usa esta acción para resolver una disputa cuando el comprador no puede confirmar.'
+        }
+        textoConfirmar={esComprador ? (esRetiro ? 'Sí, lo recogí' : 'Sí, lo recibí') : entregaCobrando ? 'Sí, entregar y cobrar' : 'Sí, fue entregado'}
         peligro={false}
         cargando={accion.isPending}
         onConfirmar={() => accion.mutate('entregar')}
@@ -235,6 +263,7 @@ export function PedidoDetalle() {
         pedidoId={Number(id)}
         onExito={invalidar}
         total={datos.total}
+        tipoEntrega={datos.tipo_entrega}
       />
     </div>
   );

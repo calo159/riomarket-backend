@@ -35,10 +35,12 @@ _PLANTILLAS = {
     "en_camino": (
         Notificacion.Tipo.PEDIDO_EN_CAMINO,
         "Pedido en camino",
-        (
-            "Tu pedido #{pedido} va en camino o está listo para retirar. "
-            "Cuando lo recibas, confírmalo en la app."
-        ),
+        "Tu pedido #{pedido} va en camino. Cuando lo recibas, confírmalo en la app.",
+    ),
+    "listo_para_recoger": (
+        Notificacion.Tipo.PEDIDO_LISTO_PARA_RECOGER,
+        "Pedido listo para recoger",
+        "Tu pedido #{pedido} está listo para recoger en {puesto}.",
     ),
     "entregado": (
         Notificacion.Tipo.PEDIDO_ENTREGADO,
@@ -105,7 +107,7 @@ def notificar_cambio_estado_pedido(*, pedido, estado_anterior):
             usuario=usuario,
             tipo=tipo,
             titulo=titulo,
-            mensaje=cuerpo.format(pedido=pedido.pk),
+            mensaje=cuerpo.format(pedido=pedido.pk, puesto=pedido.id_puesto.nombre),
             id_pedido=pedido,
         )
         for usuario in _destinatarios(pedido)
