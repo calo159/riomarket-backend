@@ -89,6 +89,23 @@ class PagoViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @extend_schema(
+        description=(
+            "Pagos aprobados visibles para el vendedor (o todos, si es administrador) y el "
+            "neto total que recibe: lo que muestra el panel del vendedor."
+        ),
+        responses=inline_serializer(
+            "ResumenIngresos",
+            {
+                "pagos_aprobados": drf_serializers.IntegerField(),
+                "ingresos_aprobados": drf_serializers.CharField(help_text="Decimal con 2 cifras"),
+            },
+        ),
+    )
+    @action(detail=False, methods=["get"], url_path="resumen")
+    def resumen(self, request):
+        return Response(services.resumen_ingresos(request.user))
+
+    @extend_schema(
         description="Registra el pago de un pedido pendiente (no lo aprueba).",
         request=CrearPagoSerializer,
         responses={status.HTTP_201_CREATED: PagoSerializer},

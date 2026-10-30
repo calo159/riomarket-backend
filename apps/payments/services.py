@@ -16,7 +16,8 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Count, DecimalField, F, QuerySet, Sum, Value
+from django.db.models.functions import Greatest
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
@@ -370,6 +371,28 @@ def visibles_pagos(usuario: Usuario, qs: QuerySet[Pago], params: dict) -> QueryS
     if usuario.es_vendedor:
         return qs.filter(id_pedido__id_puesto__id_vendedor_id=usuario.pk)
     return qs.filter(id_pedido__id_comprador_id=usuario.pk)
+
+
+def resumen_ingresos(usuario: Usuario) -> dict:
+    """Pagos aprobados visibles para el usuario y lo que recibe el vendedor (neto) en total.
+
+    Solo vendedores y administradores: el neto no tiene sentido para el comprador. Calcula en
+    la base de datos lo mismo que ``Pago.neto_vendedor`` (subtotal - comisión - descuento, sin
+    bajar de 0) y sin el tope de paginación del listado.
+    """
+    if not (usuario and usuario.is_active and (usuario.es_administrador or usuario.es_vendedor)):
+        raise PermissionDenied("Solo vendedores y administradores ven el resumen de ingresos.")
+    aprobados = visibles_pagos(usuario, Pago.objects.all(), {}).filter(estado=Pago.Estado.APROBADO)
+    neto = Greatest(
+        F("subtotal_pedido") - F("comision_plataforma") - F("descuento_aplicado"),
+        Value(Decimal("0.00")),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
+    datos = aprobados.aggregate(cantidad=Count("pk"), ingresos=Sum(neto))
+    return {
+        "pagos_aprobados": datos["cantidad"],
+        "ingresos_aprobados": str((datos["ingresos"] or Decimal("0.00")).quantize(Decimal("0.01"))),
+    }
 
 
 def filtrar_pagos(qs: QuerySet[Pago], params: dict) -> QuerySet[Pago]:
