@@ -17,7 +17,8 @@ from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q, Sum
+from django.db.models import Count, OuterRef, Prefetch, Q, Subquery, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
@@ -257,6 +258,14 @@ def filtrar_usuarios(queryset, params):
     return queryset
 
 
+def _contar_pedidos_del_usuario(activos: bool = False):
+    pedidos = Pedido.objects.filter(id_comprador=OuterRef("pk"))
+    if activos:
+        pedidos = pedidos.exclude(estado__in=Pedido.ESTADOS_FINALES)
+    cuenta = pedidos.order_by().values("id_comprador").annotate(total=Count("pk")).values("total")
+    return Coalesce(Subquery(cuenta), 0)
+
+
 def usuarios_con_metricas():
     return (
         Usuario.objects.select_related("vendedor")
@@ -268,12 +277,9 @@ def usuarios_con_metricas():
             ),
         )
         .annotate(
-            total_pedidos_comprador=Count("pedidos", distinct=True),
-            pedidos_activos_count=Count(
-                "pedidos",
-                filter=~Q(pedidos__estado__in=Pedido.ESTADOS_FINALES),
-                distinct=True,
-            ),
+            # Subconsultas: el COUNT de la paginación no hace join con todos los pedidos.
+            total_pedidos_comprador=_contar_pedidos_del_usuario(),
+            pedidos_activos_count=_contar_pedidos_del_usuario(activos=True),
         )
         .order_by("-fecha_registro", "-id")
     )

@@ -467,14 +467,14 @@ def filtrar_puestos(queryset: QuerySet, params) -> QuerySet:
         )
     categoria = parametro_entero(params, "categoria")
     if categoria:
-        queryset = queryset.filter(categorias_asignadas__id_categoria=categoria)
+        queryset = queryset.filter(categorias_asignadas__id_categoria=categoria).distinct()
     vendedor = parametro_entero(params, "vendedor")
     if vendedor:
         queryset = queryset.filter(id_vendedor=vendedor)
     domicilio = parametro_booleano(params, "domicilio")
     if domicilio is not None:
         queryset = queryset.filter(ofrece_domicilio=domicilio)
-    return queryset.distinct()
+    return queryset
 
 
 def filtrar_productos(queryset: QuerySet, params) -> QuerySet:

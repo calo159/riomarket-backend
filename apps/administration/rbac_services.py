@@ -8,8 +8,8 @@ los recursos de un rol que él mismo tiene.
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count
-from django.db.models.functions import Lower
+from django.db.models import Count, OuterRef, Subquery
+from django.db.models.functions import Coalesce, Lower
 
 from apps.audit.models import RegistroAuditoria
 from apps.audit.services import registrar
@@ -30,9 +30,19 @@ def _auditar(actor, accion, entidad, pk, **detalle) -> None:
 # Roles
 # ----------------------------------------------------------------------
 def roles_con_conteos():
+    def _contar(modelo):
+        cuenta = (
+            modelo.objects.filter(id_rol=OuterRef("pk"))
+            .order_by()
+            .values("id_rol")
+            .annotate(total=Count("pk"))
+            .values("total")
+        )
+        return Coalesce(Subquery(cuenta), 0)
+
+    # Dos joins con Count multiplican las filas (usuarios x recursos): subconsultas no.
     return Rol.objects.annotate(
-        total_usuarios=Count("asignaciones", distinct=True),
-        total_recursos=Count("vinculos", distinct=True),
+        total_usuarios=_contar(UsuarioRol), total_recursos=_contar(RolRecurso)
     ).prefetch_related("vinculos")
 
 

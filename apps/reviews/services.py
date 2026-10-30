@@ -7,7 +7,8 @@
 """
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Avg, Count, Q, QuerySet
+from django.db.models import Avg, Count, OuterRef, QuerySet, Subquery
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
@@ -168,9 +169,19 @@ def filtrar_resenas(qs: QuerySet[Resena], params) -> QuerySet[Resena]:
 
 
 def anotar_reputacion(qs: QuerySet[Puesto]) -> QuerySet[Puesto]:
-    """Añade ``calificacion_promedio`` y ``cantidad_resenas`` (solo visibles)."""
-    visibles = Q(resenas__visible=True)
+    """Añade ``calificacion_promedio`` y ``cantidad_resenas`` (solo visibles).
+
+    Son subconsultas (no ``Count`` con join): así el ``COUNT`` de la paginación no
+    arrastra la tabla de reseñas ni obliga a agrupar por todas las columnas del puesto.
+    """
+    visibles = (
+        Resena.objects.filter(id_puesto=OuterRef("pk"), visible=True).order_by().values("id_puesto")
+    )
     return qs.annotate(
-        calificacion_promedio=Avg("resenas__calificacion", filter=visibles),
-        cantidad_resenas=Count("resenas", filter=visibles, distinct=True),
+        calificacion_promedio=Subquery(
+            visibles.annotate(valor=Avg("calificacion")).values("valor")
+        ),
+        cantidad_resenas=Coalesce(
+            Subquery(visibles.annotate(total=Count("pk")).values("total")), 0
+        ),
     )

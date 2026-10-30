@@ -443,7 +443,11 @@ def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     if usuario.is_authenticated and tiene_recurso(usuario, "admin.pedidos"):
         pass
     elif usuario.is_authenticated:
-        queryset = queryset.filter(Q(id_comprador=usuario) | Q(id_puesto__id_vendedor=usuario))
+        # Subconsulta en vez de OR sobre un join: permite usar los índices de las FK.
+        queryset = queryset.filter(
+            Q(id_comprador=usuario)
+            | Q(id_puesto__in=Puesto.objects.filter(id_vendedor=usuario).values("pk"))
+        )
     else:
         queryset = queryset.none()
 
