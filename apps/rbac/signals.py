@@ -1,11 +1,12 @@
 """Mantiene ``usuario_has_rol`` alineada con ``Usuario.rol`` (rol base)."""
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from apps.accounts.models import Usuario
+from apps.rbac.acceso import invalidar_cache_peticion
 from apps.rbac.defaults import DESCRIPCION_ROL
-from apps.rbac.models import Rol, UsuarioRol
+from apps.rbac.models import Recurso, Rol, RolRecurso, UsuarioRol
 
 
 def sincronizar_rol_base(usuario: Usuario) -> None:
@@ -25,3 +26,11 @@ def _sincronizar(sender, instance, created, update_fields=None, raw=False, **kwa
     if raw or (not created and update_fields is not None and "rol" not in update_fields):
         return
     sincronizar_rol_base(instance)
+
+
+@receiver(post_save, dispatch_uid="rbac_invalidar_cache_guardar")
+@receiver(post_delete, dispatch_uid="rbac_invalidar_cache_borrar")
+def _invalidar_cache(sender, **kwargs):
+    # Si los permisos cambian dentro de una petición, la caché de esa petición queda vacía.
+    if sender in (Recurso, Rol, RolRecurso, UsuarioRol, Usuario):
+        invalidar_cache_peticion()
