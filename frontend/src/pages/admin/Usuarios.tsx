@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, Search, ShieldOff, ShieldCheck, Users } from 'lucide-react';
+import { KeyRound, Search, ShieldCheck, ShieldOff, Users } from 'lucide-react';
 import {
+  asignarRolesUsuario,
   cambiarRolUsuario,
+  listarRoles,
   listarUsuarios,
   reactivarUsuario,
   suspenderUsuario,
@@ -11,16 +13,15 @@ import {
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { Paginacion } from '../../components/ui/Paginacion';
-import { ConfirmarModal, Modal } from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { formatearFecha, ETIQUETAS_ROL, ETIQUETAS_VERIFICACION } from '../../lib/format';
-import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
+import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import type { Rol } from '../../lib/types';
 
 const TAMANO = 15;
-
 const ROLES: Rol[] = ['comprador', 'vendedor', 'administrador'];
 
 function advertenciaRol(rol: Rol): string {
@@ -33,25 +34,43 @@ function advertenciaRol(rol: Rol): string {
   return 'Sus puestos activos pasarán a inactivo y dejarán de aparecer en el catálogo; la verificación y los datos se conservan.';
 }
 
+function EstadoUsuarioBadge({ estado }: { estado: string }) {
+  const clase =
+    estado === 'activo'
+      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+  return <span className={`badge ${clase}`}>{estado}</span>;
+}
+
+function ChipsRoles({ usuario }: { usuario: UsuarioAdmin }) {
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {usuario.roles_asignados
+        .filter((rol) => !rol.es_sistema)
+        .map((rol) => (
+          <span key={rol.id} className="badge bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+            {rol.nombre}
+          </span>
+        ))}
+    </div>
+  );
+}
+
 export function Usuarios() {
   const queryClient = useQueryClient();
-  const toast = useToast();
   const [pagina, setPagina] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [rol, setRol] = useState('');
   const [estado, setEstado] = useState('');
+  const [rolAsignado, setRolAsignado] = useState('');
   const [objetivo, setObjetivo] = useState<UsuarioAdmin | null>(null);
-  const [modal, setModal] = useState<'rol' | 'suspender' | 'reactivar' | null>(null);
-  const [nuevoRol, setNuevoRol] = useState<Rol>('comprador');
-  const [motivo, setMotivo] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     document.title = 'Usuarios · Administración · RioMarket';
   }, []);
 
   const usuarios = useQuery({
-    queryKey: ['usuarios', pagina, busqueda, rol, estado],
+    queryKey: ['usuarios', pagina, busqueda, rol, estado, rolAsignado],
     queryFn: () =>
       listarUsuarios({
         page: pagina,
@@ -59,108 +78,32 @@ export function Usuarios() {
         q: busqueda.trim() || undefined,
         rol: rol || undefined,
         estado: estado || undefined,
+        rol_asignado: rolAsignado ? Number(rolAsignado) : undefined,
       }),
     placeholderData: (anterior) => anterior,
   });
-
-  const cerrar = () => {
-    setModal(null);
-    setObjetivo(null);
-    setMotivo('');
-    setError('');
-  };
+  const roles = useQuery({ queryKey: ['admin-roles'], queryFn: listarRoles });
 
   const refrescar = () => {
     void queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+    void queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
     void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
     void invalidarMenu(queryClient);
   };
 
-  const cambiar = useMutation({
-    mutationFn: ({ id, rol: destino, motivo: texto }: { id: number; rol: Rol; motivo: string }) =>
-      cambiarRolUsuario(id, { rol: destino, motivo: texto }),
-    onSuccess: (usuario) => {
-      refrescar();
-      cerrar();
-      toast.exito(`Rol de ${usuario.nombre} actualizado a ${ETIQUETAS_ROL[usuario.rol]}.`);
-    },
-    onError: (fallo) => {
-      const campos = erroresDeCampo(fallo);
-      setError(campos.rol?.[0] ?? campos.usuario?.[0] ?? campos.motivo?.[0] ?? mensajeDeError(fallo));
-    },
-  });
-
-  const suspender = useMutation({
-    mutationFn: ({ id, motivo: texto }: { id: number; motivo: string }) => suspenderUsuario(id, texto),
-    onSuccess: (usuario) => {
-      refrescar();
-      cerrar();
-      toast.exito(`${usuario.nombre} fue suspendido. Sus sesiones se cerraron.`);
-    },
-    onError: (fallo) => {
-      const campos = erroresDeCampo(fallo);
-      setError(campos.estado?.[0] ?? campos.motivo?.[0] ?? mensajeDeError(fallo));
-    },
-  });
-
-  const reactivar = useMutation({
-    mutationFn: (id: number) => reactivarUsuario(id),
-    onSuccess: (usuario) => {
-      refrescar();
-      cerrar();
-      toast.exito(`${usuario.nombre} puede iniciar sesión de nuevo.`);
-    },
-    onError: (fallo) => setError(mensajeDeError(fallo)),
-  });
-
-  const abrirRol = (usuario: UsuarioAdmin) => {
-    setObjetivo(usuario);
-    setNuevoRol(usuario.rol === 'comprador' ? 'vendedor' : 'comprador');
-    setMotivo('');
-    setError('');
-    setModal('rol');
+  const cambiarFiltro = (fijar: (valor: string) => void) => (evento: { target: { value: string } }) => {
+    fijar(evento.target.value);
+    setPagina(1);
   };
 
-  const abrirSuspender = (usuario: UsuarioAdmin) => {
-    setObjetivo(usuario);
-    setMotivo('');
-    setError('');
-    setModal('suspender');
-  };
-
-  const abrirReactivar = (usuario: UsuarioAdmin) => {
-    setObjetivo(usuario);
-    setError('');
-    setModal('reactivar');
-  };
-
-  const enviarRol = () => {
-    if (!objetivo) return;
-    if (objetivo.rol === nuevoRol) {
-      setError('Selecciona un rol distinto al actual.');
-      return;
-    }
-    if (motivo.trim().length < 5) {
-      setError('Indica un motivo de al menos 5 caracteres.');
-      return;
-    }
-    cambiar.mutate({ id: objetivo.id, rol: nuevoRol, motivo: motivo.trim() });
-  };
-
-  const enviarSuspension = () => {
-    if (!objetivo) return;
-    if (motivo.trim().length < 5) {
-      setError('Indica un motivo de al menos 5 caracteres.');
-      return;
-    }
-    suspender.mutate({ id: objetivo.id, motivo: motivo.trim() });
-  };
+  // El usuario abierto en el modal se mantiene actualizado tras cada acción.
+  const actual = objetivo ? usuarios.data?.results.find((u) => u.id === objetivo.id) ?? objetivo : null;
 
   return (
     <div>
       <EncabezadoPagina
         titulo="Usuarios"
-        descripcion="Cambia roles, suspende cuentas y revisa sus pedidos y puestos. Toda decisión queda auditada."
+        descripcion="Gestiona el rol base, los roles adicionales y el baneo de cada cuenta. Toda decisión queda auditada."
       />
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -170,39 +113,26 @@ export function Usuarios() {
             className="input w-64 pl-9"
             placeholder="Nombre, correo o celular"
             value={busqueda}
-            onChange={(evento) => {
-              setBusqueda(evento.target.value);
-              setPagina(1);
-            }}
+            onChange={cambiarFiltro(setBusqueda)}
             aria-label="Buscar usuario"
           />
         </div>
-        <select
-          className="input w-auto"
-          value={rol}
-          onChange={(evento) => {
-            setRol(evento.target.value);
-            setPagina(1);
-          }}
-          aria-label="Filtrar por rol"
-        >
-          <option value="">Todos los roles</option>
+        <select className="input w-auto" value={rol} onChange={cambiarFiltro(setRol)} aria-label="Filtrar por rol base">
+          <option value="">Todos los roles base</option>
           <option value="comprador">Compradores</option>
           <option value="vendedor">Vendedores</option>
           <option value="administrador">Administradores</option>
         </select>
-        <select
-          className="input w-auto"
-          value={estado}
-          onChange={(evento) => {
-            setEstado(evento.target.value);
-            setPagina(1);
-          }}
-          aria-label="Filtrar por estado"
-        >
+        <select className="input w-auto" value={estado} onChange={cambiarFiltro(setEstado)} aria-label="Filtrar por estado">
           <option value="">Todos los estados</option>
           <option value="activo">Activos</option>
           <option value="suspendido">Suspendidos</option>
+        </select>
+        <select className="input w-auto" value={rolAsignado} onChange={cambiarFiltro(setRolAsignado)} aria-label="Filtrar por rol asignado">
+          <option value="">Cualquier rol asignado</option>
+          {roles.data?.map((opcion) => (
+            <option key={opcion.id} value={opcion.id}>{opcion.nombre}</option>
+          ))}
         </select>
       </div>
 
@@ -223,7 +153,7 @@ export function Usuarios() {
                   <th className="p-3">Estado</th>
                   <th className="p-3">Pedidos</th>
                   <th className="p-3">Puestos</th>
-                  <th className="p-3 text-right">Acciones</th>
+                  <th className="p-3 text-right">Acceso</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,15 +166,12 @@ export function Usuarios() {
                     </td>
                     <td className="p-3">
                       <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}</span>
+                      <ChipsRoles usuario={usuario} />
                       {usuario.rol === 'vendedor' && usuario.estado_verificacion && (
                         <p className="mt-1 text-xs text-slate-500">{ETIQUETAS_VERIFICACION[usuario.estado_verificacion] ?? usuario.estado_verificacion}</p>
                       )}
                     </td>
-                    <td className="p-3">
-                      <span className={`badge ${usuario.estado === 'activo' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>
-                        {usuario.estado}
-                      </span>
-                    </td>
+                    <td className="p-3"><EstadoUsuarioBadge estado={usuario.estado} /></td>
                     <td className="p-3 text-xs text-slate-500">
                       {usuario.pedidos_como_comprador} como comprador
                       {usuario.pedidos_activos > 0 && <span className="ml-1 font-semibold text-amber-700 dark:text-amber-300">({usuario.pedidos_activos} activos)</span>}
@@ -258,9 +185,7 @@ export function Usuarios() {
                         </ul>
                       )}
                     </td>
-                    <td className="p-3">
-                      <AccionesUsuario usuario={usuario} onRol={abrirRol} onSuspender={abrirSuspender} onReactivar={abrirReactivar} />
-                    </td>
+                    <td className="p-3 text-right"><BotonAcceso usuario={usuario} onAbrir={setObjetivo} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -275,15 +200,14 @@ export function Usuarios() {
                     <p className="truncate font-semibold">{usuario.nombre}</p>
                     <p className="truncate text-xs text-slate-500">{usuario.correo}</p>
                   </div>
-                  <span className={`badge ${usuario.estado === 'activo' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}`}>
-                    {usuario.estado}
-                  </span>
+                  <EstadoUsuarioBadge estado={usuario.estado} />
                 </div>
                 <p className="text-xs text-slate-500">
                   {ETIQUETAS_ROL[usuario.rol] ?? usuario.rol} · {usuario.pedidos_como_comprador} pedidos
                   {usuario.pedidos_activos > 0 && ` · ${usuario.pedidos_activos} activos`}
                 </p>
-                <AccionesUsuario usuario={usuario} onRol={abrirRol} onSuspender={abrirSuspender} onReactivar={abrirReactivar} />
+                <ChipsRoles usuario={usuario} />
+                <BotonAcceso usuario={usuario} onAbrir={setObjetivo} />
               </article>
             ))}
           </div>
@@ -292,91 +216,221 @@ export function Usuarios() {
         </>
       )}
 
-      <Modal abierto={modal === 'rol'} onCerrar={cerrar} titulo={`Cambiar rol de ${objetivo?.nombre ?? ''}`}>
-        <Campo etiqueta="Nuevo rol" htmlFor="nuevo-rol">
-          <select id="nuevo-rol" className="input" value={nuevoRol} onChange={(evento) => setNuevoRol(evento.target.value as Rol)}>
-            {ROLES.filter((opcion) => opcion !== objetivo?.rol).map((opcion) => (
-              <option key={opcion} value={opcion}>{ETIQUETAS_ROL[opcion]}</option>
-            ))}
-          </select>
-        </Campo>
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-          {advertenciaRol(nuevoRol)}
-          {objetivo && objetivo.pedidos_activos > 0 && (
-            <p className="mt-1 font-semibold">Esta cuenta tiene {objetivo.pedidos_activos} pedido(s) activo(s); el cambio podría rechazarse hasta resolverlos.</p>
-          )}
-        </div>
-        <Campo etiqueta="Motivo (obligatorio)" htmlFor="motivo-rol" className="mt-3">
-          <textarea id="motivo-rol" rows={3} className="input" value={motivo} onChange={(evento) => setMotivo(evento.target.value)} placeholder="Explica por qué cambias el rol (mínimo 5 caracteres)." />
-        </Campo>
-        <ErrorCampo mensaje={error} />
-        <div className="mt-4 flex justify-end gap-2">
-          <button type="button" className="btn-secondary" onClick={cerrar} disabled={cambiar.isPending}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={enviarRol} disabled={cambiar.isPending}>
-            {cambiar.isPending ? 'Guardando…' : 'Cambiar rol'}
-          </button>
-        </div>
-      </Modal>
-
-      <Modal abierto={modal === 'suspender'} onCerrar={cerrar} titulo={`Suspender a ${objetivo?.nombre ?? ''}`}>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          La cuenta no podrá iniciar sesión, se cerrarán sus sesiones y sus puestos activos pasarán a suspendidos. No se borra su historial.
-        </p>
-        <Campo etiqueta="Motivo (obligatorio)" htmlFor="motivo-suspender" className="mt-3">
-          <textarea id="motivo-suspender" rows={3} className="input" value={motivo} onChange={(evento) => setMotivo(evento.target.value)} placeholder="Explica el motivo de la suspensión (mínimo 5 caracteres)." />
-        </Campo>
-        <ErrorCampo mensaje={error} />
-        <div className="mt-4 flex justify-end gap-2">
-          <button type="button" className="btn-secondary" onClick={cerrar} disabled={suspender.isPending}>Cancelar</button>
-          <button type="button" className="btn-danger" onClick={enviarSuspension} disabled={suspender.isPending}>
-            {suspender.isPending ? 'Suspendiendo…' : 'Suspender cuenta'}
-          </button>
-        </div>
-      </Modal>
-
-      <ConfirmarModal
-        abierto={modal === 'reactivar'}
-        titulo={`¿Reactivar a ${objetivo?.nombre ?? ''}?`}
-        descripcion="La cuenta podrá iniciar sesión de nuevo. Sus puestos no se reactivan automáticamente: gestiónalos desde Puestos."
-        textoConfirmar="Reactivar"
-        peligro={false}
-        cargando={reactivar.isPending}
-        onConfirmar={() => objetivo && reactivar.mutate(objetivo.id)}
-        onCerrar={cerrar}
-      />
+      {actual && (
+        <GestionarAcceso
+          key={actual.id}
+          usuario={actual}
+          rolesPersonalizados={(roles.data ?? []).filter((r) => !r.es_sistema)}
+          onCerrar={() => setObjetivo(null)}
+          onCambio={refrescar}
+        />
+      )}
     </div>
   );
 }
 
-function AccionesUsuario({
+function BotonAcceso({ usuario, onAbrir }: { usuario: UsuarioAdmin; onAbrir: (usuario: UsuarioAdmin) => void }) {
+  if (usuario.acciones_permitidas.length === 0) {
+    return <span className="text-xs text-slate-400">Sin acciones</span>;
+  }
+  return (
+    <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onAbrir(usuario)}>
+      <KeyRound className="h-3.5 w-3.5" /> Gestionar acceso
+    </button>
+  );
+}
+
+/** Modal con tres secciones independientes: rol base, roles adicionales y baneo. */
+export function GestionarAcceso({
   usuario,
-  onRol,
-  onSuspender,
-  onReactivar,
+  rolesPersonalizados,
+  onCerrar,
+  onCambio,
 }: {
   usuario: UsuarioAdmin;
-  onRol: (usuario: UsuarioAdmin) => void;
-  onSuspender: (usuario: UsuarioAdmin) => void;
-  onReactivar: (usuario: UsuarioAdmin) => void;
+  rolesPersonalizados: { id: number; nombre: string; activo: boolean }[];
+  onCerrar: () => void;
+  onCambio: () => void;
 }) {
+  const toast = useToast();
+  const puede = (accion: string) => usuario.acciones_permitidas.includes(accion as never);
+
+  const [nuevoRol, setNuevoRol] = useState<Rol>(usuario.rol === 'comprador' ? 'vendedor' : 'comprador');
+  const [motivoRol, setMotivoRol] = useState('');
+  const [errorRol, setErrorRol] = useState('');
+
+  const [seleccion, setSeleccion] = useState<Set<number>>(
+    new Set(usuario.roles_asignados.filter((r) => !r.es_sistema).map((r) => r.id)),
+  );
+  const [motivoRoles, setMotivoRoles] = useState('');
+  const [errorRoles, setErrorRoles] = useState('');
+
+  const [motivoBan, setMotivoBan] = useState('');
+  const [errorBan, setErrorBan] = useState('');
+
+  const cambiarRol = useMutation({
+    mutationFn: () => cambiarRolUsuario(usuario.id, { rol: nuevoRol, motivo: motivoRol.trim() }),
+    onSuccess: (u) => {
+      onCambio();
+      setMotivoRol('');
+      toast.exito(`Rol de ${u.nombre} actualizado a ${ETIQUETAS_ROL[u.rol]}.`);
+    },
+    onError: (fallo) => setErrorRol(mensajeDeError(fallo)),
+  });
+
+  const guardarRoles = useMutation({
+    mutationFn: () => asignarRolesUsuario(usuario.id, { roles: [...seleccion], motivo: motivoRoles.trim() }),
+    onSuccess: (u) => {
+      onCambio();
+      setMotivoRoles('');
+      toast.exito(`Roles adicionales de ${u.nombre} actualizados.`);
+    },
+    onError: (fallo) => setErrorRoles(mensajeDeError(fallo)),
+  });
+
+  const suspender = useMutation({
+    mutationFn: () => suspenderUsuario(usuario.id, motivoBan.trim()),
+    onSuccess: (u) => {
+      onCambio();
+      setMotivoBan('');
+      toast.exito(`${u.nombre} fue baneado. Sus sesiones se cerraron.`);
+    },
+    onError: (fallo) => setErrorBan(mensajeDeError(fallo)),
+  });
+
+  const reactivar = useMutation({
+    mutationFn: () => reactivarUsuario(usuario.id),
+    onSuccess: (u) => {
+      onCambio();
+      toast.exito(`${u.nombre} puede iniciar sesión de nuevo.`);
+    },
+    onError: (fallo) => setErrorBan(mensajeDeError(fallo)),
+  });
+
+  const validarMotivo = (texto: string, fijarError: (mensaje: string) => void) => {
+    if (texto.trim().length < 5) {
+      fijarError('Indica un motivo de al menos 5 caracteres.');
+      return false;
+    }
+    fijarError('');
+    return true;
+  };
+
   return (
-    <div className="flex flex-wrap justify-end gap-1">
-      {usuario.acciones_permitidas.includes('cambiar-rol') && (
-        <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onRol(usuario)}>
-          <BadgeCheck className="h-3.5 w-3.5" /> Cambiar rol
-        </button>
+    <Modal abierto onCerrar={onCerrar} titulo={`Gestionar acceso de ${usuario.nombre}`} ancho="max-w-xl">
+      <p className="mb-4 text-xs text-slate-500">
+        {usuario.correo} · rol base {ETIQUETAS_ROL[usuario.rol] ?? usuario.rol} · {usuario.estado}
+      </p>
+
+      {puede('cambiar-rol') && (
+        <section className="mb-5 space-y-2" aria-labelledby="sec-rol-base">
+          <h3 id="sec-rol-base" className="text-sm font-semibold">1. Rol base</h3>
+          <Campo etiqueta="Nuevo rol base" htmlFor="nuevo-rol">
+            <select id="nuevo-rol" className="input" value={nuevoRol} onChange={(e) => setNuevoRol(e.target.value as Rol)}>
+              {ROLES.filter((opcion) => opcion !== usuario.rol).map((opcion) => (
+                <option key={opcion} value={opcion}>{ETIQUETAS_ROL[opcion]}</option>
+              ))}
+            </select>
+          </Campo>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            {advertenciaRol(nuevoRol)}
+            {usuario.pedidos_activos > 0 && (
+              <p className="mt-1 font-semibold">Esta cuenta tiene {usuario.pedidos_activos} pedido(s) activo(s); el cambio se rechazará hasta resolverlos.</p>
+            )}
+          </div>
+          <Campo etiqueta="Motivo del cambio de rol (obligatorio)" htmlFor="motivo-rol">
+            <textarea id="motivo-rol" rows={2} className="input" value={motivoRol} onChange={(e) => setMotivoRol(e.target.value)} />
+          </Campo>
+          <ErrorCampo mensaje={errorRol} />
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={cambiarRol.isPending}
+            onClick={() => validarMotivo(motivoRol, setErrorRol) && cambiarRol.mutate()}
+          >
+            {cambiarRol.isPending ? 'Guardando…' : 'Cambiar rol base'}
+          </button>
+        </section>
       )}
-      {usuario.acciones_permitidas.includes('suspender') && (
-        <button type="button" className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400" onClick={() => onSuspender(usuario)}>
-          <ShieldOff className="h-3.5 w-3.5" /> Banear
-        </button>
+
+      {puede('roles') && (
+        <section className="mb-5 space-y-2 border-t pt-4" aria-labelledby="sec-roles">
+          <h3 id="sec-roles" className="text-sm font-semibold">2. Roles adicionales</h3>
+          {rolesPersonalizados.length === 0 ? (
+            <p className="text-xs text-slate-500">Todavía no hay roles personalizados. Créalos en Roles.</p>
+          ) : (
+            <ul className="space-y-1">
+              {rolesPersonalizados.map((opcion) => (
+                <li key={opcion.id}>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={seleccion.has(opcion.id)}
+                      onChange={(e) =>
+                        setSeleccion((previa) => {
+                          const nueva = new Set(previa);
+                          if (e.target.checked) nueva.add(opcion.id);
+                          else nueva.delete(opcion.id);
+                          return nueva;
+                        })
+                      }
+                    />
+                    {opcion.nombre}
+                    {!opcion.activo && <span className="text-xs text-amber-600">(inactivo: no otorga nada)</span>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Campo etiqueta="Motivo de los roles adicionales (obligatorio)" htmlFor="motivo-roles">
+            <textarea id="motivo-roles" rows={2} className="input" value={motivoRoles} onChange={(e) => setMotivoRoles(e.target.value)} />
+          </Campo>
+          <ErrorCampo mensaje={errorRoles} />
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={guardarRoles.isPending}
+            onClick={() => validarMotivo(motivoRoles, setErrorRoles) && guardarRoles.mutate()}
+          >
+            {guardarRoles.isPending ? 'Guardando…' : 'Guardar roles adicionales'}
+          </button>
+        </section>
       )}
-      {usuario.acciones_permitidas.includes('reactivar') && (
-        <button type="button" className="btn-primary py-1.5 text-xs" onClick={() => onReactivar(usuario)}>
-          <ShieldCheck className="h-3.5 w-3.5" /> Reactivar
-        </button>
+
+      {(puede('suspender') || puede('reactivar')) && (
+        <section className="space-y-2 border-t pt-4" aria-labelledby="sec-ban">
+          <h3 id="sec-ban" className="text-sm font-semibold">3. Banear (suspender)</h3>
+          {puede('suspender') ? (
+            <>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                La cuenta no podrá iniciar sesión, se cerrarán sus sesiones y sus puestos activos pasarán a suspendidos. Conserva su rol, sus roles y su historial.
+              </p>
+              <Campo etiqueta="Motivo del baneo (obligatorio)" htmlFor="motivo-ban">
+                <textarea id="motivo-ban" rows={2} className="input" value={motivoBan} onChange={(e) => setMotivoBan(e.target.value)} />
+              </Campo>
+              <ErrorCampo mensaje={errorBan} />
+              <button
+                type="button"
+                className="btn-danger"
+                disabled={suspender.isPending}
+                onClick={() => validarMotivo(motivoBan, setErrorBan) && suspender.mutate()}
+              >
+                <ShieldOff className="h-4 w-4" /> {suspender.isPending ? 'Suspendiendo…' : 'Suspender cuenta'}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                La cuenta podrá iniciar sesión de nuevo. Sus puestos no se reactivan solos: gestiónalos desde Puestos.
+              </p>
+              <ErrorCampo mensaje={errorBan} />
+              <button type="button" className="btn-primary" disabled={reactivar.isPending} onClick={() => reactivar.mutate()}>
+                <ShieldCheck className="h-4 w-4" /> {reactivar.isPending ? 'Reactivando…' : 'Reactivar cuenta'}
+              </button>
+            </>
+          )}
+        </section>
       )}
-      {usuario.acciones_permitidas.length === 0 && <span className="text-xs text-slate-400">Sin acciones</span>}
-    </div>
+    </Modal>
   );
 }

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { iconoDe } from '../../navigation/iconos';
-import type { MenuEnlace, MenuGrupo } from '../../navigation/tipos';
+import { agruparItems, type MenuItem } from '../../navigation/tipos';
 
 type Variante = 'horizontal' | 'vertical' | 'cuenta';
 
@@ -32,33 +32,41 @@ function enlaceClase(variante: Variante) {
   };
 }
 
-export function MenuEnlaces({
+/** La raíz de un panel (/admin) solo se marca activa en su ruta exacta. */
+function esRaiz(item: MenuItem, items: MenuItem[]) {
+  return items.some((otro) => otro.codigo !== item.codigo && otro.ruta.startsWith(`${item.ruta}/`));
+}
+
+export function MenuItems({
   items,
   badges,
   variante = 'horizontal',
   onNavegar,
+  todos = items,
 }: {
-  items: MenuEnlace[];
+  items: MenuItem[];
   badges: Record<string, number>;
   variante?: Variante;
   onNavegar?: () => void;
+  /** Todos los ítems del menú, para detectar la raíz de un panel entre grupos. */
+  todos?: MenuItem[];
 }) {
   return (
     <>
-      {items.map((enlace) => {
-        const Icono = iconoDe(enlace.icono);
-        const badge = textoBadge(enlace.badge ? badges[enlace.badge] : undefined);
+      {items.map((item) => {
+        const Icono = iconoDe(item.icono);
+        const badge = textoBadge(badges[item.codigo]);
         return (
           <NavLink
-            key={`${enlace.to}-${enlace.etiqueta}`}
-            to={enlace.to}
-            end={enlace.fin}
+            key={item.codigo}
+            to={item.ruta}
+            end={esRaiz(item, todos)}
             className={enlaceClase(variante)}
             onClick={onNavegar}
           >
             <span className="inline-flex w-full items-center gap-2">
               <Icono className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 flex-1 truncate">{enlace.etiqueta}</span>
+              <span className="min-w-0 flex-1 truncate">{item.nombre}</span>
               {badge && (
                 <span
                   className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white"
@@ -75,25 +83,32 @@ export function MenuEnlaces({
   );
 }
 
+/** Menú vertical del panel, con los recursos agrupados por su grupo. */
 export function MenuPanel({
-  grupos,
+  items,
   badges,
   onNavegar,
 }: {
-  grupos: MenuGrupo[];
+  items: MenuItem[];
   badges: Record<string, number>;
   onNavegar?: () => void;
 }) {
   return (
     <>
-      {grupos.map((grupo, indice) => (
+      {agruparItems(items).map((grupo, indice) => (
         <div key={grupo.grupo ?? `grupo-${indice}`} className="space-y-1">
           {grupo.grupo && (
             <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               {grupo.grupo}
             </p>
           )}
-          <MenuEnlaces items={grupo.items} badges={badges} variante="vertical" onNavegar={onNavegar} />
+          <MenuItems
+            items={grupo.items}
+            badges={badges}
+            variante="vertical"
+            onNavegar={onNavegar}
+            todos={items}
+          />
         </div>
       ))}
     </>

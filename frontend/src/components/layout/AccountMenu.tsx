@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useSession } from '../../auth/SessionProvider';
 import { useMenu } from '../../navigation/useMenu';
-import { MenuEnlaces } from './MenuItems';
+import { MenuItems } from './MenuItems';
+import { itemsDe } from '../../navigation/tipos';
 import { iniciales } from '../../lib/utils';
 import { ETIQUETAS_ROL } from '../../lib/format';
 
@@ -67,7 +68,7 @@ export function AccountMenu() {
             </span>
           </div>
           <div className="p-1.5" onClick={() => setAbierto(false)}>
-            <MenuEnlaces items={menu.cuenta} badges={badges} variante="cuenta" />
+            <MenuItems items={itemsDe(menu, 'cuenta')} badges={badges} variante="cuenta" />
           </div>
           <div className="border-t p-1.5">
             <button

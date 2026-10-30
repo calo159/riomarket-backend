@@ -4,15 +4,19 @@ import { Menu, Search, ShoppingCart, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
-import { MenuEnlaces } from './MenuItems';
+import { MenuItems } from './MenuItems';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { useCart } from '../../cart/CartProvider';
 import { useMenu } from '../../navigation/useMenu';
+import { itemsDe, primerPanel } from '../../navigation/tipos';
 
 export function PublicLayout() {
   const { autenticado } = useSession();
   const { menu, badges } = useMenu();
+  const panel = primerPanel(menu);
+  const publicos = itemsDe(menu, 'publico');
+  const tiene = (codigo: string) => menu.recursos.includes(codigo);
   const { totalItems } = useCart();
   const [busqueda, setBusqueda] = useState('');
   const [menuAbierto, setMenuAbierto] = useState(false);
@@ -31,7 +35,15 @@ export function PublicLayout() {
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Logo />
           <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Principal">
-            <MenuEnlaces items={menu.publico} badges={badges} variante="horizontal" />
+            <MenuItems items={publicos} badges={badges} variante="horizontal" />
+            {panel && (
+              <Link
+                to={panel.ruta}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                Panel
+              </Link>
+            )}
           </nav>
 
           <form onSubmit={buscar} className="ml-auto hidden max-w-md flex-1 sm:block" role="search">
@@ -101,15 +113,24 @@ export function PublicLayout() {
               </label>
             </form>
             <nav className="flex flex-col gap-1" aria-label="Menú móvil">
-              <MenuEnlaces
-                items={menu.publico}
+              <MenuItems
+                items={publicos}
                 badges={badges}
                 variante="horizontal"
                 onNavegar={() => setMenuAbierto(false)}
               />
+              {panel && (
+                <Link
+                  to={panel.ruta}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  onClick={() => setMenuAbierto(false)}
+                >
+                  Panel
+                </Link>
+              )}
               {autenticado ? (
-                <MenuEnlaces
-                  items={menu.cuenta}
+                <MenuItems
+                  items={itemsDe(menu, 'cuenta')}
                   badges={badges}
                   variante="horizontal"
                   onNavegar={() => setMenuAbierto(false)}
@@ -146,14 +167,20 @@ export function PublicLayout() {
             <ul className="space-y-2 text-sm">
               <li><Link className="hover:underline" to="/catalogo">Catálogo</Link></li>
               <li><Link className="hover:underline" to="/carrito">Carrito</Link></li>
-              <li><Link className="hover:underline" to="/mis-pedidos">Mis pedidos</Link></li>
+              {tiene('mis_pedidos') && (
+                <li><Link className="hover:underline" to="/mis-pedidos">Mis pedidos</Link></li>
+              )}
             </ul>
           </div>
           <div>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Vender</h2>
             <ul className="space-y-2 text-sm">
-              <li><Link className="hover:underline" to="/registro?rol=vendedor">Crear cuenta de vendedor</Link></li>
-              <li><Link className="hover:underline" to="/vendedor">Panel de vendedor</Link></li>
+              {!autenticado && (
+                <li><Link className="hover:underline" to="/registro?rol=vendedor">Crear cuenta de vendedor</Link></li>
+              )}
+              {panel && (
+                <li><Link className="hover:underline" to={panel.ruta}>Ir a mi panel</Link></li>
+              )}
             </ul>
           </div>
           <div>

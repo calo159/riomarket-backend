@@ -53,6 +53,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/recursos/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        get: operations["admin_recursos_list"];
+        put?: never;
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        post: operations["admin_recursos_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/recursos/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        get: operations["admin_recursos_retrieve"];
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        put: operations["admin_recursos_update"];
+        post?: never;
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        delete: operations["admin_recursos_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Recursos: módulos o pantallas que los roles pueden abrir. */
+        patch: operations["admin_recursos_partial_update"];
+        trace?: never;
+    };
     "/api/admin/resumen/": {
         parameters: {
             query?: never;
@@ -63,6 +101,61 @@ export interface paths {
         /** @description Métricas globales del marketplace para el panel de administración. */
         get: operations["admin_resumen_retrieve"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        get: operations["admin_roles_list"];
+        put?: never;
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        post: operations["admin_roles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        get: operations["admin_roles_retrieve"];
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        put: operations["admin_roles_update"];
+        post?: never;
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        delete: operations["admin_roles_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Roles: nombre, estado y los recursos que otorgan. */
+        patch: operations["admin_roles_partial_update"];
+        trace?: never;
+    };
+    "/api/admin/roles/{id}/recursos/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Reemplaza los recursos del rol (el rol administrador conserva los básicos). */
+        put: operations["admin_roles_recursos_update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -113,7 +206,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Cambia el rol de una cuenta (no el propio, no el último admin). */
+        /** @description Cambia el rol base de una cuenta (no el propio, no el último admin). */
         post: operations["admin_usuarios_cambiar_rol_create"];
         delete?: never;
         options?: never;
@@ -138,6 +231,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/usuarios/{id}/roles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Reemplaza los roles adicionales (personalizados) de la cuenta. */
+        put: operations["admin_usuarios_roles_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/usuarios/{id}/suspender/": {
         parameters: {
             query?: never;
@@ -147,7 +257,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Suspende una cuenta, sus puestos activos y sus sesiones. */
+        /** @description Banea (suspende) una cuenta, sus puestos activos y sus sesiones. */
         post: operations["admin_usuarios_suspender_create"];
         delete?: never;
         options?: never;
@@ -230,7 +340,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description ``GET /api/auth/menu/`` — menú del usuario según su rol (público). */
+        /** @description ``GET /api/auth/menu/`` — menú del usuario según sus recursos (público). */
         get: operations["auth_menu_retrieve"];
         put?: never;
         post?: never;
@@ -1137,6 +1247,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description * `publico` - Público
+         *     * `cuenta` - Cuenta
+         *     * `panel_vendedor` - Panel de vendedor
+         *     * `panel_admin` - Panel de administración
+         * @enum {string}
+         */
+        AmbitoEnum: "publico" | "cuenta" | "panel_vendedor" | "panel_admin";
         AnularPagoRequest: {
             notas?: string;
         };
@@ -1198,9 +1316,15 @@ export interface components {
              * @description Descuento máximo (aplica a porcentajes).
              */
             tope_descuento?: string | null;
-            /** @description Total de usos permitidos (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Total de usos permitidos (vacío = ilimitado).
+             */
             usos_totales?: number | null;
-            /** @description Usos permitidos por usuario (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Usos permitidos por usuario (vacío = ilimitado).
+             */
             usos_por_usuario?: number | null;
             /** Format: date-time */
             fecha_inicio?: string | null;
@@ -1230,9 +1354,15 @@ export interface components {
              * @description Descuento máximo (aplica a porcentajes).
              */
             tope_descuento?: string | null;
-            /** @description Total de usos permitidos (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Total de usos permitidos (vacío = ilimitado).
+             */
             usos_totales?: number | null;
-            /** @description Usos permitidos por usuario (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Usos permitidos por usuario (vacío = ilimitado).
+             */
             usos_por_usuario?: number | null;
             /** Format: date-time */
             fecha_inicio?: string | null;
@@ -1338,6 +1468,7 @@ export interface components {
             id_producto: number;
             readonly url: string | null;
             readonly miniatura: string | null;
+            /** Format: int64 */
             orden?: number;
             alt?: string;
             es_principal?: boolean;
@@ -1346,6 +1477,7 @@ export interface components {
         };
         ImagenProductoRequest: {
             id_producto: number;
+            /** Format: int64 */
             orden?: number;
             /** Format: binary */
             archivo?: string;
@@ -1369,6 +1501,7 @@ export interface components {
             readonly unidad_medida: components["schemas"]["UnidadMedidaEnum"];
             /** Format: decimal */
             readonly precio_unitario: string;
+            /** Format: int64 */
             cantidad: number;
             /** Format: decimal */
             readonly subtotal: string;
@@ -1385,6 +1518,7 @@ export interface components {
              * @description PROTECT: el producto referenciado por un pedido no se borra (historial).
              */
             id_producto: number;
+            /** Format: int64 */
             cantidad: number;
         };
         /** @description Igual que el login JWT estándar, agregando los datos del usuario. */
@@ -1401,25 +1535,21 @@ export interface components {
         };
         Menu: {
             rol: string;
-            inicio: string;
-            publico: components["schemas"]["MenuEnlace"][];
-            cuenta: components["schemas"]["MenuEnlace"][];
-            panel: components["schemas"]["MenuGrupo"][];
-            panel_titulo: string | null;
+            roles: string[];
+            recursos: string[];
+            items: components["schemas"]["MenuItem"][];
             badges: {
                 [key: string]: number;
             };
         };
-        MenuEnlace: {
-            to: string;
-            etiqueta: string;
+        MenuItem: {
+            codigo: string;
+            nombre: string;
+            ruta: string;
             icono: string;
-            fin?: boolean;
-            badge?: string;
-        };
-        MenuGrupo: {
-            grupo: string | null;
-            items: components["schemas"]["MenuEnlace"][];
+            ambito: string;
+            grupo: string;
+            orden: number;
         };
         /**
          * @description * `efectivo` - Efectivo
@@ -1614,6 +1744,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Puesto"][];
         };
+        PaginatedRecursoList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Recurso"][];
+        };
         PaginatedRegistroAuditoriaList: {
             /** @example 123 */
             count: number;
@@ -1643,6 +1788,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Resena"][];
+        };
+        PaginatedRolList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Rol"][];
         };
         PaginatedUsuarioAdminList: {
             /** @example 123 */
@@ -1738,9 +1898,15 @@ export interface components {
              * @description Descuento máximo (aplica a porcentajes).
              */
             tope_descuento?: string | null;
-            /** @description Total de usos permitidos (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Total de usos permitidos (vacío = ilimitado).
+             */
             usos_totales?: number | null;
-            /** @description Usos permitidos por usuario (vacío = ilimitado). */
+            /**
+             * Format: int64
+             * @description Usos permitidos por usuario (vacío = ilimitado).
+             */
             usos_por_usuario?: number | null;
             /** Format: date-time */
             fecha_inicio?: string | null;
@@ -1799,6 +1965,7 @@ export interface components {
             descripcion?: string;
             /** Format: decimal */
             precio?: string;
+            /** Format: int64 */
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
@@ -1820,12 +1987,31 @@ export interface components {
             horario?: string;
             ofrece_domicilio?: boolean;
         };
+        PatchedRecursoRequest: {
+            codigo?: string;
+            nombre?: string;
+            descripcion?: string;
+            ambito?: components["schemas"]["AmbitoEnum"];
+            ruta?: string;
+            icono?: string;
+            grupo?: string;
+            /** Format: int64 */
+            orden?: number;
+            es_publico?: boolean;
+            activo?: boolean;
+        };
         PatchedResenaEscrituraRequest: {
             /** Puesto */
             id_puesto?: number;
             id_pedido?: number | null;
+            /** Format: int64 */
             calificacion?: number;
             comentario?: string;
+        };
+        PatchedRolRequest: {
+            nombre?: string;
+            descripcion?: string;
+            activo?: boolean;
         };
         Pedido: {
             readonly id: number;
@@ -1934,6 +2120,7 @@ export interface components {
             descripcion?: string;
             /** Format: decimal */
             precio: string;
+            /** Format: int64 */
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
@@ -1953,6 +2140,7 @@ export interface components {
             descripcion?: string;
             /** Format: decimal */
             precio: string;
+            /** Format: int64 */
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
@@ -2015,6 +2203,35 @@ export interface components {
         RecuperarContrasenaRequest: {
             /** Format: email */
             correo: string;
+        };
+        Recurso: {
+            readonly id: number;
+            codigo: string;
+            nombre: string;
+            descripcion?: string;
+            ambito?: components["schemas"]["AmbitoEnum"];
+            ruta?: string;
+            icono?: string;
+            grupo?: string;
+            /** Format: int64 */
+            orden?: number;
+            es_publico?: boolean;
+            readonly es_sistema: boolean;
+            activo?: boolean;
+            readonly total_roles: number;
+        };
+        RecursoRequest: {
+            codigo: string;
+            nombre: string;
+            descripcion?: string;
+            ambito?: components["schemas"]["AmbitoEnum"];
+            ruta?: string;
+            icono?: string;
+            grupo?: string;
+            /** Format: int64 */
+            orden?: number;
+            es_publico?: boolean;
+            activo?: boolean;
         };
         ReembolsarPagoRequest: {
             notas?: string;
@@ -2084,6 +2301,7 @@ export interface components {
              * @description Pedido entregado que origina la reseña (auditoría).
              */
             readonly id_pedido: number | null;
+            /** Format: int64 */
             calificacion: number;
             comentario?: string;
             readonly respuesta: string;
@@ -2100,6 +2318,7 @@ export interface components {
             /** Puesto */
             id_puesto: number;
             id_pedido?: number | null;
+            /** Format: int64 */
             calificacion: number;
             comentario?: string;
         };
@@ -2107,6 +2326,7 @@ export interface components {
             /** Puesto */
             id_puesto: number;
             id_pedido?: number | null;
+            /** Format: int64 */
             calificacion: number;
             comentario?: string;
         };
@@ -2120,6 +2340,18 @@ export interface components {
             token: string;
             nueva: string;
         };
+        Rol: {
+            readonly id: number;
+            nombre: string;
+            descripcion?: string;
+            activo?: boolean;
+            readonly es_sistema: boolean;
+            readonly total_usuarios: number;
+            readonly total_recursos: number;
+            readonly recursos: {
+                [key: string]: unknown;
+            };
+        };
         /**
          * @description * `comprador` - Comprador
          *     * `vendedor` - Vendedor
@@ -2127,6 +2359,19 @@ export interface components {
          * @enum {string}
          */
         Rol9f8Enum: "comprador" | "vendedor" | "administrador";
+        RolRecursosRequest: {
+            recursos: number[];
+            motivo: string;
+        };
+        RolRequest: {
+            nombre: string;
+            descripcion?: string;
+            activo?: boolean;
+        };
+        RolesUsuarioRequest: {
+            roles: number[];
+            motivo: string;
+        };
         /**
          * @description * `aprobar` - aprobar
          *     * `rechazar` - rechazar
@@ -2209,6 +2454,9 @@ export interface components {
             readonly pedidos_como_comprador: number;
             readonly pedidos_activos: number;
             readonly puestos: {
+                [key: string]: unknown;
+            };
+            readonly roles_asignados: {
                 [key: string]: unknown;
             };
             readonly acciones_permitidas: {
@@ -2421,6 +2669,161 @@ export interface operations {
             };
         };
     };
+    admin_recursos_list: {
+        parameters: {
+            query?: {
+                activo?: boolean;
+                ambito?: "cuenta" | "panel_admin" | "panel_vendedor" | "publico";
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description Código o nombre */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRecursoList"];
+                };
+            };
+        };
+    };
+    admin_recursos_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecursoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecursoRequest"];
+                "multipart/form-data": components["schemas"]["RecursoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recurso"];
+                };
+            };
+        };
+    };
+    admin_recursos_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este recurso. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recurso"];
+                };
+            };
+        };
+    };
+    admin_recursos_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este recurso. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecursoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RecursoRequest"];
+                "multipart/form-data": components["schemas"]["RecursoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recurso"];
+                };
+            };
+        };
+    };
+    admin_recursos_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este recurso. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    admin_recursos_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este recurso. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRecursoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRecursoRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRecursoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recurso"];
+                };
+            };
+        };
+    };
     admin_resumen_retrieve: {
         parameters: {
             query?: never;
@@ -2442,6 +2845,182 @@ export interface operations {
             };
         };
     };
+    admin_roles_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRolList"];
+                };
+            };
+        };
+    };
+    admin_roles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RolRequest"];
+                "multipart/form-data": components["schemas"]["RolRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rol"];
+                };
+            };
+        };
+    };
+    admin_roles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este rol. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rol"];
+                };
+            };
+        };
+    };
+    admin_roles_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este rol. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RolRequest"];
+                "multipart/form-data": components["schemas"]["RolRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rol"];
+                };
+            };
+        };
+    };
+    admin_roles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este rol. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_roles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este rol. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRolRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRolRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRolRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rol"];
+                };
+            };
+        };
+    };
+    admin_roles_recursos_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este rol. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolRecursosRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RolRecursosRequest"];
+                "multipart/form-data": components["schemas"]["RolRecursosRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rol"];
+                };
+            };
+        };
+    };
     admin_usuarios_list: {
         parameters: {
             query?: {
@@ -2454,6 +3033,8 @@ export interface operations {
                 /** @description Nombre, correo o celular */
                 q?: string;
                 rol?: "administrador" | "comprador" | "vendedor";
+                /** @description Id de un rol */
+                rol_asignado?: number;
             };
             header?: never;
             path?: never;
@@ -2532,6 +3113,34 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsuarioAdmin"];
+                };
+            };
+        };
+    };
+    admin_usuarios_roles_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este usuario. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolesUsuarioRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RolesUsuarioRequest"];
+                "multipart/form-data": components["schemas"]["RolesUsuarioRequest"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -4038,6 +4647,8 @@ export interface operations {
                 page_size?: number;
                 /** @description ID del pedido */
                 pedido?: number;
+                /** @description Solo pagos pendientes o procesando */
+                por_confirmar?: boolean;
             };
             header?: never;
             path?: never;

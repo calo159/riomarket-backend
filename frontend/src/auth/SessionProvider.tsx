@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, refreshAccessToken, setAccessToken, setSessionLostHandler } from '../lib/http';
+import { invalidarMenu } from '../navigation/useMenu';
 import { guardarAvisoSesion, limpiarRefresh } from './tokens';
 import type { Perfil, RespuestaLogin, Rol, UsuarioSesion } from '../lib/types';
 
@@ -132,7 +133,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const recargarPerfil = useCallback(async () => {
     const { data } = await api.get<Perfil>('/auth/perfil/');
     setUsuario(aUsuarioSesion(data));
-  }, []);
+    void invalidarMenu(queryClient);
+  }, [queryClient]);
 
   const valor = useMemo<ContextoSesion>(
     () => ({

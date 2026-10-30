@@ -7,11 +7,12 @@ import { MenuPanel } from './MenuItems';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { useMenu } from '../../navigation/useMenu';
+import { itemsDe } from '../../navigation/tipos';
 import { ETIQUETAS_ROL } from '../../lib/format';
 import { iniciales } from '../../lib/utils';
 
 export function PanelLayout() {
-  const { usuario, rol, cerrarSesion } = useSession();
+  const { usuario, cerrarSesion } = useSession();
   const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
@@ -23,7 +24,9 @@ export function PanelLayout() {
 
   if (!usuario) return null;
 
-  const tituloPanel = menu.panel_titulo ?? (rol === 'administrador' ? 'Administración' : 'Panel de vendedor');
+  const esAdmin = location.pathname.startsWith('/admin');
+  const tituloPanel = esAdmin ? 'Administración' : 'Panel de vendedor';
+  const itemsPanel = itemsDe(menu, esAdmin ? 'panel_admin' : 'panel_vendedor');
 
   const salir = async () => {
     await cerrarSesion();
@@ -41,7 +44,7 @@ export function PanelLayout() {
         <p className="text-xs text-slate-500 dark:text-slate-400">{ETIQUETAS_ROL[usuario.rol]}</p>
       </div>
       <nav className="flex-1 space-y-2 overflow-y-auto p-3" aria-label="Navegación del panel">
-        <MenuPanel grupos={menu.panel} badges={badges} onNavegar={() => setAbierto(false)} />
+        <MenuPanel items={itemsPanel} badges={badges} onNavegar={() => setAbierto(false)} />
       </nav>
       <div className="space-y-1 border-t p-3">
         <Link

@@ -4,108 +4,132 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import { MENU_FALLBACK, type MenuEnlace, type MenuRespuesta } from '../../navigation/tipos';
-import { MenuEnlaces, MenuPanel } from './MenuItems';
+import { itemsDe, MENU_FALLBACK, type MenuItem, type MenuRespuesta } from '../../navigation/tipos';
+import { MenuItems, MenuPanel } from './MenuItems';
+
+function item(codigo: string, nombre: string, ruta: string, ambito: MenuItem['ambito'], grupo = '', orden = 1): MenuItem {
+  return { codigo, nombre, ruta, icono: 'Circle', ambito, grupo, orden };
+}
+
+const CATALOGO = item('catalogo', 'Catálogo', '/catalogo', 'publico');
+const PERFIL = item('perfil', 'Mi perfil', '/perfil', 'cuenta');
+const NOTIFICACIONES = item('notificaciones', 'Notificaciones', '/notificaciones', 'cuenta', '', 2);
+
+const MENU_COMPRADOR: MenuRespuesta = {
+  rol: 'comprador',
+  roles: ['comprador'],
+  recursos: ['catalogo', 'mis_pedidos', 'perfil'],
+  items: [CATALOGO, item('mis_pedidos', 'Mis pedidos', '/mis-pedidos', 'cuenta'), PERFIL],
+  badges: { mis_pedidos: 2 },
+};
 
 const MENU_ADMIN: MenuRespuesta = {
   rol: 'administrador',
-  inicio: '/admin',
-  publico: [{ to: '/catalogo', etiqueta: 'Catálogo', icono: 'ShoppingBag' }],
-  cuenta: [
-    { to: '/perfil', etiqueta: 'Mi perfil', icono: 'User' },
-    { to: '/notificaciones', etiqueta: 'Notificaciones', icono: 'Bell', badge: 'notificaciones' },
+  roles: ['administrador'],
+  recursos: ['admin.resumen', 'admin.usuarios', 'admin.verificaciones', 'admin.pedidos'],
+  items: [
+    CATALOGO,
+    PERFIL,
+    NOTIFICACIONES,
+    item('admin.resumen', 'Resumen', '/admin', 'panel_admin'),
+    item('admin.usuarios', 'Usuarios', '/admin/usuarios', 'panel_admin', 'Accesos'),
+    item('admin.verificaciones', 'Verificaciones', '/admin/verificaciones', 'panel_admin', 'Gestión'),
+    item('admin.pedidos', 'Pedidos', '/admin/pedidos', 'panel_admin', 'Operación'),
   ],
-  panel: [
-    {
-      grupo: 'Gestión',
-      items: [
-        { to: '/admin/usuarios', etiqueta: 'Usuarios', icono: 'Users' },
-        { to: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'ShieldCheck', badge: 'verificaciones' },
-      ],
-    },
-    {
-      grupo: 'Operación',
-      items: [{ to: '/admin/pedidos', etiqueta: 'Pedidos', icono: 'ClipboardList', badge: 'no_recibidos' }],
-    },
-  ],
-  panel_titulo: 'Administración',
-  badges: { verificaciones: 120, no_recibidos: 0, notificaciones: 3 },
+  badges: { 'admin.verificaciones': 120, 'admin.pedidos': 0, notificaciones: 3 },
 };
 
-function enlacesDe(menu: MenuRespuesta): MenuEnlace[] {
-  return [...menu.publico, ...menu.cuenta, ...menu.panel.flatMap((grupo) => grupo.items)];
-}
-
 describe('MenuItems', () => {
-  it('pinta grupos, enlaces y badges con tope 99+', () => {
-    render(
+  it('renderiza distinto según la respuesta de cada rol', () => {
+    const { rerender } = render(
       <MemoryRouter>
-        <MenuPanel grupos={MENU_ADMIN.panel} badges={MENU_ADMIN.badges} />
+        <MenuItems items={itemsDe(MENU_COMPRADOR, 'cuenta')} badges={MENU_COMPRADOR.badges} />
       </MemoryRouter>,
     );
+    expect(screen.getByRole('link', { name: /Mis pedidos/ })).toHaveAttribute('href', '/mis-pedidos');
+    expect(screen.queryByRole('link', { name: /Usuarios/ })).not.toBeInTheDocument();
 
-    expect(screen.getByText('Gestión')).toBeInTheDocument();
-    expect(screen.getByText('Operación')).toBeInTheDocument();
+    rerender(
+      <MemoryRouter>
+        <MenuPanel items={itemsDe(MENU_ADMIN, 'panel_admin')} badges={MENU_ADMIN.badges} />
+      </MemoryRouter>,
+    );
     expect(screen.getByRole('link', { name: /Usuarios/ })).toHaveAttribute('href', '/admin/usuarios');
+    expect(screen.queryByRole('link', { name: /Mis pedidos/ })).not.toBeInTheDocument();
+  });
+
+  it('agrupa el panel, muestra el badge con tope 99+ y oculta los ceros', () => {
+    render(
+      <MemoryRouter>
+        <MenuPanel items={itemsDe(MENU_ADMIN, 'panel_admin')} badges={MENU_ADMIN.badges} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Accesos')).toBeInTheDocument();
+    expect(screen.getByText('Gestión')).toBeInTheDocument();
     expect(screen.getByText('99+')).toHaveAttribute('aria-label', '99+ pendientes');
     expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
-  it('marca el enlace activo y cierra el menú al navegar', async () => {
+  it('sin dato de badge no pinta nada', () => {
+    render(
+      <MemoryRouter>
+        <MenuItems items={itemsDe(MENU_COMPRADOR, 'cuenta')} badges={{}} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByLabelText(/pendientes/)).not.toBeInTheDocument();
+  });
+
+  it('marca el enlace activo, solo marca la raíz del panel en su ruta exacta y cierra al navegar', async () => {
     const onNavegar = vi.fn();
     render(
       <MemoryRouter initialEntries={['/admin/usuarios']}>
-        <MenuPanel grupos={MENU_ADMIN.panel} badges={MENU_ADMIN.badges} onNavegar={onNavegar} />
+        <MenuPanel items={itemsDe(MENU_ADMIN, 'panel_admin')} badges={{}} onNavegar={onNavegar} />
       </MemoryRouter>,
     );
-
     const usuarios = screen.getByRole('link', { name: /Usuarios/ });
     expect(usuarios).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: /Resumen/ })).not.toHaveAttribute('aria-current');
     await userEvent.click(usuarios);
     expect(onNavegar).toHaveBeenCalledTimes(1);
   });
 
-  it('muestra el menú mínimo cuando no hay respuesta del backend', () => {
+  it('muestra solo el catálogo cuando el backend no responde', () => {
     render(
       <MemoryRouter>
-        <MenuEnlaces items={MENU_FALLBACK.publico} badges={MENU_FALLBACK.badges} />
-        <MenuEnlaces items={MENU_FALLBACK.cuenta} badges={MENU_FALLBACK.badges} variante="cuenta" />
+        <MenuItems items={itemsDe(MENU_FALLBACK, 'publico')} badges={MENU_FALLBACK.badges} />
       </MemoryRouter>,
     );
-
     expect(screen.getByRole('link', { name: /Catálogo/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Carrito/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Ingresar/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
-  it('cada destino de ejemplo existe como ruta en App.tsx', () => {
+  it('cada ruta del catálogo de recursos existe en App.tsx', () => {
     const fuente = readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
     const rutas = new Set(
       [...fuente.matchAll(/<Route\s+(?:index\s+)?path="([^"]+)"/g)].map((coincidencia) => coincidencia[1]),
     );
-
     const destinos = [
-      ...enlacesDe(MENU_ADMIN),
-      ...enlacesDe(MENU_FALLBACK),
-      { to: '/vendedor/verificacion', etiqueta: 'Verificación', icono: 'BadgeCheck' },
-      { to: '/vendedor/pedidos', etiqueta: 'Pedidos', icono: 'ClipboardList' },
-      { to: '/vendedor/resenas', etiqueta: 'Reseñas', icono: 'Star' },
-      { to: '/admin/categorias', etiqueta: 'Categorías', icono: 'Tags' },
-      { to: '/admin/resenas', etiqueta: 'Reseñas', icono: 'Star' },
-      { to: '/admin/auditoria', etiqueta: 'Auditoría', icono: 'BookOpenCheck' },
+      ...MENU_COMPRADOR.items,
+      ...MENU_ADMIN.items,
+      item('admin.roles', 'Roles', '/admin/roles', 'panel_admin'),
+      item('admin.recursos', 'Recursos', '/admin/recursos', 'panel_admin'),
+      item('vendedor.resumen', 'Resumen', '/vendedor', 'panel_vendedor'),
+      item('vendedor.pedidos', 'Pedidos', '/vendedor/pedidos', 'panel_vendedor'),
+      item('admin.auditoria', 'Auditoría', '/admin/auditoria', 'panel_admin'),
+      item('direcciones', 'Direcciones', '/direcciones', 'cuenta'),
     ];
 
     for (const destino of destinos) {
-      const segmentos = destino.to.split('/').filter(Boolean);
-      if (segmentos.length === 0) {
-        expect(fuente).toContain('<Route index');
+      const segmentos = destino.ruta.split('/').filter(Boolean);
+      if (segmentos.length === 1 && (segmentos[0] === 'admin' || segmentos[0] === 'vendedor')) {
+        expect(rutas.has(segmentos[0])).toBe(true);
         continue;
       }
-      const hoja = segmentos[segmentos.length - 1];
-      expect(rutas.has(hoja) || rutas.has(segmentos.join('/'))).toBe(true);
-      if (segmentos[0] === 'admin' || segmentos[0] === 'vendedor') {
-        expect(rutas.has(segmentos[0])).toBe(true);
-      }
+      expect(rutas.has(segmentos[segmentos.length - 1])).toBe(true);
+    }
+    // Cada ruta de panel se protege por su recurso, no por el rol.
+    for (const codigo of ['admin.roles', 'admin.recursos', 'vendedor.pedidos', 'admin.usuarios']) {
+      expect(fuente).toContain(`recurso="${codigo}"`);
     }
   });
 });
