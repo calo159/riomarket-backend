@@ -17,7 +17,9 @@ from django.db.models import Max, Q, QuerySet
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
 from apps.common.image_processing import make_thumbnail, process_product_image
+from apps.common.motivo import validar_motivo
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
+from apps.rbac.acceso import tiene_recurso
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
 # de columnas: un valor fuera de lista no llega a ``order_by``).
@@ -210,11 +212,12 @@ def _validar_precio(precio) -> None:
 # ---------------------------------------------------------------------------
 # Moderación (solo administradores)
 # ---------------------------------------------------------------------------
-def _exigir_moderador(actor) -> None:
-    if not (actor and actor.is_authenticated and actor.es_administrador):
-        raise PermissionDenied("Solo un administrador puede moderar el catálogo.")
-    if not actor.is_active:
-        raise PermissionDenied("La cuenta administradora está suspendida.")
+def _exigir_moderador(actor, recurso: str) -> None:
+    """Modera quien tenga el recurso RBAC correspondiente (no solo el rol administrador)."""
+    if not (actor and actor.is_authenticated and actor.is_active):
+        raise PermissionDenied("Tu cuenta no puede moderar el catálogo.")
+    if not tiene_recurso(actor, recurso):
+        raise PermissionDenied("Tu cuenta no tiene acceso para moderar esto.")
 
 
 def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
@@ -234,7 +237,9 @@ def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
         logging.getLogger(__name__).exception("No se pudo notificar al vendedor %s", usuario.pk)
 
 
-def _auditar_moderacion(actor, entidad: str, id_entidad: int, anterior: str, nuevo: str):
+def _auditar_moderacion(
+    actor, entidad: str, id_entidad: int, anterior: str, nuevo: str, motivo: str = ""
+):
     from apps.audit.services import registrar
 
     registrar(
@@ -242,17 +247,20 @@ def _auditar_moderacion(actor, entidad: str, id_entidad: int, anterior: str, nue
         accion="actualizar",
         entidad=entidad,
         id_entidad=id_entidad,
-        detalle={"campo": "estado", "de": anterior, "a": nuevo},
+        detalle={"campo": "estado", "de": anterior, "a": nuevo, "motivo": motivo},
     )
 
 
 def moderar_puesto(*, puesto: Puesto, actor, estado: str, motivo: str = "") -> Puesto:
-    """Suspende o reactiva un puesto (solo administradores)."""
-    _exigir_moderador(actor)
+    """Suspende o reactiva un puesto (recurso admin.puestos)."""
+    _exigir_moderador(actor, "admin.puestos")
     if estado not in Puesto.Estado.values:
         raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
     if puesto.estado == estado:
         raise ValidationError({"estado": "El puesto ya tiene ese estado."})
+    if estado != Puesto.Estado.ACTIVO:
+        motivo = validar_motivo(motivo)
+    motivo = (motivo or "").strip()
     anterior = puesto.estado
     puesto.estado = estado
     puesto.save(update_fields=["estado"])
@@ -260,17 +268,20 @@ def moderar_puesto(*, puesto: Puesto, actor, estado: str, motivo: str = "") -> P
     if motivo:
         mensaje += f" Motivo: {motivo}"
     _notificar_propietario(puesto.id_vendedor, "Cambio en tu puesto", mensaje)
-    _auditar_moderacion(actor, "puesto", puesto.pk, anterior, estado)
+    _auditar_moderacion(actor, "puesto", puesto.pk, anterior, estado, motivo)
     return puesto
 
 
 def moderar_producto(*, producto: Producto, actor, estado: str, motivo: str = "") -> Producto:
-    """Bloquea o reactiva un producto (solo administradores)."""
-    _exigir_moderador(actor)
+    """Bloquea o reactiva un producto (recurso admin.productos)."""
+    _exigir_moderador(actor, "admin.productos")
     if estado not in Producto.Estado.values:
         raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
     if producto.estado == estado:
         raise ValidationError({"estado": "El producto ya tiene ese estado."})
+    if estado != Producto.Estado.ACTIVO:
+        motivo = validar_motivo(motivo)
+    motivo = (motivo or "").strip()
     anterior = producto.estado
     producto.estado = estado
     producto.save(update_fields=["estado"])
@@ -278,7 +289,7 @@ def moderar_producto(*, producto: Producto, actor, estado: str, motivo: str = ""
     if motivo:
         mensaje += f" Motivo: {motivo}"
     _notificar_propietario(producto.id_puesto.id_vendedor, "Cambio en tu producto", mensaje)
-    _auditar_moderacion(actor, "producto", producto.pk, anterior, estado)
+    _auditar_moderacion(actor, "producto", producto.pk, anterior, estado, motivo)
     return producto
 
 
@@ -368,7 +379,7 @@ def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
     Un público que pida ``?estado=suspendido`` obtiene vacío (nunca puestos
     suspendidos de terceros); el dueño sí ve los suyos en cualquier estado.
     """
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.puestos"):
         pass
     elif usuario.is_authenticated:
         queryset = queryset.filter(Q(estado=Puesto.Estado.ACTIVO) | Q(id_vendedor=usuario))
@@ -384,7 +395,7 @@ def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
 
 def visibles_productos(usuario, queryset: QuerySet, params) -> QuerySet:
     """Igual que ``visibles_puestos`` pero con la cadena Producto→Puesto."""
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.productos"):
         pass
     elif usuario.is_authenticated:
         queryset = queryset.filter(
@@ -404,7 +415,7 @@ def visibles_productos(usuario, queryset: QuerySet, params) -> QuerySet:
 
 
 def visibles_imagenes(usuario, queryset: QuerySet) -> QuerySet:
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.productos"):
         return queryset
     if usuario.is_authenticated:
         return queryset.filter(

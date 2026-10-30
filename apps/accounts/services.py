@@ -13,6 +13,7 @@ from django.utils import timezone
 from apps.accounts.models import Usuario, Vendedor
 from apps.common import crypto
 from apps.common.validators import renombrar_archivo, validate_image_file
+from apps.rbac.acceso import tiene_recurso
 
 # El registro nunca asigna el rol administrador (se crean por createsuperuser).
 ROLES_REGISTRABLES = (Usuario.Rol.COMPRADOR, Usuario.Rol.VENDEDOR)
@@ -136,7 +137,7 @@ def solicitar_verificacion(*, usuario: Usuario, numero_cedula, foto) -> Vendedor
 
 
 def aprobar_verificacion(*, vendedor: Vendedor, revisor: Usuario) -> Vendedor:
-    if not revisor.es_administrador or not revisor.is_active:
+    if not revisor.is_active or not tiene_recurso(revisor, "admin.verificaciones"):
         raise ValidationError({"revisor": "Solo un administrador activo puede revisar."})
     if not vendedor.cedula_huella or not vendedor.foto_cedula:
         raise ValidationError({"vendedor": "La solicitud no tiene documento ni foto para revisar."})
@@ -149,7 +150,7 @@ def aprobar_verificacion(*, vendedor: Vendedor, revisor: Usuario) -> Vendedor:
 
 
 def rechazar_verificacion(*, vendedor: Vendedor, revisor: Usuario, motivo: str) -> Vendedor:
-    if not revisor.es_administrador or not revisor.is_active:
+    if not revisor.is_active or not tiene_recurso(revisor, "admin.verificaciones"):
         raise ValidationError({"revisor": "Solo un administrador activo puede revisar."})
     if not vendedor.cedula_huella or not vendedor.foto_cedula:
         raise ValidationError({"vendedor": "La solicitud no tiene documento ni foto para revisar."})

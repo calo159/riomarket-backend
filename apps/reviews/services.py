@@ -13,6 +13,7 @@ from django.utils import timezone
 from apps.accounts.models import Usuario
 from apps.catalog.models import Puesto
 from apps.orders.models import Pedido
+from apps.rbac.acceso import tiene_recurso
 from apps.reviews.models import Resena
 
 ORDENAMIENTO_RESENA = (
@@ -65,7 +66,7 @@ def _exigir_pedido_entregado(usuario, puesto: Puesto, id_pedido=None) -> None:
 
 
 def _exigir_dueno_o_admin(resena: Resena, usuario) -> None:
-    if usuario.es_administrador:
+    if tiene_recurso(usuario, "admin.resenas"):
         return
     if resena.id_usuario_id != usuario.pk:
         raise PermissionDenied("Solo el autor de la reseña puede modificarla.")
@@ -140,7 +141,7 @@ def eliminar_resena(*, resena: Resena, usuario) -> None:
 
 def visibles_resenas(usuario, qs: QuerySet[Resena]) -> QuerySet[Resena]:
     """Admin: todas. Vendedor: las de sus puestos. Demás: solo visibles."""
-    if usuario and usuario.is_authenticated and usuario.es_administrador:
+    if usuario and usuario.is_authenticated and tiene_recurso(usuario, "admin.resenas"):
         return qs
     if usuario and usuario.is_authenticated and usuario.rol == Usuario.Rol.VENDEDOR:
         return qs.filter(id_puesto__id_vendedor=usuario)

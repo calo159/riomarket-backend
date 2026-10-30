@@ -27,7 +27,8 @@ from apps.accounts.verificacion_serializers import (
     SolicitudVerificacionSerializer,
     VerificacionAdminListSerializer,
 )
-from apps.common.permissions import EsAdministrador, EsVendedor
+from apps.common.permissions import EsVendedor
+from apps.rbac.permissions import TieneRecurso
 
 SIN_SOLICITUD = {
     "id": None,
@@ -68,7 +69,7 @@ class EsRevisorAsignado(BasePermission):
     message = "Solo el revisor asignado puede ver la foto del documento."
 
     def has_object_permission(self, request, view, obj):
-        if not EsAdministrador().has_permission(request, view):
+        if not TieneRecurso("admin.verificaciones")().has_permission(request, view):
             return False
         if not obj.id_revisor_id or request.user.is_superuser:
             return True
@@ -122,7 +123,7 @@ class SolicitudVerificacionView(APIView):
 class SolicitudesAdminListView(generics.ListAPIView):
     """``GET /solicitudes/`` (admin) — cola de revisión, filtrable por ``estado``."""
 
-    permission_classes = [EsAdministrador]
+    permission_classes = [TieneRecurso("admin.verificaciones")]
     serializer_class = VerificacionAdminListSerializer
 
     @extend_schema(
@@ -148,7 +149,7 @@ class SolicitudesAdminListView(generics.ListAPIView):
 class DecidirVerificacionView(generics.UpdateAPIView):
     """``PATCH /solicitudes/{id}/`` (admin) — aprueba o rechaza con motivo."""
 
-    permission_classes = [EsAdministrador]
+    permission_classes = [TieneRecurso("admin.verificaciones")]
     serializer_class = DecidirVerificacionSerializer
     http_method_names = ["patch", "put", "head", "options"]
     queryset = Vendedor.objects.all()
@@ -169,7 +170,7 @@ class DecidirVerificacionView(generics.UpdateAPIView):
 class CedulaPrivadaView(APIView):
     """``GET /solicitudes/{id}/cedula/`` — archivo protegido, nunca público."""
 
-    permission_classes = [EsAdministrador, EsRevisorAsignado]
+    permission_classes = [TieneRecurso("admin.verificaciones"), EsRevisorAsignado]
 
     @extend_schema(
         responses={

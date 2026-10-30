@@ -22,7 +22,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
-from apps.common.permissions import EsAdministrador
 from apps.common.query import aplicar_ordenamiento
 from apps.payments import services
 from apps.payments.models import Pago
@@ -36,6 +35,7 @@ from apps.payments.serializers import (
     ReembolsarPagoSerializer,
     SimularPagoSerializer,
 )
+from apps.rbac.permissions import TieneRecurso
 
 PARAMETROS_PAGO = [
     OpenApiParameter(name="estado", enum=Pago.Estado.values),
@@ -58,7 +58,7 @@ class PagoViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("marcar_reembolsado", "anular"):
-            return [EsAdministrador()]
+            return [TieneRecurso("admin.pagos")()]
         return [IsAuthenticated()]
 
     def get_serializer_class(self):

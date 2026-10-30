@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import QuerySet
 
 from apps.audit.models import RegistroAuditoria
+from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ def registrar(
 
 
 def visibles_registros(usuario, qs: QuerySet[RegistroAuditoria]) -> QuerySet[RegistroAuditoria]:
-    if not usuario or not usuario.is_authenticated or not usuario.es_administrador:
+    if not usuario or not usuario.is_authenticated or not tiene_recurso(usuario, "admin.auditoria"):
         return qs.none()
     return qs
 
@@ -83,5 +84,5 @@ def filtrar_registros(qs: QuerySet[RegistroAuditoria], params) -> QuerySet[Regis
 
 
 def exigir_admin(usuario) -> None:
-    if not (usuario and usuario.is_authenticated and usuario.es_administrador):
+    if not (usuario and usuario.is_authenticated and tiene_recurso(usuario, "admin.auditoria")):
         raise PermissionDenied("Solo el administrador consulta la auditoría.")

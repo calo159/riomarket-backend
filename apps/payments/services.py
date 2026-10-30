@@ -22,6 +22,7 @@ from apps.common import pricing
 from apps.common.query import parametro_booleano, parametro_entero
 from apps.orders.models import Pedido
 from apps.payments.models import Pago
+from apps.rbac.acceso import tiene_recurso
 
 ORDENAMIENTO_PAGO = ("fecha_creacion", "-fecha_creacion", "id", "-id")
 
@@ -229,7 +230,7 @@ def confirmar_efectivo(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
 
 
 def marcar_reembolsado(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> Pago:
-    if not (usuario and usuario.is_active and usuario.es_administrador):
+    if not (usuario and usuario.is_active and tiene_recurso(usuario, "admin.pagos")):
         raise PermissionDenied("Solo el administrador puede marcar un reembolso.")
     datos = datos or {}
     return _aplicar_estado(
@@ -242,7 +243,7 @@ def marcar_reembolsado(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
 
 
 def anular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> Pago:
-    if not (usuario and usuario.is_active and usuario.es_administrador):
+    if not (usuario and usuario.is_active and tiene_recurso(usuario, "admin.pagos")):
         raise PermissionDenied("Solo el administrador puede anular un pago.")
     datos = datos or {}
     return _aplicar_estado(

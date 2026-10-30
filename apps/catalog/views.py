@@ -29,8 +29,10 @@ from apps.catalog.serializers import (
     ProductoSerializer,
     PuestoSerializer,
 )
-from apps.common.permissions import EsAdministrador, EsDuenoOAdmin, EsVendedorAprobado
+from apps.common.permissions import EsDuenoOAdmin, EsVendedorAprobado
 from apps.common.query import aplicar_ordenamiento, parametro_entero
+from apps.rbac.acceso import tiene_recurso
+from apps.rbac.permissions import TieneRecurso
 from apps.reviews.services import anotar_reputacion
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
@@ -68,12 +70,12 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
-        return [IsAuthenticated(), EsAdministrador()]
+        return [IsAuthenticated(), TieneRecurso("admin.categorias")()]
 
     def get_queryset(self):
         qs = Categoria.objects.all()
         usuario = self.request.user
-        if usuario.is_authenticated and usuario.es_administrador:
+        if usuario.is_authenticated and tiene_recurso(usuario, "admin.categorias"):
             return qs
         return qs.filter(activa=True)
 
@@ -99,7 +101,7 @@ class PuestoViewSet(viewsets.ModelViewSet):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
         if self.action == "moderar":
-            return [EsAdministrador()]
+            return [TieneRecurso("admin.puestos")()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]
@@ -181,7 +183,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
         if self.action == "moderar":
-            return [EsAdministrador()]
+            return [TieneRecurso("admin.productos")()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]

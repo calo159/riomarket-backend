@@ -25,6 +25,7 @@ from apps.common import pricing
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
 from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
+from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
 
@@ -415,7 +416,7 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
 # ---------------------------------------------------------------------------
 def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     """Cada cual ve lo suyo: comprador sus pedidos, vendedor los de sus puestos."""
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.pedidos"):
         pass
     elif usuario.is_authenticated:
         queryset = queryset.filter(Q(id_comprador=usuario) | Q(id_puesto__id_vendedor=usuario))
