@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, LayoutGrid, MapPin, PackageCheck, ShieldCheck, Star, Store, Truck } from 'lucide-react';
+import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
 import { listarCategorias, listarProductos, listarPuestos } from '../api/catalog';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
@@ -12,7 +12,7 @@ import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
 import { claves } from '../lib/queryKeys';
-import { urlAbsoluta } from '../lib/utils';
+import { cn, urlAbsoluta } from '../lib/utils';
 import type { Categoria, Producto } from '../lib/types';
 
 function nombreCategoria(categorias: Categoria[] | undefined, id: number): string | null {
@@ -164,29 +164,49 @@ export function Inicio() {
           )}
         </nav>
 
-        <section className="mt-4 hidden grid-cols-4 gap-3.5 md:grid" aria-label="Accesos rápidos">
+        <section className="mt-4 hidden grid-cols-3 gap-3.5 md:grid" aria-label="Accesos rápidos">
           {[
-            { to: '/catalogo', icono: Truck, titulo: 'Domicilio o retiro', texto: 'Elige en cada pedido' },
-            { to: '#puestos', icono: Store, titulo: 'Puestos de Riohacha', texto: 'Conoce a quién le compras' },
-            { to: '#puestos', icono: ShieldCheck, titulo: 'Vendedores verificados', texto: 'Con identidad revisada' },
+            {
+              to: '/catalogo',
+              titulo: 'Pide a domicilio o recoge en el puesto',
+              texto: 'Tú eliges cómo recibirlo en cada pedido.',
+              foto: '/landing/arepa-de-huevo.webp',
+            },
+            {
+              to: '#puestos',
+              titulo: 'Conoce los puestos de Riohacha',
+              texto: 'Vendedores con la identidad verificada.',
+              foto: '/landing/aguacate.webp',
+            },
             {
               to: autenticado ? inicioPorRol(rol) : '/registro?rol=vendedor',
-              icono: PackageCheck,
               titulo: 'Vende en RioMarket',
-              texto: 'Abre tu puesto en línea',
+              texto: 'Abre tu puesto en línea.',
+              foto: '/landing/coco.webp',
+              destacado: true,
             },
-          ].map(({ to, icono: Icono, titulo, texto }) => {
-            const clase =
-              'card card-hover flex items-center gap-3 p-4 text-tinta hover:text-tinta dark:text-slate-100 dark:hover:text-slate-100';
+          ].map(({ to, titulo, texto, foto, destacado }) => {
+            const clase = cn(
+              'card card-hover grid min-h-[116px] grid-cols-[minmax(0,1fr)_38%] overflow-hidden text-tinta hover:text-tinta dark:text-slate-100 dark:hover:text-slate-100',
+              destacado && 'border-transparent bg-amarillo dark:bg-amarillo dark:text-tinta dark:hover:text-tinta',
+            );
             const contenido = (
               <>
-                <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-200">
-                  <Icono className="h-[22px] w-[22px]" aria-hidden="true" />
+                <span className="flex flex-col justify-center gap-1 p-4">
+                  <b className="text-base leading-tight">{titulo}</b>
+                  <small className={cn('text-[13px]', destacado ? 'text-[#38505B]' : 'text-slate-500 dark:text-slate-400')}>
+                    {texto}
+                  </small>
                 </span>
-                <span>
-                  <b className="block text-[15px]">{titulo}</b>
-                  <small className="text-[13px] text-slate-500 dark:text-slate-400">{texto}</small>
-                </span>
+                <img
+                  src={foto}
+                  alt=""
+                  width={640}
+                  height={640}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
               </>
             );
             return to.startsWith('#') ? (
