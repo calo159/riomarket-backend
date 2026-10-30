@@ -149,6 +149,17 @@ export function PublicLayout() {
               <MapPin className="h-4 w-4" aria-hidden="true" /> Entregar en Riohacha
             </span>
             <MenuItems items={publicos} badges={badges} variante="encabezado" />
+            <NavLink
+              to="/mapa"
+              className={({ isActive }) =>
+                cn(
+                  'inline-flex min-h-[32px] items-center border-b-2 py-1 text-sm font-medium transition-colors',
+                  isActive ? 'border-amarillo text-white' : 'border-transparent text-[#E2F3F5] hover:text-white',
+                )
+              }
+            >
+              Mapa
+            </NavLink>
             {panel && (
               <NavLink
                 to={panel.ruta}
@@ -171,9 +182,22 @@ export function PublicLayout() {
               </Link>
             )}
           </nav>
-          <p className="flex items-center gap-1.5 pb-2.5 text-[13px] font-semibold md:hidden">
-            <MapPin className="h-[15px] w-[15px]" aria-hidden="true" /> Entregar en Riohacha
-          </p>
+          <div className="flex items-center justify-between gap-3 pb-1 text-[13px] font-semibold md:hidden">
+            <p className="flex items-center gap-1.5">
+              <MapPin className="h-[15px] w-[15px]" aria-hidden="true" /> Entregar en Riohacha
+            </p>
+            <NavLink
+              to="/mapa"
+              className={({ isActive }) =>
+                cn(
+                  'inline-flex min-h-[44px] items-center border-b-2 px-1',
+                  isActive ? 'border-amarillo' : 'border-transparent',
+                )
+              }
+            >
+              Mapa de puestos
+            </NavLink>
+          </div>
         </div>
       </header>
 
@@ -191,6 +215,7 @@ export function PublicLayout() {
             <h2 className="font-bold text-white">Comprar</h2>
             <ul className="mt-1">
               <li><Link className="pie-enlace" to="/catalogo">Catálogo</Link></li>
+              <li><Link className="pie-enlace" to="/mapa">Mapa de puestos</Link></li>
               <li><Link className="pie-enlace" to="/carrito">Carrito</Link></li>
               {tiene('mis_pedidos') && <li><Link className="pie-enlace" to="/mis-pedidos">Mis pedidos</Link></li>}
             </ul>
