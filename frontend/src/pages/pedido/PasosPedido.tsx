@@ -1,17 +1,30 @@
-import { CheckCircle2, ChefHat, Clock, PackageCheck, Truck, XCircle, type LucideIcon } from 'lucide-react';
+import { CheckCircle2, ChefHat, Clock, PackageCheck, Store, Truck, XCircle, type LucideIcon } from 'lucide-react';
 import { ETIQUETAS_PEDIDO } from '../../lib/format';
 import { cn } from '../../lib/utils';
 
-const PASOS: { clave: string; icono: LucideIcon }[] = [
+interface Paso {
+  clave: string;
+  icono: LucideIcon;
+}
+
+const INICIO: Paso[] = [
   { clave: 'pendiente', icono: Clock },
   { clave: 'confirmado', icono: CheckCircle2 },
   { clave: 'en_preparacion', icono: ChefHat },
-  { clave: 'en_camino', icono: Truck },
-  { clave: 'entregado', icono: PackageCheck },
 ];
+const FINAL: Paso = { clave: 'entregado', icono: PackageCheck };
+
+const PASOS_DOMICILIO: Paso[] = [...INICIO, { clave: 'en_camino', icono: Truck }, FINAL];
+const PASOS_RETIRO: Paso[] = [...INICIO, { clave: 'listo_para_recoger', icono: Store }, FINAL];
+
+/** Los pasos dependen de cómo se entrega: un retiro nunca va «en camino» (nadie lo lleva). */
+export function pasosDelPedido(tipoEntrega: string | undefined): Paso[] {
+  return tipoEntrega === 'retiro' ? PASOS_RETIRO : PASOS_DOMICILIO;
+}
 
 /** Seguimiento visual del pedido: pasos con iconos y barra de progreso animada. */
-export function PasosPedido({ estado }: { estado: string }) {
+export function PasosPedido({ estado, tipoEntrega }: { estado: string; tipoEntrega?: string }) {
+  const PASOS = pasosDelPedido(tipoEntrega);
   if (estado === 'cancelado') {
     return (
       <div
@@ -27,7 +40,9 @@ export function PasosPedido({ estado }: { estado: string }) {
       </div>
     );
   }
-  const actual = Math.max(0, PASOS.findIndex((p) => p.clave === estado));
+  // Un retiro heredado «en camino» se muestra en su paso equivalente: listo para recoger.
+  const claveActual = tipoEntrega === 'retiro' && estado === 'en_camino' ? 'listo_para_recoger' : estado;
+  const actual = Math.max(0, PASOS.findIndex((p) => p.clave === claveActual));
   const avance = (actual / (PASOS.length - 1)) * 100;
   return (
     <ol className="relative mt-6 grid grid-cols-1 gap-3 sm:grid-cols-5 sm:gap-2" aria-label="Estado del pedido">

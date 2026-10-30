@@ -17,7 +17,7 @@ import { CargandoPantalla, EstadoVacio } from '../components/ui/Estado';
 import { Campo } from '../components/ui/Campos';
 import { formatearMoneda } from '../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
-import { crearPedido, type DatosPedido } from '../api/orders';
+import { crearPedidoConPagoAlRecoger, type DatosPedido } from '../api/orders';
 import { validarCupon } from '../api/coupons';
 import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
@@ -107,12 +107,16 @@ export function Checkout() {
         });
         idDireccion = nueva.id;
       }
-      return crearPedido({ ...datos, id_direccion: idDireccion });
+      return crearPedidoConPagoAlRecoger({ ...datos, id_direccion: idDireccion });
     },
     onSuccess: (pedido) => {
       vaciar();
       if (guardarEnLibreta) void queryClient.invalidateQueries({ queryKey: claves.direcciones });
-      toast.exito('¡Pedido creado! Ahora puedes registrar el pago.');
+      toast.exito(
+        pedido.tipo_entrega === 'retiro'
+          ? '¡Pedido creado! Pagas en el puesto al recoger.'
+          : '¡Pedido creado! Ahora puedes registrar el pago.',
+      );
       navigate(`/pedidos/${pedido.id}?nuevo=1`);
     },
     onError: (error) => {
@@ -225,6 +229,11 @@ export function Checkout() {
                 </p>
                 {puesto.data.horario && <p className="mt-1 text-slate-500 dark:text-slate-400">Horario: {puesto.data.horario}</p>}
               </div>
+            )}
+            {tipoEntrega === 'retiro' && (
+              <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                Pagas en el puesto al recoger (efectivo)
+              </p>
             )}
           </section>
 

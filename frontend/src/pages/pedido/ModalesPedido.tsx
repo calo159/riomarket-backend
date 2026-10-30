@@ -69,9 +69,16 @@ export function ModalNoRecibido({ abierto, onCerrar, pedidoId, onExito }: PropsM
 }
 
 /** El comprador registra el pago del pedido con el método elegido. */
-export function ModalPago({ abierto, onCerrar, pedidoId, onExito, total }: PropsModal & { total: string }) {
+export function ModalPago({
+  abierto,
+  onCerrar,
+  pedidoId,
+  onExito,
+  total,
+  tipoEntrega,
+}: PropsModal & { total: string; tipoEntrega?: string }) {
   const toast = useToast();
-  const [metodo, setMetodo] = useState(SANDBOX_PAGOS ? 'simulado' : 'efectivo');
+  const [metodo, setMetodo] = useState(tipoEntrega === 'retiro' || !SANDBOX_PAGOS ? 'efectivo' : 'simulado');
   const [error, setError] = useState('');
 
   const pagar = useMutation({
@@ -111,6 +118,9 @@ export function ModalPago({ abierto, onCerrar, pedidoId, onExito, total }: Props
           <option value="daviplata">Daviplata</option>
         </select>
       </Campo>
+      {tipoEntrega === 'retiro' && metodo === 'efectivo' && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pagas en el puesto al recoger tu pedido.</p>
+      )}
       <ErrorCampo mensaje={error} />
       <div className="mt-5 flex justify-end gap-2">
         <button type="button" className="btn-secondary" onClick={onCerrar} disabled={pagar.isPending}>

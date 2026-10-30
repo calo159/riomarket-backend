@@ -915,7 +915,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description El comprador confirma que recibió el pedido (en_camino → entregado). El vendedor no puede marcar entregado; el administrador solo para resolver disputas. */
+        /** @description Cierra la entrega. Domicilio: el comprador confirma que lo recibió (en_camino → entregado); el vendedor no puede. Retiro: desde listo_para_recoger puede el vendedor del puesto, el comprador o el administrador; si el pago es en efectivo y sigue pendiente, solo el vendedor o el administrador (cobran en mano y el pago pasa a aprobado). */
         post: operations["orders_pedidos_entregar_create"];
         delete?: never;
         options?: never;
@@ -932,8 +932,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description El vendedor marca que entregó el pedido al domiciliario o que está listo para retirar (en_preparacion → en_camino). */
+        /** @description El vendedor marca que entregó el pedido a domicilio al repartidor (en_preparacion → en_camino). Solo pedidos a domicilio. */
         post: operations["orders_pedidos_enviar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/pedidos/{id}/listo-para-recoger/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description El vendedor avisa que el pedido de retiro está listo para recoger (en_preparacion → listo_para_recoger). Solo pedidos de retiro. */
+        post: operations["orders_pedidos_listo_para_recoger_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -949,7 +966,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description El comprador reporta que no recibió el pedido en camino. No cambia el estado, notifica al vendedor y solo se permite una vez. */
+        /** @description El comprador reporta que no recibió el pedido a domicilio en camino. No cambia el estado, notifica al vendedor y solo se permite una vez. No aplica a retiros. */
         post: operations["orders_pedidos_no_recibido_create"];
         delete?: never;
         options?: never;
@@ -2079,11 +2096,12 @@ export interface components {
          *     * `confirmado` - Confirmado
          *     * `en_preparacion` - En preparación
          *     * `en_camino` - En camino
+         *     * `listo_para_recoger` - Listo para recoger
          *     * `entregado` - Entregado
          *     * `cancelado` - Cancelado
          * @enum {string}
          */
-        PedidoEstadoEnum: "pendiente" | "confirmado" | "en_preparacion" | "en_camino" | "entregado" | "cancelado";
+        PedidoEstadoEnum: "pendiente" | "confirmado" | "en_preparacion" | "en_camino" | "listo_para_recoger" | "entregado" | "cancelado";
         PedidoRequest: {
             /** Puesto */
             id_puesto: number;
@@ -2428,6 +2446,7 @@ export interface components {
          *     * `pedido_confirmado` - Pedido confirmado
          *     * `pedido_en_preparacion` - Pedido en preparación
          *     * `pedido_en_camino` - Pedido en camino
+         *     * `pedido_listo_para_recoger` - Pedido listo para recoger
          *     * `pedido_entregado` - Pedido entregado
          *     * `pedido_cancelado` - Pedido cancelado
          *     * `pago_aprobado` - Pago aprobado
@@ -2436,7 +2455,7 @@ export interface components {
          *     * `general` - General
          * @enum {string}
          */
-        TipoEnum: "pedido_creado" | "pedido_confirmado" | "pedido_en_preparacion" | "pedido_en_camino" | "pedido_entregado" | "pedido_cancelado" | "pago_aprobado" | "pago_rechazado" | "verificacion" | "general";
+        TipoEnum: "pedido_creado" | "pedido_confirmado" | "pedido_en_preparacion" | "pedido_en_camino" | "pedido_listo_para_recoger" | "pedido_entregado" | "pedido_cancelado" | "pago_aprobado" | "pago_rechazado" | "verificacion" | "general";
         TokenRefresh: {
             readonly access: string;
             refresh: string;
@@ -4285,7 +4304,7 @@ export interface operations {
                 page_size?: number;
                 /** @description ID del pedido */
                 pedido?: number;
-                tipo?: "general" | "pago_aprobado" | "pago_rechazado" | "pedido_cancelado" | "pedido_confirmado" | "pedido_creado" | "pedido_en_camino" | "pedido_en_preparacion" | "pedido_entregado" | "verificacion";
+                tipo?: "general" | "pago_aprobado" | "pago_rechazado" | "pedido_cancelado" | "pedido_confirmado" | "pedido_creado" | "pedido_en_camino" | "pedido_en_preparacion" | "pedido_entregado" | "pedido_listo_para_recoger" | "verificacion";
             };
             header?: never;
             path?: never;
@@ -4597,6 +4616,34 @@ export interface operations {
         };
     };
     orders_pedidos_enviar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este pedido. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PedidoRequest"];
+                "multipart/form-data": components["schemas"]["PedidoRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Pedido"];
+                };
+            };
+        };
+    };
+    orders_pedidos_listo_para_recoger_create: {
         parameters: {
             query?: never;
             header?: never;

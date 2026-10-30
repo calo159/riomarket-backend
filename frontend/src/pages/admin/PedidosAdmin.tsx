@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, ClipboardList, Package, Truck, XCircle } from 'lucide-react';
+import { ArrowRight, ClipboardList, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
@@ -13,17 +13,9 @@ import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { ICONOS_SIGUIENTE, siguienteAccion } from '../pedido/siguienteAccion';
 
 const TAMANO = 15;
-
-const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono: typeof CheckCircle2 } | null> = {
-  pendiente: { accion: 'confirmar', etiqueta: 'Confirmar', icono: CheckCircle2 },
-  confirmado: { accion: 'en-preparacion', etiqueta: 'En preparación', icono: Package },
-  en_preparacion: { accion: 'enviar', etiqueta: 'En camino', icono: Truck },
-  en_camino: { accion: 'entregar', etiqueta: 'Marcar entregado', icono: CheckCircle2 },
-  entregado: null,
-  cancelado: null,
-};
 
 export function PedidosAdmin() {
   const queryClient = useQueryClient();
@@ -115,10 +107,9 @@ export function PedidosAdmin() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const siguiente = SIGUIENTE[pedido.estado];
-              const siguientePermitido = siguiente && pedido.acciones_permitidas?.includes(siguiente.accion) ? siguiente : null;
+              const siguientePermitido = siguienteAccion(pedido, 'admin');
               const puedeCancelar = pedido.acciones_permitidas?.includes('cancelar');
-              const Icono = siguientePermitido?.icono;
+              const Icono = siguientePermitido ? ICONOS_SIGUIENTE[siguientePermitido.icono] : null;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
