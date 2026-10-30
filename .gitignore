@@ -61,3 +61,7 @@ schema.yaml
 Thumbs.db
 
 .env
+
+# Permisos locales de Claude Code (los reescribe la herramienta; no se versionan)
+.claude/settings.json
+.claude/settings.local.json
