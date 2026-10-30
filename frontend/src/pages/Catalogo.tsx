@@ -192,7 +192,7 @@ export function Catalogo() {
   return (
     <div className="mx-auto max-w-[1240px] px-3 py-4 sm:px-5 md:py-5">
       <nav aria-label="Ruta" className="mb-3 text-[13px] text-slate-500 dark:text-slate-400">
-        <Link to="/" className="link">Inicio</Link> › {categoriaActual ?? 'Catálogo'}
+        <Link to="/tienda" className="link">Inicio</Link> › {categoriaActual ?? 'Catálogo'}
       </nav>
       <div className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)]">
         <aside className="card hidden h-fit p-4 lg:block" aria-label="Filtros">
@@ -248,7 +248,7 @@ export function Catalogo() {
               titulo="No encontramos productos"
               descripcion="Prueba con otra búsqueda o quita algunos filtros."
               icono={<PackageSearch className="h-7 w-7" />}
-              accion={hayFiltros ? <button type="button" className="btn-secondary" onClick={limpiar}>Limpiar filtros</button> : <Link to="/" className="btn-primary">Volver al inicio</Link>}
+              accion={hayFiltros ? <button type="button" className="btn-secondary" onClick={limpiar}>Limpiar filtros</button> : <Link to="/tienda" className="btn-primary">Volver al inicio</Link>}
             />
           )}
           {productos.data && productos.data.results.length > 0 && (

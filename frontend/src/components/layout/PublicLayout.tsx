@@ -225,7 +225,7 @@ export function PublicLayout() {
         className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-slate-200 bg-white md:hidden dark:border-slate-800 dark:bg-slate-900"
         aria-label="Navegación"
       >
-        <Pestana to="/" end icono={Home} etiqueta="Inicio" />
+        <Pestana to="/tienda" end icono={Home} etiqueta="Inicio" />
         <Pestana to="/catalogo" icono={LayoutGrid} etiqueta="Catálogo" />
         <Pestana
           to="/carrito"

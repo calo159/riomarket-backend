@@ -14,7 +14,7 @@ export function Logo({
 }) {
   return (
     <Link
-      to="/"
+      to="/tienda"
       className={cn(
         'inline-flex items-center rounded-lg text-[27px] font-extrabold tracking-[-0.03em]',
         sobreMarca ? 'text-white hover:text-white' : 'text-brand-600 dark:text-white',

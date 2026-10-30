@@ -45,7 +45,7 @@ export function PanelLayout() {
       </nav>
       <div className="space-y-1 border-t p-3">
         <Link
-          to="/"
+          to="/tienda"
           className="flex min-h-[44px] items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:min-h-[40px]"
         >
           <Store className="h-[18px] w-[18px]" aria-hidden="true" /> Ver la tienda
@@ -79,7 +79,7 @@ export function PanelLayout() {
         <div className="ml-auto flex items-center gap-0.5">
           <ThemeToggle variante="encabezado" />
           <NotificationBell variante="encabezado" />
-          <Link to="/" className="acto-encabezado hidden sm:inline-flex">
+          <Link to="/tienda" className="acto-encabezado hidden sm:inline-flex">
             <Store className="h-5 w-5" aria-hidden="true" /> Ver la tienda
           </Link>
           <span

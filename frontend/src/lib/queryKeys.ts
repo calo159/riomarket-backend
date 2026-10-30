@@ -93,6 +93,7 @@ export const claves = {
     admin: (pagina: Filtro, busqueda: Filtro, estado: Filtro) =>
       ['puestos', 'admin', pagina, busqueda, estado] as const,
     inicio: ['puestos', 'inicio'] as const,
+    landing: ['puestos', 'landing'] as const,
     todosParaSeleccion: ['puestos', 'todos'] as const,
     vendedor: (usuarioId: Id) => ['puestos', 'vendedor', idClave(usuarioId)] as const,
   },
