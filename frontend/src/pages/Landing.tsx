@@ -399,12 +399,12 @@ export function Landing() {
             <div className={s.stage}>
               <figure className={cn(s.ph, s.phBig)}>
                 <img
-                  src="/landing/puesto-pescado.webp"
+                  src="/landing/aguacate.webp"
                   width={640}
                   height={640}
                   {...{ fetchpriority: 'high' }}
                   decoding="async"
-                  alt="Puesto de pescado en un mercado, con el pescado sobre hielo y compradores mirando"
+                  alt="Aguacates partidos sobre una hoja de plátano"
                 />
               </figure>
               <figure className={cn(s.ph, s.phSm)}>
