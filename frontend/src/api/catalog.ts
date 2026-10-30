@@ -77,6 +77,7 @@ export interface DatosPuesto {
   longitud?: string | null;
   horario?: string;
   ofrece_domicilio?: boolean;
+  acepta_whatsapp?: boolean;
 }
 
 export async function crearPuesto(datos: DatosPuesto): Promise<Puesto> {

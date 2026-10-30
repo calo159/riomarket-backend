@@ -23,6 +23,7 @@ import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Categoria, Puesto } from '../../lib/types';
 import { cn } from '../../lib/utils';
 import { claves } from '../../lib/queryKeys';
+import { InterruptorWhatsapp } from './InterruptorWhatsapp';
 
 const VACIO: DatosPuesto = {
   nombre: '',
@@ -208,6 +209,8 @@ export function Puestos() {
                 ))
               )}
             </div>
+
+            <InterruptorWhatsapp puesto={puesto} />
 
             <div className="mt-auto flex flex-wrap gap-2 pt-4">
               <Link to={`/puestos/${puesto.id}`} className="btn-secondary py-1.5 text-xs">Ver público</Link>

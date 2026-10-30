@@ -22,6 +22,8 @@ import { Estrellas } from '../components/ui/Estrellas';
 import { useSession } from '../auth/SessionProvider';
 import { Imagen } from '../components/Imagen';
 import { claves } from '../lib/queryKeys';
+import { BotonWhatsapp } from '../components/BotonWhatsapp';
+import { mensajeWhatsappProducto } from '../lib/whatsapp';
 
 export function ProductoDetalle() {
   const { id } = useParams();
@@ -263,6 +265,11 @@ export function ProductoDetalle() {
               </div>
             </div>
           )}
+          <BotonWhatsapp
+            numero={tienda?.whatsapp}
+            mensaje={mensajeWhatsappProducto(datos.nombre)}
+            className="min-h-[48px] text-base"
+          />
         </aside>
       </div>
 
