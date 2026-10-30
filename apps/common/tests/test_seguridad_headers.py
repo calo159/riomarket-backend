@@ -61,9 +61,14 @@ def test_con_medios_en_un_almacen_externo_la_csp_permite_esas_imagenes(settings)
 
     origenes = _directivas(_csp(_Peticion()))["img-src"].split()
 
-    assert "https://abc123.storage.supabase.co" in origenes  # solo el origen, sin la ruta
-    assert "'self'" in origenes
-    assert not any("/storage/v1" in origen for origen in origenes)
+    # Solo el origen del almacén (sin la ruta del bucket), además de lo que ya había.
+    assert origenes == [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://tile.openstreetmap.org",
+        "https://abc123.storage.supabase.co",
+    ]
 
 
 def test_con_medios_locales_la_csp_no_abre_otros_origenes(settings):
