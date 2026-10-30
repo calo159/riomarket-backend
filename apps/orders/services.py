@@ -122,15 +122,19 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
         pedido.total = subtotal + pedido.tarifa_domicilio - descuento
         pedido.full_clean()
         pedido.save()
-        for producto, cantidad in items_a_crear:
-            ItemPedido.objects.create(
-                id_pedido=pedido,
-                id_producto=producto,
-                nombre_producto=producto.nombre,
-                unidad_medida=producto.unidad_medida,
-                precio_unitario=producto.precio,
-                cantidad=cantidad,
-            )
+        ItemPedido.objects.bulk_create(
+            [
+                ItemPedido(
+                    id_pedido=pedido,
+                    id_producto=producto,
+                    nombre_producto=producto.nombre,
+                    unidad_medida=producto.unidad_medida,
+                    precio_unitario=producto.precio,
+                    cantidad=cantidad,
+                )
+                for producto, cantidad in items_a_crear
+            ]
+        )
         if cupon is not None:
             from apps.promotions import services as promos_services
 

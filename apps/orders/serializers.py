@@ -8,8 +8,27 @@ servidor, nunca llegan del cliente.
 
 from rest_framework import serializers
 
+from apps.catalog.models import Producto
 from apps.orders import services
 from apps.orders.models import ItemPedido, Pedido
+
+MAX_LINEAS_POR_PEDIDO = 50
+
+
+class ProductoPorId(serializers.PrimaryKeyRelatedField):
+    """Recibe el id del producto sin consultarlo: ``crear_pedido`` los trae todos de una vez.
+
+    El campo por defecto hace un SELECT por línea (y 300 líneas inventadas costaban 300
+    consultas antes del 400).
+    """
+
+    def to_internal_value(self, data):
+        if isinstance(data, bool) or not isinstance(data, int | str):
+            self.fail("incorrect_type", data_type=type(data).__name__)
+        try:
+            return int(data)
+        except ValueError:
+            self.fail("incorrect_type", data_type=type(data).__name__)
 
 
 class ItemPedidoSerializer(serializers.ModelSerializer):
@@ -20,6 +39,7 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
     """
 
     subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    id_producto = ProductoPorId(queryset=Producto.objects.all())
 
     class Meta:
         model = ItemPedido
@@ -47,7 +67,7 @@ class ReportarNoRecibidoSerializer(serializers.Serializer):
 
 
 class PedidoSerializer(serializers.ModelSerializer):
-    items = ItemPedidoSerializer(many=True, allow_empty=False)
+    items = ItemPedidoSerializer(many=True, allow_empty=False, max_length=MAX_LINEAS_POR_PEDIDO)
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
     acciones_permitidas = serializers.SerializerMethodField()
 
