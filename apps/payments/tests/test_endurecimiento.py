@@ -93,3 +93,33 @@ class TestWebhookValidaMontoYFecha:
 
         pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
         assert self._enviar(cliente_anon, settings, pago, timestamp=time.time()).status_code == 200
+
+
+@pytest.mark.django_db
+class TestNetoYReintento:
+    def test_neto_del_vendedor_nunca_es_negativo(self, comprador, pedido):
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        # Cupón del 100 %: el descuento supera lo que queda tras la comisión.
+        pago.descuento_aplicado = pago.subtotal_pedido
+        assert pago.neto_vendedor == 0
+
+    def test_un_pago_rechazado_se_puede_reintentar(self, comprador, pedido):
+        pago = pagos_services.crear_pago(
+            pedido=pedido, usuario=comprador, datos={"metodo_pago": Pago.MetodoPago.SIMULADO}
+        )
+        pagos_services.simular_pago(pago=pago, usuario=comprador, datos={"accion": "rechazar"})
+        pago.refresh_from_db()
+        assert pago.estado == Pago.Estado.RECHAZADO
+
+        nuevo = pagos_services.crear_pago(
+            pedido=pedido, usuario=comprador, datos={"metodo_pago": Pago.MetodoPago.EFECTIVO}
+        )
+        assert nuevo.pk == pago.pk
+        assert nuevo.estado == Pago.Estado.PENDIENTE
+        assert nuevo.metodo_pago == Pago.MetodoPago.EFECTIVO
+
+    def test_un_pago_aprobado_no_se_reemplaza(self, comprador, pedido):
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        pagos_services.simular_pago(pago=pago, usuario=comprador, datos={})
+        with pytest.raises(DjangoValidationError):
+            pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})

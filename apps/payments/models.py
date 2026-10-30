@@ -144,9 +144,11 @@ class Pago(models.Model):
         """Lo que recibe el vendedor: subtotal - comisión - descuento (ADR-003/6b)."""
         from apps.common import pricing
 
-        return pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma) - Decimal(
+        neto = pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma) - Decimal(
             self.descuento_aplicado
         )
+        # Con un cupón muy alto el vendedor recibe 0 (la plataforma absorbe la diferencia).
+        return max(neto, Decimal("0.00"))
 
     def __str__(self):
         return f"Pago #{self.pk} - Pedido #{self.id_pedido_id} - {self.estado}"

@@ -61,7 +61,7 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
         raise ValidationError({"no_autorizado": "Usuario no autorizado."})
     if not (usuario.es_administrador or pedido.id_comprador_id == usuario.pk):
         raise PermissionDenied("Solo el comprador o el administrador pueden crear el pago.")
-    if hasattr(pedido, "pago"):
+    if hasattr(pedido, "pago") and pedido.pago.estado != Pago.Estado.RECHAZADO:
         raise ValidationError({"pedido": "El pedido ya tiene un pago registrado."})
     if pedido.estado == Pedido.Estado.CANCELADO:
         raise ValidationError({"id_pedido": "No se puede pagar un pedido cancelado."})
@@ -86,18 +86,27 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
     total = pedido.subtotal + tarifa - pedido.descuento_cupon
 
     with transaction.atomic():
-        pago = Pago(
-            id_pedido=pedido,
-            metodo_pago=metodo,
-            estado=Pago.Estado.PENDIENTE,
-            subtotal_pedido=pedido.subtotal,
-            tarifa_domicilio_aplicada=tarifa,
-            comision_plataforma=comision,
-            descuento_aplicado=pedido.descuento_cupon,
-            total_cobrado=total,
-            notas=(datos.get("notas") or "").strip(),
-            datos_sandbox={},
+        # Un pago rechazado se reutiliza (relación 1 a 1): el comprador puede reintentar.
+        pago = Pago.objects.select_for_update().filter(id_pedido=pedido).first() or Pago(
+            id_pedido=pedido
         )
+        if pago.pk and pago.estado != Pago.Estado.RECHAZADO:
+            raise ValidationError({"pedido": "El pedido ya tiene un pago registrado."})
+        pago.fecha_aprobacion = None
+        pago.referencia_gateway = ""
+        campos = {
+            "metodo_pago": metodo,
+            "estado": Pago.Estado.PENDIENTE,
+            "subtotal_pedido": pedido.subtotal,
+            "tarifa_domicilio_aplicada": tarifa,
+            "comision_plataforma": comision,
+            "descuento_aplicado": pedido.descuento_cupon,
+            "total_cobrado": total,
+            "notas": (datos.get("notas") or "").strip(),
+            "datos_sandbox": {},
+        }
+        for campo, valor in campos.items():
+            setattr(pago, campo, valor)
         pago.full_clean()
         pago.save()
     _auditar_pago(usuario, pago, "crear")
