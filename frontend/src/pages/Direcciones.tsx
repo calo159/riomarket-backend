@@ -118,7 +118,6 @@ export function Direcciones() {
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <EncabezadoPagina
         titulo="Mis direcciones"
-        descripcion="Guarda tus lugares frecuentes para agilizar tus pedidos."
         acciones={
           <button type="button" className="btn-primary" onClick={abrirNueva}>
             <Plus className="h-4 w-4" /> Nueva dirección

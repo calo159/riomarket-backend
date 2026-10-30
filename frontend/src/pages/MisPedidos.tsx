@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Package } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { listarPedidos } from '../api/orders';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
@@ -30,7 +30,6 @@ export function MisPedidos() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <EncabezadoPagina
         titulo="Mis pedidos"
-        descripcion="Sigue el estado de tus compras y vuelve a pedir tus favoritos."
         acciones={
           <select
             className="input w-auto"
@@ -67,9 +66,6 @@ export function MisPedidos() {
                 to={`/pedidos/${pedido.id}`}
                 className="card flex flex-col gap-3 p-4 transition hover:border-brand-300 sm:flex-row sm:items-center"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white dark:bg-brand-500">
-                  <Package className="h-6 w-6" />
-                </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">Pedido #{pedido.id}</p>
@@ -81,7 +77,7 @@ export function MisPedidos() {
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
-                  <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>
+                  <p className="tnum text-lg font-extrabold">{formatearMoneda(pedido.total)}</p>
                   <ChevronRight className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                 </div>
               </Link>

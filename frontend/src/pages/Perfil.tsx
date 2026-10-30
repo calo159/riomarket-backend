@@ -85,7 +85,7 @@ export function Perfil() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <EncabezadoPagina titulo="Mi perfil" descripcion="Gestiona tus datos de contacto y revisa el estado de tu cuenta." />
+      <EncabezadoPagina titulo="Mi perfil" />
 
       <section className="card mb-6 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white dark:bg-brand-500 text-xl font-bold">
