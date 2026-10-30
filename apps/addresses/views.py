@@ -79,3 +79,6 @@ class DireccionViewSet(viewsets.ModelViewSet):
         direccion = self.get_object()
         direccion = services.marcar_predeterminada(direccion=direccion, usuario=request.user)
         return Response(DireccionSerializer(direccion).data)
+
+    def perform_destroy(self, instance):
+        services.eliminar_direccion(direccion=instance, usuario=self.request.user)
