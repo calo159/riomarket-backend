@@ -1,14 +1,14 @@
 # Auditoría general de RioMarket
 
-Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base de datos y rendimiento, frontend, infraestructura, lógica y tests); **cada hallazgo se verificó leyendo el código o con una prueba que falla antes y pasa después**. Los duplicados entre áreas se marcan con `=`.
+Rama `mejora/auditoria-general` (la rama `mejora/optimizacion` cerró R-06, R-13, R-16, L-18, F-08 y F-10 a F-20 salvo F-19). Cinco revisiones en paralelo (seguridad, base de datos y rendimiento, frontend, infraestructura, lógica y tests); **cada hallazgo se verificó leyendo el código o con una prueba que falla antes y pasa después**. Los duplicados entre áreas se marcan con `=`.
 
 ## Resumen ejecutivo
 
 - Hallazgos únicos: **91** (8 duplicados entre áreas).
 - Por severidad: **2** crítico, **12** alto, **44** medio, **33** bajo.
 - Por área: Frontend 22, Infraestructura 20, Seguridad 18, Rendimiento/BD 16, Lógica 15.
-- Estado: **50** corregido, **28** propuesto, **13** corregido en parte.
-- Línea base → final: 666 → 760+ pruebas de backend, 33 → 61 de frontend; cobertura de backend 92 %.
+- Estado: **64** corregido, **19** propuesto, **8** corregido en parte (más 8 duplicados que siguen al hallazgo original).
+- Línea base → final: 666 → 801 pruebas de backend, 33 → 73 de frontend; cobertura de backend 92 % (medida antes de la rama `mejora/optimizacion`).
 
 ### Top 10 de riesgos
 
@@ -57,17 +57,17 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | R-03 | MEDIO | `crear_pedido` hacía 3 consultas por línea y no limitaba las líneas (302 consultas para un 400) | Corregido | `9a636c7`: 70→47 consultas con 12 líneas; 121→<20 al rechazar 120 |
 | R-04 | MEDIO | Cancelar pedido hacía N+1 sobre productos | Corregido | `aaa531c` |
 | R-05 | MEDIO | `_invalidar_sesiones` hacía `get_or_create` por token (220 consultas con 50) | Corregido | `7c0f750`: 2 consultas |
-| R-06 | MEDIO | `tiene_recurso` consulta la BD en cada llamada, sin caché por petición | Corregido en parte | `8a2b378` en el listado de usuarios; el resto queda propuesto |
+| R-06 | MEDIO | `tiene_recurso` consulta la BD en cada llamada, sin caché por petición | Corregido | `184c7d4`: caché por petición (middleware + `ContextVar`), vaciada por señales si el RBAC cambia dentro de la petición; 3 llamadas pasan de 3 consultas a 1 |
 | R-07 | MEDIO | Listado de pedidos con `OR` sobre join: escaneo completo | Corregido | `9802e78` |
-| R-08 | MEDIO | Casi ningún modelo declara `Meta.indexes` | Corregido en parte | `feb0753`: 6 índices (pedido, producto, pago, notificación, reseña). `Puesto`, `Usuario` y `pg_trgm` propuestos |
+| R-08 | MEDIO | Casi ningún modelo declara `Meta.indexes` | Corregido en parte | `feb0753`: 6 índices (pedido, producto, pago, notificación, reseña). `1b69dbd`: `Puesto (estado, nombre)` y `Usuario (rol/estado, -fecha_registro)`. `pg_trgm` sigue propuesto |
 | R-09 | MEDIO | Filtro de fechas de auditoría con `__date` anulaba el índice | Corregido | `dd31ca3` |
 | R-10 | MEDIO | `COUNT` del listado de puestos arrastraba reseñas y la fila del vendedor | Corregido | `9802e78` |
 | R-11 | MEDIO | `COUNT` del listado de usuarios hacía join/group by con todos los pedidos | Corregido | `9802e78` |
 | R-12 | MEDIO | Listado de roles: dos `Count` sobre dos joins multiplican filas | Corregido | `9802e78` |
-| R-13 | BAJO | `reordenar_imagenes` hace un UPDATE por id y no limitaba la lista | Corregido en parte | `bf9364c`: validación y tope; `bulk_update` propuesto |
+| R-13 | BAJO | `reordenar_imagenes` hace un UPDATE por id y no limitaba la lista | Corregido | `bf9364c`: validación y tope; `5a22b54`: un solo `bulk_update` |
 | R-14 | BAJO | `IntegrityError` en carreras daba 500 | Corregido | `bf9364c` (ver L-09) |
 | R-15 | BAJO | `select_related` sin uso en notificaciones, pedidos, direcciones y pagos | Corregido | `dd31ca3`. Reseñas lo conserva (usa `usuario_nombre`) |
-| R-16 | BAJO | `resumen()` hace 15 consultas sin caché | Propuesto |  |
+| R-16 | BAJO | `resumen()` hace 15 consultas sin caché | Corregido | `66023dd`: `resumen()` pasa de 14 a 8 consultas (una por tabla) con los mismos valores |
 | R-17 | BAJO | Actualizar el perfil dispara la sincronización de roles | Corregido | `906b01b` |
 
 ### Lógica
@@ -91,7 +91,7 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | L-15 | MEDIO | Webhook no idempotente (reintentos dan 400) | Corregido | `7c0f750` |
 | L-16 | BAJO | Formato de errores no uniforme (lista en vez de dict por campo) | Propuesto |  |
 | L-17 | BAJO | Categorías con padre propio o ciclos | Corregido | `bf9364c` |
-| L-18 | BAJO | Direcciones: coordenadas fuera de rango y `DELETE` que se salta el servicio | Corregido en parte | `bf9364c`: rangos. `destroy` propuesto |
+| L-18 | BAJO | Direcciones: coordenadas fuera de rango y `DELETE` que se salta el servicio | Corregido | `bf9364c`: rangos; `6310935`: `DELETE` usa `eliminar_direccion` y promueve otra dirección activa si se borra la predeterminada |
 | L-19 | MEDIO | Recuperación de contraseña sin correo ni pruebas | Duplicado | = S-04 (se añadieron pruebas) |
 | L-20 | BAJO | Producto con precio 0 permitido | Propuesto |  |
 
@@ -133,19 +133,19 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | F-05 | MEDIO | Caracteres corruptos (U+FFFD) en `PedidosAdmin.tsx` | Corregido | `a7a0275` |
 | F-06 | MEDIO | Reembolsar/anular sin confirmación; botones solo-icono sin nombre accesible | Corregido | `cbae80a` |
 | F-07 | MEDIO | El carrito sobrevive al cierre de sesión | Corregido | `a7a0275` |
-| F-08 | MEDIO | «Ingresos aprobados» sumado en cliente con tope de 100 | Propuesto | Endpoint de resumen en el backend |
+| F-08 | MEDIO | «Ingresos aprobados» sumado en cliente con tope de 100 | Corregido | `2d47d32` y `55fd8aa`: `GET /payments/pagos/resumen/` suma el neto en la base de datos (sin tope de 100) y respeta la visibilidad por rol |
 | F-09 | MEDIO | El efecto de direcciones del checkout pisa lo que el usuario edita | Propuesto |  |
-| F-10 | MEDIO | Modal sin trampa de foco | Corregido en parte | Trampa de foco y overlay fuera del teclado en `Modal`; ARIA de `AccountMenu` y del drawer siguen pendientes |
-| F-11 | MEDIO | ARIA inválido en `AccountMenu` y drawer móvil | Propuesto |  |
-| F-12 | MEDIO | Claves de consulta inconsistentes (id numérico vs string) | Propuesto |  |
+| F-10 | MEDIO | Modal sin trampa de foco | Corregido | Trampa de foco y overlay fuera del teclado en `Modal`; el ARIA de `AccountMenu` y del drawer es F-11 |
+| F-11 | MEDIO | ARIA inválido en `AccountMenu` y drawer móvil | Corregido | `5baf87b`: `AccountMenu` sin `role="menu"` (disclosure con `aria-controls`); drawer como `dialog` modal con fondo fuera del teclado y botones con `aria-expanded` |
+| F-12 | MEDIO | Claves de consulta inconsistentes (id numérico vs string) | Corregido | `d654963`: `src/lib/queryKeys.ts` centraliza las claves y normaliza los ids a número |
 | F-13 | MEDIO | «Hoy» calculado en UTC en cupones | Corregido | `cbae80a` |
-| F-14 | BAJO | Formato de calificación y etiquetas de estado duplicados | Propuesto |  |
-| F-15 | BAJO | Componentes de más de 300 líneas (`PedidoDetalle` 580) | Propuesto |  |
-| F-16 | BAJO | Código muerto (`actualizarPedido`, tipos exportados sin uso, `limpiarRefresh` vacío) | Propuesto |  |
-| F-17 | BAJO | `as any` en tarjetas y `api-types.ts` desfasado de las imágenes | Propuesto |  |
-| F-18 | BAJO | Imágenes sin `width/height`; hero con `loading=lazy` | Propuesto |  |
+| F-14 | BAJO | Formato de calificación y etiquetas de estado duplicados | Corregido | `566b6be`: `formatearCalificacion` y `OPCIONES_FILTRO_PEDIDO` en `lib/format.ts` |
+| F-15 | BAJO | Componentes de más de 300 líneas (`PedidoDetalle` 580) | Corregido | `211e721`: `PedidoDetalle` de 573 a 241 líneas, con subcomponentes en `src/pages/pedido/` |
+| F-16 | BAJO | Código muerto (`actualizarPedido`, tipos exportados sin uso, `limpiarRefresh` vacío) | Corregido | `3719ab2`: `actualizarPedido`, `limpiarRefresh`, `contarNoLeidas` y tipos sin uso fuera; exportaciones innecesarias quitadas |
+| F-17 | BAJO | `as any` en tarjetas y `api-types.ts` desfasado de las imágenes | Corregido | `265b87a`: `api-types.ts` regenerado (`logo`/`portada` de `Puesto`) y sin `as any` |
+| F-18 | BAJO | Imágenes sin `width/height`; hero con `loading=lazy` | Corregido | `265b87a`: `width`/`height` en las imágenes; portada del puesto e imagen principal del producto con carga inmediata |
 | F-19 | BAJO | Estados de carga/vacío/título inconsistentes | Corregido en parte | Pagos y Verificaciones corregidos en `cbae80a` |
-| F-20 | BAJO | `staleTime` y sondeos redundantes | Propuesto |  |
+| F-20 | BAJO | `staleTime` y sondeos redundantes | Corregido | `d654963`: sin `staleTime` igual al valor por defecto; la campana usa los badges del menú en lugar de un sondeo propio |
 | F-21 | BAJO | Bucle con `?redirect=/login` | Corregido | `64370a0` |
 | F-22 | BAJO | e2e con solo 2 pruebas | Propuesto |  |
 
@@ -162,6 +162,12 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | Productos activos por nombre | `SCAN` + `TEMP B-TREE` | `SEARCH … USING COVERING INDEX producto_estado_nombre_idx` |
 | Pagos por estado / notificaciones no leídas | `SCAN` / índice solo por usuario | índice compuesto |
 | Tests: listados personales con 2 vs 12 filas | — | consultas constantes (guardia en `tests/test_consultas.py`) |
+| Listados de catálogo, reseñas, categorías y pedidos con 2 vs 10 filas | — | consultas constantes (guardia en `tests/test_consultas_listados.py`); no había N+1 |
+| `resumen()` del panel de administración | 14 consultas | 8 |
+| `tiene_recurso` llamado 3 veces en una petición | 3 consultas | 1 |
+| `reordenar_imagenes` con 8 imágenes | 1 `SELECT` + 8 `UPDATE` | 1 `SELECT` + 1 `UPDATE` |
+| Chunk `schemas-*.js` (zod, react-hook-form) | 118,14 kB (36,53 kB gzip) | 54,79 kB (19,09 kB gzip) con `zod/mini` |
+| Chunk `index-*.js` (librerías + app) | 317,40 kB (104,11 kB gzip) | 52,74 kB de app + `vendor-react` 141,88 kB + `vendor-datos` 86,86 kB + `vendor-router` 39,14 kB (cada deploy solo invalida el de la app) |
 
 ## Propuestas pendientes (requieren decisión)
 
@@ -169,4 +175,4 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 - **Apagar `SEED_DEMO` y `PAYMENTS_SANDBOX_ENABLED` en producción (S-02, S-03).** Quita la clave pública y el pago gratis, pero rompe la demo del curso. En Render: `PAYMENTS_SANDBOX_ENABLED=False` y `SEED_DEMO=false`. Esfuerzo: bajo.
 - **Definir `NUM_PROXIES`, `STORAGE_S3_BUCKET_PRIVADO` y sus credenciales en Render (S-06, I-04).** El código ya los soporta; falta la configuración de tu servicio. Esfuerzo: bajo.
 - **`puede_publicar` fail-closed y vendedor sin verificación en `crear_pedido` (L-05, S-10).** Más seguro, pero invalida cuentas sin fila `Vendedor` y muchas pruebas. Esfuerzo: medio.
-- **Refactor del frontend: dividir `PedidoDetalle`, centralizar claves de consulta, trampa de foco en `Modal` (F-10, F-12, F-15).** Mejora mantenibilidad y accesibilidad sin cambiar funciones. Esfuerzo: medio.
+- **Índices `pg_trgm` para las búsquedas con `icontains` (R-08).** Acelera `?q=` en usuarios, productos y puestos, pero exige la extensión de PostgreSQL y una migración específica del motor. Esfuerzo: bajo.
