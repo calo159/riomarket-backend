@@ -30,11 +30,13 @@ export function useMenu() {
 
 /** Recursos efectivos del usuario; el backend sigue siendo quien decide. */
 export function useAcceso() {
-  const { menu, cargando } = useMenu();
+  const { menu, cargando, error, recargar } = useMenu();
   const recursos = new Set(menu.recursos);
   return {
     recursos,
     cargando,
+    error,
+    recargar,
     tiene: (codigo: string) => recursos.has(codigo),
   };
 }

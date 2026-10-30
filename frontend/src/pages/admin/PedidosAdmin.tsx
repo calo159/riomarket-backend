@@ -42,7 +42,7 @@ export function PedidosAdmin() {
   };
 
   useEffect(() => {
-    document.title = 'Pedidos �� Administraci��n �� RioMarket';
+    document.title = 'Pedidos · Administración · RioMarket';
   }, []);
 
   const pedidos = useQuery({
@@ -85,7 +85,7 @@ export function PedidosAdmin() {
               <option value="">Todos</option>
               <option value="pendiente">Pendientes</option>
               <option value="confirmado">Confirmados</option>
-              <option value="en_preparacion">En preparaci��n</option>
+              <option value="en_preparacion">En preparación</option>
               <option value="en_camino">En camino</option>
               <option value="entregado">Entregados</option>
               <option value="cancelado">Cancelados</option>

@@ -11,6 +11,8 @@ const sesion = vi.hoisted(() => ({
 const acceso = vi.hoisted(() => ({
   recursos: [] as string[],
   cargando: false,
+  error: false,
+  recargar: vi.fn(),
 }));
 
 vi.mock('./SessionProvider', () => ({
@@ -20,6 +22,8 @@ vi.mock('./SessionProvider', () => ({
 vi.mock('../navigation/useMenu', () => ({
   useAcceso: () => ({
     cargando: acceso.cargando,
+    error: acceso.error,
+    recargar: acceso.recargar,
     recursos: new Set(acceso.recursos),
     tiene: (codigo: string) => acceso.recursos.includes(codigo),
   }),
@@ -50,6 +54,7 @@ describe('RutaProtegida', () => {
     sesion.usuario = null;
     acceso.recursos = [];
     acceso.cargando = false;
+    acceso.error = false;
   });
 
   it('redirige al login con el destino cuando no hay sesión', () => {
@@ -86,6 +91,15 @@ describe('RutaProtegida', () => {
     acceso.recursos = ['admin.resumen'];
     montar('/privado', { recurso: 'admin.roles' });
     expect(screen.getByText('sin permiso')).toBeInTheDocument();
+  });
+
+  it('con recurso: si el menú falla ofrece reintentar en vez de mandar a /403', () => {
+    sesion.estado = 'autenticado';
+    sesion.usuario = { rol: 'administrador' };
+    acceso.error = true;
+    montar('/privado', { recurso: 'admin.roles' });
+    expect(screen.queryByText('sin permiso')).not.toBeInTheDocument();
+    expect(screen.getByText(/No pudimos comprobar tus permisos/)).toBeInTheDocument();
   });
 
   it('con recurso: espera a que cargue el menú antes de decidir', () => {
