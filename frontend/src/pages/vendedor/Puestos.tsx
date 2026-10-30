@@ -170,7 +170,6 @@ export function Puestos() {
         <EstadoVacio
           titulo="Aún no tienes puestos"
           descripcion="Crea tu primer puesto para empezar a publicar productos."
-          icono={<Store className="h-9 w-9" />}
           accion={verificado ? <button type="button" className="btn-primary" onClick={abrirNuevo}>Crear puesto</button> : undefined}
         />
       )}

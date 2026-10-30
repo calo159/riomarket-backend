@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Package, Search, Unlock } from 'lucide-react';
+import { Lock, Search, Unlock } from 'lucide-react';
 import { listarProductos, type FiltrosProducto } from '../../api/catalog';
 import { moderarProducto } from '../../api/admin';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -115,7 +115,7 @@ export function ProductosAdmin() {
       {productos.isLoading && <CargandoBloque mensaje="Cargando productos…" />}
       {productos.isError && <EstadoError mensaje="No pudimos cargar los productos." onReintentar={() => void productos.refetch()} />}
       {productos.data && productos.data.results.length === 0 && (
-        <EstadoVacio titulo="Sin productos" descripcion="No hay productos que coincidan con los filtros." icono={<Package className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin productos" descripcion="No hay productos que coincidan con los filtros." />
       )}
       {productos.data && productos.data.results.length > 0 && (
         <>

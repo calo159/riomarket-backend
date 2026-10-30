@@ -132,7 +132,6 @@ export function Direcciones() {
         <EstadoVacio
           titulo="Aún no tienes direcciones"
           descripcion="Agrega tu casa o trabajo para pedir a domicilio más rápido."
-          icono={<MapPin className="h-9 w-9" />}
           accion={<button type="button" className="btn-primary" onClick={abrirNueva}>Agregar dirección</button>}
         />
       )}

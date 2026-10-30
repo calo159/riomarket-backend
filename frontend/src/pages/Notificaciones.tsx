@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, CheckCircle2, CreditCard, Package, ShieldCheck, Truck } from 'lucide-react';
+import { CheckCheck, CheckCircle2, CreditCard, Package, ShieldCheck, Truck } from 'lucide-react';
 import { listarNotificaciones, marcarLeida, marcarTodasLeidas } from '../api/notifications';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
@@ -95,7 +95,6 @@ export function Notificaciones() {
         <EstadoVacio
           titulo="No hay notificaciones"
           descripcion={soloNoLeidas ? 'Estás al día: no tienes notificaciones sin leer.' : 'Aquí verás las novedades de tus pedidos y pagos.'}
-          icono={<Bell className="h-9 w-9" />}
         />
       )}
       {notificaciones.data && notificaciones.data.results.length > 0 && (

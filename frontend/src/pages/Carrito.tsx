@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { formatearMoneda } from '../lib/format';
 import { Imagen } from '../components/Imagen';
@@ -27,7 +27,6 @@ export function Carrito() {
         <EstadoVacio
           titulo="Tu carrito está vacío"
           descripcion="Explora el catálogo y agrega productos de tus vendedores favoritos."
-          icono={<ShoppingCart className="h-9 w-9" />}
           accion={<Link to="/catalogo" className="btn-primary">Ir al catálogo</Link>}
         />
       </div>

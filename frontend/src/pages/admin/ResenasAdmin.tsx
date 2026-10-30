@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Star, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { eliminarResena, listarResenas } from '../../api/reviews';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
@@ -78,7 +78,7 @@ export function ResenasAdmin() {
       {resenas.isLoading && <CargandoBloque mensaje="Cargando reseñas…" />}
       {resenas.isError && <EstadoError mensaje="No pudimos cargar las reseñas." onReintentar={() => void resenas.refetch()} />}
       {resenas.data && resenas.data.results.length === 0 && (
-        <EstadoVacio titulo="Sin reseñas" descripcion="No hay reseñas que coincidan con el filtro." icono={<Star className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin reseñas" descripcion="No hay reseñas que coincidan con el filtro." />
       )}
       {resenas.data && resenas.data.results.length > 0 && (
         <>

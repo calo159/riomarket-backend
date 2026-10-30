@@ -174,7 +174,7 @@ export function ProductosVendedor() {
       {productos.isLoading && <CargandoBloque mensaje="Cargando productos…" />}
       {productos.isError && <EstadoError mensaje="No pudimos cargar productos." onReintentar={() => void productos.refetch()} />}
       {mios.length === 0 && !productos.isLoading && (
-        <EstadoVacio titulo="Sin productos" descripcion="Agrega tu primer producto al catálogo del puesto." icono={<ImagePlus className="h-9 w-9" />} accion={verificado && puestos.data?.results.length ? <button type="button" className="btn-primary" onClick={abrirNuevo}>Crear producto</button> : undefined} />
+        <EstadoVacio titulo="Sin productos" descripcion="Agrega tu primer producto al catálogo del puesto." accion={verificado && puestos.data?.results.length ? <button type="button" className="btn-primary" onClick={abrirNuevo}>Crear producto</button> : undefined} />
       )}
 
       <div className="overflow-x-auto card">

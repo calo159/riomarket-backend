@@ -39,7 +39,7 @@ export function PanelLayout() {
         <Logo />
       </div>
       <div className="border-b px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{tituloPanel}</p>
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">{tituloPanel}</p>
         <p className="mt-1 truncate text-sm font-semibold">{usuario.nombre}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">{ETIQUETAS_ROL[usuario.rol]}</p>
       </div>
@@ -49,14 +49,14 @@ export function PanelLayout() {
       <div className="space-y-1 border-t p-3">
         <Link
           to="/"
-          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <Store className="h-4 w-4" /> Ver la tienda
         </Link>
         <button
           type="button"
           onClick={() => void salir()}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rojo-600 hover:bg-rojo-50 dark:text-rojo-400 dark:hover:bg-rojo-950/40"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-rojo-600 hover:bg-rojo-50 dark:text-rojo-400 dark:hover:bg-rojo-950/40"
         >
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </button>
@@ -84,7 +84,7 @@ export function PanelLayout() {
             role="dialog"
             aria-modal="true"
             aria-label="Menú de navegación"
-            className="relative h-full w-72 max-w-[85vw] border-r bg-white shadow-2xl dark:bg-slate-900"
+            className="relative h-full w-72 max-w-[85vw] border-r bg-white dark:bg-slate-900"
           >
             <button
               type="button"
@@ -100,7 +100,7 @@ export function PanelLayout() {
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-white/90 px-4 backdrop-blur dark:bg-slate-900/90 sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-white px-4 dark:bg-slate-900 sm:px-6">
           <button
             type="button"
             className="btn-ghost p-2 lg:hidden"
@@ -121,7 +121,7 @@ export function PanelLayout() {
             <ThemeToggle />
             <NotificationBell />
             <span
-              className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200"
+              className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white dark:bg-brand-500"
               title={usuario.nombre}
             >
               {iniciales(usuario.nombre)}

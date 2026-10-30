@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Tags, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   actualizarCategoria,
   crearCategoria,
@@ -124,7 +124,7 @@ export function CategoriasAdmin() {
       {categorias.isLoading && <CargandoBloque mensaje="Cargando categorías…" />}
       {categorias.isError && <EstadoError mensaje="No pudimos cargar las categorías." onReintentar={() => void categorias.refetch()} />}
       {categorias.data && lista.length === 0 && (
-        <EstadoVacio titulo="Sin categorías" descripcion="Crea la primera categoría del catálogo." icono={<Tags className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin categorías" descripcion="Crea la primera categoría del catálogo." />
       )}
       {lista.length > 0 && (
         <div className="overflow-x-auto card">

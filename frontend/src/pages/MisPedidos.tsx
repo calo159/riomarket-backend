@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Package, ShoppingBag } from 'lucide-react';
+import { ChevronRight, Package } from 'lucide-react';
 import { listarPedidos } from '../api/orders';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
@@ -55,7 +55,6 @@ export function MisPedidos() {
         <EstadoVacio
           titulo="Aún no tienes pedidos"
           descripcion="Cuando compres algo, aquí podrás seguir su estado."
-          icono={<ShoppingBag className="h-9 w-9" />}
           accion={<Link to="/catalogo" className="btn-primary">Explorar el catálogo</Link>}
         />
       )}
@@ -66,7 +65,7 @@ export function MisPedidos() {
               <Link
                 key={pedido.id}
                 to={`/pedidos/${pedido.id}`}
-                className="card flex flex-col gap-3 p-4 transition hover:border-brand-300 hover:shadow-md sm:flex-row sm:items-center"
+                className="card flex flex-col gap-3 p-4 transition hover:border-brand-300 sm:flex-row sm:items-center"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                   <Package className="h-6 w-6" />

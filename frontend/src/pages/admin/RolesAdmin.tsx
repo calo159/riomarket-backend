@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, Lock, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { Lock, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import {
   actualizarRol,
   crearRol,
@@ -121,7 +121,7 @@ export function RolesAdmin() {
       {fallo && <EstadoError mensaje="No pudimos cargar los roles." onReintentar={() => void roles.refetch()} />}
 
       {roles.data && recursos.data && roles.data.length === 0 && (
-        <EstadoVacio titulo="Sin roles" descripcion="Crea el primer rol personalizado." icono={<KeyRound className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin roles" descripcion="Crea el primer rol personalizado." />
       )}
 
       {roles.data && recursos.data && vista === 'lista' && (

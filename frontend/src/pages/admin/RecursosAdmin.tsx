@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutList, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import {
   actualizarRecurso,
   crearRecurso,
@@ -108,7 +108,7 @@ export function RecursosAdmin() {
       {recursos.isLoading && <CargandoBloque mensaje="Cargando recursos…" />}
       {recursos.isError && <EstadoError mensaje="No pudimos cargar los recursos." onReintentar={() => void recursos.refetch()} />}
       {recursos.data && recursos.data.length === 0 && (
-        <EstadoVacio titulo="Sin recursos" descripcion="No hay recursos con esos filtros." icono={<LayoutList className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin recursos" descripcion="No hay recursos con esos filtros." />
       )}
 
       {recursos.data && recursos.data.length > 0 && (

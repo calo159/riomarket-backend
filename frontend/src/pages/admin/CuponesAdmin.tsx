@@ -130,7 +130,7 @@ export function CuponesAdmin() {
       {cupones.isLoading && <CargandoBloque mensaje="Cargando cupones…" />}
       {cupones.isError && <EstadoError mensaje="No pudimos cargar cupones." onReintentar={() => void cupones.refetch()} />}
       {(cupones.data?.results.length ?? 0) === 0 && !cupones.isLoading && (
-        <EstadoVacio titulo="Sin cupones" descripcion="Crea cupones globales o por puesto." icono={<Ticket className="h-9 w-9" />} accion={<button type="button" className="btn-primary" onClick={abrirNuevo}>Crear cupón</button>} />
+        <EstadoVacio titulo="Sin cupones" descripcion="Crea cupones globales o por puesto." accion={<button type="button" className="btn-primary" onClick={abrirNuevo}>Crear cupón</button>} />
       )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {(cupones.data?.results ?? []).map((cupon) => (

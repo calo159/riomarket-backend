@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AlertTriangle, Inbox, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function Spinner({ className }: { className?: string }) {
@@ -27,19 +27,16 @@ export function EstadoVacio({
   titulo,
   descripcion,
   accion,
-  icono,
 }: {
   titulo: string;
   descripcion?: string;
   accion?: ReactNode;
-  icono?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-14 text-center">
-      <div className="mb-3 text-slate-400">{icono ?? <Inbox className="h-8 w-8" />}</div>
-      <h2 className="text-lg font-semibold">{titulo}</h2>
-      {descripcion && <p className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">{descripcion}</p>}
-      {accion && <div className="mt-5">{accion}</div>}
+    <div className="rounded-xl border-2 border-dashed border-slate-300 px-5 py-8 dark:border-slate-600 sm:px-8">
+      <h2 className="text-lg font-extrabold">{titulo}</h2>
+      {descripcion && <p className="mt-1 max-w-md text-sm text-slate-700 dark:text-slate-300">{descripcion}</p>}
+      {accion && <div className="mt-4">{accion}</div>}
     </div>
   );
 }
@@ -52,37 +49,31 @@ export function EstadoError({
   onReintentar?: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-rojo-200 bg-rojo-50 p-5 text-rojo-900 dark:border-rojo-900 dark:bg-rojo-950/50 dark:text-rojo-200">
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-        <div>
-          <p className="font-semibold">No pudimos cargar esta sección</p>
-          <p className="mt-1 text-sm">{mensaje}</p>
-          {onReintentar && (
-            <button type="button" className="btn-secondary mt-3" onClick={onReintentar}>
-              Reintentar
-            </button>
-          )}
-        </div>
-      </div>
+    <div role="alert" className="rounded-xl border-2 border-rojo-600 bg-white p-5 text-slate-900 dark:border-rojo-400 dark:bg-slate-900 dark:text-slate-100">
+      <p className="font-extrabold text-rojo-700 dark:text-rojo-300">No pudimos cargar esta sección</p>
+      <p className="mt-1 text-sm">{mensaje}</p>
+      {onReintentar && (
+        <button type="button" className="btn-secondary mt-3" onClick={onReintentar}>
+          Reintentar
+        </button>
+      )}
     </div>
   );
 }
 
 function EsqueletoTarjeta() {
   return (
-    <div className="card overflow-hidden p-4">
-      <div className="skeleton mb-4 h-40 w-full" />
-      <div className="skeleton mb-2 h-4 w-3/4" />
-      <div className="skeleton mb-2 h-3 w-1/2" />
-      <div className="skeleton h-5 w-1/3" />
+    <div>
+      <div className="skeleton aspect-square w-full rounded-lg" />
+      <div className="skeleton mt-2 h-6 w-1/2" />
+      <div className="skeleton mt-2 h-4 w-4/5" />
     </div>
   );
 }
 
 export function EsqueletoGrid({ cantidad = 8 }: { cantidad?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" aria-hidden="true">
       {Array.from({ length: cantidad }).map((_, indice) => (
         <EsqueletoTarjeta key={indice} />
       ))}

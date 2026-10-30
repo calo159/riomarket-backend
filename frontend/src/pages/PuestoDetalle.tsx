@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Bike, Clock, MapPin, PackageSearch, Star, Store } from 'lucide-react';
+import { Bike, Clock, MapPin, Star } from 'lucide-react';
 import { listarProductos, obtenerPuesto } from '../api/catalog';
 import { listarResenas } from '../api/reviews';
 import { ProductoCard } from '../components/ProductoCard';
 import { Imagen } from '../components/Imagen';
-import { urlAbsoluta } from '../lib/utils';
+import { Reticula } from '../components/Reticula';
+import { categoriaPrincipalDe } from '../components/PuestoCard';
+import { clasesDeCategoria } from '../lib/categoria';
+import { cn, urlAbsoluta } from '../lib/utils';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
@@ -62,6 +65,10 @@ export function PuestoDetalle() {
   const tienda = puesto.data;
   const categorias = tienda.categorias as unknown as { id: number; nombre: string }[];
   const portada = urlAbsoluta(tienda.portada);
+  // El letrero siempre lleva texto claro: si la categoría principal es amarilla, usa la verde.
+  const idCategoria = categoriaPrincipalDe(tienda) ?? tienda.id;
+  const categoriaLetrero = clasesDeCategoria(idCategoria).color === 'amarillo' ? idCategoria + 1 : idCategoria;
+  const letrero = clasesDeCategoria(categoriaLetrero);
   const logo = urlAbsoluta(tienda.logo);
 
   const cambiarCategoria = (nueva: number | null) => {
@@ -71,92 +78,82 @@ export function PuestoDetalle() {
 
   return (
     <div>
-      <section className="border-b bg-white dark:bg-slate-900">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-          {portada && (
-            <div className="mb-6 aspect-[3/1] w-full overflow-hidden rounded-2xl">
-              <Imagen
-                src={portada}
-                fallbackNombre={tienda.nombre}
-                contenedorClassName="h-full w-full"
-                alt={`Portada de ${tienda.nombre}`}
-                width={1200}
-                height={400}
-                loading="eager" // portada del puesto: visible al abrir la página
-              />
-            </div>
+      <section className={cn('relative overflow-hidden px-4 pb-14 pt-12 sm:px-6', letrero.bloque)}>
+        <span className="asa" aria-hidden="true" />
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center">
+          {logo && (
+            <Imagen
+              src={logo}
+              fallbackNombre={tienda.nombre}
+              categoriaId={categoriaLetrero}
+              contenedorClassName="h-20 w-20 shrink-0 rounded-lg"
+              alt={`Logo de ${tienda.nombre}`}
+              width={80}
+              height={80}
+            />
           )}
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-            {logo ? (
-              <Imagen
-                src={logo}
-                fallbackNombre={tienda.nombre}
-                contenedorClassName="h-20 w-20 shrink-0 rounded-2xl"
-                alt={`Logo de ${tienda.nombre}`}
-                width={80}
-                height={80}
-              />
-            ) : (
-              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                <Store className="h-10 w-10" />
-              </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-4xl leading-tight sm:text-6xl">{tienda.nombre}</h1>
+            {tienda.estado !== 'activo' && (
+              <span className="badge mt-2 bg-white text-rojo-700">Puesto {tienda.estado}</span>
             )}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-3xl font-bold">{tienda.nombre}</h1>
-                {tienda.estado !== 'activo' && (
-                  <span className="badge bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300">
-                    Puesto {tienda.estado}
-                  </span>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
-                <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {tienda.direccion}</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-sol-400 text-sol-400" />
-                  {formatearCalificacion(tienda.calificacion_promedio)}
-                  {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
-                </span>
-                {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" /> {tienda.horario}</span>}
-                <span className="inline-flex items-center gap-1.5">
-                  <Bike className="h-4 w-4" /> {tienda.ofrece_domicilio ? 'Ofrece domicilio' : 'Solo retiro en el puesto'}
-                </span>
-              </div>
-              {tienda.descripcion && <p className="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">{tienda.descripcion}</p>}
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {categorias.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => cambiarCategoria(item.id)}
-                    className={`badge transition ${
-                      categoria === item.id
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                    }`}
-                  >
-                    {item.nombre}
-                  </button>
-                ))}
-              </div>
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium">
+              <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" aria-hidden="true" /> {tienda.direccion}</span>
+              <span className="tnum inline-flex items-center gap-1.5">
+                <Star className="h-4 w-4 fill-current" aria-hidden="true" />
+                {formatearCalificacion(tienda.calificacion_promedio)}
+                {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
+              </span>
+              {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" aria-hidden="true" /> {tienda.horario}</span>}
+              <span className="inline-flex items-center gap-1.5">
+                <Bike className="h-4 w-4" aria-hidden="true" /> {tienda.ofrece_domicilio ? 'Ofrece domicilio' : 'Solo retiro en el puesto'}
+              </span>
             </div>
           </div>
         </div>
+        <Reticula className={cn('absolute inset-x-0 bottom-0 h-7', letrero.ranuras)} />
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-bold">Productos</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {categoria ? categorias.find((item) => item.id === categoria)?.nombre : 'Todo el puesto'}
-            </p>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        {(portada || tienda.descripcion) && (
+          <div className="mb-6 grid gap-4 md:grid-cols-[2fr_3fr]">
+            {portada && (
+              <div className="aspect-[3/1] w-full overflow-hidden rounded-lg md:col-span-2 md:aspect-[6/1]">
+                <Imagen
+                  src={portada}
+                  fallbackNombre={tienda.nombre}
+                  categoriaId={categoriaLetrero}
+                  contenedorClassName="h-full w-full"
+                  alt={`Portada de ${tienda.nombre}`}
+                  width={1200}
+                  height={400}
+                  loading="eager" // portada del puesto: visible al abrir la página
+                />
+              </div>
+            )}
+            {tienda.descripcion && <p className="max-w-3xl text-slate-700 dark:text-slate-300 md:col-span-2">{tienda.descripcion}</p>}
           </div>
-          {categoria && (
-            <button type="button" className="btn-secondary" onClick={() => cambiarCategoria(null)}>
-              Ver todas las categorías
-            </button>
-          )}
+        )}
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl">Productos</h2>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Categorías del puesto">
+            {categorias.map((item) => {
+              const clases = clasesDeCategoria(item.id);
+              const activa = categoria === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => cambiarCategoria(activa ? null : item.id)}
+                  aria-pressed={activa}
+                  className={cn('btn min-h-9 border-2 px-3 py-1', activa ? clases.chipActivo : clases.chip)}
+                >
+                  {item.nombre}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {productos.isLoading && <EsqueletoGrid cantidad={TAMANO} />}
@@ -165,13 +162,12 @@ export function PuestoDetalle() {
           <EstadoVacio
             titulo="Sin productos en esta categoría"
             descripcion="Este puesto todavía no tiene productos publicados aquí."
-            icono={<PackageSearch className="h-8 w-8" />}
             accion={<Link to="/catalogo" className="btn-secondary">Explorar todo el catálogo</Link>}
           />
         )}
         {productos.data && productos.data.results.length > 0 && (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {productos.data.results.map((producto) => (
                 <ProductoCard key={producto.id} producto={producto} puesto={tienda} />
               ))}
@@ -187,10 +183,10 @@ export function PuestoDetalle() {
         )}
 
         <section className="mt-12">
-          <h2 className="text-2xl font-bold">Reseñas</h2>
-          {resenas.isLoading && <p className="mt-2 text-sm text-slate-500">Cargando reseñas…</p>}
+          <h2 className="text-2xl">Reseñas</h2>
+          {resenas.isLoading && <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Cargando reseñas…</p>}
           {resenas.data && resenas.data.results.length === 0 && (
-            <p className="mt-3 rounded-xl border border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-3 rounded-xl border-2 border-dashed border-slate-300 px-4 py-6 text-sm text-slate-700 dark:border-slate-600 dark:text-slate-300">
               Este puesto aún no tiene reseñas. Compra y sé el primero en opinar.
             </p>
           )}
@@ -202,9 +198,9 @@ export function PuestoDetalle() {
                     <p className="font-semibold">{resena.usuario_nombre}</p>
                     <Estrellas valor={resena.calificacion} />
                   </div>
-                  {resena.comentario && <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{resena.comentario}</p>}
+                  {resena.comentario && <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{resena.comentario}</p>}
                   {resena.respuesta && (
-                    <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
+                    <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800">
                       <p className="text-xs font-semibold text-brand-700 dark:text-brand-300">Respuesta del vendedor</p>
                       <p className="mt-1 text-slate-600 dark:text-slate-300">{resena.respuesta}</p>
                     </div>

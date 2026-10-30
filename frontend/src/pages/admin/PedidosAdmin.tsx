@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, CheckCircle2, ClipboardList, Package, Truck, XCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Package, Truck, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
@@ -108,7 +108,6 @@ export function PedidosAdmin() {
         <EstadoVacio
           titulo="Sin pedidos"
           descripcion="No hay pedidos que coincidan con el filtro."
-          icono={<ClipboardList className="h-9 w-9" />}
         />
       )}
       {pedidos.data && pedidos.data.results.length > 0 && (

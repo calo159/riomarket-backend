@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bike, RotateCcw, Search, ShieldOff, Star, Store } from 'lucide-react';
+import { Bike, RotateCcw, Search, ShieldOff, Star } from 'lucide-react';
 import { listarPuestos } from '../../api/catalog';
 import { moderarPuesto } from '../../api/admin';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -119,7 +119,6 @@ export function PuestosAdmin() {
         <EstadoVacio
           titulo="Sin puestos"
           descripcion="No hay puestos que coincidan con los filtros."
-          icono={<Store className="h-9 w-9" />}
         />
       )}
       {puestos.data && puestos.data.results.length > 0 && (

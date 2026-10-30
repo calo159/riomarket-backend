@@ -75,7 +75,7 @@ export function PanelAdmin() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {atencion.map(({ etiqueta, valor, icono: Icono, to }) => (
-            <Link key={etiqueta} to={to} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+            <Link key={etiqueta} to={to} className="card p-5 transition hover:-translate-y-0.5">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>

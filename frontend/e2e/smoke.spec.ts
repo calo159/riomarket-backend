@@ -4,7 +4,7 @@ test('carga la portada pública', async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveTitle(/RioMarket/);
-  await expect(page.getByRole('heading', { name: /Lo que necesitas/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Qué llevas hoy/i })).toBeVisible();
 });
 
 test('muestra el login y permite ir al registro', async ({ page }) => {

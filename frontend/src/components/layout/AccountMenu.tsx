@@ -49,7 +49,7 @@ export function AccountMenu() {
         aria-expanded={abierto}
         aria-controls={idPanel}
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white dark:bg-brand-500">
           {iniciales(usuario.nombre)}
         </span>
         <span className="hidden max-w-[9rem] truncate text-sm font-semibold sm:block">{usuario.nombre.split(' ')[0]}</span>
@@ -60,12 +60,12 @@ export function AccountMenu() {
         // Es un panel de enlaces (no un role="menu", que exigiría menuitems y navegación con flechas).
         <div
           id={idPanel}
-          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border bg-white shadow-xl dark:bg-slate-900"
+          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border bg-white dark:bg-slate-900"
         >
           <div className="border-b px-4 py-3">
             <p className="truncate font-semibold">{usuario.nombre}</p>
             <p className="truncate text-xs text-slate-500 dark:text-slate-400">{usuario.correo}</p>
-            <span className="badge mt-2 bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+            <span className="badge mt-2 bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-slate-100">
               {ETIQUETAS_ROL[rol ?? ''] ?? rol}
             </span>
           </div>
@@ -76,7 +76,7 @@ export function AccountMenu() {
             <button
               type="button"
               onClick={() => void salir()}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rojo-600 hover:bg-rojo-50 dark:text-rojo-400 dark:hover:bg-rojo-950/40"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rojo-700 hover:bg-rojo-50 dark:text-rojo-300 dark:hover:bg-rojo-950/40"
             >
               <LogOut className="h-4 w-4" /> Cerrar sesión
             </button>

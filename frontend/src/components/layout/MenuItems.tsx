@@ -14,20 +14,20 @@ function enlaceClase(variante: Variante) {
   return ({ isActive }: { isActive: boolean }) => {
     if (variante === 'horizontal') {
       return cn(
-        'rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+        'rounded-lg px-3 py-2 text-sm font-medium transition',
         isActive
-          ? 'bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
+          ? 'bg-brand-50 font-semibold text-brand-800 dark:bg-brand-950 dark:text-brand-200'
+          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white',
       );
     }
     if (variante === 'cuenta') {
-      return 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500';
+      return 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800';
     }
     return cn(
-      'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+      'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition',
       isActive
-        ? 'bg-brand-600 text-white shadow-sm'
-        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+        ? 'bg-brand-600 text-white dark:bg-brand-500'
+        : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
     );
   };
 }
@@ -98,7 +98,7 @@ export function MenuPanel({
       {agruparItems(items).map((grupo, indice) => (
         <div key={grupo.grupo ?? `grupo-${indice}`} className="space-y-1">
           {grupo.grupo && (
-            <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <p className="px-3 pb-1 pt-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
               {grupo.grupo}
             </p>
           )}

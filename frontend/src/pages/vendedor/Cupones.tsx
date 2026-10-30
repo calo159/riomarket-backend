@@ -147,7 +147,7 @@ export function Cupones() {
       {cupones.isLoading && <CargandoBloque mensaje="Cargando cupones…" />}
       {cupones.isError && <EstadoError mensaje="No pudimos cargar cupones." onReintentar={() => void cupones.refetch()} />}
       {mios.length === 0 && !cupones.isLoading && (
-        <EstadoVacio titulo="Sin cupones" descripcion="Agrega descuentos para atraer más pedidos." icono={<Ticket className="h-9 w-9" />} accion={verificado && puestosMios.length ? <button type="button" className="btn-primary" onClick={abrirNuevo}>Crear cupón</button> : undefined} />
+        <EstadoVacio titulo="Sin cupones" descripcion="Agrega descuentos para atraer más pedidos." accion={verificado && puestosMios.length ? <button type="button" className="btn-primary" onClick={abrirNuevo}>Crear cupón</button> : undefined} />
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">

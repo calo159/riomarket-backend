@@ -20,9 +20,9 @@ const Contexto = createContext<ContextoToast | null>(null);
 let contador = 0;
 
 const ESTILOS: Record<TipoToast, string> = {
-  exito: 'border-verde-300 bg-verde-50 text-verde-950 dark:border-verde-800 dark:bg-verde-950 dark:text-verde-100',
-  error: 'border-rojo-300 bg-rojo-50 text-rojo-950 dark:border-rojo-800 dark:bg-rojo-950 dark:text-rojo-100',
-  info: 'border-brand-300 bg-brand-50 text-brand-950 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100',
+  exito: 'border-verde-700 bg-verde-600 text-white',
+  error: 'border-rojo-700 bg-rojo-600 text-white',
+  info: 'border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950',
 };
 
 const ICONOS: Record<TipoToast, ReactNode> = {
@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <Contexto.Provider value={valor}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-4 bottom-4 z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:items-end"
+        className="pointer-events-none fixed inset-x-4 bottom-[4.5rem] z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:bottom-4 sm:right-6 sm:items-end"
         role="status"
         aria-live="polite"
       >
@@ -69,7 +69,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg',
+              'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm',
               ESTILOS[toast.tipo],
             )}
           >

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, Search, ShieldCheck, ShieldOff, Users } from 'lucide-react';
+import { KeyRound, Search, ShieldCheck, ShieldOff } from 'lucide-react';
 import {
   asignarRolesUsuario,
   cambiarRolUsuario,
@@ -140,7 +140,7 @@ export function Usuarios() {
       {usuarios.isLoading && <CargandoBloque mensaje="Cargando usuarios…" />}
       {usuarios.isError && <EstadoError mensaje="No pudimos cargar los usuarios." onReintentar={() => void usuarios.refetch()} />}
       {usuarios.data && usuarios.data.results.length === 0 && (
-        <EstadoVacio titulo="Sin usuarios" descripcion="No hay cuentas que coincidan con los filtros." icono={<Users className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin usuarios" descripcion="No hay cuentas que coincidan con los filtros." />
       )}
 
       {usuarios.data && usuarios.data.results.length > 0 && (

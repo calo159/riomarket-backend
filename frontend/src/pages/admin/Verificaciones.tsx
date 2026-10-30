@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, FileSearch, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, FileSearch, XCircle } from 'lucide-react';
 import { decidirSolicitud, listarSolicitudes, obtenerFotoCedula } from '../../api/verification';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio, Spinner } from '../../components/ui/Estado';
@@ -88,7 +88,7 @@ export function Verificaciones() {
       {solicitudes.isLoading && <CargandoBloque mensaje="Cargando solicitudes…" />}
       {solicitudes.isError && <EstadoError mensaje="No pudimos cargar solicitudes." onReintentar={() => void solicitudes.refetch()} />}
       {solicitudes.data && filas.length === 0 && (
-        <EstadoVacio titulo="Sin solicitudes" descripcion="No hay solicitudes con ese estado." icono={<ShieldCheck className="h-9 w-9" />} />
+        <EstadoVacio titulo="Sin solicitudes" descripcion="No hay solicitudes con ese estado." />
       )}
       {filas.length > 0 && (
         <div className="overflow-x-auto card">
