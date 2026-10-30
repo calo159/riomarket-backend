@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { urlAbsoluta } from './utils';
+import { rutaInternaSegura, urlAbsoluta } from './utils';
 
 describe('urlAbsoluta', () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -17,5 +17,23 @@ describe('urlAbsoluta', () => {
   it('respeta las URLs absolutas y los valores vacíos', () => {
     expect(urlAbsoluta('https://cdn.test/producto.png')).toBe('https://cdn.test/producto.png');
     expect(urlAbsoluta(null)).toBeNull();
+  });
+});
+
+describe('rutaInternaSegura', () => {
+  it('acepta rutas internas', () => {
+    expect(rutaInternaSegura('/mis-pedidos?x=1')).toBe('/mis-pedidos?x=1');
+  });
+
+  it.each(['https://evil.test', '//evil.test', '', null, undefined])('rechaza %s', (valor) => {
+    expect(rutaInternaSegura(valor as string | null | undefined)).toBeNull();
+  });
+
+  it.each(['/login', '/login?redirect=/x', '/registro', '/registro/'])('no redirige de vuelta a %s', (valor) => {
+    expect(rutaInternaSegura(valor)).toBeNull();
+  });
+
+  it('no confunde rutas que solo empiezan parecido', () => {
+    expect(rutaInternaSegura('/login-ayuda')).toBe('/login-ayuda');
   });
 });

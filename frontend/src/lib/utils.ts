@@ -22,6 +22,8 @@ export function rutaInternaSegura(valor: string | null | undefined): string | nu
   if (!valor) return null;
   if (!valor.startsWith('/') || valor.startsWith('//')) return null;
   if (valor.includes('://') || valor.includes('\\')) return null;
+  // Volver a /login o /registro dejaría al usuario ya autenticado en un bucle.
+  if (/^\/(login|registro)(\/|\?|#|$)/.test(valor)) return null;
   return valor;
 }
 
