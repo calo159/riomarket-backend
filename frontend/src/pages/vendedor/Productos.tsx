@@ -262,6 +262,8 @@ export function ProductosVendedor() {
                 fallbackNombre={imagenes?.nombre ?? 'Producto'}
                 contenedorClassName="h-full w-full"
                 alt=""
+                width={96}
+                height={96}
               />
               <button type="button" className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white" onClick={() => quitarImg.mutate(imagen.id)}><Trash2 className="h-3 w-3" /></button>
             </div>

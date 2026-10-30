@@ -6,18 +6,20 @@ import { urlAbsoluta } from '../lib/utils';
 
 export function PuestoCard({ puesto }: { puesto: Puesto }) {
   const categorias = puesto.categorias as unknown as { id: number; nombre: string }[];
-  const puestoAny = puesto as any;
-  const logo = urlAbsoluta(puestoAny.logo || puestoAny.url_logo);
+  const logo = urlAbsoluta(puesto.logo);
+  const portada = urlAbsoluta(puesto.portada);
   return (
     <Link
       to={`/puestos/${puesto.id}`}
       className="card group flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg"
     >
-      {(puestoAny.portada || puestoAny.url_portada) && (
+      {portada && (
         <div className="relative h-28 w-full">
           <Imagen
-            src={urlAbsoluta(puestoAny.portada || puestoAny.url_portada)}
+            src={portada}
             fallbackNombre={puesto.nombre}
+            width={400}
+            height={112}
             contenedorClassName="h-full w-full"
           />
         </div>
@@ -27,6 +29,8 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
           <Imagen
             src={logo}
             fallbackNombre={puesto.nombre}
+            width={48}
+            height={48}
             contenedorClassName="h-12 w-12 shrink-0 rounded-xl"
           />
         ) : (

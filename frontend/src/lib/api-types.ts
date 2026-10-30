@@ -1492,10 +1492,6 @@ export interface components {
          */
         ItemPedido: {
             readonly id: number;
-            /**
-             * Producto
-             * @description PROTECT: el producto referenciado por un pedido no se borra (historial).
-             */
             id_producto: number;
             readonly nombre_producto: string;
             readonly unidad_medida: components["schemas"]["UnidadMedidaEnum"];
@@ -1513,10 +1509,6 @@ export interface components {
          *     servidor al crear el pedido).
          */
         ItemPedidoRequest: {
-            /**
-             * Producto
-             * @description PROTECT: el producto referenciado por un pedido no se borra (historial).
-             */
             id_producto: number;
             /** Format: int64 */
             cantidad: number;
@@ -2004,7 +1996,6 @@ export interface components {
             /** Puesto */
             id_puesto?: number;
             id_pedido?: number | null;
-            /** Format: int64 */
             calificacion?: number;
             comentario?: string;
         };
@@ -2171,6 +2162,8 @@ export interface components {
             readonly categorias: {
                 [key: string]: unknown;
             }[];
+            readonly logo: string | null;
+            readonly portada: string | null;
         };
         /**
          * @description * `activo` - Activo
@@ -2318,7 +2311,6 @@ export interface components {
             /** Puesto */
             id_puesto: number;
             id_pedido?: number | null;
-            /** Format: int64 */
             calificacion: number;
             comentario?: string;
         };
@@ -2326,7 +2318,6 @@ export interface components {
             /** Puesto */
             id_puesto: number;
             id_pedido?: number | null;
-            /** Format: int64 */
             calificacion: number;
             comentario?: string;
         };

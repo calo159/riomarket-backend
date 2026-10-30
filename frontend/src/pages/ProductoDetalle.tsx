@@ -133,17 +133,20 @@ export function ProductoDetalle() {
         <div>
           <div className="card aspect-square overflow-hidden">
             <Imagen
-              src={urlAbsoluta((imagen as any)?.url || (imagen as any)?.miniatura)}
+              src={urlAbsoluta(imagen?.url || imagen?.miniatura)}
               fallbackNombre={datos.nombre}
               contenedorClassName="h-full w-full"
-              alt={(imagen as any)?.alt || datos.nombre}
+              alt={imagen?.alt || datos.nombre}
+              width={imagen?.ancho ?? undefined}
+              height={imagen?.alto ?? undefined}
+              loading="eager" // es la imagen principal, visible al abrir la página
             />
           </div>
           {imagenes.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {imagenes.map((item, indice) => (
                 <button
-                  key={(item as any).id}
+                  key={item.id}
                   type="button"
                   onClick={() => setImagenActiva(indice)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${
@@ -152,8 +155,10 @@ export function ProductoDetalle() {
                   aria-label={`Ver imagen ${indice + 1}`}
                 >
                   <Imagen
-                    src={urlAbsoluta((item as any)?.miniatura || (item as any)?.url)}
+                    src={urlAbsoluta(item.miniatura || item.url)}
                     fallbackNombre={datos.nombre}
+                    width={80}
+                    height={80}
                     contenedorClassName="h-full w-full"
                   />
                 </button>
