@@ -108,7 +108,7 @@ frontend (`src/auth/permisos.ts`) solo controla qué rutas y acciones se muestra
 
 | Rol | Inicio tras login | Rutas principales |
 | --- | --- | --- |
-| Comprador | `/` | `/catalogo`, `/carrito`, `/checkout`, `/mis-pedidos`, `/direcciones`, `/notificaciones`, `/perfil` |
+| Comprador | `/tienda` | `/catalogo`, `/carrito`, `/checkout`, `/mis-pedidos`, `/direcciones`, `/notificaciones`, `/perfil` |
 | Vendedor | `/vendedor` | `/vendedor/verificacion`, `/vendedor/puestos`, `/vendedor/productos`, `/vendedor/pedidos`, `/vendedor/cupones`, `/vendedor/resenas` |
 | Administrador | `/admin` | `/admin` (resumen), `/admin/usuarios`, `/admin/verificaciones`, `/admin/pedidos`, `/admin/puestos`, `/admin/productos`, `/admin/categorias`, `/admin/resenas`, `/admin/pagos`, `/admin/cupones`, `/admin/auditoria` |
 
@@ -177,7 +177,7 @@ frontend/
 - `npm test`: 18 pruebas de utilidades, interceptores HTTP (refresh compartido,
   reintento y pérdida de sesión), rutas protegidas, menú dinámico con fallback y
   modales de moderación de usuarios.
-- `npm run test:e2e`: smoke de portada, login y navegación al registro.
+- `npm run test:e2e`: smoke de la landing, de `/tienda`, login y navegación al registro.
 - `npm run lint`, `npm run typecheck` y `npm run build` también corren en CI.
 
 ## Limitaciones conocidas

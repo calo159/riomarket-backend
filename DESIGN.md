@@ -32,7 +32,7 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
 ## Componentes compartidos
 
 - `PublicLayout`: encabezado turquesa con buscador (con categoría), pedidos, carrito; barra inferior de 5 pestañas en celular
-  (Inicio, Catálogo, Carrito, Pedidos o Panel según permisos, Cuenta, que abre una hoja). `PanelLayout`: barra superior de marca y menú lateral con iconos e ítem activo marcado.
+  (Tienda, Catálogo, Carrito, Pedidos o Panel según permisos, Cuenta, que abre una hoja). `PanelLayout`: barra superior de marca y menú lateral con iconos e ítem activo marcado.
 - `Destacados`: carrusel con puestos reales (portada si existe; color sólido si no; 0 o 1 elementos se ven bien), barra de progreso,
   pausa con el cursor o el foco, entrada escalonada del texto. Sin autoavance con `prefers-reduced-motion`.
 - `ProductoCard`: foto cuadrada, «Quedan N» solo con stock de 1 a 5, calificación del puesto solo si existe, domicilio, botón `+` redondo en celular.
@@ -55,3 +55,11 @@ Se conserva el botón. Fondo `#0F1A20`, tarjetas `#1B2A33`, bordes `#26363E`, en
 
 Solo se muestran datos que la API entrega. Las reseñas son del puesto y se etiquetan así. No hay promesas de «fresco», «del día», «pago seguro» ni «gratis».
 Se añadieron al listado de productos los campos de solo lectura `puesto_nombre`, `puesto_ofrece_domicilio` y `puesto_calificacion` (sin consultas extra).
+
+## Landing (`/`) y tienda (`/tienda`)
+
+`/` es una landing propia (`pages/Landing.tsx` + `Landing.module.css`, chunk aparte de ~17 kB) con su cabecera y su pie; no usa `PublicLayout`. La tienda (`Inicio`) vive en `/tienda`
+y `/inicio` redirige allí. Con sesión iniciada, `/` redirige a `inicioPorRol` (comprador `/tienda`, vendedor `/vendedor`, administrador `/admin`); mientras la sesión carga se muestra el estado de carga.
+Traducida de la maqueta aprobada: titular grande, ticket de pedido que se «imprime» y recorre los 5 estados (sello «Lo recibí»), franja turquesa, línea de seguimiento con `animation-timeline: view()`
+(quieta y completa sin soporte), interruptor comprar/vender (`role="tablist"`, flechas), pasillo de puestos reales de la API (hasta 4, esqueletos, aviso si falla o no hay), reglas sobre fondo papel, cierre, pie y barra fija en celular.
+Paleta propia y clara aunque la tienda esté en oscuro (CSS Modules, `color-scheme: light`). Con `prefers-reduced-motion` todo queda quieto y completo. Fotos en `public/landing/` (con crédito en `/creditos-fotos`).

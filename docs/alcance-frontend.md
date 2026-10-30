@@ -44,12 +44,12 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 
 ### Fase 2: auth y RBAC
 - Login y registro. Registro permite comprador o vendedor.
-- Redirección al inicio según rol tras login: comprador `/`, vendedor `/vendedor`, admin `/admin`.
+- Redirección al inicio según rol tras login: comprador `/tienda`, vendedor `/vendedor`, admin `/admin`.
 - Logout. La sesión se restaura desde la cookie de refresh al cargar la app.
 - Manejo de sesión expirada sin parpadeo.
 
 ### Fase 3: catálogo público
-- Inicio con destacados, categorías y puestos.
+- Landing en `/` (sin sesión) y tienda en `/tienda`: destacados, categorías y puestos.
 - Catálogo con búsqueda, filtros por categoría y puesto, orden y paginación.
 - Detalle de producto (agregar al carrito, stock, puesto).
 - Detalle de puesto (datos, categorías, productos, reseñas).

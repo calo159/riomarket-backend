@@ -339,7 +339,8 @@ curl http://127.0.0.1:8000/api/auth/menu/ -H "Authorization: Bearer $TOKEN"
 
 La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones están en [`frontend/README.md#estado-de-cumplimiento`](frontend/README.md#estado-de-cumplimiento). Los comandos de arranque están en [Inicio rápido](#2-frontend-otra-terminal).
 
-- **Comprador** (`/`): catálogo, carrito, checkout, pedidos, direcciones y perfil.
+- **Landing** (`/`): presentación para compradores y vendedores; con sesión iniciada redirige al inicio del rol.
+- **Comprador** (`/tienda`): catálogo, carrito, checkout, pedidos, direcciones y perfil.
 - **Vendedor** (`/vendedor`): puestos, productos, pedidos, cupones, reseñas y verificación.
 - **Administrador** (`/admin`): resumen con alertas, usuarios, verificaciones, pedidos, puestos, productos, categorías, reseñas, pagos, cupones y auditoría. El menú y los accesos se generan desde el backend.
 
@@ -397,7 +398,7 @@ Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conoci
 1. Sube el repositorio a GitHub (rama `main`).
 2. En Render, elige **New → Blueprint** y conecta el repositorio.
 3. Confirma los recursos y espera a que termine el deploy.
-4. Verifica `/api/health/`, `/api/docs/` y `/`.
+4. Verifica `/api/health/`, `/api/docs/`, `/` (landing) y `/tienda`.
 
 La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.onrender.com`. Límites del plan gratuito: el servicio se duerme, la base **caduca a los 30 días** y el disco es efímero. Para una base duradera usa Supabase y reemplaza `DATABASE_URL`. Más detalles en [`docs/despliegue.md`](docs/despliegue.md).
 
