@@ -44,7 +44,7 @@ export function ResenaPedido({ datos, resenaPropia }: Props) {
 
   return (
     <section className="card p-5">
-      <h2 className="text-lg font-bold">Reseña del puesto</h2>
+      <h2 className="text-lg font-extrabold">Reseña del puesto</h2>
       {resenaPropia ? (
         <div className="mt-2 text-sm">
           <Estrellas valor={resenaPropia.calificacion} />

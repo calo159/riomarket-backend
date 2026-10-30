@@ -88,25 +88,25 @@ export function Perfil() {
       <EncabezadoPagina titulo="Mi perfil" descripcion="Gestiona tus datos de contacto y revisa el estado de tu cuenta." />
 
       <section className="card mb-6 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xl font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white dark:bg-brand-500 text-xl font-bold">
           {iniciales(datos.nombre)}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-xl font-bold">{datos.nombre}</h2>
+          <h2 className="truncate text-xl font-extrabold">{datos.nombre}</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">{datos.correo}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
               {ETIQUETAS_ROL[datos.rol] ?? datos.rol}
             </span>
             {datos.estado === 'activo' ? (
-              <span className="badge bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300">
+              <span className="badge bg-verde-600 text-white">
                 <BadgeCheck className="mr-1 h-3 w-3" /> Cuenta activa
               </span>
             ) : (
-              <span className="badge bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300">Suspendida</span>
+              <span className="badge bg-rojo-600 text-white">Suspendida</span>
             )}
             {esVendedor && datos.estado_verificacion && (
-              <span className="badge bg-sol-100 text-sol-800 dark:bg-sol-950 dark:text-sol-300">
+              <span className="badge bg-sol-400 text-slate-950">
                 <ShieldCheck className="mr-1 h-3 w-3" /> Verificación: {datos.estado_verificacion}
               </span>
             )}
@@ -118,26 +118,26 @@ export function Perfil() {
       </section>
 
       <form className="card p-5" onSubmit={enviar} noValidate>
-        <h2 className="text-lg font-bold">Datos de contacto</h2>
+        <h2 className="text-lg font-extrabold">Datos de contacto</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Estos datos se usan para coordinar tus entregas y notificaciones.
         </p>
         <div className="mt-4 space-y-3">
           <Campo etiqueta="Nombre completo" htmlFor="nombre" error={errores.nombre}>
             <div className="relative">
-              <UserRound className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <UserRound className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
               <input id="nombre" className="input pl-9" value={nombre} onChange={(evento) => setNombre(evento.target.value)} autoComplete="name" />
             </div>
           </Campo>
           <Campo etiqueta="Correo" htmlFor="correo" error={errores.correo}>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Mail className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
               <input id="correo" type="email" className="input pl-9" value={correo} onChange={(evento) => setCorreo(evento.target.value)} autoComplete="email" />
             </div>
           </Campo>
           <Campo etiqueta="Celular" htmlFor="celular" error={errores.celular}>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Phone className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
               <input id="celular" type="tel" className="input pl-9" value={celular} onChange={(evento) => setCelular(evento.target.value)} autoComplete="tel" />
             </div>
           </Campo>
@@ -155,7 +155,7 @@ export function Perfil() {
 
       {esVendedor && (
         <section className="card mt-5 p-5">
-          <h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="h-5 w-5" /> Verificación de vendedor</h2>
+          <h2 className="flex items-center gap-2 text-lg font-extrabold"><ShieldCheck className="h-5 w-5" /> Verificación de vendedor</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Consulta o actualiza tus documentos para poder publicar puestos y productos.
           </p>

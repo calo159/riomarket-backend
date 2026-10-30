@@ -20,6 +20,7 @@ import { leerAvisoSesion } from '../../auth/tokens';
 import { rutaInternaSegura } from '../../lib/utils';
 import { CargandoPantalla } from '../../components/ui/Estado';
 import { Campo } from '../../components/ui/Campos';
+import { Reticula } from '../../components/Reticula';
 import { Logo } from '../../components/layout/Logo';
 
 // zod/mini (en lugar de zod clásico) para no cargar en el bundle los métodos que no se usan.
@@ -98,30 +99,13 @@ export function Login() {
 
   return (
     <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-brand-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-brand-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-sand-400/20 blur-3xl" />
-        <div className="relative">
-          <Logo className="[&_span:last-child]:text-white" />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-tight">
-            Tu mercado local, a un clic de distancia.
-          </h1>
-          <p className="mt-4 max-w-md text-brand-100">
-            Compra frutas frescas, comidas y artesanías directo a los vendedores de Riohacha.
-          </p>
-        </div>
-        <div className="relative grid gap-3">
-          {[
-            'Puestos verificados y reseñas reales',
-            'Pago simulado seguro para tus prácticas',
-            'Sigue tu pedido en tiempo real',
-          ].map((texto) => (
-            <div key={texto} className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 backdrop-blur">
-              <ShoppingBasket className="h-5 w-5 text-sand-300" />
-              <span className="text-sm">{texto}</span>
-            </div>
-          ))}
-        </div>
+      <div className="relative hidden overflow-hidden bg-brand-800 p-12 pb-24 text-white lg:flex lg:flex-col dark:bg-brand-700">
+        <span className="asa" aria-hidden="true" />
+        <Logo className="mt-8 !text-white" />
+        <h1 className="mt-16 max-w-md text-5xl leading-tight">
+          Entra y arma tu canasta.
+        </h1>
+        <Reticula className="absolute inset-x-0 bottom-0 h-14 text-slate-950/25" />
       </div>
 
       <div className="flex items-center justify-center px-4 py-12 sm:px-8">
@@ -129,13 +113,10 @@ export function Login() {
           <div className="mb-8 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-bold">Bienvenido de nuevo</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Ingresa para comprar o administrar tu puesto.
-          </p>
+          <h2 className="text-3xl">Bienvenido de nuevo</h2>
 
           {(aviso || expirada) && (
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-sol-300 bg-sol-50 px-4 py-3 text-sm text-sol-900 dark:border-sol-800 dark:bg-sol-950/50 dark:text-sol-200">
+            <div className="mt-5 flex items-start gap-2 rounded-lg bg-sol-400 px-4 py-3 text-sm font-medium text-slate-950">
               <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
               <p>{aviso ?? 'Tu sesión expiró. Inicia sesión de nuevo.'}</p>
             </div>
@@ -143,7 +124,7 @@ export function Login() {
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (
-              <div className="flex items-start gap-2 rounded-xl border border-rojo-300 bg-rojo-50 px-4 py-3 text-sm text-rojo-900 dark:border-rojo-800 dark:bg-rojo-950/50 dark:text-rojo-200" role="alert">
+              <div className="flex items-start gap-2 rounded-lg bg-rojo-600 px-4 py-3 text-sm font-medium text-white" role="alert">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{errors.root.message}</p>
               </div>
@@ -179,7 +160,7 @@ export function Login() {
               </div>
             </Campo>
 
-            <button type="submit" className="btn-primary w-full py-3" disabled={isSubmitting}>
+            <button type="submit" className="btn-primary min-h-12 w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Ingresando…' : 'Ingresar'}
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
@@ -193,8 +174,8 @@ export function Login() {
           </p>
 
           {DEMO_MODE && (
-            <div className="mt-8 rounded-xl border border-dashed p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <div className="mt-8 rounded-lg border-2 border-dashed border-slate-300 p-4 dark:border-slate-600">
+              <p className="text-sm font-semibold">
                 Acceso rápido de demostración
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">

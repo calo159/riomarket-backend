@@ -83,7 +83,7 @@ export function PuestosAdmin() {
         acciones={
           <div className="flex flex-wrap gap-2">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 dark:text-slate-400" />
               <input
                 className="input w-64 pl-9"
                 placeholder="Buscar puesto"
@@ -151,7 +151,7 @@ export function PuestosAdmin() {
                       <td className="p-3 text-slate-500 dark:text-slate-400">#{puesto.id_vendedor}</td>
                       <td className="p-3">
                         <div className="flex flex-wrap gap-1">
-                          {categorias.length === 0 && <span className="text-slate-400">Sin categorías</span>}
+                          {categorias.length === 0 && <span className="text-slate-600 dark:text-slate-400">Sin categorías</span>}
                           {categorias.map((categoria) => (
                             <span key={categoria.id} className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                               {categoria.nombre}
@@ -160,7 +160,7 @@ export function PuestosAdmin() {
                         </div>
                       </td>
                       <td className="p-3">
-                        <span className={`badge ${suspendido ? 'bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300' : puesto.estado === 'activo' ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                        <span className={`badge ${suspendido ? 'bg-rojo-600 text-white' : puesto.estado === 'activo' ? 'bg-verde-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                           {puesto.estado}
                         </span>
                       </td>
@@ -177,7 +177,7 @@ export function PuestosAdmin() {
                         <span className="inline-flex items-center gap-1">
                           <Star className="h-3.5 w-3.5 text-sol-500" />
                           {formatearCalificacion(puesto.calificacion_promedio, '—')}
-                          <span className="text-xs text-slate-400">({puesto.cantidad_resenas})</span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400">({puesto.cantidad_resenas})</span>
                         </span>
                       </td>
                       <td className="p-3 text-right">

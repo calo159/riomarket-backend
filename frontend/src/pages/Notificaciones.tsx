@@ -105,10 +105,10 @@ export function Notificaciones() {
                 <>
                   <span
                     className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
                       notificacion.leida
                         ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                        : 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300',
+                        : 'bg-brand-600 text-white dark:bg-brand-500',
                     )}
                   >
                     {icono(notificacion.tipo)}
@@ -119,14 +119,14 @@ export function Notificaciones() {
                       {!notificacion.leida && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600" aria-label="Sin leer" />}
                     </div>
                     <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{notificacion.mensaje}</p>
-                    <p className="mt-1 text-xs text-slate-400">{formatearFechaHora(notificacion.fecha_creacion)}</p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{formatearFechaHora(notificacion.fecha_creacion)}</p>
                   </div>
                 </>
               );
 
               const clase = cn(
                 'flex items-start gap-3 rounded-xl border p-4 transition',
-                notificacion.leida ? 'bg-white dark:bg-slate-900' : 'border-brand-200 bg-brand-50/60 dark:border-brand-900 dark:bg-brand-950/30',
+                notificacion.leida ? 'bg-white dark:bg-slate-900' : 'border-2 border-brand-600 bg-white dark:border-brand-400 dark:bg-slate-900',
               );
 
               return notificacion.id_pedido ? (

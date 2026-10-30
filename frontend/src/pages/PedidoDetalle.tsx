@@ -140,7 +140,7 @@ export function PedidoDetalle() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold">Pedido #{datos.id}</h1>
+            <h1 className="text-3xl font-extrabold">Pedido #{datos.id}</h1>
             <EtiquetaEstado estado={datos.estado} />
           </div>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

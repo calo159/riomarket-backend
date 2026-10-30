@@ -141,10 +141,10 @@ export function Direcciones() {
             <article key={direccion.id} className="card flex flex-col p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h2 className="flex items-center gap-2 font-semibold">
+                  <h2 className="flex items-center gap-2 font-extrabold">
                     {direccion.alias}
                     {direccion.es_predeterminada && (
-                      <span className="badge bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">Predeterminada</span>
+                      <span className="badge bg-brand-600 text-white dark:bg-brand-500">Predeterminada</span>
                     )}
                   </h2>
                   <p className="mt-1 flex items-start gap-1 text-sm text-slate-600 dark:text-slate-300">

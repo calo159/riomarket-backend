@@ -67,7 +67,7 @@ export function MisPedidos() {
                 to={`/pedidos/${pedido.id}`}
                 className="card flex flex-col gap-3 p-4 transition hover:border-brand-300 sm:flex-row sm:items-center"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white dark:bg-brand-500">
                   <Package className="h-6 w-6" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -82,7 +82,7 @@ export function MisPedidos() {
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>
-                  <ChevronRight className="h-5 w-5 text-slate-400" />
+                  <ChevronRight className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                 </div>
               </Link>
             ))}

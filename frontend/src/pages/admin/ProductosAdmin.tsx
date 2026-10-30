@@ -82,7 +82,7 @@ export function ProductosAdmin() {
         acciones={
           <div className="flex flex-wrap gap-2">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 dark:text-slate-400" />
               <input
                 className="input w-64 pl-9"
                 placeholder="Buscar producto"
@@ -142,7 +142,7 @@ export function ProductosAdmin() {
                     <td className="p-3">{formatearMoneda(producto.precio)}</td>
                     <td className="p-3">{producto.stock}</td>
                     <td className="p-3">
-                      <span className={`badge ${producto.estado === 'bloqueado' ? 'bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300' : producto.estado === 'activo' ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                      <span className={`badge ${producto.estado === 'bloqueado' ? 'bg-rojo-600 text-white' : producto.estado === 'activo' ? 'bg-verde-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                         {producto.estado}
                       </span>
                     </td>

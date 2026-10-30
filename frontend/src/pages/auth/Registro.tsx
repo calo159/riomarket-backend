@@ -11,6 +11,7 @@ import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { useToast } from '../../components/ui/Toast';
 import { Campo } from '../../components/ui/Campos';
 import { CargandoPantalla } from '../../components/ui/Estado';
+import { Reticula } from '../../components/Reticula';
 import { Logo } from '../../components/layout/Logo';
 import { cn } from '../../lib/utils';
 
@@ -123,25 +124,13 @@ export function Registro() {
 
   return (
     <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl lg:grid-cols-[1fr_1.1fr]">
-      <div className="relative hidden overflow-hidden bg-brand-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute -right-24 top-10 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
-        <div className="relative">
-          <Logo className="[&_span:last-child]:text-white" />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-tight">
-            Únete a la comunidad que mueve a Riohacha.
-          </h1>
-          <p className="mt-4 max-w-md text-brand-100">
-            Compra a tus vecinos o abre tu propio puesto y llega a más clientes.
-          </p>
-        </div>
-        <div className="relative space-y-3 text-sm">
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3">
-            <ShoppingBag className="h-5 w-5 text-sand-300" /> Compra fácil y recibe donde estés.
-          </div>
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3">
-            <Store className="h-5 w-5 text-sand-300" /> Vende con verificación de identidad.
-          </div>
-        </div>
+      <div className="relative hidden overflow-hidden bg-brand-800 p-12 pb-24 text-white lg:flex lg:flex-col dark:bg-brand-700">
+        <span className="asa" aria-hidden="true" />
+        <Logo className="mt-8 !text-white" />
+        <h1 className="mt-16 max-w-md text-5xl leading-tight">
+          Compra en los puestos de Riohacha o abre el tuyo.
+        </h1>
+        <Reticula className="absolute inset-x-0 bottom-0 h-14 text-slate-950/25" />
       </div>
 
       <div className="flex items-center justify-center px-4 py-10 sm:px-8">
@@ -149,12 +138,11 @@ export function Registro() {
           <div className="mb-6 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-bold">Crea tu cuenta</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Es gratis y toma menos de un minuto.</p>
-
+          <h2 className="text-3xl">Crea tu cuenta</h2>
+          
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (
-              <div className="flex items-start gap-2 rounded-xl border border-rojo-300 bg-rojo-50 px-4 py-3 text-sm text-rojo-900 dark:border-rojo-800 dark:bg-rojo-950/50 dark:text-rojo-200" role="alert">
+              <div className="flex items-start gap-2 rounded-lg bg-rojo-600 px-4 py-3 text-sm font-medium text-white" role="alert">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <p>{errors.root.message}</p>
               </div>
@@ -245,7 +233,7 @@ export function Registro() {
               {errors.acepta?.message && <p className="field-error">{errors.acepta.message}</p>}
             </div>
 
-            <button type="submit" className="btn-primary w-full py-3" disabled={isSubmitting}>
+            <button type="submit" className="btn-primary min-h-12 w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>

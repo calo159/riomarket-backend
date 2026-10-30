@@ -130,14 +130,14 @@ export function RolesAdmin() {
             <article key={rol.id} className="card space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h2 className="flex items-center gap-2 font-semibold">
+                  <h2 className="flex items-center gap-2 font-extrabold">
                     {rol.nombre}
                     {rol.es_sistema && (
                       <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                         <Lock className="h-3 w-3" /> Sistema
                       </span>
                     )}
-                    {!rol.activo && <span className="badge bg-sol-100 text-sol-800">Inactivo</span>}
+                    {!rol.activo && <span className="badge bg-sol-400 text-slate-950">Inactivo</span>}
                   </h2>
                   {rol.descripcion && <p className="text-sm text-slate-500 dark:text-slate-400">{rol.descripcion}</p>}
                 </div>
@@ -188,7 +188,7 @@ export function RolesAdmin() {
                     <tr key={recurso.id} className="border-b last:border-0">
                       <td className="p-3">
                         <p className="font-medium">{recurso.nombre}</p>
-                        <p className="text-xs text-slate-400">{recurso.codigo}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{recurso.codigo}</p>
                       </td>
                       {roles.data.map((rol) => {
                         const bloqueado = esObligatorio(rol, recurso);
@@ -256,7 +256,7 @@ function FilasGrupo({ titulo, columnas, children }: { titulo: string; columnas: 
   return (
     <>
       <tr className="bg-slate-50 dark:bg-slate-800/50">
-        <th colSpan={columnas} className="p-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <th colSpan={columnas} className="p-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">
           {titulo}
         </th>
       </tr>
@@ -413,7 +413,7 @@ function PermisosModal({
   return (
     <Modal abierto onCerrar={onCerrar} titulo={`Permisos de «${rol.nombre}»`} ancho="max-w-2xl">
       {hayObligatorios && (
-        <p className="mb-3 rounded-xl border border-sol-200 bg-sol-50 p-3 text-xs text-sol-900 dark:border-sol-900 dark:bg-sol-950/40 dark:text-sol-200">
+        <p className="mb-3 rounded-xl bg-sol-400 text-slate-950 p-3 text-xs">
           Los recursos con candado son obligatorios para el rol administrador: sin ellos nadie podría seguir administrando el sistema.
         </p>
       )}
@@ -423,7 +423,7 @@ function PermisosModal({
           const todos = editables.length > 0 && editables.every((recurso) => marcados.has(recurso.id));
           return (
             <fieldset key={grupo.clave} className="rounded-xl border p-3">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{grupo.titulo}</legend>
+              <legend className="px-1 text-xs font-semibold text-slate-600 dark:text-slate-400">{grupo.titulo}</legend>
               {editables.length > 0 && (
                 <label className="mb-2 flex items-center gap-2 text-xs font-medium text-brand-700 dark:text-brand-300">
                   <input type="checkbox" checked={todos} onChange={(evento) => alternarGrupo(grupo.items, evento.target.checked)} />
@@ -443,7 +443,7 @@ function PermisosModal({
                           onChange={(evento) => alternar(recurso.id, evento.target.checked)}
                         />
                         {recurso.nombre}
-                        {bloqueado && <Lock className="h-3 w-3 text-slate-400" aria-label="Obligatorio" />}
+                        {bloqueado && <Lock className="h-3 w-3 text-slate-600 dark:text-slate-400" aria-label="Obligatorio" />}
                         {!recurso.activo && <span className="text-xs text-sol-600">(inactivo)</span>}
                       </label>
                     </li>

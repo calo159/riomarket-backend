@@ -38,8 +38,8 @@ function advertenciaRol(rol: Rol): string {
 function EstadoUsuarioBadge({ estado }: { estado: string }) {
   const clase =
     estado === 'activo'
-      ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300'
-      : 'bg-rojo-100 text-rojo-800 dark:bg-rojo-950 dark:text-rojo-300';
+      ? 'bg-verde-600 text-white'
+      : 'bg-rojo-600 text-white';
   return <span className={`badge ${clase}`}>{estado}</span>;
 }
 
@@ -49,7 +49,7 @@ function ChipsRoles({ usuario }: { usuario: UsuarioAdmin }) {
       {usuario.roles_asignados
         .filter((rol) => !rol.es_sistema)
         .map((rol) => (
-          <span key={rol.id} className="badge bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+          <span key={rol.id} className="badge bg-brand-600 text-white dark:bg-brand-500">
             {rol.nombre}
           </span>
         ))}
@@ -109,7 +109,7 @@ export function Usuarios() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 dark:text-slate-400" />
           <input
             className="input w-64 pl-9"
             placeholder="Nombre, correo o celular"
@@ -163,7 +163,7 @@ export function Usuarios() {
                     <td className="p-3">
                       <p className="font-medium">{usuario.nombre}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{usuario.correo} · {usuario.celular}</p>
-                      <p className="text-xs text-slate-400">Desde {formatearFecha(usuario.fecha_registro)}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Desde {formatearFecha(usuario.fecha_registro)}</p>
                     </td>
                     <td className="p-3">
                       <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}</span>
@@ -181,7 +181,7 @@ export function Usuarios() {
                       {usuario.puestos.length === 0 ? '—' : (
                         <ul className="space-y-0.5">
                           {usuario.puestos.map((puesto) => (
-                            <li key={puesto.id}>{puesto.nombre} <span className="text-slate-400">({puesto.estado})</span></li>
+                            <li key={puesto.id}>{puesto.nombre} <span className="text-slate-600 dark:text-slate-400">({puesto.estado})</span></li>
                           ))}
                         </ul>
                       )}
@@ -232,7 +232,7 @@ export function Usuarios() {
 
 function BotonAcceso({ usuario, onAbrir }: { usuario: UsuarioAdmin; onAbrir: (usuario: UsuarioAdmin) => void }) {
   if (usuario.acciones_permitidas.length === 0) {
-    return <span className="text-xs text-slate-400">Sin acciones</span>;
+    return <span className="text-xs text-slate-600 dark:text-slate-400">Sin acciones</span>;
   }
   return (
     <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onAbrir(usuario)}>
@@ -325,7 +325,7 @@ function GestionarAcceso({
 
       {puede('cambiar-rol') && (
         <section className="mb-5 space-y-2" aria-labelledby="sec-rol-base">
-          <h3 id="sec-rol-base" className="text-sm font-semibold">1. Rol base</h3>
+          <h3 id="sec-rol-base" className="text-sm font-extrabold">1. Rol base</h3>
           <Campo etiqueta="Nuevo rol base" htmlFor="nuevo-rol">
             <select id="nuevo-rol" className="input" value={nuevoRol} onChange={(e) => setNuevoRol(e.target.value as Rol)}>
               {ROLES.filter((opcion) => opcion !== usuario.rol).map((opcion) => (
@@ -333,7 +333,7 @@ function GestionarAcceso({
               ))}
             </select>
           </Campo>
-          <div className="rounded-xl border border-sol-200 bg-sol-50 p-3 text-xs text-sol-900 dark:border-sol-900 dark:bg-sol-950/40 dark:text-sol-200">
+          <div className="rounded-xl bg-sol-400 text-slate-950 p-3 text-xs">
             {advertenciaRol(nuevoRol)}
             {usuario.pedidos_activos > 0 && (
               <p className="mt-1 font-semibold">Esta cuenta tiene {usuario.pedidos_activos} pedido(s) activo(s); el cambio se rechazará hasta resolverlos.</p>
@@ -356,7 +356,7 @@ function GestionarAcceso({
 
       {puede('roles') && (
         <section className="mb-5 space-y-2 border-t pt-4" aria-labelledby="sec-roles">
-          <h3 id="sec-roles" className="text-sm font-semibold">2. Roles adicionales</h3>
+          <h3 id="sec-roles" className="text-sm font-extrabold">2. Roles adicionales</h3>
           {rolesPersonalizados.length === 0 ? (
             <p className="text-xs text-slate-500">Todavía no hay roles personalizados. Créalos en Roles.</p>
           ) : (
@@ -400,7 +400,7 @@ function GestionarAcceso({
 
       {(puede('suspender') || puede('reactivar')) && (
         <section className="space-y-2 border-t pt-4" aria-labelledby="sec-ban">
-          <h3 id="sec-ban" className="text-sm font-semibold">3. Banear (suspender)</h3>
+          <h3 id="sec-ban" className="text-sm font-extrabold">3. Banear (suspender)</h3>
           {puede('suspender') ? (
             <>
               <p className="text-xs text-slate-600 dark:text-slate-300">

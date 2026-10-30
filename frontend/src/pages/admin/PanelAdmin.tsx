@@ -70,7 +70,7 @@ export function PanelAdmin() {
       <EncabezadoPagina titulo="Panel de administración" descripcion="Supervisión y moderación del marketplace." />
 
       <section className="mb-8">
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold">
           <AlertTriangle className="h-5 w-5 text-sol-500" /> Requiere atención
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -81,7 +81,7 @@ export function PanelAdmin() {
                   <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
                   <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-sol-700 dark:text-sol-300' : ''}`}>{valor}</p>
                 </div>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sol-100 text-sol-800 dark:bg-sol-950 dark:text-sol-200">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sol-400 text-slate-950">
                   <Icono className="h-5 w-5" />
                 </span>
               </div>
@@ -91,7 +91,7 @@ export function PanelAdmin() {
       </section>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold">
           <Users className="h-5 w-5" /> Resumen general
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -104,7 +104,7 @@ export function PanelAdmin() {
         </div>
       </section>
 
-      <p className="mt-6 text-xs text-slate-400">
+      <p className="mt-6 text-xs text-slate-600 dark:text-slate-400">
         Actualizado {new Date(datos.generado_en).toLocaleString('es-CO')}. Usuarios suspendidos: {datos.usuarios.suspendidos}. Reseñas ocultas: {datos.resenas.ocultas}.
       </p>
     </div>

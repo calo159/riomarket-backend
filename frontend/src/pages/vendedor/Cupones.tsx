@@ -158,7 +158,7 @@ export function Cupones() {
                 <Ticket className="h-4 w-4 text-brand-600" />
                 <p className="font-bold tracking-wider">{cupon.codigo}</p>
               </div>
-              <span className={cupon.activo ? 'badge bg-verde-100 text-verde-800' : 'badge bg-slate-100 text-slate-600'}>{cupon.activo ? 'Activo' : 'Inactivo'}</span>
+              <span className={cupon.activo ? 'badge bg-verde-600 text-white' : 'badge bg-slate-100 text-slate-600'}>{cupon.activo ? 'Activo' : 'Inactivo'}</span>
             </div>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
               {cupon.tipo_descuento === 'porcentaje' ? `${cupon.valor}%` : formatearMoneda(cupon.valor)}

@@ -76,7 +76,7 @@ export function AccountMenu() {
             <button
               type="button"
               onClick={() => void salir()}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rojo-700 hover:bg-rojo-50 dark:text-rojo-300 dark:hover:bg-rojo-950/40"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-rojo-600 text-white dark:hover:"
             >
               <LogOut className="h-4 w-4" /> Cerrar sesión
             </button>

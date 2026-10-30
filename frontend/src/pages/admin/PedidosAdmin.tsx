@@ -135,7 +135,7 @@ export function PedidosAdmin() {
                       {pedido.items.length === 1 ? 'producto' : 'productos'} · Puesto #{pedido.id_puesto}
                     </p>
                     {pedido.estado === 'en_camino' && pedido.no_recibido_en && (
-                      <p className="mt-1 rounded-lg bg-sol-50 px-2 py-1 text-xs font-semibold text-sol-800 dark:bg-sol-950/60 dark:text-sol-200">
+                      <p className="mt-1 rounded-lg bg-sol-400 text-slate-950 px-2 py-1 text-xs font-semibold">
                         Disputa: el comprador reportó que no le llegó el {formatearFechaHora(pedido.no_recibido_en)}.
                         {pedido.motivo_no_recibido ? ` Motivo: ${pedido.motivo_no_recibido}.` : ''} Revisa y resuelve con "Marcar entregado" o cancela/reembolsa.
                       </p>

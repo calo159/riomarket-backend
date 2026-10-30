@@ -157,7 +157,7 @@ export function Puestos() {
       />
 
       {!verificacion.isLoading && !verificado && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-sol-300 bg-sol-50 p-4 text-sm text-sol-900 dark:border-sol-800 dark:bg-sol-950/40 dark:text-sol-100 sm:flex-row sm:items-center">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl bg-sol-400 text-slate-950 p-4 text-sm sm:flex-row sm:items-center">
           <BadgeCheck className="h-5 w-5 shrink-0" />
           <p className="flex-1">Necesitas la verificación aprobada para crear puestos. Mientras tanto puedes revisar los existentes.</p>
           <Link to="/vendedor/verificacion" className="btn-secondary shrink-0">Verificarme</Link>
@@ -180,7 +180,7 @@ export function Puestos() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate text-lg font-bold">{puesto.nombre}</h2>
+                  <h2 className="truncate text-lg font-extrabold">{puesto.nombre}</h2>
                   <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{puesto.estado}</span>
                 </div>
                 <p className="mt-1 flex items-start gap-1 text-sm text-slate-600 dark:text-slate-300">
@@ -193,7 +193,7 @@ export function Puestos() {
                   </p>
                 )}
               </div>
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white dark:bg-brand-500">
                 <Store className="h-5 w-5" />
               </span>
             </div>
@@ -203,7 +203,7 @@ export function Puestos() {
                 <span className="text-xs text-sol-700 dark:text-sol-400">Sin categorías asignadas</span>
               ) : (
                 categoriasAsignadas(puesto).map((categoria) => (
-                  <span key={categoria.id} className="badge bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200">{categoria.nombre}</span>
+                  <span key={categoria.id} className="badge bg-brand-600 text-white dark:bg-brand-500">{categoria.nombre}</span>
                 ))
               )}
             </div>

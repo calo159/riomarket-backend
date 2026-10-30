@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Bike, MapPin, Package, Store } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
 import { formatearMoneda } from '../../lib/format';
 
 export function ProductosPedido({ datos }: { datos: Pedido }) {
   return (
     <section className="card p-5">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><Package className="h-5 w-5" /> Productos</h2>
+      <h2 className="text-lg font-extrabold">Productos</h2>
       <div className="mt-3 divide-y">
         {datos.items.map((item) => (
           <div key={item.id} className="flex items-center justify-between gap-3 py-3">
@@ -27,10 +27,7 @@ export function ProductosPedido({ datos }: { datos: Pedido }) {
 export function EntregaPedido({ datos }: { datos: Pedido }) {
   return (
     <section className="card p-5">
-      <h2 className="flex items-center gap-2 text-lg font-bold">
-        {datos.tipo_entrega === 'domicilio' ? <Bike className="h-5 w-5" /> : <Store className="h-5 w-5" />}
-        Entrega
-      </h2>
+      <h2 className="text-lg font-extrabold">Entrega</h2>
       <dl className="mt-3 space-y-2 text-sm">
         <div className="flex gap-2">
           <dt className="w-28 shrink-0 text-slate-500 dark:text-slate-400">Modalidad</dt>

@@ -143,7 +143,7 @@ export function CategoriasAdmin() {
                   <td className="p-3 font-medium">{categoria.nombre}</td>
                   <td className="p-3 text-slate-500">{nombreDe(categoria.id_categoria_padre)}</td>
                   <td className="p-3">
-                    <span className={`badge ${categoria.activa ? 'bg-verde-100 text-verde-800 dark:bg-verde-950 dark:text-verde-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                    <span className={`badge ${categoria.activa ? 'bg-verde-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                       {categoria.activa ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>

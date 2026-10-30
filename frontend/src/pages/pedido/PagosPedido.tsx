@@ -1,6 +1,6 @@
-import { CreditCard } from 'lucide-react';
+import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import type { Pago } from '../../lib/types';
-import { ETIQUETAS_PAGO, formatearFechaHora, formatearMoneda } from '../../lib/format';
+import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 
 interface Props {
   cargando: boolean;
@@ -34,7 +34,7 @@ export function PagosPedido({
 }: Props) {
   return (
     <section className="card p-5">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><CreditCard className="h-5 w-5" /> Pagos</h2>
+      <h2 className="text-lg font-extrabold">Pagos</h2>
       {cargando && <p className="mt-2 text-sm text-slate-500">Cargando pagos…</p>}
       {!cargando && pagos.length === 0 && (
         <p className="mt-3 rounded-xl border border-dashed px-4 py-5 text-sm text-slate-500 dark:text-slate-400">
@@ -52,9 +52,7 @@ export function PagosPedido({
                   {pago.referencia_gateway && ` · Ref. ${pago.referencia_gateway}`}
                 </p>
               </div>
-              <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                {ETIQUETAS_PAGO[pago.estado] ?? pago.estado}
-              </span>
+              <EtiquetaEstado estado={pago.estado} />
             </div>
             <p className="mt-2 text-sm">
               Total cobrado: <strong>{formatearMoneda(pago.total_cobrado)}</strong>

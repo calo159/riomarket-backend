@@ -88,19 +88,19 @@ export function Verificacion() {
   const configuracion = {
     pendiente: {
       icono: Clock,
-      clase: 'border-sol-300 bg-sol-50 text-sol-900 dark:border-sol-800 dark:bg-sol-950/40 dark:text-sol-100',
+      clase: ' bg-sol-400 text-slate-950',
       titulo: 'Tu solicitud está en revisión',
       detalle: 'Un administrador revisará tu cédula. Te notificaremos cuando haya una decisión.',
     },
     aprobado: {
       icono: BadgeCheck,
-      clase: 'border-verde-300 bg-verde-50 text-verde-900 dark:border-verde-800 dark:bg-verde-950/40 dark:text-verde-100',
+      clase: ' bg-verde-600 text-white',
       titulo: '¡Estás verificado!',
       detalle: 'Ya puedes crear puestos, publicar productos y recibir pedidos.',
     },
     rechazado: {
       icono: XCircle,
-      clase: 'border-rojo-300 bg-rojo-50 text-rojo-900 dark:border-rojo-800 dark:bg-rojo-950/40 dark:text-rojo-100',
+      clase: ' bg-rojo-600 text-white',
       titulo: 'Tu verificación fue rechazada',
       detalle: datos?.motivo_rechazo || 'Corrige los datos y vuelve a enviar la solicitud.',
     },
@@ -120,7 +120,7 @@ export function Verificacion() {
           <div className="flex items-start gap-3">
             <Icono className="mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h2 className="font-bold">{configuracion.titulo}</h2>
+              <h2 className="font-extrabold">{configuracion.titulo}</h2>
               <p className="mt-0.5 text-sm">{configuracion.detalle}</p>
               <p className="mt-2 text-xs opacity-80">
                 Estado: {ETIQUETAS_VERIFICACION[estado ?? 'pendiente'] ?? estado} · Enviada el {formatearFechaHora(datos.fecha_solicitud)}
@@ -133,7 +133,7 @@ export function Verificacion() {
 
       {puedeEnviar ? (
         <form className="card p-5" onSubmit={onSubmit} noValidate>
-          <h2 className="flex items-center gap-2 text-lg font-bold">
+          <h2 className="flex items-center gap-2 text-lg font-extrabold">
             <ShieldCheck className="h-5 w-5" /> {datos ? 'Enviar de nuevo' : 'Enviar documentos'}
           </h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -166,7 +166,7 @@ export function Verificacion() {
                 className="flex w-full items-center gap-3 rounded-xl border border-dashed p-4 text-left transition hover:border-brand-400"
                 onClick={() => inputFoto.current?.click()}
               >
-                {foto ? <FileImage className="h-6 w-6 text-brand-600" /> : <Upload className="h-6 w-6 text-slate-400" />}
+                {foto ? <FileImage className="h-6 w-6 text-brand-600" /> : <Upload className="h-6 w-6 text-slate-600 dark:text-slate-400" />}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{foto ? foto.name : 'Selecciona una imagen'}</span>
                   <span className="block text-xs text-slate-500 dark:text-slate-400">

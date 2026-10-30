@@ -7,12 +7,10 @@ import {
   MapPin,
   Store,
   Ticket,
-  Trash2,
 } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { useSession } from '../auth/SessionProvider';
 import { useToast } from '../components/ui/Toast';
-import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoPantalla, EstadoVacio } from '../components/ui/Estado';
 import { Campo } from '../components/ui/Campos';
 import { formatearMoneda } from '../lib/format';
@@ -137,11 +135,11 @@ export function Checkout() {
 
   if (!carrito || carrito.items.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <EncabezadoPagina titulo="Finalizar compra" />
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <h1 className="mb-5 text-3xl sm:text-4xl">Finalizar compra</h1>
         <EstadoVacio
           titulo="No hay productos para pagar"
-          descripcion="Agrega productos al carrito antes de continuar."
+          descripcion="Agrega productos a la canasta antes de continuar."
           accion={<Link to="/catalogo" className="btn-primary">Ir al catálogo</Link>}
         />
       </div>
@@ -178,13 +176,16 @@ export function Checkout() {
   const ofreceDomicilio = puesto.data?.ofrece_domicilio ?? carrito.ofreceDomicilio;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <EncabezadoPagina titulo="Finalizar compra" descripcion="Revisa la entrega y confirma tu pedido." />
+    <div className="mx-auto max-w-6xl px-4 pb-32 pt-6 sm:px-6 lg:pb-8">
+      <div className="mb-5">
+        <p className="text-sm text-slate-700 dark:text-slate-300">Finalizar compra en</p>
+        <h1 className="text-3xl leading-tight sm:text-4xl">{carrito.puestoNombre}</h1>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-5">
           <section className="card p-5">
-            <h2 className="text-lg font-bold">1. Tipo de entrega</h2>
+            <h2 className="text-lg">Tipo de entrega</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
@@ -218,7 +219,7 @@ export function Checkout() {
             </div>
 
             {tipoEntrega === 'retiro' && puesto.data && (
-              <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
+              <div className="mt-4 rounded-lg bg-slate-100 p-4 text-sm dark:bg-slate-800">
                 <p className="font-semibold">{puesto.data.nombre}</p>
                 <p className="mt-1 flex items-center gap-1 text-slate-600 dark:text-slate-300">
                   <MapPin className="h-4 w-4" /> {puesto.data.direccion}
@@ -230,7 +231,7 @@ export function Checkout() {
 
           {tipoEntrega === 'domicilio' && (
             <section className="card p-5">
-              <h2 className="text-lg font-bold">2. Dirección de entrega</h2>
+              <h2 className="text-lg">Dirección de entrega</h2>
               {direcciones.data && direcciones.data.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {direcciones.data.map((item) => (
@@ -254,7 +255,7 @@ export function Checkout() {
                       />
                       <span className="text-sm">
                         <span className="font-semibold">{item.alias}</span>
-                        {item.es_predeterminada && <span className="badge ml-2 bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">Predeterminada</span>}
+                        {item.es_predeterminada && <span className="badge ml-2 bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-slate-100">Predeterminada</span>}
                         <span className="mt-0.5 block text-slate-600 dark:text-slate-300">{item.direccion}</span>
                         {item.referencia && <span className="block text-xs text-slate-500 dark:text-slate-400">{item.referencia}</span>}
                       </span>
@@ -269,7 +270,7 @@ export function Checkout() {
                       setReferencia('');
                     }}
                     className={`w-full rounded-xl border border-dashed p-3 text-left text-sm font-medium ${
-                      modoDireccion === 'manual' ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40' : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                      modoDireccion === 'manual' ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     Usar otra dirección
@@ -335,7 +336,7 @@ export function Checkout() {
           )}
 
           <section className="card p-5">
-            <h2 className="text-lg font-bold">{tipoEntrega === 'domicilio' ? '3' : '2'}. Notas y cupón</h2>
+            <h2 className="text-lg">Notas y cupón</h2>
             <Campo etiqueta="Notas para el vendedor (opcional)" htmlFor="notas" className="mt-3">
               <textarea
                 id="notas"
@@ -350,7 +351,7 @@ export function Checkout() {
               <label className="label" htmlFor="cupon">Cupón de descuento</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Ticket className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Ticket className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 dark:text-slate-400" />
                   <input
                     id="cupon"
                     className="input pl-9 uppercase"
@@ -382,8 +383,8 @@ export function Checkout() {
           </section>
         </div>
 
-        <aside className="card h-fit p-5 lg:sticky lg:top-24">
-          <h2 className="text-lg font-bold">Tu pedido</h2>
+        <aside className="h-fit rounded-xl border-2 border-slate-900 p-5 dark:border-slate-300 lg:sticky lg:top-24">
+          <h2 className="text-lg">Tu pedido</h2>
           <div className="mt-3 space-y-2">
             {carrito.items.map((item) => (
               <div key={item.productoId} className="flex justify-between gap-2 text-sm">
@@ -405,23 +406,35 @@ export function Checkout() {
           <div className="my-4 border-t" />
           <div className="flex items-center justify-between">
             <span className="font-semibold">Total</span>
-            <span className="text-xl font-extrabold text-brand-800 dark:text-brand-300">{formatearMoneda(total)}</span>
+            <span className="tnum text-2xl font-extrabold">{formatearMoneda(total)}</span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             El servidor confirma los montos finales al crear el pedido. El pago se registra en el siguiente paso.
           </p>
           <button
             type="button"
-            className="btn-primary mt-4 w-full py-3"
+            className="btn-primary mt-4 hidden min-h-12 w-full lg:flex"
             onClick={enviar}
             disabled={crear.isPending}
           >
             {crear.isPending ? 'Creando pedido…' : 'Confirmar pedido'}
           </button>
           <Link to="/carrito" className="btn-ghost mt-2 w-full">
-            <Trash2 className="h-4 w-4" /> Volver al carrito
+            Volver a la canasta
           </Link>
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-slate-950 bg-white px-4 py-3 dark:border-slate-300 dark:bg-slate-950 lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-slate-700 dark:text-slate-300">Total</p>
+            <p className="tnum text-2xl font-extrabold leading-none">{formatearMoneda(total)}</p>
+          </div>
+          <button type="button" className="btn-primary ml-auto min-h-12 flex-1 sm:flex-none" onClick={enviar} disabled={crear.isPending}>
+            {crear.isPending ? 'Creando pedido…' : 'Confirmar pedido'}
+          </button>
+        </div>
       </div>
     </div>
   );

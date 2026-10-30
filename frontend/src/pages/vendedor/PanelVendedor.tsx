@@ -53,10 +53,10 @@ export function PanelVendedor() {
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
 
   const tarjetas = [
-    { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
-    { etiqueta: 'Productos', valor: productos.data?.count ?? 0, icono: Package, to: '/vendedor/productos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
-    { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-sol-100 text-sol-700 dark:bg-sol-950 dark:text-sol-300' },
-    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-verde-100 text-verde-700 dark:bg-verde-950 dark:text-verde-300' },
+    { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-brand-600 text-white dark:bg-brand-500' },
+    { etiqueta: 'Productos', valor: productos.data?.count ?? 0, icono: Package, to: '/vendedor/productos', color: 'bg-brand-600 text-white dark:bg-brand-500' },
+    { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-sol-400 text-slate-950' },
+    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-verde-600 text-white' },
   ];
 
   return (
@@ -78,7 +78,7 @@ export function PanelVendedor() {
       />
 
       {!verificacion.isLoading && !verificado && (
-        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-sol-300 bg-sol-50 p-4 text-sol-950 dark:border-sol-800 dark:bg-sol-950/40 dark:text-sol-100 sm:flex-row sm:items-center">
+        <div className="mb-5 flex flex-col gap-3 rounded-xl bg-sol-400 text-slate-950 p-4 sm:flex-row sm:items-center">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <div className="flex-1 text-sm">
             <p className="font-semibold">
@@ -115,7 +115,7 @@ export function PanelVendedor() {
       <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_320px]">
         <section className="card p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">Pedidos pendientes</h2>
+            <h2 className="text-lg font-extrabold">Pedidos pendientes</h2>
             <Link to="/vendedor/pedidos" className="link inline-flex items-center gap-1 text-sm">
               Ver todos <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -146,7 +146,7 @@ export function PanelVendedor() {
 
         <aside className="space-y-4">
           <section className="card p-5">
-            <h2 className="text-base font-bold">Accesos rápidos</h2>
+            <h2 className="text-base font-extrabold">Accesos rápidos</h2>
             <div className="mt-3 space-y-2">
               <Link to="/vendedor/puestos" className="flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">
                 <Store className="h-4 w-4 text-brand-600" /> Mis puestos
@@ -161,7 +161,7 @@ export function PanelVendedor() {
           </section>
           {puestos.data?.results[0] && (
             <section className="card p-5">
-              <h2 className="text-base font-bold">Tu puesto principal</h2>
+              <h2 className="text-base font-extrabold">Tu puesto principal</h2>
               <p className="mt-1 font-medium">{puestos.data.results[0].nombre}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{puestos.data.results[0].direccion}</p>
               <Link to={`/puestos/${puestos.data.results[0].id}`} className="btn-secondary mt-3 w-full">Ver en la tienda</Link>

@@ -90,7 +90,7 @@ export function ResenasAdmin() {
                     <Estrellas valor={resena.calificacion} />
                     {!resena.visible && <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Oculta</span>}
                   </div>
-                  <p className="mt-1 text-sm">{resena.comentario || <span className="text-slate-400">Sin comentario.</span>}</p>
+                  <p className="mt-1 text-sm">{resena.comentario || <span className="text-slate-600 dark:text-slate-400">Sin comentario.</span>}</p>
                   <p className="mt-1 text-xs text-slate-500">
                     {resena.usuario_nombre} · Puesto #{resena.id_puesto} · {formatearFechaHora(resena.fecha_creacion)}
                   </p>
