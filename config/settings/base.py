@@ -242,6 +242,8 @@ SPECTACULAR_SETTINGS = {
 # Validación estricta de archivos subidos
 # ---------------------------------------------------------------------------
 # Tamaño máximo de imagen (bytes): 2 MB
+# Tope de píxeles al decodificar (una bomba de descompresión cabe en pocos KB).
+MAX_IMAGE_PIXELS = env.int("MAX_IMAGE_PIXELS", default=25_000_000)
 MAX_IMAGE_SIZE = env.int("MAX_IMAGE_SIZE", default=2 * 1024 * 1024)
 ALLOWED_IMAGE_CONTENT_TYPES = env.list(
     "ALLOWED_IMAGE_CONTENT_TYPES", default=["image/jpeg", "image/png", "image/webp"]

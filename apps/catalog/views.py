@@ -217,7 +217,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="imagenes/reordenar")
     def reordenar_imagenes(self, request, pk=None):
         producto = self.get_object()
-        orden_ids = request.data.get("orden") or request.data.get("imagenes") or []
+        orden_ids = request.data.get("orden", request.data.get("imagenes", []))
         imagenes = services.reordenar_imagenes(producto=producto, orden_ids=orden_ids)
         return Response(ImagenProductoSerializer(imagenes, many=True).data)
 

@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Puesto
+from apps.common.query import parametro_entero
 from apps.orders.models import Pedido
 from apps.rbac.acceso import tiene_recurso
 from apps.reviews.models import Resena
@@ -149,19 +150,18 @@ def visibles_resenas(usuario, qs: QuerySet[Resena]) -> QuerySet[Resena]:
 
 
 def filtrar_resenas(qs: QuerySet[Resena], params) -> QuerySet[Resena]:
-    puesto = params.get("puesto")
-    if puesto:
-        if not puesto.isdigit():
-            raise ValidationError({"puesto": "Debe ser un ID entero."})
-        qs = qs.filter(id_puesto_id=int(puesto))
-    cal_min = params.get("calificacion_min")
-    cal_max = params.get("calificacion_max")
-    if cal_min:
-        qs = qs.filter(calificacion__gte=int(cal_min))
-    if cal_max:
-        qs = qs.filter(calificacion__lte=int(cal_max))
-    if params.get("vendedor"):
-        qs = qs.filter(id_puesto__id_vendedor_id=params.get("vendedor"))
+    puesto = parametro_entero(params, "puesto")
+    if puesto is not None:
+        qs = qs.filter(id_puesto_id=puesto)
+    cal_min = parametro_entero(params, "calificacion_min")
+    if cal_min is not None:
+        qs = qs.filter(calificacion__gte=cal_min)
+    cal_max = parametro_entero(params, "calificacion_max")
+    if cal_max is not None:
+        qs = qs.filter(calificacion__lte=cal_max)
+    vendedor = parametro_entero(params, "vendedor")
+    if vendedor is not None:
+        qs = qs.filter(id_puesto__id_vendedor_id=vendedor)
     if params.get("con_respuesta") == "true":
         qs = qs.exclude(respuesta="")
     return qs

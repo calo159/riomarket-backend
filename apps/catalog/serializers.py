@@ -17,6 +17,19 @@ class CategoriaSerializer(serializers.ModelSerializer):
         fields = ("id", "nombre", "id_categoria_padre", "activa")
         read_only_fields = ("id",)
 
+    def validate_id_categoria_padre(self, padre):
+        """Una categoría no puede ser su propio ancestro (evita ciclos en el árbol)."""
+        actual = self.instance
+        if padre is not None and actual is not None:
+            nodo = padre
+            while nodo is not None:
+                if nodo.pk == actual.pk:
+                    raise serializers.ValidationError(
+                        "La categoría padre no puede ser ella misma ni una de sus subcategorías."
+                    )
+                nodo = nodo.id_categoria_padre
+        return padre
+
 
 class ModerarSerializer(serializers.Serializer):
     estado = serializers.CharField()

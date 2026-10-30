@@ -6,6 +6,8 @@ PBKDF2, nunca texto plano). Renombrarlo romería ``check_password``,
 ``set_password`` y el admin de Django; se documenta como equivalente.
 """
 
+import unicodedata
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -104,7 +106,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     @staticmethod
     def normalizar_celular(celular: str) -> str:
         """Solo dígitos, sin código de país: ``+57 300 123 4567`` → ``3001234567``."""
-        digitos = "".join(ch for ch in str(celular or "") if ch.isdigit())
+        digitos = "".join(
+            str(unicodedata.decimal(ch)) for ch in str(celular or "") if ch.isdecimal()
+        )
         if len(digitos) == 12 and digitos.startswith("57"):
             digitos = digitos[2:]
         elif len(digitos) == 14 and digitos.startswith("0057"):

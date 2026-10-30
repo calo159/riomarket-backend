@@ -11,6 +11,7 @@ repetirse entre cuentas):
 
 import hashlib
 import hmac
+import unicodedata
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -70,7 +71,7 @@ def huella_deterministica(texto: str, clave: bytes | None = None) -> str:
 
 def normalizar_cedula(cedula: str) -> str:
     """Simplifica la cédula para comparar: solo dígitos, sin ceros a la izquierda."""
-    digitos = "".join(ch for ch in str(cedula) if ch.isdigit())
+    digitos = "".join(str(unicodedata.decimal(ch)) for ch in str(cedula) if ch.isdecimal())
     return digitos.lstrip("0") or "0"
 
 

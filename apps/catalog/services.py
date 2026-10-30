@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
+from django.http import Http404
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
 from apps.common.image_processing import make_thumbnail, process_product_image
@@ -322,21 +323,36 @@ def agregar_imagen(*, producto, archivo, alt: str = "") -> ImagenProducto:
         return imagen
 
 
-def reordenar_imagenes(*, producto, orden_ids: list) -> list:
+def reordenar_imagenes(*, producto, orden_ids) -> list:
+    """Reordena según la lista de ids; rechaza listas mal formadas o más largas que las imágenes."""
     from django.db import transaction
 
+    if not isinstance(orden_ids, list) or not all(
+        isinstance(valor, int) and not isinstance(valor, bool) for valor in orden_ids
+    ):
+        raise ValidationError({"orden": "Debe ser una lista de ids de imagen (enteros)."})
+    validas = set(producto.imagenes.values_list("pk", flat=True))
+    if len(orden_ids) > len(validas):
+        raise ValidationError({"orden": "La lista tiene más ids que imágenes del producto."})
     with transaction.atomic():
         for idx, img_id in enumerate(orden_ids):
-            ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
+            if img_id in validas:
+                ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
     return list(producto.imagenes.all())
 
 
-def marcar_imagen_principal(*, producto, imagen_id: int) -> ImagenProducto:
+def marcar_imagen_principal(*, producto, imagen_id) -> ImagenProducto:
     from django.db import transaction
 
+    try:
+        imagen_id = int(imagen_id)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError({"imagen": "El id de la imagen debe ser un entero."}) from exc
     with transaction.atomic():
+        imagen = ImagenProducto.objects.filter(id_producto=producto, pk=imagen_id).first()
+        if imagen is None:
+            raise Http404("La imagen no existe en este producto.")
         ImagenProducto.objects.filter(id_producto=producto).update(es_principal=False)
-        imagen = ImagenProducto.objects.get(id_producto=producto, pk=imagen_id)
         imagen.es_principal = True
         imagen.save(update_fields=["es_principal"])
     return imagen
