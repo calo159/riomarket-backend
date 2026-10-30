@@ -653,8 +653,13 @@ class Command(BaseCommand):
                     if metodo == Pago.MetodoPago.EFECTIVO:
                         pagos_services.confirmar_efectivo(pago=pago, usuario=vendedor, datos={})
                     else:
-                        pagos_services.simular_pago(
-                            pago=pago, usuario=comprador, datos={"accion": "aprobar"}
+                        # Datos de demo: aprueba como lo haría la pasarela (simular_pago solo
+                        # admite el método «simulado»).
+                        pagos_services._aplicar_estado(
+                            pago=pago,
+                            destino=Pago.Estado.APROBADO,
+                            referencia=f"seed-{pago.pk}",
+                            origen="seed",
                         )
 
             self._avanzar_estado(

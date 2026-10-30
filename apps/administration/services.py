@@ -21,6 +21,7 @@ from django.db.models import Count, Prefetch, Q, Sum
 from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
+from apps.accounts.services import invalidar_sesiones
 from apps.audit.services import registrar
 from apps.catalog.models import Producto, Puesto
 from apps.common.motivo import validar_motivo
@@ -71,15 +72,8 @@ def _admins_activos(excluir_pk=None) -> int:
 
 
 def _invalidar_sesiones(usuario: Usuario) -> None:
-    """Blacklist de todos los refresh tokens vigentes del usuario."""
     try:
-        from rest_framework_simplejwt.token_blacklist.models import (
-            BlacklistedToken,
-            OutstandingToken,
-        )
-
-        for token in OutstandingToken.objects.filter(user=usuario):
-            BlacklistedToken.objects.get_or_create(token=token)
+        invalidar_sesiones(usuario)
     except Exception:  # pragma: no cover - no debe romper la decisión de negocio
         logger.exception("No se pudieron invalidar las sesiones de %s", usuario.pk)
 

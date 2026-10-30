@@ -192,6 +192,10 @@ def simular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> 
     if not sandbox_habilitado():
         raise PermissionDenied("La simulación de pagos está deshabilitada.")
     _autorizar_gestion(pago, usuario)
+    if pago.metodo_pago != Pago.MetodoPago.SIMULADO:
+        raise ValidationError(
+            {"metodo_pago": "Solo se pueden simular los pagos con método «simulado»."}
+        )
     datos = datos or {}
     accion = (datos.get("accion") or "aprobar").strip().lower()
     if accion not in ("aprobar", "rechazar"):
@@ -303,6 +307,9 @@ def procesar_webhook(*, proveedor: str, cuerpo: bytes, payload: dict, firma: str
     if pago is None:
         raise ValidationError({"referencia": "No existe un pago con esa referencia."})
     destino = Pago.Estado.APROBADO if evento["estado"] == "aprobado" else Pago.Estado.RECHAZADO
+    if pago.estado == destino:
+        # Las pasarelas reintentan: repetir un evento ya aplicado responde 200 sin cambios.
+        return pago
     return _aplicar_estado(
         pago=pago,
         destino=destino,

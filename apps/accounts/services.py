@@ -7,7 +7,7 @@ de forma verificable aisladamente desde tests.
 
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
@@ -165,6 +165,16 @@ def rechazar_verificacion(*, vendedor: Vendedor, revisor: Usuario, motivo: str) 
     return vendedor
 
 
+def invalidar_sesiones(usuario: Usuario) -> None:
+    """Pone en la lista negra todos los refresh tokens vigentes del usuario (una consulta)."""
+    from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
+    pendientes = OutstandingToken.objects.filter(user=usuario, blacklistedtoken__isnull=True)
+    BlacklistedToken.objects.bulk_create(
+        [BlacklistedToken(token=token) for token in pendientes], ignore_conflicts=True
+    )
+
+
 def cambiar_contrasena(*, usuario: Usuario, actual: str, nueva: str) -> Usuario:
     if not usuario.check_password(actual):
         raise ValidationError({"actual": "La contraseña actual es incorrecta."})
@@ -173,12 +183,18 @@ def cambiar_contrasena(*, usuario: Usuario, actual: str, nueva: str) -> Usuario:
     password_validation.validate_password(nueva, user=usuario)
     usuario.set_password(nueva)
     usuario.save(update_fields=["password"])
+    # Quien robó una sesión no la conserva después del cambio de clave.
+    invalidar_sesiones(usuario)
     return usuario
 
 
 def solicitar_recuperacion(*, correo: str):
+    import logging
     import secrets
     from datetime import timedelta
+
+    from django.conf import settings
+    from django.core.mail import send_mail
 
     from apps.accounts.models import TokenRecuperacion
 
@@ -186,12 +202,26 @@ def solicitar_recuperacion(*, correo: str):
     usuario = Usuario.objects.filter(correo=correo).first()
     if not usuario:
         return
-    token = secrets.token_urlsafe(32).replace("-", "").replace("_", "")
+    token = secrets.token_urlsafe(32).replace("-", "").replace("_", "")[:64]
     expira = timezone.now() + timedelta(hours=1)
-    TokenRecuperacion.objects.create(usuario=usuario, token=token[:64], expira=expira)
-    import logging
-
-    logging.getLogger(__name__).info("RECUPERACION_TOKEN %s %s", usuario.correo, token[:64])
+    with transaction.atomic():
+        # Un token nuevo reemplaza a los anteriores: solo el último sirve.
+        TokenRecuperacion.objects.filter(usuario=usuario, usado=False).update(usado=True)
+        TokenRecuperacion.objects.create(usuario=usuario, token=token, expira=expira)
+    if settings.NOTIFICATIONS_EMAIL_ENABLED:
+        send_mail(
+            subject="Recupera tu contraseña de RioMarket",
+            message=(
+                "Usa este código para restablecer tu contraseña (vale 1 hora):\n\n"
+                f"{token}\n\nSi no lo pediste, ignora este mensaje."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[usuario.correo],
+            fail_silently=True,
+        )
+    if settings.DEBUG:
+        # Solo en desarrollo: en producción el token nunca se escribe en los logs.
+        logging.getLogger(__name__).info("RECUPERACION_TOKEN %s %s", usuario.correo, token)
 
 
 def restablecer_contrasena(*, token: str, nueva: str) -> Usuario:
@@ -199,16 +229,20 @@ def restablecer_contrasena(*, token: str, nueva: str) -> Usuario:
 
     from apps.accounts.models import TokenRecuperacion
 
-    tr = (
-        TokenRecuperacion.objects.filter(token=token[:64], usado=False, expira__gt=timezone.now())
-        .select_related("usuario")
-        .first()
-    )
-    if not tr:
-        raise ValidationError({"token": "Token inválido o expirado."})
-    password_validation.validate_password(nueva, user=tr.usuario)
-    tr.usuario.set_password(nueva)
-    tr.usuario.save(update_fields=["password"])
-    tr.usado = True
-    tr.save(update_fields=["usado"])
+    with transaction.atomic():
+        # La fila se bloquea: dos peticiones simultáneas no consumen el mismo token.
+        tr = (
+            TokenRecuperacion.objects.select_for_update()
+            .filter(token=token[:64], usado=False, expira__gt=timezone.now())
+            .select_related("usuario")
+            .first()
+        )
+        if not tr:
+            raise ValidationError({"token": "Token inválido o expirado."})
+        password_validation.validate_password(nueva, user=tr.usuario)
+        tr.usuario.set_password(nueva)
+        tr.usuario.save(update_fields=["password"])
+        tr.usado = True
+        tr.save(update_fields=["usado"])
+        invalidar_sesiones(tr.usuario)
     return tr.usuario
