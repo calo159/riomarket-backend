@@ -186,24 +186,17 @@ export function PedidoDetalle() {
   const pagoVigente = listaPagos[0];
   const pagoAprobado = listaPagos.some((pago) => pago.estado === 'aprobado');
   const esComprador = usuario?.id === datos.id_comprador;
-  const esVendedor = rol === 'vendedor';
   const esAdmin = rol === 'administrador';
-  const puedePagar =
-    datos.estado === 'pendiente' &&
-    (esComprador || esAdmin) &&
-    !pagoAprobado &&
-    !listaPagos.some((pago) => ['pendiente', 'procesando'].includes(pago.estado));
+  // Quién puede pagar o cobrar lo decide el backend (acciones_permitidas), no el rol.
+  const permitidas = datos.acciones_permitidas ?? [];
+  const puedePagar = permitidas.includes('pagar') && !pagoAprobado;
   const pasoActual = PASOS.indexOf(datos.estado);
   const resenaPropia = resenas.data?.results.find((resena) => resena.id_pedido === datos.id && resena.id_usuario === usuario?.id);
 
-  const permitidas = datos.acciones_permitidas ?? [];
   const puedeCancelar = permitidas.includes('cancelar');
   const puedeEntregar = permitidas.includes('entregar');
   const puedeReportar = permitidas.includes('no-recibido') && !datos.no_recibido_en;
-  const puedeConfirmarEfectivo =
-    (esVendedor || esAdmin) &&
-    pagoVigente?.metodo_pago === 'efectivo' &&
-    ['pendiente', 'procesando'].includes(pagoVigente.estado);
+  const puedeConfirmarEfectivo = permitidas.includes('confirmar-pago');
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">

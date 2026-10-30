@@ -432,6 +432,36 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
         and permissions.puede(usuario, permissions.Accion.NO_RECIBIDO, pedido)
     ):
         acciones.append(permissions.Accion.NO_RECIBIDO.value)
+    acciones.extend(_acciones_de_pago(pedido, usuario))
+    return acciones
+
+
+def _acciones_de_pago(pedido: Pedido, usuario) -> list[str]:
+    """``pagar`` (comprador/admin) y ``confirmar-pago`` (vendedor de ESE pedido o admin).
+
+    Así el frontend no adivina por rol quién puede cobrar. ``pedido.pago`` viene en el
+    ``select_related`` del listado: no añade consultas por fila.
+    """
+    if not (usuario and usuario.is_authenticated and usuario.is_active):
+        return []
+    pago = getattr(pedido, "pago", None)
+    acciones: list[str] = []
+    es_comprador = pedido.id_comprador_id == usuario.pk
+    if (
+        pedido.estado == Pedido.Estado.PENDIENTE
+        and (es_comprador or usuario.es_administrador)
+        and (pago is None or pago.estado == "rechazado")
+    ):
+        acciones.append("pagar")
+    if (
+        pago is not None
+        and pago.metodo_pago == "efectivo"
+        and pago.estado in ("pendiente", "procesando")
+        and pedido.estado != Pedido.Estado.CANCELADO
+    ):
+        es_vendedor = pedido.id_puesto.id_vendedor_id == usuario.pk and usuario.puede_publicar()
+        if es_vendedor or usuario.es_administrador:
+            acciones.append("confirmar-pago")
     return acciones
 
 

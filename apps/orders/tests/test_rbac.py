@@ -104,12 +104,12 @@ class TestAccionesDisponibles:
     @pytest.mark.parametrize(
         "estado,rol,esperadas",
         [
-            (Pedido.Estado.PENDIENTE, Usuario.Rol.COMPRADOR, ["editar", "cancelar"]),
+            (Pedido.Estado.PENDIENTE, Usuario.Rol.COMPRADOR, ["editar", "cancelar", "pagar"]),
             (Pedido.Estado.PENDIENTE, Usuario.Rol.VENDEDOR, ["confirmar", "cancelar"]),
             (
                 Pedido.Estado.PENDIENTE,
                 Usuario.Rol.ADMINISTRADOR,
-                ["editar", "confirmar", "cancelar"],
+                ["editar", "confirmar", "cancelar", "pagar"],
             ),
             (Pedido.Estado.CONFIRMADO, Usuario.Rol.COMPRADOR, ["cancelar"]),
             (Pedido.Estado.CONFIRMADO, Usuario.Rol.VENDEDOR, ["en-preparacion", "cancelar"]),
