@@ -97,39 +97,37 @@ export function Login() {
   };
 
   return (
-    <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-brand-800 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-brand-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-sand-400/20 blur-3xl" />
+    <div className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-[1240px] gap-0 px-3 py-5 sm:px-5 lg:grid-cols-2 lg:py-8">
+      <div className="relative hidden overflow-hidden rounded-l-xl bg-brand-600 p-12 text-white dark:bg-brand-900 lg:flex lg:flex-col lg:justify-between">
         <div className="relative">
-          <Logo className="[&_span:last-child]:text-white" />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-tight">
+          <Logo sobreMarca />
+          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
             Tu mercado local, a un clic de distancia.
           </h1>
-          <p className="mt-4 max-w-md text-brand-100">
-            Compra frutas frescas, comidas y artesanías directo a los vendedores de Riohacha.
+          <p className="mt-4 max-w-md text-lg text-brand-50">
+            Compra frutas, comidas y artesanías directo a los vendedores de Riohacha.
           </p>
         </div>
         <div className="relative grid gap-3">
           {[
             'Puestos verificados y reseñas reales',
-            'Pago simulado seguro para tus prácticas',
-            'Sigue tu pedido en tiempo real',
+            'Efectivo o modo de prueba: aquí no hay pasarela real',
+            'Sigue tu pedido paso a paso',
           ].map((texto) => (
-            <div key={texto} className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 backdrop-blur">
-              <ShoppingBasket className="h-5 w-5 text-sand-300" />
+            <div key={texto} className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3">
+              <ShoppingBasket className="h-5 w-5 text-amarillo" />
               <span className="text-sm">{texto}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center justify-center px-4 py-12 sm:px-8">
+      <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-10 sm:px-8 lg:rounded-l-none lg:rounded-r-xl dark:border-slate-800 dark:bg-slate-900">
         <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden">
+          <div className="mb-6 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-bold">Bienvenido de nuevo</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight">Bienvenido de nuevo</h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Ingresa para comprar o administrar tu puesto.
           </p>
@@ -188,7 +186,7 @@ export function Login() {
           <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
             ¿No tienes cuenta?{' '}
             <Link to="/registro" className="link">
-              Crea una gratis
+              Crea una cuenta
             </Link>
           </p>
 

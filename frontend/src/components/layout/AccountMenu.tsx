@@ -8,7 +8,7 @@ import { itemsDe } from '../../navigation/tipos';
 import { iniciales } from '../../lib/utils';
 import { ETIQUETAS_ROL } from '../../lib/format';
 
-export function AccountMenu() {
+export function AccountMenu({ variante = 'normal' }: { variante?: 'normal' | 'encabezado' }) {
   const { usuario, rol, cerrarSesion } = useSession();
   const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
@@ -44,12 +44,12 @@ export function AccountMenu() {
     <div className="relative" ref={contenedor}>
       <button
         type="button"
-        className="btn-ghost gap-2 py-1.5 pl-1.5 pr-2.5"
+        className={variante === 'encabezado' ? 'acto-encabezado gap-2 !pl-1.5' : 'btn-ghost gap-2 py-1.5 pl-1.5 pr-2.5'}
         onClick={() => setAbierto((valor) => !valor)}
         aria-expanded={abierto}
         aria-controls={idPanel}
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amarillo text-sm font-extrabold text-tinta">
           {iniciales(usuario.nombre)}
         </span>
         <span className="hidden max-w-[9rem] truncate text-sm font-semibold sm:block">{usuario.nombre.split(' ')[0]}</span>
@@ -60,12 +60,12 @@ export function AccountMenu() {
         // Es un panel de enlaces (no un role="menu", que exigiría menuitems y navegación con flechas).
         <div
           id={idPanel}
-          className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border bg-white shadow-xl dark:bg-slate-900"
+          className="absolute right-0 z-50 mt-2 w-64 animate-fadezoom overflow-hidden rounded-lg border bg-white text-tinta shadow-menu dark:bg-slate-900 dark:text-slate-100"
         >
           <div className="border-b px-4 py-3">
             <p className="truncate font-semibold">{usuario.nombre}</p>
             <p className="truncate text-xs text-slate-500 dark:text-slate-400">{usuario.correo}</p>
-            <span className="badge mt-2 bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-200">
+            <span className="badge mt-2 bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200">
               {ETIQUETAS_ROL[rol ?? ''] ?? rol}
             </span>
           </div>
@@ -76,7 +76,7 @@ export function AccountMenu() {
             <button
               type="button"
               onClick={() => void salir()}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+              className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
             >
               <LogOut className="h-4 w-4" /> Cerrar sesión
             </button>

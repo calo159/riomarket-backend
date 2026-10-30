@@ -109,7 +109,7 @@ export function Usuarios() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             className="input w-64 pl-9"
             placeholder="Nombre, correo o celular"
@@ -163,7 +163,7 @@ export function Usuarios() {
                     <td className="p-3">
                       <p className="font-medium">{usuario.nombre}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{usuario.correo} · {usuario.celular}</p>
-                      <p className="text-xs text-slate-400">Desde {formatearFecha(usuario.fecha_registro)}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Desde {formatearFecha(usuario.fecha_registro)}</p>
                     </td>
                     <td className="p-3">
                       <span className="badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{ETIQUETAS_ROL[usuario.rol] ?? usuario.rol}</span>
@@ -181,7 +181,7 @@ export function Usuarios() {
                       {usuario.puestos.length === 0 ? '—' : (
                         <ul className="space-y-0.5">
                           {usuario.puestos.map((puesto) => (
-                            <li key={puesto.id}>{puesto.nombre} <span className="text-slate-400">({puesto.estado})</span></li>
+                            <li key={puesto.id}>{puesto.nombre} <span className="text-slate-500 dark:text-slate-400">({puesto.estado})</span></li>
                           ))}
                         </ul>
                       )}
@@ -232,7 +232,7 @@ export function Usuarios() {
 
 function BotonAcceso({ usuario, onAbrir }: { usuario: UsuarioAdmin; onAbrir: (usuario: UsuarioAdmin) => void }) {
   if (usuario.acciones_permitidas.length === 0) {
-    return <span className="text-xs text-slate-400">Sin acciones</span>;
+    return <span className="text-xs text-slate-500 dark:text-slate-400">Sin acciones</span>;
   }
   return (
     <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onAbrir(usuario)}>

@@ -6,10 +6,11 @@ import { listarCategorias, listarProductos, type FiltrosProducto } from '../api/
 import { ProductoCard } from '../components/ProductoCard';
 import { EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
-import { EncabezadoPagina } from '../components/ui/Encabezado';
+import { Modal } from '../components/ui/Modal';
+import { GRID_PRODUCTOS } from '../lib/estilos';
 import { claves } from '../lib/queryKeys';
 
-const TAMANO = 12;
+const TAMANO = 15;
 
 export function Catalogo() {
   const [params, setParams] = useSearchParams();
@@ -81,6 +82,7 @@ export function Catalogo() {
     setParams(new URLSearchParams(), { replace: true });
   };
 
+  const nombreDe = (id: number) => categorias.data?.find((c) => c.id === id)?.nombre ?? null;
   const hayFiltros = Boolean(params.get('q') || categoria || ordering || params.get('precio_min') || params.get('precio_max'));
   const categoriaActual = categorias.data?.find((item) => String(item.id) === categoria)?.nombre;
 
@@ -89,7 +91,7 @@ export function Catalogo() {
       <form onSubmit={buscar}>
         <label className="label" htmlFor="buscar-catalogo">Buscar</label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             id="buscar-catalogo"
             value={texto}
@@ -106,9 +108,9 @@ export function Catalogo() {
           <button
             type="button"
             onClick={() => actualizar({ categoria: null })}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+            className={`flex min-h-[44px] w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm md:min-h-[38px] ${
               !categoria
-                ? 'bg-brand-50 font-semibold text-brand-800 dark:bg-brand-950 dark:text-brand-200'
+                ? 'bg-brand-50 font-bold text-brand-700 dark:bg-slate-800 dark:text-brand-200'
                 : 'hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
@@ -119,9 +121,9 @@ export function Catalogo() {
               key={item.id}
               type="button"
               onClick={() => actualizar({ categoria: String(item.id) })}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${
+              className={`flex min-h-[44px] w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm md:min-h-[38px] ${
                 categoria === String(item.id)
-                  ? 'bg-brand-50 font-semibold text-brand-800 dark:bg-brand-950 dark:text-brand-200'
+                  ? 'bg-brand-50 font-bold text-brand-700 dark:bg-slate-800 dark:text-brand-200'
                   : 'hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -181,55 +183,63 @@ export function Catalogo() {
     </div>
   );
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <EncabezadoPagina
-        titulo={categoriaActual ? categoriaActual : 'Catálogo'}
-        descripcion="Productos frescos y locales de vendedores de Riohacha."
-        acciones={
-          <button type="button" className="btn-secondary lg:hidden" onClick={() => setFiltrosMoviles(true)}>
-            <SlidersHorizontal className="h-4 w-4" /> Filtros
-          </button>
-        }
-      />
+  const chips: { clave: string; texto: string; quitar: () => void }[] = [];
+  if (params.get('q')) chips.push({ clave: 'q', texto: `Búsqueda: ${params.get('q')}`, quitar: () => actualizar({ q: null }) });
+  if (categoria && categoriaActual) chips.push({ clave: 'categoria', texto: categoriaActual, quitar: () => actualizar({ categoria: null }) });
+  if (params.get('precio_min')) chips.push({ clave: 'min', texto: `Desde $ ${params.get('precio_min')}`, quitar: () => actualizar({ precio_min: null }) });
+  if (params.get('precio_max')) chips.push({ clave: 'max', texto: `Hasta $ ${params.get('precio_max')}`, quitar: () => actualizar({ precio_max: null }) });
 
-      <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
-        <aside className="card hidden h-fit p-5 lg:block">
-          <p className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-500">
-            <Filter className="h-4 w-4" /> Filtros
+  return (
+    <div className="mx-auto max-w-[1240px] px-3 py-4 sm:px-5 md:py-5">
+      <nav aria-label="Ruta" className="mb-3 text-[13px] text-slate-500 dark:text-slate-400">
+        <Link to="/" className="link">Inicio</Link> › {categoriaActual ?? 'Catálogo'}
+      </nav>
+      <div className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)]">
+        <aside className="card hidden h-fit p-4 lg:block" aria-label="Filtros">
+          <p className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+            <Filter className="h-4 w-4" aria-hidden="true" /> Filtros
           </p>
           {panelFiltros}
         </aside>
 
-        {filtrosMoviles && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <button type="button" className="absolute inset-0 bg-slate-950/50" onClick={() => setFiltrosMoviles(false)} aria-label="Cerrar filtros" />
-            <div className="absolute inset-y-0 right-0 w-80 max-w-[90vw] overflow-y-auto bg-white p-5 shadow-2xl dark:bg-slate-900">
-              <div className="mb-5 flex items-center justify-between">
-                <p className="text-lg font-bold">Filtros</p>
-                <button type="button" className="btn-ghost p-2" onClick={() => setFiltrosMoviles(false)} aria-label="Cerrar">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              {panelFiltros}
-            </div>
-          </div>
-        )}
+        <Modal abierto={filtrosMoviles} onCerrar={() => setFiltrosMoviles(false)} titulo="Filtros">
+          {panelFiltros}
+        </Modal>
 
-        <div>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <p>
-              {productos.data ? `${productos.data.count} ${productos.data.count === 1 ? 'producto' : 'productos'}` : 'Buscando…'}
-            </p>
-            {params.get('q') && (
-              <p className="inline-flex items-center gap-1">
-                Búsqueda: <strong className="text-slate-800 dark:text-slate-200">{params.get('q')}</strong>
-                <button type="button" onClick={() => actualizar({ q: null })} className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Quitar búsqueda">
-                  <X className="h-3.5 w-3.5" />
-                </button>
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h1 className="text-[22px] font-extrabold tracking-tight">{categoriaActual ?? 'Catálogo'}</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
+                {productos.data ? `${productos.data.count} ${productos.data.count === 1 ? 'resultado' : 'resultados'}` : 'Buscando…'}
               </p>
-            )}
+            </div>
+            <button type="button" className="btn-secondary lg:hidden" onClick={() => setFiltrosMoviles(true)}>
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" /> Filtros{chips.length > 0 && ` (${chips.length})`}
+            </button>
           </div>
+
+          {chips.length > 0 && (
+            <ul className="mb-3 flex flex-wrap gap-2" aria-label="Filtros activos">
+              {chips.map((chip) => (
+                <li key={chip.clave}>
+                  <button
+                    type="button"
+                    onClick={chip.quitar}
+                    aria-label={`Quitar filtro: ${chip.texto}`}
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-brand-600 bg-brand-50 px-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-300 dark:bg-slate-800 dark:text-brand-200"
+                  >
+                    {chip.texto} <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button type="button" onClick={limpiar} className="min-h-[36px] px-2 text-sm font-semibold text-slate-600 underline-offset-4 hover:underline dark:text-slate-300">
+                  Limpiar todo
+                </button>
+              </li>
+            </ul>
+          )}
 
           {productos.isLoading && <EsqueletoGrid cantidad={TAMANO} />}
           {productos.isError && <EstadoError mensaje="No pudimos cargar el catálogo." onReintentar={() => void productos.refetch()} />}
@@ -237,15 +247,15 @@ export function Catalogo() {
             <EstadoVacio
               titulo="No encontramos productos"
               descripcion="Prueba con otra búsqueda o quita algunos filtros."
-              icono={<PackageSearch className="h-8 w-8" />}
+              icono={<PackageSearch className="h-7 w-7" />}
               accion={hayFiltros ? <button type="button" className="btn-secondary" onClick={limpiar}>Limpiar filtros</button> : <Link to="/" className="btn-primary">Volver al inicio</Link>}
             />
           )}
           {productos.data && productos.data.results.length > 0 && (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className={GRID_PRODUCTOS}>
                 {productos.data.results.map((producto) => (
-                  <ProductoCard key={producto.id} producto={producto} />
+                  <ProductoCard key={producto.id} producto={producto} categoria={nombreDe(producto.id_categoria)} />
                 ))}
               </div>
               <Paginacion

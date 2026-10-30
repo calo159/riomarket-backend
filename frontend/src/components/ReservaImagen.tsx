@@ -1,40 +1,22 @@
-import { ImageOff } from 'lucide-react';
+import { IconoCategoria } from './iconos';
 
-const COLORES = [
-  'from-brand-100 to-brand-200 dark:from-brand-950 dark:to-brand-900',
-  'from-sand-100 to-sand-200 dark:from-slate-800 dark:to-slate-900',
-  'from-emerald-100 to-emerald-200 dark:from-emerald-950 dark:to-emerald-900',
-  'from-amber-100 to-amber-200 dark:from-amber-950 dark:to-amber-900',
-  'from-cyan-100 to-cyan-200 dark:from-cyan-950 dark:to-cyan-900',
-];
-
-function hash(str: string) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  return h;
-}
-
+/** Reserva sin foto: fondo gris claro con el icono de la categoría (o uno genérico). */
 export function ReservaImagen({
-  nombre,
+  nombre = '',
+  categoria,
   className = '',
 }: {
-  nombre: string;
+  nombre?: string;
+  categoria?: string | null;
   className?: string;
 }) {
-  const idx = hash(nombre || 'riomarket') % COLORES.length;
-  const iniciales = (nombre || 'RM')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((x) => x[0]?.toUpperCase() || '')
-    .join('');
   return (
     <div
-      className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${COLORES[idx]} ${className}`}
+      role="img"
+      aria-label={nombre ? `${nombre}, sin foto` : 'Sin foto'}
+      className={`flex h-full w-full items-center justify-center bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 ${className}`}
     >
-      <div className="flex flex-col items-center gap-2 text-slate-600 dark:text-slate-300">
-        <ImageOff className="h-10 w-10" />
-        {iniciales && <span className="text-lg font-bold">{iniciales}</span>}
-      </div>
+      <IconoCategoria nombre={categoria} className="h-1/3 w-1/3 max-h-16 max-w-16 min-h-6 min-w-6" />
     </div>
   );
 }

@@ -35,9 +35,9 @@ export function EstadoVacio({
   icono?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-14 text-center">
-      <div className="mb-3 text-slate-400">{icono ?? <Inbox className="h-8 w-8" />}</div>
-      <h2 className="text-lg font-semibold">{titulo}</h2>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
+      <div className="mb-3 grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-300">{icono ?? <Inbox className="h-7 w-7" />}</div>
+      <h2 className="text-lg font-bold">{titulo}</h2>
       {descripcion && <p className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">{descripcion}</p>}
       {accion && <div className="mt-5">{accion}</div>}
     </div>
@@ -52,7 +52,7 @@ export function EstadoError({
   onReintentar?: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
+    <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-rose-900 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
         <div>
@@ -69,20 +69,25 @@ export function EstadoError({
   );
 }
 
+/** Esqueleto con la forma real de la tarjeta de producto: foto cuadrada, precio, nombre, puesto. */
 function EsqueletoTarjeta() {
   return (
-    <div className="card overflow-hidden p-4">
-      <div className="skeleton mb-4 h-40 w-full" />
-      <div className="skeleton mb-2 h-4 w-3/4" />
-      <div className="skeleton mb-2 h-3 w-1/2" />
-      <div className="skeleton h-5 w-1/3" />
+    <div className="card overflow-hidden" aria-hidden="true">
+      <div className="skeleton aspect-square w-full rounded-none" />
+      <div className="space-y-2 p-3">
+        <div className="skeleton h-6 w-2/5" />
+        <div className="skeleton h-4 w-full" />
+        <div className="skeleton h-4 w-3/5" />
+        <div className="skeleton h-3 w-1/2" />
+        <div className="skeleton mt-3 h-10 w-full" />
+      </div>
     </div>
   );
 }
 
 export function EsqueletoGrid({ cantidad = 8 }: { cantidad?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Cargando productos">
       {Array.from({ length: cantidad }).map((_, indice) => (
         <EsqueletoTarjeta key={indice} />
       ))}

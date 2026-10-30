@@ -75,7 +75,7 @@ export function Verificacion() {
   };
 
   if (verificacion.isLoading) {
-    return <div className="mx-auto max-w-3xl"><CargandoBloque mensaje="Consultando tu verificación…" /></div>;
+    return <div className="max-w-3xl"><CargandoBloque mensaje="Consultando tu verificación…" /></div>;
   }
   if (verificacion.isError) {
     return <EstadoError mensaje="No pudimos consultar tu verificación." onReintentar={() => void verificacion.refetch()} />;
@@ -109,7 +109,7 @@ export function Verificacion() {
   const Icono = configuracion.icono;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="max-w-3xl">
       <EncabezadoPagina
         titulo="Verificación de vendedor"
         descripcion="Verifica tu identidad para publicar productos y recibir pedidos."
@@ -166,7 +166,7 @@ export function Verificacion() {
                 className="flex w-full items-center gap-3 rounded-xl border border-dashed p-4 text-left transition hover:border-brand-400"
                 onClick={() => inputFoto.current?.click()}
               >
-                {foto ? <FileImage className="h-6 w-6 text-brand-600" /> : <Upload className="h-6 w-6 text-slate-400" />}
+                {foto ? <FileImage className="h-6 w-6 text-brand-600" /> : <Upload className="h-6 w-6 text-slate-500 dark:text-slate-400" />}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{foto ? foto.name : 'Selecciona una imagen'}</span>
                   <span className="block text-xs text-slate-500 dark:text-slate-400">

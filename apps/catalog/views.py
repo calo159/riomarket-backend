@@ -33,7 +33,7 @@ from apps.common.permissions import EsDuenoOAdmin, EsVendedorAprobado
 from apps.common.query import aplicar_ordenamiento, parametro_entero
 from apps.rbac.acceso import tiene_recurso
 from apps.rbac.permissions import TieneRecurso
-from apps.reviews.services import anotar_reputacion
+from apps.reviews.services import anotar_calificacion_del_puesto, anotar_reputacion
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
     OpenApiParameter(name="q", type=OpenApiTypes.STR, description="Nombre o descripción"),
@@ -191,6 +191,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         qs = Producto.objects.select_related("id_puesto", "id_categoria").prefetch_related(
             "imagenes"
         )
+        qs = anotar_calificacion_del_puesto(qs)
         qs = services.visibles_productos(self.request.user, qs, params)
         qs = services.filtrar_productos(qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PRODUCTO)

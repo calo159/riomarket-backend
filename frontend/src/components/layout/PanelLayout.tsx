@@ -35,12 +35,9 @@ export function PanelLayout() {
 
   const barraLateral = (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center border-b px-4">
-        <Logo />
-      </div>
       <div className="border-b px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{tituloPanel}</p>
-        <p className="mt-1 truncate text-sm font-semibold">{usuario.nombre}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tituloPanel}</p>
+        <p className="mt-1 truncate text-sm font-bold">{usuario.nombre}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">{ETIQUETAS_ROL[usuario.rol]}</p>
       </div>
       <nav className="flex-1 space-y-2 overflow-y-auto p-3" aria-label="Navegación del panel">
@@ -49,24 +46,52 @@ export function PanelLayout() {
       <div className="space-y-1 border-t p-3">
         <Link
           to="/"
-          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="flex min-h-[44px] items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:min-h-[40px]"
         >
-          <Store className="h-4 w-4" /> Ver la tienda
+          <Store className="h-[18px] w-[18px]" aria-hidden="true" /> Ver la tienda
         </Link>
         <button
           type="button"
           onClick={() => void salir()}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+          className="flex min-h-[44px] w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 md:min-h-[40px]"
         >
-          <LogOut className="h-4 w-4" /> Cerrar sesión
+          <LogOut className="h-[18px] w-[18px]" aria-hidden="true" /> Cerrar sesión
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-white dark:bg-slate-900 lg:block">
+    <div className="min-h-screen bg-fondo dark:bg-slate-950">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-brand-600 px-3 text-white dark:bg-brand-900 sm:px-5">
+        <button
+          type="button"
+          className="acto-encabezado lg:hidden"
+          onClick={() => setAbierto(true)}
+          aria-label="Abrir menú"
+          aria-expanded={abierto}
+          aria-controls="menu-movil-panel"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <Logo sobreMarca className="!text-[22px]" />
+        <span className="ml-1 hidden rounded-md bg-white/15 px-2.5 py-1 text-xs font-bold sm:inline">{tituloPanel}</span>
+        <div className="ml-auto flex items-center gap-0.5">
+          <ThemeToggle variante="encabezado" />
+          <NotificationBell variante="encabezado" />
+          <Link to="/" className="acto-encabezado hidden sm:inline-flex">
+            <Store className="h-5 w-5" aria-hidden="true" /> Ver la tienda
+          </Link>
+          <span
+            className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-amarillo text-sm font-extrabold text-tinta"
+            title={usuario.nombre}
+          >
+            {iniciales(usuario.nombre)}
+          </span>
+        </div>
+      </header>
+
+      <aside className="fixed bottom-0 left-0 top-14 z-30 hidden w-60 border-r bg-white dark:bg-slate-900 lg:block">
         {barraLateral}
       </aside>
 
@@ -76,7 +101,7 @@ export function PanelLayout() {
             type="button"
             aria-hidden="true"
             tabIndex={-1}
-            className="absolute inset-0 bg-slate-950/50"
+            className="absolute inset-0 animate-fadein bg-slate-950/60"
             onClick={() => setAbierto(false)}
           />
           <aside
@@ -84,11 +109,11 @@ export function PanelLayout() {
             role="dialog"
             aria-modal="true"
             aria-label="Menú de navegación"
-            className="relative h-full w-72 max-w-[85vw] border-r bg-white shadow-2xl dark:bg-slate-900"
+            className="relative h-full w-72 max-w-[85vw] animate-slidein border-r bg-white shadow-menu dark:bg-slate-900"
           >
             <button
               type="button"
-              className="btn-ghost absolute right-2 top-3 p-2"
+              className="btn-ghost absolute right-2 top-2 !min-h-[44px] !min-w-[44px] p-2"
               onClick={() => setAbierto(false)}
               aria-label="Cerrar menú"
             >
@@ -99,36 +124,8 @@ export function PanelLayout() {
         </div>
       )}
 
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-white/90 px-4 backdrop-blur dark:bg-slate-900/90 sm:px-6">
-          <button
-            type="button"
-            className="btn-ghost p-2 lg:hidden"
-            onClick={() => setAbierto(true)}
-            aria-label="Abrir menú"
-            aria-expanded={abierto}
-            aria-controls="menu-movil-panel"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{tituloPanel}</p>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-              {usuario.correo}
-            </p>
-          </div>
-          <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle />
-            <NotificationBell />
-            <span
-              className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200"
-              title={usuario.nombre}
-            >
-              {iniciales(usuario.nombre)}
-            </span>
-          </div>
-        </header>
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-8">
+      <div className="pt-14 lg:pl-60">
+        <main key={location.pathname} className="ruta-entra mx-auto max-w-[1240px] px-3 py-5 sm:px-6 lg:py-7">
           <Outlet />
         </main>
       </div>

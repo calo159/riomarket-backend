@@ -2133,6 +2133,10 @@ export interface components {
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
             readonly imagenes: components["schemas"]["ImagenProducto"][];
+            readonly puesto_nombre: string;
+            readonly puesto_ofrece_domicilio: boolean;
+            /** Format: double */
+            readonly puesto_calificacion: number | null;
         };
         /**
          * @description * `activo` - Activo

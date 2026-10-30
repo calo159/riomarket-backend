@@ -130,7 +130,7 @@ export function PedidoDetalle() {
   const puedeConfirmarEfectivo = permitidas.includes('confirmar-pago');
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1240px] px-3 py-5 sm:px-5">
       <Link to="/mis-pedidos" className="btn-ghost -ml-2 mb-3">
         <ArrowLeft className="h-4 w-4" /> Volver
       </Link>

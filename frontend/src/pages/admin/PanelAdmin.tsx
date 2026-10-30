@@ -104,7 +104,7 @@ export function PanelAdmin() {
         </div>
       </section>
 
-      <p className="mt-6 text-xs text-slate-400">
+      <p className="mt-6 text-xs text-slate-500 dark:text-slate-400">
         Actualizado {new Date(datos.generado_en).toLocaleString('es-CO')}. Usuarios suspendidos: {datos.usuarios.suspendidos}. Reseñas ocultas: {datos.resenas.ocultas}.
       </p>
     </div>
