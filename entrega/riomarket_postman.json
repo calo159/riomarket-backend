@@ -172,7 +172,7 @@
       "name": "11. Entregar",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token_vendedor}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{base_url}}/api/orders/pedidos/{{id_pedido}}/entregar/", "host": ["{{base_url}}"], "path": ["api", "orders", "pedidos", "{{id_pedido}}", "entregar", ""] }
       }
     }
