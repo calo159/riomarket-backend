@@ -26,7 +26,31 @@ export function Modal({
     const anterior = document.activeElement as HTMLElement | null;
     ref.current?.focus();
     const alPresionar = (evento: KeyboardEvent) => {
-      if (evento.key === 'Escape') cerrarRef.current();
+      if (evento.key === 'Escape') {
+        cerrarRef.current();
+        return;
+      }
+      if (evento.key !== 'Tab' || !ref.current) return;
+      // Trampa de foco: el Tab da la vuelta dentro del diálogo y no llega al fondo.
+      const enfocables = Array.from(
+        ref.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (enfocables.length === 0) {
+        evento.preventDefault();
+        return;
+      }
+      const primero = enfocables[0];
+      const ultimo = enfocables[enfocables.length - 1];
+      const activo = document.activeElement;
+      if (evento.shiftKey && (activo === primero || activo === ref.current)) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && activo === ultimo) {
+        evento.preventDefault();
+        primero.focus();
+      }
     };
     document.addEventListener('keydown', alPresionar);
     document.body.style.overflow = 'hidden';
@@ -44,6 +68,8 @@ export function Modal({
       <button
         type="button"
         className="absolute inset-0 cursor-default"
+        tabIndex={-1}
+        aria-hidden="true"
         aria-label="Cerrar"
         onClick={onCerrar}
       />

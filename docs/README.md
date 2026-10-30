@@ -35,10 +35,11 @@ stack, pruebas y despliegue.
 - [ADR-005: reputación y reseñas](ADR-005-reputacion-resenas.md)
 - [ADR-006: promociones y cupones](ADR-006-promociones-cupones.md)
 - [ADR-007: auditoría de acciones](ADR-007-auditoria.md)
+- [ADR-008: almacenamiento de imágenes](ADR-008-almacenamiento-imagenes.md)
 
 ## Entrega
 
 - [Guía de entrega](../entrega/LEEME_ENTREGA.md)
 - [Flujo de prueba con curl](../entrega/flujo_prueba.curl.md)
-- [Respaldo JSON](../entrega/datos_riomarket.json)
-- [Respaldo SQL](../entrega/datos_riomarket.sql)
+- [Respaldo JSON](../entrega/datos_riomarket.json) *(histórico, anterior al RBAC)*
+- [Respaldo SQL](../entrega/datos_riomarket.sql) *(histórico, anterior al RBAC)*

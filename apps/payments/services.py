@@ -11,6 +11,8 @@ Decisiones (ver ``docs/ADR-003-pagos.md``):
   ``PAYMENTS_SANDBOX_ENABLED`` está activo; en producción se usa el webhook.
 """
 
+from decimal import Decimal, InvalidOperation
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -59,7 +61,7 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
         raise ValidationError({"no_autorizado": "Usuario no autorizado."})
     if not (usuario.es_administrador or pedido.id_comprador_id == usuario.pk):
         raise PermissionDenied("Solo el comprador o el administrador pueden crear el pago.")
-    if hasattr(pedido, "pago"):
+    if hasattr(pedido, "pago") and pedido.pago.estado != Pago.Estado.RECHAZADO:
         raise ValidationError({"pedido": "El pedido ya tiene un pago registrado."})
     if pedido.estado == Pedido.Estado.CANCELADO:
         raise ValidationError({"id_pedido": "No se puede pagar un pedido cancelado."})
@@ -84,18 +86,27 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
     total = pedido.subtotal + tarifa - pedido.descuento_cupon
 
     with transaction.atomic():
-        pago = Pago(
-            id_pedido=pedido,
-            metodo_pago=metodo,
-            estado=Pago.Estado.PENDIENTE,
-            subtotal_pedido=pedido.subtotal,
-            tarifa_domicilio_aplicada=tarifa,
-            comision_plataforma=comision,
-            descuento_aplicado=pedido.descuento_cupon,
-            total_cobrado=total,
-            notas=(datos.get("notas") or "").strip(),
-            datos_sandbox={},
+        # Un pago rechazado se reutiliza (relación 1 a 1): el comprador puede reintentar.
+        pago = Pago.objects.select_for_update().filter(id_pedido=pedido).first() or Pago(
+            id_pedido=pedido
         )
+        if pago.pk and pago.estado != Pago.Estado.RECHAZADO:
+            raise ValidationError({"pedido": "El pedido ya tiene un pago registrado."})
+        pago.fecha_aprobacion = None
+        pago.referencia_gateway = ""
+        campos = {
+            "metodo_pago": metodo,
+            "estado": Pago.Estado.PENDIENTE,
+            "subtotal_pedido": pedido.subtotal,
+            "tarifa_domicilio_aplicada": tarifa,
+            "comision_plataforma": comision,
+            "descuento_aplicado": pedido.descuento_cupon,
+            "total_cobrado": total,
+            "notas": (datos.get("notas") or "").strip(),
+            "datos_sandbox": {},
+        }
+        for campo, valor in campos.items():
+            setattr(pago, campo, valor)
         pago.full_clean()
         pago.save()
     _auditar_pago(usuario, pago, "crear")
@@ -290,6 +301,33 @@ def _buscar_pago_por_referencia(referencia: str) -> Pago | None:
     return None
 
 
+VENTANA_WEBHOOK_SEGUNDOS = 300
+
+
+def _validar_evento_webhook(evento: dict, pago: Pago) -> None:
+    """Rechaza eventos repetidos tarde (replay) o con un monto distinto al cobrado.
+
+    Los campos ``timestamp`` (epoch en segundos) y ``monto`` son opcionales: se validan
+    solo si la pasarela los envía.
+    """
+    marca = evento.get("timestamp")
+    if marca is not None:
+        try:
+            antiguedad = abs(timezone.now().timestamp() - float(marca))
+        except (TypeError, ValueError) as exc:
+            raise ValidationError({"timestamp": "Marca de tiempo inválida."}) from exc
+        if antiguedad > VENTANA_WEBHOOK_SEGUNDOS:
+            raise ValidationError({"timestamp": "El evento es demasiado antiguo o del futuro."})
+    monto = evento.get("monto")
+    if monto is not None:
+        try:
+            esperado = Decimal(str(monto)) == pago.total_cobrado
+        except InvalidOperation as exc:
+            raise ValidationError({"monto": "Monto inválido."}) from exc
+        if not esperado:
+            raise ValidationError({"monto": "El monto del evento no coincide con el cobro."})
+
+
 def procesar_webhook(*, proveedor: str, cuerpo: bytes, payload: dict, firma: str) -> Pago:
     """Valida la firma del webhook y aplica el evento al pago correspondiente."""
     from apps.payments.pasarela import get_pasarela
@@ -308,6 +346,7 @@ def procesar_webhook(*, proveedor: str, cuerpo: bytes, payload: dict, firma: str
     pago = _buscar_pago_por_referencia(evento["referencia"])
     if pago is None:
         raise ValidationError({"referencia": "No existe un pago con esa referencia."})
+    _validar_evento_webhook(evento, pago)
     destino = Pago.Estado.APROBADO if evento["estado"] == "aprobado" else Pago.Estado.RECHAZADO
     if pago.estado == destino:
         # Las pasarelas reintentan: repetir un evento ya aplicado responde 200 sin cambios.

@@ -1,100 +1,58 @@
 # RioMarket
 
-Local marketplace for the market stalls of Riohacha, Colombia. It contains the
-**Django/DRF REST API** and the **React/Vite SPA**: catalog, orders, payments,
-seller verification, reviews, coupons, notifications and audit logs.
+Local marketplace for the market stalls of Riohacha, Colombia: a **Django/DRF REST API** plus a
+**React/Vite SPA** with catalog, orders, payments, seller verification, reviews, coupons,
+notifications, audit logs and a full **role/resource administration** (RBAC).
 
-[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/) [![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/) [![DRF](https://img.shields.io/badge/DRF-3.18-red)](https://www.django-rest-framework.org/)
-[![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/)
+> The Spanish [README.md](README.md) is the reference document; this page is a short English summary.
 
-> Demo: <https://riomarket.onrender.com>. Default Blueprint URL; it may change and
-> the free service sleeps. No live deployment was verified from this environment.
+[![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/) [![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/) [![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/)
 
-## Overview
+Demo (Render): <https://riomarket.onrender.com>. The free service sleeps and the URL may change.
 
-RioMarket connects stall vendors with local buyers. One order belongs to **one
-stall**; the server calculates totals and updates stock transactionally. Roles
-are buyer, seller and administrator; sellers must be verified to publish.
-Stack: Python 3.12, Django 5.2, DRF, SimpleJWT, PostgreSQL 16, React 18, strict
-TypeScript, Vite 5, TanStack Query, Tailwind, pytest, ruff and Vitest.
+## What it does
 
-| Area | Status | Notes |
-| --- | --- | --- |
-| Session | Ready | Access JWT in memory + refresh in an HttpOnly cookie |
-| Catalog and checkout | Ready | Stalls, products, filters, cart and checkout |
-| Orders and payments | Ready | States, transactional stock and sandbox payments |
-| Reviews and coupons | Ready | Delivered orders only; coupons scoped to a stall |
-| Panels | Ready | Buyer, seller and admin in one SPA |
-Not included: a real payment gateway, user administration and password changes.
+- One order belongs to **one stall**; the server computes totals and updates stock transactionally.
+- Order flow: `pendiente → confirmado → en_preparacion → en_camino → entregado` (or `cancelado`).
+  The **seller** confirms, prepares and ships; only the **buyer** (or an admin) confirms delivery,
+  and the buyer can report "it has not arrived".
+- Sellers must be verified (encrypted ID number, private ID photo) before publishing.
+- **RBAC**: users have a base role (buyer, seller, administrator) plus optional custom roles. Roles
+  grant *resources* (screens/modules); the menu and the admin API are driven by them. System roles
+  and resources are protected by lock-outs (e.g. the administrator role cannot lose `admin.roles`).
+- Every sensitive admin action requires a reason, is audited and notifies the person affected.
 
 ## Quick start
 
-The repository includes a `.env` for the demo; back it up before replacing it.
-
 ```bash
-# Docker
-docker compose up --build -d
-docker compose exec web sh -c "python manage.py migrate && python manage.py seed_masivo"
-cd frontend && npm ci && cp .env.example .env && npm run dev
-```
-
-```bash
-# Without Docker; activate the line for your OS
-python -m venv .venv
-.venv\Scripts\Activate.ps1    # Windows PowerShell
-source .venv/bin/activate     # Linux/macOS
+cp .env.example .env            # fill SECRET_KEY and FERNET_KEY (the .env is NOT versioned)
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 python manage.py migrate
-python manage.py seed_masivo
+python manage.py seed_masivo    # demo data (password: see README.md)
 python manage.py runserver
+
+cd frontend && npm ci && npm run dev
 ```
 
-API: <http://127.0.0.1:8000>; SPA: <http://127.0.0.1:3000>; Swagger: `/api/docs/`; health: `/api/health/`.
+## Tests and quality
 
-## Demo data
+```bash
+pytest -q                       # backend (SQLite in memory; set TEST_DATABASE_URL for PostgreSQL)
+ruff check apps tests && ruff format --check apps
+cd frontend && npx tsc --noEmit && npx eslint src && npx vitest run && npm run build
+```
 
-Password for all demo accounts: `RioMarket2026!`.
+CI (GitHub Actions) runs lint, migrations check, the backend suite against PostgreSQL, the
+OpenAPI validation and the frontend lint, typecheck, tests and build.
 
-| Role | Email |
-| --- | --- |
-| Administrator | `admin@riomarket.test` |
-| Approved sellers | `carmen@riomarket.test`, `diego@riomarket.test` |
-| Buyer | `luis@riomarket.test` |
+## Deployment (Render + Supabase)
 
-`seed_masivo` creates **15 users and 522 domain records** on a clean database; `seed_demo` creates **28 records**. Render runs `seed_masivo` on every boot, which refreshes demo passwords.
-
-## Authentication
-
-- The short-lived **access** JWT is sent as `Authorization: Bearer` and kept only in memory by the SPA.
-- The **refresh** token lives in the `rm_refresh` cookie: `HttpOnly`, `SameSite=Strict`, `Secure` outside development, path `/api/auth/`. It is not returned in the login body.
-- Refresh/logout require `X-Requested-With: XMLHttpRequest`; tokens rotate and the previous one is blacklisted. See [`docs/api-ejemplos.md`](docs/api-ejemplos.md).
-
-## API, frontend and tests
-
-Prefixes: `/api/auth/`, `/api/catalog/`, `/api/orders/`, `/api/payments/`,
-`/api/addresses/`, `/api/verificacion/`, `/api/reviews/`, `/api/promotions/`,
-`/api/notifications/`, `/api/audit/` and `/api/health/`. The SPA lives in
-[`frontend/`](frontend/README.md#estado-de-cumplimiento) and Vite proxies `/api`
-and `/media`; if you set `VITE_API_URL`, keep the same host as the SPA.
-
-Backend: `pytest -q`, ruff, `makemigrations --check --dry-run` and `spectacular --validate`; **483 tests passing**, no pending migrations and one enum warning. Frontend: lint, typecheck, `npm test` and build; **10 tests passing** in 3 files.
-
-## Deployment and security
-
-`render.yaml` creates a Docker web service and a free PostgreSQL 16 database.
-`scripts/render-start.sh` runs `collectstatic`, `migrate`, `seed_masivo`,
-`seed_imagenes_demo` and gunicorn. The free service sleeps and media is ephemeral; see
-[`docs/despliegue.md`](docs/despliegue.md).
-
-There is no real payment gateway, user administration or password-change endpoint,
-and email delivery is optional. The ID photo is encrypted and served through an
-authorized view. `.env` is committed intentionally for the academic delivery and
-contains demo credentials: rotate the database password or make the repository
-private afterward. There is no `LICENSE` file yet. Maintainer: `calo159`
-(<https://github.com/calo159>).
+`render.yaml` builds `Dockerfile.render`; `scripts/render-start.sh` runs `collectstatic`, `migrate`,
+`createcachetable` and (if `SEED_DEMO=true`) the demo seed. Set `DATABASE_URL`, `SECRET_KEY`,
+`FERNET_KEY` and optionally the `STORAGE_S3_*` variables (a private bucket keeps the ID photos).
+See `docs/despliegue.md` and `docs/AUDITORIA.md` (security notes and pending proposals).
 
 ## Documentation
 
-- [Index](docs/README.md), [architecture](docs/arquitectura.md), [API](docs/api-ejemplos.md), [deployment](docs/despliegue.md)
-- [Frontend scope](docs/alcance-frontend.md), [maintenance](docs/MANTENIMIENTO.md), [security](SEGURIDAD.md), [presentation](docs/PRESENTACION.md)
-- [Delivery guide](entrega/LEEME_ENTREGA.md), [curl flow](entrega/flujo_prueba.curl.md), [Postman](entrega/riomarket_postman.json)
+`docs/README.md` is the index: architecture, ADRs, API examples, deployment and the audit report.

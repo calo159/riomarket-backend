@@ -169,6 +169,9 @@ CORS_ALLOW_CREDENTIALS = True
 # Django REST Framework
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
+    # Número de proxies de confianza delante de la app (Render/Cloudflare). Con un valor,
+    # el límite de intentos usa la IP real y no la cabecera X-Forwarded-For que escribe el cliente.
+    "NUM_PROXIES": env.int("NUM_PROXIES", default=None),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -244,6 +247,8 @@ SPECTACULAR_SETTINGS = {
 # Tamaño máximo de imagen (bytes): 2 MB
 # Tope de píxeles al decodificar (una bomba de descompresión cabe en pocos KB).
 MAX_IMAGE_PIXELS = env.int("MAX_IMAGE_PIXELS", default=25_000_000)
+# Bucket S3 PRIVADO para la foto de cédula (vacío = disco local). Lo activa prod.py.
+PRIVATE_S3_BUCKET = ""
 MAX_IMAGE_SIZE = env.int("MAX_IMAGE_SIZE", default=2 * 1024 * 1024)
 ALLOWED_IMAGE_CONTENT_TYPES = env.list(
     "ALLOWED_IMAGE_CONTENT_TYPES", default=["image/jpeg", "image/png", "image/webp"]

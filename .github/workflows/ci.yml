@@ -30,6 +30,8 @@ jobs:
 
     env:
       DATABASE_URL: postgres://riomarket:riomarket@localhost:5432/riomarket
+      # Las pruebas corren contra PostgreSQL (como producción), no contra SQLite en memoria.
+      TEST_DATABASE_URL: postgres://riomarket:riomarket@localhost:5432/riomarket
       DEBUG: "False"
       PAYMENTS_SANDBOX_ENABLED: "True"
       SECRET_KEY: ci-secret-key-riomarket-0123456789abcdefghijklmnopqrstuvwxyz
@@ -51,7 +53,7 @@ jobs:
 
       - name: Lint (ruff)
         run: |
-          ruff check apps config tests --no-cache
+          ruff check apps config tests scripts --no-cache
           ruff format --check apps config tests
 
       - name: Migraciones sin cambios pendientes

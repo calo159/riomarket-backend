@@ -45,7 +45,14 @@ if _redis_url:
         }
     }
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    # Sin Redis: caché en la base de datos, compartida entre workers y reinicios (a diferencia de
+    # LocMem, donde cada worker cuenta aparte). La tabla se crea al arrancar (createcachetable).
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "cache_riomarket",
+        }
+    }
 
 # Frontend unificado: WhiteNoise sirve los assets del build de Vite.
 # El index.html lo entrega Django para que apliquen las cabeceras de seguridad.
@@ -67,6 +74,16 @@ _s3_region = env("STORAGE_S3_REGION", default="us-east-1")
 _s3_public_base_url = env("STORAGE_PUBLIC_BASE_URL", default="")
 
 _use_s3 = bool(_s3_bucket_publico and _s3_access_key and _s3_secret_key and _s3_endpoint)
+
+# La foto de cédula usa su propio bucket PRIVADO si hay credenciales (si no, disco local efímero).
+if _s3_bucket_privado and _s3_access_key and _s3_secret_key and _s3_endpoint:
+    PRIVATE_S3_BUCKET = _s3_bucket_privado
+    AWS_ACCESS_KEY_ID = _s3_access_key
+    AWS_SECRET_ACCESS_KEY = _s3_secret_key
+    AWS_S3_ENDPOINT_URL = _s3_endpoint
+    AWS_S3_REGION_NAME = _s3_region
+else:
+    logger.warning("Sin bucket privado: las fotos de cédula se guardan en disco local efímero.")
 
 if _use_s3:
     AWS_ACCESS_KEY_ID = _s3_access_key

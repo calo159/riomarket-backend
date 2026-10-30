@@ -65,3 +65,7 @@ Thumbs.db
 # Permisos locales de Claude Code (los reescribe la herramienta; no se versionan)
 .claude/settings.json
 .claude/settings.local.json
+
+# Prompts de trabajo personales (no forman parte de la documentación)
+docs/PROMPT_*.md
+docs/adr/promt.md
