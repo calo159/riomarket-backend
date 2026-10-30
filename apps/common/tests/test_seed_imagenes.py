@@ -13,7 +13,7 @@ from apps.common.management.commands.seed_imagenes_demo import (
     foto_de_producto,
     respaldo_de_producto,
 )
-from tests.factories import ProductoFactory
+from tests.factories import ProductoFactory, PuestoFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -94,3 +94,30 @@ def test_es_idempotente():
     call_command("seed_imagenes_demo")
 
     assert Producto.objects.get(pk=producto.pk).imagenes.get().archivo.name == primera
+
+
+def test_recrea_la_foto_demo_cuando_el_redeploy_borro_el_archivo():
+    """Render usa disco efímero: la base conserva la ruta pero el archivo desaparece."""
+    producto = ProductoFactory(nombre="Aguacate (kg)")
+    call_command("seed_imagenes_demo")
+    imagen = producto.imagenes.get()
+    imagen.archivo.storage.delete(imagen.archivo.name)
+    assert not imagen.archivo.storage.exists(imagen.archivo.name)
+
+    call_command("seed_imagenes_demo")
+
+    imagen.refresh_from_db()
+    assert imagen.archivo.storage.exists(imagen.archivo.name)
+    assert "foto-demo-aguacate" in imagen.archivo.name
+
+
+def test_recrea_la_portada_de_un_puesto_cuando_el_archivo_desaparecio():
+    puesto = PuestoFactory(nombre="Frutas del Caribe")
+    call_command("seed_imagenes_demo")
+    puesto.refresh_from_db()
+    puesto.portada.storage.delete(puesto.portada.name)
+
+    call_command("seed_imagenes_demo")
+
+    puesto.refresh_from_db()
+    assert puesto.portada.storage.exists(puesto.portada.name)

@@ -135,14 +135,17 @@ def _huellas_de_prueba() -> set[str]:
 
 
 def _es_de_prueba(archivo, de_prueba: set[str]) -> bool:
-    if Path(archivo.name).name.startswith(PREFIJO_FOTO):
-        return False
+    """True si hay que (re)poner la foto demo: es un placeholder o el archivo ya no existe."""
     try:
         with archivo.open("rb") as abierto:
-            return hashlib.sha256(abierto.read()).hexdigest() in de_prueba
+            contenido = abierto.read()
     except FileNotFoundError:
-        # Archivo perdido en un redeploy con disco efímero: la imagen ya está rota.
+        # Disco efímero: el redeploy borró el archivo y la base conserva la ruta. Se recrea
+        # también cuando es una foto demo, o la imagen quedaría rota hasta el siguiente cambio.
         return True
+    if Path(archivo.name).name.startswith(PREFIJO_FOTO):
+        return False
+    return hashlib.sha256(contenido).hexdigest() in de_prueba
 
 
 def _archivo(ruta: Path, prefijo: str = "") -> ContentFile:
