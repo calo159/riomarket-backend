@@ -47,7 +47,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Pedido.objects.select_related("id_puesto", "id_comprador").prefetch_related("items")
+        qs = Pedido.objects.select_related("id_puesto").prefetch_related("items")
         qs = services.visibles_pedidos(self.request.user, qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO)
 

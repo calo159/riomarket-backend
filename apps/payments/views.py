@@ -76,11 +76,7 @@ class PagoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Pago.objects.select_related(
-            "id_pedido",
-            "id_pedido__id_comprador",
-            "id_pedido__id_puesto",
-        )
+        qs = Pago.objects.select_related("id_pedido", "id_pedido__id_puesto")
         qs = services.visibles_pagos(self.request.user, qs, params)
         qs = services.filtrar_pagos(qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PAGO)
