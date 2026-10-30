@@ -340,14 +340,19 @@ def reordenar_imagenes(*, producto, orden_ids) -> list:
         isinstance(valor, int) and not isinstance(valor, bool) for valor in orden_ids
     ):
         raise ValidationError({"orden": "Debe ser una lista de ids de imagen (enteros)."})
-    validas = set(producto.imagenes.values_list("pk", flat=True))
-    if len(orden_ids) > len(validas):
+    imagenes = list(producto.imagenes.all())
+    if len(orden_ids) > len(imagenes):
         raise ValidationError({"orden": "La lista tiene más ids que imágenes del producto."})
+    # Los ids ajenos se ignoran; si un id se repite, vale su última posición.
+    posicion = {img_id: idx for idx, img_id in enumerate(orden_ids)}
+    cambiadas = []
+    for imagen in imagenes:
+        if imagen.pk in posicion and imagen.orden != posicion[imagen.pk]:
+            imagen.orden = posicion[imagen.pk]
+            cambiadas.append(imagen)
     with transaction.atomic():
-        for idx, img_id in enumerate(orden_ids):
-            if img_id in validas:
-                ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
-    return list(producto.imagenes.all())
+        ImagenProducto.objects.bulk_update(cambiadas, ["orden"])
+    return sorted(imagenes, key=lambda imagen: (imagen.orden, imagen.pk))
 
 
 def marcar_imagen_principal(*, producto, imagen_id) -> ImagenProducto:
