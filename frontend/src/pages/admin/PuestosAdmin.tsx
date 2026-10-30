@@ -12,6 +12,7 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import type { Puesto } from '../../lib/types';
+import { formatearCalificacion } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
@@ -176,7 +177,7 @@ export function PuestosAdmin() {
                       <td className="p-3">
                         <span className="inline-flex items-center gap-1">
                           <Star className="h-3.5 w-3.5 text-amber-500" />
-                          {puesto.calificacion_promedio != null ? Number(puesto.calificacion_promedio).toFixed(1) : '—'}
+                          {formatearCalificacion(puesto.calificacion_promedio, '—')}
                           <span className="text-xs text-slate-400">({puesto.cantidad_resenas})</span>
                         </span>
                       </td>

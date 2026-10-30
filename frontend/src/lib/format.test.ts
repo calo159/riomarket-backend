@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { hoyBogota } from './format';
+import { formatearCalificacion, hoyBogota, OPCIONES_FILTRO_PEDIDO, ETIQUETAS_PEDIDO } from './format';
 
 describe('hoyBogota', () => {
   afterEach(() => vi.useRealTimers());
@@ -14,5 +14,19 @@ describe('hoyBogota', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-03-10T15:00:00Z'));
     expect(hoyBogota()).toBe('2026-03-10');
+  });
+});
+
+describe('formatearCalificacion', () => {
+  it('muestra un decimal y el texto indicado si no hay reseñas', () => {
+    expect(formatearCalificacion(4.25)).toBe('4.3');
+    expect(formatearCalificacion(null)).toBe('Sin reseñas');
+    expect(formatearCalificacion(null, '—')).toBe('—');
+  });
+});
+
+describe('OPCIONES_FILTRO_PEDIDO', () => {
+  it('cubre todos los estados de pedido, en el mismo orden', () => {
+    expect(OPCIONES_FILTRO_PEDIDO.map((o) => o.valor)).toEqual(Object.keys(ETIQUETAS_PEDIDO));
   });
 });

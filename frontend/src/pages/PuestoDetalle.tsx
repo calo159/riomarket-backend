@@ -10,6 +10,7 @@ import { urlAbsoluta } from '../lib/utils';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
+import { formatearCalificacion } from '../lib/format';
 import { claves } from '../lib/queryKeys';
 
 const TAMANO = 12;
@@ -113,7 +114,7 @@ export function PuestoDetalle() {
                 <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {tienda.direccion}</span>
                 <span className="inline-flex items-center gap-1.5">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  {tienda.calificacion_promedio ? tienda.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+                  {formatearCalificacion(tienda.calificacion_promedio)}
                   {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
                 </span>
                 {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" /> {tienda.horario}</span>}

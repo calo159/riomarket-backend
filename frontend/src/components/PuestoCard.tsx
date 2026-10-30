@@ -3,6 +3,7 @@ import { Bike, MapPin, Star, Store } from 'lucide-react';
 import type { Puesto } from '../lib/types';
 import { Imagen } from './Imagen';
 import { urlAbsoluta } from '../lib/utils';
+import { formatearCalificacion } from '../lib/format';
 
 export function PuestoCard({ puesto }: { puesto: Puesto }) {
   const categorias = puesto.categorias as unknown as { id: number; nombre: string }[];
@@ -58,7 +59,7 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
       <div className="mt-4 flex items-center justify-between border-t px-5 pb-5 pt-3 text-xs text-slate-500 dark:text-slate-400">
         <span className="inline-flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          {puesto.calificacion_promedio ? puesto.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+          {formatearCalificacion(puesto.calificacion_promedio)}
           {puesto.cantidad_resenas > 0 && ` (${puesto.cantidad_resenas})`}
         </span>
         {puesto.ofrece_domicilio ? (

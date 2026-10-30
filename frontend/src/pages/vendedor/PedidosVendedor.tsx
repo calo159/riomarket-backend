@@ -10,7 +10,7 @@ import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Es
 import { Paginacion } from '../../components/ui/Paginacion';
 import { ConfirmarModal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
-import { formatearFechaHora, formatearMoneda } from '../../lib/format';
+import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
@@ -72,12 +72,9 @@ export function PedidosVendedor() {
             aria-label="Filtrar por estado"
           >
             <option value="">Todos</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="confirmado">Confirmados</option>
-            <option value="en_preparacion">En preparación</option>
-            <option value="en_camino">En camino</option>
-            <option value="entregado">Entregados</option>
-            <option value="cancelado">Cancelados</option>
+            {OPCIONES_FILTRO_PEDIDO.map((opcion) => (
+              <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+            ))}
           </select>
         }
       />

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { listarResenas } from '../api/reviews';
 import { obtenerProducto, obtenerPuesto } from '../api/catalog';
-import { formatearMoneda } from '../lib/format';
+import { formatearCalificacion, formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { useCart } from '../cart/CartProvider';
 import { useToast } from '../components/ui/Toast';
@@ -188,7 +188,7 @@ export function ProductoDetalle() {
             {tienda && (
               <span className="inline-flex items-center gap-1">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                {tienda.calificacion_promedio ? tienda.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+                {formatearCalificacion(tienda.calificacion_promedio)}
                 {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas})`}
               </span>
             )}
