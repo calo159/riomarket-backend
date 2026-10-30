@@ -1,24 +1,8 @@
 import type { components } from './api-types';
 
-export type Schemas = components['schemas'];
+type Schemas = components['schemas'];
 
 export type Rol = 'comprador' | 'vendedor' | 'administrador';
-export type EstadoPedido =
-  | 'pendiente'
-  | 'confirmado'
-  | 'en_preparacion'
-  | 'en_camino'
-  | 'entregado'
-  | 'cancelado';
-export type EstadoPago =
-  | 'pendiente'
-  | 'procesando'
-  | 'aprobado'
-  | 'rechazado'
-  | 'reembolsado'
-  | 'anulado';
-export type EstadoVerificacion = 'pendiente' | 'aprobado' | 'rechazado';
-
 export type Categoria = Schemas['Categoria'];
 export type Producto = Schemas['Producto'];
 export type ImagenProducto = Schemas['ImagenProducto'];

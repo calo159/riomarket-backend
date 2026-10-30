@@ -242,7 +242,7 @@ function BotonAcceso({ usuario, onAbrir }: { usuario: UsuarioAdmin; onAbrir: (us
 }
 
 /** Modal con tres secciones independientes: rol base, roles adicionales y baneo. */
-export function GestionarAcceso({
+function GestionarAcceso({
   usuario,
   rolesPersonalizados,
   onCerrar,

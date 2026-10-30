@@ -10,7 +10,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { api, refreshAccessToken, setAccessToken, setSessionLostHandler } from '../lib/http';
 import { invalidarMenu } from '../navigation/useMenu';
-import { guardarAvisoSesion, limpiarRefresh } from './tokens';
+import { guardarAvisoSesion } from './tokens';
 import type { Perfil, RespuestaLogin, Rol, UsuarioSesion } from '../lib/types';
 
 type EstadoSesion = 'cargando' | 'anonimo' | 'autenticado';
@@ -53,7 +53,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const limpiarSesionLocal = useCallback(() => {
     setAccessToken(null);
-    limpiarRefresh();
     setUsuario(null);
     setEstado('anonimo');
     queryClient.clear();
@@ -72,8 +71,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } catch {
         if (!activo) return;
         setAccessToken(null);
-        limpiarRefresh();
-        setUsuario(null);
+            setUsuario(null);
         setEstado('anonimo');
       }
     }

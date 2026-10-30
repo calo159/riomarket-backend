@@ -13,7 +13,7 @@ export interface FiltrosProducto {
   estado?: string;
 }
 
-export interface FiltrosPuesto {
+interface FiltrosPuesto {
   q?: string;
   categoria?: number | string;
   vendedor?: number | string;
@@ -29,7 +29,7 @@ export async function listarCategorias(): Promise<Categoria[]> {
   return data.results;
 }
 
-export interface DatosCategoria {
+interface DatosCategoria {
   nombre: string;
   id_categoria_padre?: number | null;
   activa?: boolean;

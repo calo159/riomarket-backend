@@ -1,4 +1,4 @@
-export type AmbitoMenu = 'publico' | 'cuenta' | 'panel_vendedor' | 'panel_admin';
+type AmbitoMenu = 'publico' | 'cuenta' | 'panel_vendedor' | 'panel_admin';
 
 /** Un recurso con ruta que el usuario puede abrir (viene de /auth/menu/). */
 export interface MenuItem {
@@ -19,7 +19,7 @@ export interface MenuRespuesta {
   badges: Record<string, number>;
 }
 
-export interface GrupoMenu {
+interface GrupoMenu {
   grupo: string | null;
   items: MenuItem[];
 }

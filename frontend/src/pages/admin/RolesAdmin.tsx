@@ -25,11 +25,11 @@ import { claves } from '../../lib/queryKeys';
 type Vista = 'lista' | 'matriz';
 
 /** Un rol "administrador" de sistema no puede perder los recursos que sostienen el panel. */
-export function esObligatorio(rol: RolAdmin, recurso: RecursoAdmin): boolean {
+function esObligatorio(rol: RolAdmin, recurso: RecursoAdmin): boolean {
   return rol.es_sistema && rol.nombre === 'administrador' && RECURSOS_OBLIGATORIOS_ADMIN.includes(recurso.codigo);
 }
 
-export function agruparRecursos(recursos: RecursoAdmin[]): { clave: string; titulo: string; items: RecursoAdmin[] }[] {
+function agruparRecursos(recursos: RecursoAdmin[]): { clave: string; titulo: string; items: RecursoAdmin[] }[] {
   const grupos: { clave: string; titulo: string; items: RecursoAdmin[] }[] = [];
   for (const recurso of recursos) {
     const clave = `${recurso.ambito}|${recurso.grupo}`;
@@ -355,7 +355,7 @@ function FormularioRol({
   );
 }
 
-export function PermisosModal({
+function PermisosModal({
   rol,
   recursos,
   onCerrar,

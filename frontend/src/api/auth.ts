@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Perfil, Rol, UsuarioSesion } from '../lib/types';
 
-export interface DatosRegistro {
+interface DatosRegistro {
   nombre: string;
   correo: string;
   celular: string;

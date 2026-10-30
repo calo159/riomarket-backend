@@ -1,5 +1,4 @@
 import axios, { type AxiosAdapter, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
-import { limpiarRefresh } from '../auth/tokens';
 
 declare module 'axios' {
   interface InternalAxiosRequestConfig {
@@ -7,7 +6,7 @@ declare module 'axios' {
   }
 }
 
-export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const RUTAS_SIN_REFRESH = ['/auth/login/', '/auth/registro/', '/auth/token/refresh/', '/auth/token/verify/'];
 
@@ -24,7 +23,7 @@ interface OpcionesHttp {
   adaptadorApi?: AxiosAdapter;
 }
 
-export interface ClienteHttp {
+interface ClienteHttp {
   api: AxiosInstance;
   refrescar: () => Promise<string>;
 }
@@ -103,7 +102,6 @@ export function crearClienteHttp(opciones: OpcionesHttp): ClienteHttp {
         original.withCredentials = true;
         return api(original);
       } catch (errorRefresh) {
-        limpiarRefresh();
         opciones.alPerderSesion();
         throw errorRefresh;
       }

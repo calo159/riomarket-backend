@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Paginado, RegistroAuditoria } from '../lib/types';
 
-export interface FiltrosAuditoria {
+interface FiltrosAuditoria {
   entidad?: string;
   accion?: string;
   usuario?: number | string;
