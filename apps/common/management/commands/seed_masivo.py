@@ -35,6 +35,8 @@ from apps.payments import services as pagos_services
 from apps.payments.models import Pago
 from apps.promotions import services as promos_services
 from apps.promotions.models import Cupon, UsoCupon
+from apps.rbac.defaults import sembrar
+from apps.rbac.models import Recurso, Rol, RolRecurso
 from apps.reviews import services as reviews_services
 from apps.reviews.models import Resena
 
@@ -415,6 +417,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.password = options["password"]
+        sembrar(Rol, Recurso, RolRecurso)
 
         if options["if_empty"] and self._total_registros() >= TOTAL_MINIMO:
             self.stdout.write(

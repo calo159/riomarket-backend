@@ -108,13 +108,15 @@ class TestMenu:
         assert respuesta.data["badges"]["pedidos_pendientes"] == 1
 
     def test_badges_admin(self, cliente_admin, vendedor):
-        VendedorPendienteFactory(id_usuario=Usuario.objects.create_user(
-            nombre="Pendiente",
-            correo="pendiente@test.com",
-            celular="3000000000",
-            password="clave12345",
-            rol=Usuario.Rol.VENDEDOR,
-        ))
+        VendedorPendienteFactory(
+            id_usuario=Usuario.objects.create_user(
+                nombre="Pendiente",
+                correo="pendiente@test.com",
+                celular="3000000000",
+                password="clave12345",
+                rol=Usuario.Rol.VENDEDOR,
+            )
+        )
         PedidoFactory(
             id_comprador=Usuario.objects.create_user(
                 nombre="Compra",

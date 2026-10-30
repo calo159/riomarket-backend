@@ -23,9 +23,7 @@ class TestModerarPuesto:
         assert respuesta.data["estado"] == Puesto.Estado.SUSPENDIDO
         puesto.refresh_from_db()
         assert puesto.estado == Puesto.Estado.SUSPENDIDO
-        assert Notificacion.objects.filter(
-            id_usuario=vendedor, titulo__icontains="puesto"
-        ).exists()
+        assert Notificacion.objects.filter(id_usuario=vendedor, titulo__icontains="puesto").exists()
         assert RegistroAuditoria.objects.filter(
             entidad="puesto", id_entidad=puesto.pk, detalle__a="suspendido"
         ).exists()

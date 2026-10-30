@@ -54,9 +54,7 @@ def exigir_admin(usuario) -> None:
 def _motivo(motivo: str) -> str:
     motivo = (motivo or "").strip()
     if len(motivo) < MOTIVO_MIN:
-        raise ValidationError(
-            {"motivo": f"Indica un motivo de al menos {MOTIVO_MIN} caracteres."}
-        )
+        raise ValidationError({"motivo": f"Indica un motivo de al menos {MOTIVO_MIN} caracteres."})
     return motivo[:300]
 
 
@@ -109,9 +107,7 @@ def _auditar(actor, usuario: Usuario, campo: str, anterior, nuevo, motivo: str) 
 
 
 def pedidos_activos_como_comprador(usuario: Usuario):
-    return Pedido.objects.filter(id_comprador=usuario).exclude(
-        estado__in=Pedido.ESTADOS_FINALES
-    )
+    return Pedido.objects.filter(id_comprador=usuario).exclude(estado__in=Pedido.ESTADOS_FINALES)
 
 
 def pedidos_activos_en_puestos(usuario: Usuario):
@@ -278,10 +274,7 @@ def acciones_permitidas(usuario: Usuario, actor: Usuario) -> list[str]:
         return []
     if usuario.estado == Usuario.Estado.SUSPENDIDO:
         return ["reactivar"]
-    if (
-        usuario.rol != Usuario.Rol.ADMINISTRADOR
-        or _admins_activos(excluir_pk=usuario.pk) > 0
-    ):
+    if usuario.rol != Usuario.Rol.ADMINISTRADOR or _admins_activos(excluir_pk=usuario.pk) > 0:
         return ["cambiar-rol", "suspender"]
     return []
 
@@ -304,8 +297,7 @@ def resumen() -> dict:
         estado: Puesto.objects.filter(estado=estado).count() for estado in Puesto.Estado.values
     }
     productos_por_estado = {
-        estado: Producto.objects.filter(estado=estado).count()
-        for estado in Producto.Estado.values
+        estado: Producto.objects.filter(estado=estado).count() for estado in Producto.Estado.values
     }
     pagos = Pago.objects.filter(estado=Pago.Estado.APROBADO).aggregate(
         total=Sum("total_cobrado"),

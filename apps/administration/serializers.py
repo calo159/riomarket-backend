@@ -44,9 +44,9 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.INT)
     def get_pedidos_activos(self, obj) -> int:
         anotado = getattr(obj, "pedidos_activos_count", None)
-        return anotado if anotado is not None else services.pedidos_activos_como_comprador(
-            obj
-        ).count()
+        return (
+            anotado if anotado is not None else services.pedidos_activos_como_comprador(obj).count()
+        )
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_puestos(self, obj) -> list[dict]:

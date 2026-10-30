@@ -41,6 +41,7 @@ TRANSICIONES: dict[str, tuple[str, ...]] = {
     Pedido.Estado.CANCELADO: (),
 }
 
+
 # ---------------------------------------------------------------------------
 # Regla 4: creación
 # ---------------------------------------------------------------------------
@@ -258,9 +259,7 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
         mensaje="Solo el comprador del pedido puede reportar que no lo recibió.",
     )
     if pedido.estado != Pedido.Estado.EN_CAMINO:
-        raise ValidationError(
-            {"estado": "Solo se puede reportar un pedido que esté en camino."}
-        )
+        raise ValidationError({"estado": "Solo se puede reportar un pedido que esté en camino."})
     if pedido.no_recibido_en is not None:
         raise ValidationError({"no_recibido": "Ya reportaste que este pedido no te llegó."})
     motivo = (motivo or "").strip()
@@ -394,9 +393,8 @@ def _notificar_no_recibido(pedido: Pedido) -> None:
 def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
     """Acciones que ``usuario`` puede ejecutar ahora (RBAC segun el estado)."""
     acciones: list[str] = []
-    if (
-        pedido.estado == Pedido.Estado.PENDIENTE
-        and permissions.puede(usuario, permissions.Accion.EDITAR, pedido)
+    if pedido.estado == Pedido.Estado.PENDIENTE and permissions.puede(
+        usuario, permissions.Accion.EDITAR, pedido
     ):
         acciones.append(permissions.Accion.EDITAR.value)
     for destino in TRANSICIONES.get(pedido.estado, ()):

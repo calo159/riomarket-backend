@@ -118,11 +118,14 @@ def _badges_admin() -> dict:
         "verificaciones": Vendedor.objects.filter(
             estado_verificacion=Vendedor.EstadoVerificacion.PENDIENTE
         ).count(),
-        "no_recibidos": Pedido.objects.filter(no_recibido_en__isnull=False, estado__in=[
-            Pedido.Estado.CONFIRMADO,
-            Pedido.Estado.EN_PREPARACION,
-            Pedido.Estado.EN_CAMINO,
-        ]).count(),
+        "no_recibidos": Pedido.objects.filter(
+            no_recibido_en__isnull=False,
+            estado__in=[
+                Pedido.Estado.CONFIRMADO,
+                Pedido.Estado.EN_PREPARACION,
+                Pedido.Estado.EN_CAMINO,
+            ],
+        ).count(),
         "pagos_por_confirmar": Pago.objects.filter(
             estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
         ).count(),

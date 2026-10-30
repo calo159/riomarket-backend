@@ -114,9 +114,7 @@ class TestListado:
         assert [p["id"] for p in respuesta.data["results"]] == [pedido.pk]
 
     def test_filtro_con_no_recibido(self, cliente_admin):
-        reportado = PedidoFactory(
-            estado=Pedido.Estado.EN_CAMINO, no_recibido_en=timezone.now()
-        )
+        reportado = PedidoFactory(estado=Pedido.Estado.EN_CAMINO, no_recibido_en=timezone.now())
         sin_reporte = PedidoFactory(estado=Pedido.Estado.EN_CAMINO)
         respuesta = cliente_admin.get(PEDIDOS, {"con_no_recibido": "true"})
         assert [p["id"] for p in respuesta.data["results"]] == [reportado.pk]

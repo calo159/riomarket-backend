@@ -50,9 +50,7 @@ class TestListado:
 
     def test_detalle_con_metricas(self, cliente_admin, admin, comprador, puesto):
         PedidoFactory(id_comprador=comprador, id_puesto=puesto, estado=Pedido.Estado.PENDIENTE)
-        PedidoFactory(
-            id_comprador=comprador, id_puesto=puesto, estado=Pedido.Estado.ENTREGADO
-        )
+        PedidoFactory(id_comprador=comprador, id_puesto=puesto, estado=Pedido.Estado.ENTREGADO)
         respuesta = cliente_admin.get(f"{USUARIOS}{comprador.pk}/")
         assert respuesta.status_code == 200
         assert respuesta.data["pedidos_como_comprador"] == 2
@@ -67,9 +65,7 @@ class TestListado:
 
 @pytest.mark.django_db
 class TestCambiarRol:
-    def test_comprador_a_vendedor_crea_solicitud_y_audita(
-        self, cliente_admin, admin, comprador
-    ):
+    def test_comprador_a_vendedor_crea_solicitud_y_audita(self, cliente_admin, admin, comprador):
         refresh = RefreshToken.for_user(comprador)
         assert refresh is not None
 
@@ -129,9 +125,7 @@ class TestCambiarRol:
         assert comprador.rol == Usuario.Rol.COMPRADOR
 
     def test_pedidos_activos_en_puestos_bloquean(self, cliente_admin, vendedor, puesto, comprador):
-        PedidoFactory(
-            id_comprador=comprador, id_puesto=puesto, estado=Pedido.Estado.EN_CAMINO
-        )
+        PedidoFactory(id_comprador=comprador, id_puesto=puesto, estado=Pedido.Estado.EN_CAMINO)
         respuesta = cliente_admin.post(
             url(vendedor, "cambiar-rol"),
             {"rol": "comprador", "motivo": "Cambio de rol"},
@@ -184,9 +178,7 @@ class TestSuspenderReactivar:
         assert respuesta.status_code == 400
 
     def test_motivo_obligatorio(self, cliente_admin, comprador):
-        respuesta = cliente_admin.post(
-            url(comprador, "suspender"), {"motivo": "no"}, format="json"
-        )
+        respuesta = cliente_admin.post(url(comprador, "suspender"), {"motivo": "no"}, format="json")
         assert respuesta.status_code == 400
 
     def test_ya_suspendido(self, cliente_admin, comprador):

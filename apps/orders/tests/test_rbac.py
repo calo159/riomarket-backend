@@ -160,9 +160,7 @@ class TestAccionesEnApi:
         producto = ProductoFactory(id_puesto=puesto)
         return producto, pedido_en(estado, comprador, puesto)
 
-    def test_comprador_ve_entregar_y_no_recibido(
-        self, cliente_comprador, comprador, puesto
-    ):
+    def test_comprador_ve_entregar_y_no_recibido(self, cliente_comprador, comprador, puesto):
         _, pedido = self._crear(Pedido.Estado.EN_CAMINO, comprador, puesto)
         respuesta = cliente_comprador.get(f"{PEDIDOS}{pedido.pk}/")
         assert respuesta.status_code == 200
@@ -174,9 +172,7 @@ class TestAccionesEnApi:
         assert respuesta.status_code == 200
         assert respuesta.data["acciones_permitidas"] == []
 
-    def test_vendedor_no_puede_entregar(
-        self, cliente_vendedor, comprador, puesto
-    ):
+    def test_vendedor_no_puede_entregar(self, cliente_vendedor, comprador, puesto):
         _, pedido = self._crear(Pedido.Estado.EN_CAMINO, comprador, puesto)
         respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/entregar/", {}, format="json")
         assert respuesta.status_code == 403

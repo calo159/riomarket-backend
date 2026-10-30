@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "apps.promotions",
     "apps.audit",
     "apps.administration",
+    "apps.rbac",
 ]
 
 MIDDLEWARE = [
