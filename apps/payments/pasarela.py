@@ -52,7 +52,13 @@ class PasarelaSandbox(PasarelaPago):
         estado = str(payload.get("estado", "")).lower()
         if estado not in {"aprobado", "rechazado"}:
             raise ValueError("Evento inválido: 'estado' debe ser 'aprobado' o 'rechazado'.")
-        return {"referencia": str(payload["referencia"]), "estado": estado}
+        evento = {"referencia": str(payload["referencia"]), "estado": estado}
+        # Campos opcionales: si la pasarela los envía, el servicio los valida.
+        if payload.get("monto") is not None:
+            evento["monto"] = str(payload["monto"])
+        if payload.get("timestamp") is not None:
+            evento["timestamp"] = payload["timestamp"]
+        return evento
 
 
 _PASARELAS: dict[str, type[PasarelaPago]] = {"sandbox": PasarelaSandbox}

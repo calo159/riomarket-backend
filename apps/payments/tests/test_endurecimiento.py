@@ -52,3 +52,44 @@ class TestWebhookIdempotente:
             assert respuesta.status_code == 200
         pago.refresh_from_db()
         assert pago.estado == Pago.Estado.APROBADO
+
+
+@pytest.mark.django_db
+class TestWebhookValidaMontoYFecha:
+    def _enviar(self, cliente, settings, pago, **extra):
+        settings.PAYMENTS_WEBHOOK_SECRET = "secreto-pruebas"
+        cuerpo = json.dumps(
+            {"referencia": f"sandbox-{pago.pk}", "estado": "aprobado", **extra}
+        ).encode()
+        firma = hmac.new(b"secreto-pruebas", cuerpo, hashlib.sha256).hexdigest()
+        return cliente.post(
+            "/api/payments/webhook/sandbox/",
+            data=cuerpo,
+            content_type="application/json",
+            HTTP_X_RIOMARKET_SIGNATURE=firma,
+        )
+
+    def test_monto_distinto_se_rechaza(self, settings, cliente_anon, comprador, pedido):
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        respuesta = self._enviar(cliente_anon, settings, pago, monto="1.00")
+        assert respuesta.status_code == 400
+        pago.refresh_from_db()
+        assert pago.estado != Pago.Estado.APROBADO
+
+    def test_monto_correcto_se_acepta(self, settings, cliente_anon, comprador, pedido):
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        respuesta = self._enviar(cliente_anon, settings, pago, monto=str(pago.total_cobrado))
+        assert respuesta.status_code == 200
+
+    def test_evento_antiguo_se_rechaza(self, settings, cliente_anon, comprador, pedido):
+        import time
+
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        respuesta = self._enviar(cliente_anon, settings, pago, timestamp=time.time() - 3600)
+        assert respuesta.status_code == 400
+
+    def test_evento_reciente_se_acepta(self, settings, cliente_anon, comprador, pedido):
+        import time
+
+        pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})
+        assert self._enviar(cliente_anon, settings, pago, timestamp=time.time()).status_code == 200

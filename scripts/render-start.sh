@@ -2,6 +2,7 @@
 set -e
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
+python manage.py createcachetable
 # Render puede escribir "True"/"1"/"yes": normalizar antes de comparar.
 seed_demo="$(printf '%s' "${SEED_DEMO:-false}" | tr '[:upper:]' '[:lower:]')"
 case "$seed_demo" in
