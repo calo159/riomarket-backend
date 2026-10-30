@@ -1,5 +1,7 @@
 """Middleware para cabeceras de seguridad en respuestas del frontend/API."""
 
+from urllib.parse import urlsplit
+
 from django.conf import settings
 
 # Prefijos cuyas plantillas (Swagger UI / Redoc de drf-spectacular) cargan
@@ -9,6 +11,25 @@ PREFIJOS_DOCS = ("/api/docs/",)
 PREFIJOS_ADMIN = ("/admin/",)
 
 
+def _origen_de_medios() -> str:
+    """Origen (``https://host``) de las fotos cuando viven en un almacén externo (S3/Supabase).
+
+    Con ``MEDIA_URL`` relativo las fotos salen del propio dominio y ``'self'`` ya basta.
+    """
+    partes = urlsplit(str(getattr(settings, "MEDIA_URL", "") or ""))
+    if partes.scheme in ("http", "https") and partes.netloc:
+        return f"{partes.scheme}://{partes.netloc}"
+    return ""
+
+
+def _img_src(*extra: str) -> str:
+    origenes = ["'self'", "data:", "blob:", *extra]
+    medios = _origen_de_medios()
+    if medios and medios not in origenes:
+        origenes.append(medios)
+    return "img-src " + " ".join(origenes)
+
+
 def _csp(request) -> str:
     if request.path.startswith(PREFIJOS_ADMIN):
         return "; ".join(
@@ -16,7 +37,7 @@ def _csp(request) -> str:
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline'",
                 "style-src 'self' 'unsafe-inline'",
-                "img-src 'self' data: blob: https://tile.openstreetmap.org",
+                _img_src("https://tile.openstreetmap.org"),
                 "font-src 'self' data:",
                 "connect-src 'self'",
                 "frame-ancestors 'none'",
@@ -49,7 +70,7 @@ def _csp(request) -> str:
             "default-src 'self'",
             "script-src 'self'",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: blob: https://tile.openstreetmap.org",
+            _img_src("https://tile.openstreetmap.org"),
             "font-src 'self' data:",
             "connect-src 'self'",
             "frame-ancestors 'none'",
