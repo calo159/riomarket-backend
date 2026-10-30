@@ -46,6 +46,7 @@ class Notificacion(models.Model):
         verbose_name = "notificación"
         verbose_name_plural = "notificaciones"
         ordering = ["-fecha_creacion"]
+        indexes = [models.Index(fields=["id_usuario", "leida"], name="notif_usuario_leida_idx")]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(

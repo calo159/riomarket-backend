@@ -128,6 +128,10 @@ class Pedido(models.Model):
         verbose_name = "pedido"
         verbose_name_plural = "pedidos"
         ordering = ["-fecha_creacion"]
+        indexes = [
+            models.Index(fields=["estado", "-fecha_creacion"], name="pedido_estado_fecha_idx"),
+            models.Index(fields=["id_comprador", "-fecha_creacion"], name="pedido_comprador_idx"),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(

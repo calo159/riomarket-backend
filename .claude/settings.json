@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations orders payments notifications reviews catalog -n indices_de_consulta)",
+      "Bash(python manage.py migrate -v0)",
+      "Bash(python manage.py shell -c \"exec\\(open\\(r'C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/plan.py'\\).read\\(\\)\\)\")"
+    ]
+  }
+}
