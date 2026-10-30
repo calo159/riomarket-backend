@@ -5,6 +5,8 @@ import { Bike, Clock, MapPin, PackageSearch, Star, Store } from 'lucide-react';
 import { listarProductos, obtenerPuesto } from '../api/catalog';
 import { listarResenas } from '../api/reviews';
 import { ProductoCard } from '../components/ProductoCard';
+import { Imagen } from '../components/Imagen';
+import { urlAbsoluta } from '../lib/utils';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
@@ -57,6 +59,9 @@ export function PuestoDetalle() {
 
   const tienda = puesto.data;
   const categorias = tienda.categorias as unknown as { id: number; nombre: string }[];
+  const tiendaAny = tienda as any;
+  const portada = urlAbsoluta(tiendaAny.portada || tiendaAny.url_portada);
+  const logo = urlAbsoluta(tiendaAny.logo || tiendaAny.url_logo);
 
   const cambiarCategoria = (nueva: number | null) => {
     setCategoria(nueva);
@@ -67,10 +72,29 @@ export function PuestoDetalle() {
     <div>
       <section className="border-b bg-white dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+          {portada && (
+            <div className="mb-6 aspect-[3/1] w-full overflow-hidden rounded-2xl">
+              <Imagen
+                src={portada}
+                fallbackNombre={tienda.nombre}
+                contenedorClassName="h-full w-full"
+                alt={`Portada de ${tienda.nombre}`}
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-              <Store className="h-10 w-10" />
-            </span>
+            {logo ? (
+              <Imagen
+                src={logo}
+                fallbackNombre={tienda.nombre}
+                contenedorClassName="h-20 w-20 shrink-0 rounded-2xl"
+                alt={`Logo de ${tienda.nombre}`}
+              />
+            ) : (
+              <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                <Store className="h-10 w-10" />
+              </span>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-3xl font-bold">{tienda.nombre}</h1>

@@ -61,7 +61,7 @@ Password for all demo accounts: `RioMarket2026!`.
 | Approved sellers | `carmen@riomarket.test`, `diego@riomarket.test` |
 | Buyer | `luis@riomarket.test` |
 
-`seed_masivo` creates **15 users and 522 domain records** on a clean database; `seed_demo` creates **28 records**. Render runs `seed_masivo --if-empty`.
+`seed_masivo` creates **15 users and 522 domain records** on a clean database; `seed_demo` creates **28 records**. Render runs `seed_masivo` on every boot, which refreshes demo passwords.
 
 ## Authentication
 
@@ -82,8 +82,8 @@ Backend: `pytest -q`, ruff, `makemigrations --check --dry-run` and `spectacular 
 ## Deployment and security
 
 `render.yaml` creates a Docker web service and a free PostgreSQL 16 database.
-`scripts/render-start.sh` runs `collectstatic`, `migrate`, `seed_masivo --if-empty`
-and gunicorn. The free service sleeps and media is ephemeral; see
+`scripts/render-start.sh` runs `collectstatic`, `migrate`, `seed_masivo`,
+`seed_imagenes_demo` and gunicorn. The free service sleeps and media is ephemeral; see
 [`docs/despliegue.md`](docs/despliegue.md).
 
 There is no real payment gateway, user administration or password-change endpoint,

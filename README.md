@@ -57,9 +57,10 @@ stateDiagram-v2
     pendiente --> cancelado
     confirmado --> en_preparacion
     confirmado --> cancelado
-    en_preparacion --> en_camino
+    en_preparacion --> en_camino: vendedor entrega al domiciliario / listo
     en_preparacion --> cancelado
-    en_camino --> entregado
+    en_camino --> entregado: comprador confirma recepción
+    en_camino --> en_camino: comprador reporta no-recibido
     entregado --> [*]
     cancelado --> [*]
 ```
@@ -132,7 +133,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo --if-empty`, que siembra únicamente si hay menos de 100 registros.
+`seed_masivo` es idempotente y, en una base limpia, crea **15 usuarios y 522 registros de dominio**: 8 categorías, 6 puestos, 40 productos, 30 pedidos, 28 pagos, 123 notificaciones y 191 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
@@ -344,6 +345,24 @@ La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones 
 
 Vite corre en `127.0.0.1:3000` y hace proxy de `/api` y `/media`. Si defines `VITE_API_URL`, usa el mismo host de la SPA para que la cookie `SameSite=Strict` siga siendo del mismo sitio. El acceso rápido con las cuentas demo del login se activa con `VITE_DEMO_MODE=true`.
 
+### Permisos de pedidos por rol
+
+La fuente de verdad es `apps/orders/permissions.py`; el comprador solo actúa
+sobre **su** pedido y el vendedor sobre los de **su** puesto. El administrador
+resuelve disputas y no crea pedidos. `acciones_permitidas` de la API expone
+esta matriz combinada con el estado actual.
+
+| Acción | Comprador | Vendedor del puesto | Administrador |
+| --- | :---: | :---: | :---: |
+| Crear pedido | ✅ | — | — |
+| Editar dirección/notas (pendiente) | ✅ | — | ✅ |
+| Confirmar pedido | — | ✅ | ✅ |
+| Pasar a preparación | — | ✅ | ✅ |
+| Marcar en camino / listo para retirar | — | ✅ | ✅ |
+| Confirmar recepción (`entregado`) | ✅ | — | ✅ |
+| Reportar `no-recibido` (en camino) | ✅ | — | ✅ |
+| Cancelar | ✅ | ✅ | ✅ |
+
 ## Pruebas
 
 Backend:
@@ -373,7 +392,7 @@ Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conoci
 
 ## Despliegue en Render
 
-`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
+`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
 
 1. Sube el repositorio a GitHub (rama `main`).
 2. En Render, elige **New → Blueprint** y conecta el repositorio.

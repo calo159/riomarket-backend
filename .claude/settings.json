@@ -7,7 +7,17 @@
       "Bash(python -m pytest -q tests/test_consultas.py apps/administration -s)",
       "Bash(python \"C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/front2.py\")",
       "Bash(python \"C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/docs1.py\")",
-      "Bash(python \"C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/auditoria.py\")"
+      "Bash(python \"C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/auditoria.py\")",
+      "Bash(git config *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git filter-branch *)",
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+      "Bash(git push *)",
+      "Bash(git ls-remote *)",
+      "Bash(git merge *)",
+      "Bash(python \"C:/Users/USUARIO/AppData/Local/Temp/claude/c--Users-USUARIO-Documents-riomarket-backend/7784e063-c5b5-464d-8417-9eb58e4ddf22/scratchpad/resolver.py\")"
     ]
   }
 }

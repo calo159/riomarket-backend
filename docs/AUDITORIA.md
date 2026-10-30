@@ -30,7 +30,7 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | ID | Severidad | Hallazgo | Estado | Commit / nota |
 | --- | --- | --- | --- | --- |
 | S-01 | CRÍTICO | Credenciales reales (`DATABASE_URL`, `SECRET_KEY`, `FERNET_KEY`) en el historial de git; `origin/main` aún versiona `.env` | Propuesto | `baea219` lo desversiona (local, sin push). Hay que **rotar** y reescribir historial si se desea |
-| S-02 | CRÍTICO | `SEED_DEMO=true` recrea en cada arranque el superusuario `admin@riomarket.test` con clave pública | Corregido en parte | `f2391d0`: `seed_masivo --if-empty`. La clave demo sigue siendo pública mientras `SEED_DEMO=true` |
+| S-02 | CRÍTICO | `SEED_DEMO=true` recrea en cada arranque el superusuario `admin@riomarket.test` con clave pública | Propuesto | Decisión del dueño: `main` (`76c11b0`) quitó `--if-empty` a propósito para refrescar las cuentas demo. Riesgo vigente mientras la demo sea pública |
 | S-03 | ALTO | El comprador se autoaprueba cualquier pago con `simular_pago` (sandbox activo en producción) | Corregido en parte | `7c0f750`: solo pagos con método `simulado`. Apagar `PAYMENTS_SANDBOX_ENABLED` queda como decisión |
 | S-04 | ALTO | Token de recuperación de contraseña escrito en los logs y sin envío de correo | Corregido | `7c0f750` |
 | S-05 | MEDIO | Restablecer contraseña no es atómico, no cierra sesiones y no invalida tokens previos | Corregido | `7c0f750` |
@@ -101,7 +101,7 @@ Rama `mejora/auditoria-general`. Cinco revisiones en paralelo (seguridad, base d
 | --- | --- | --- | --- | --- |
 | I-01 | CRÍTICO | Credenciales en el historial | Duplicado | = S-01 |
 | I-02 | ALTO | Cada arranque en Render re-siembra y resetea la clave del admin | Duplicado | = S-02 |
-| I-03 | ALTO | Documentos afirman `--if-empty` que el script no usaba | Corregido | `f2391d0` hace verdad lo documentado |
+| I-03 | ALTO | Documentos afirmaban `--if-empty` que el script no usaba | Corregido | `main` documentó el comportamiento real (refresco en cada arranque) |
 | I-04 | ALTO | La foto de cédula nunca va a S3 y se pierde en cada redeploy | Propuesto | Implementar `PrivateMediaStorage` sobre S3 o usar disco persistente |
 | I-05 | ALTO | El servicio Postgres del CI no se usa (tests en SQLite) | Propuesto | Definir `TEST_DATABASE_URL` en `ci.yml`; no pude validarlo en este entorno |
 | I-06 | MEDIO | README promete un `.env` versionado; un clon limpio no arranca | Corregido | README actualizado |

@@ -17,14 +17,14 @@ cada decisión.
 
 | Comprobación | Comando | Resultado |
 | --- | --- | --- |
-| Suite backend | `pytest -q` | 482 pruebas aprobadas |
+| Suite backend | `pytest -q` | 589 pruebas aprobadas |
 | Lint backend | `ruff check apps config tests --no-cache` | Sin errores |
 | Formato backend | `ruff format --check apps config tests` | Sin cambios |
 | Migraciones | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | OpenAPI | `python manage.py spectacular --file schema.yaml --validate` | 0 errores, 1 warning de colisión de enum `estado` |
 | Lint frontend | `npm run lint` | Sin errores ni warnings |
 | Tipos frontend | `npm run typecheck` | Sin errores |
-| Tests frontend | `npm test` | 10 pruebas aprobadas |
+| Tests frontend | `npm test` | 21 pruebas aprobadas |
 | Build frontend | `npm run build` | Build de producción correcto |
 
 En Windows, `spectacular` sin `--file` falla al imprimir `→` en consola
@@ -63,7 +63,7 @@ En Windows, `spectacular` sin `--file` falla al imprimir `→` en consola
 `pip-audit` detectó 49 avisos en tres paquetes fijados: Django 5.1.15,
 Django REST Framework 3.17.2 y Pillow 12.3.0. Se actualizó a las versiones
 corregidas (Django 5.2.17, DRF 3.18.2 y Pillow 13.0.0) y se repitió la suite
-completa: **483 pruebas en verde**, lint/formato correctos y esquema sin errores.
+completa: **589 pruebas en verde**, lint/formato correctos y esquema sin errores.
 `pip-audit -r requirements.txt` ya no reporta vulnerabilidades conocidas.
 
 ### Frontend
@@ -79,7 +79,7 @@ Las correcciones disponibles exigen saltos mayores:
 - `zod`: la corrección es v4 y el peer actual de `@hookform/resolvers` es v3.
 
 No se aplican saltos mayores sin una migración probada. El frontend sigue con
-lint, typecheck, 10 tests y build correctos.
+lint, typecheck, 21 tests y build correctos.
 
 ## Documentación
 
@@ -96,7 +96,7 @@ lint, typecheck, 10 tests y build correctos.
 - `docs/api-ejemplos.md` mostraba el refresh en el cuerpo del login, pero el
   backend lo entrega en una cookie HttpOnly. Se corrigió el flujo con
   `curl -c/-b` y la cabecera `X-Requested-With`. El README y el README del
-  frontend también se alinearon con la cookie y con los 483/10 tests actuales.
+  frontend también se alinearon con la cookie y con los 589/21 tests actuales.
 
 ## Datos demo
 

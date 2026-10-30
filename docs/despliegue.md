@@ -4,8 +4,8 @@ Todo está automatizado en `render.yaml`:
 
 - Render crea el servicio Docker **y la base PostgreSQL** (plan free).
 - Genera `SECRET_KEY` y `FERNET_KEY` solo.
-- Ejecuta `collectstatic`, `migrate` y `seed_masivo --if-empty` en el arranque:
-  carga los datos solo si la base tiene menos de 100 registros.
+- Ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo` en
+  cada arranque: actualiza las contraseñas demo y completa los datos faltantes.
 - Configura HTTPS, `ALLOWED_HOSTS` y CSRF para `*.onrender.com`.
 
 ## Lo único que debes hacer tú
@@ -26,9 +26,10 @@ Verificación rápida:
 
 ## Si quieres cambiar la contraseña demo
 
-Antes del primer deploy, en el Blueprint agrega la variable
-`SEED_DEMO_PASSWORD` con tu clave (o cámbiala en Environment y haz "Manual
-Deploy"). El seed solo corre si la base tiene menos de 100 registros de dominio.
+En el Blueprint agrega la variable `SEED_DEMO_PASSWORD` con tu clave (o
+cámbiala en Environment y haz "Manual Deploy"). El seed corre en cada arranque
+y actualiza la contraseña de las cuentas demo, incluso si la base ya estaba
+sembrada.
 
 > Si la cambias, los botones de acceso rápido del login (que usan
 > `RioMarket2026!`) dejarán de funcionar: escribe la clave a mano.
@@ -39,8 +40,8 @@ Deploy"). El seed solo corre si la base tiene menos de 100 registros de dominio.
 - La base free de Render **caduca a los 30 días** (aviso por correo; 14 días de
   gracia para pasarla a pago).
 - Disco efímero: las imágenes subidas se pierden en cada redeploy. Usa almacenamiento S3-compatible (Supabase Storage/R2/AWS) con las variables `STORAGE_S3_*`.
-- Sin Shell en el plan free: los datos demo se cargan solos en el arranque con
-  `seed_masivo --if-empty` y `seed_imagenes_demo`.
+- Sin Shell en el plan free: los datos demo y las imágenes se cargan solos en
+  cada arranque con `seed_masivo` y `seed_imagenes_demo`.
 
 ## Si necesitas que la base dure más de 30 días
 
@@ -55,8 +56,9 @@ Usa Supabase (free, no caduca):
 
 1. En Supabase Storage crea dos buckets: `productos` (público) y `privado` (privado).
 2. En Supabase → Settings → API/Storage crea claves S3 o usa las credenciales compatibles.
-3. En Render añade las variables: `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY`, `STORAGE_S3_BUCKET_PUBLICO=productos`, `STORAGE_S3_BUCKET_PRIVADO=privado`. Opcional `STORAGE_PUBLIC_BASE_URL`.
+3. En Render añade las variables: `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY`, `STORAGE_S3_SECRET_KEY`, `STORAGE_S3_BUCKET_PUBLICO=productos`, `STORAGE_S3_BUCKET_PRIVADO=privado`. Opcional `STORAGE_PUBLIC_BASE_URL`: usa la raíz pública (`https://<ref>.supabase.co/storage/v1/object/public`) o la URL que ya incluya el bucket.
 4. Redeploy. Las imágenes subirán al bucket público; las fotos de cédula seguirán en almacén privado. Si no se configuran, se usa disco local (efímero).
+5. Las imágenes demo se generan con `python scripts/generar_placeholders.py`. Para buscar fotos libres sin API key usa `python scripts/buscar_imagenes_libres.py` (Openverse); las candidatas quedan en `seed_images/candidatas/` y sus créditos en `seed_images/CREDITOS.md`.
 
 Redis es opcional: define `REDIS_URL` (Render Key Value) solo si quieres caché
 compartida; sin ella se usa memoria local.

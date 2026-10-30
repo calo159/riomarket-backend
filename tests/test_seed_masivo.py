@@ -99,6 +99,15 @@ class TestSeedMasivo:
         )
         assert respuesta.status_code == 200
 
+        for correo in (
+            "admin@riomarket.test",
+            "carmen@riomarket.test",
+            "diego@riomarket.test",
+            "luis@riomarket.test",
+        ):
+            usuario = Usuario.objects.get(correo=correo)
+            assert usuario.check_password("RioMarket2026!") is True
+
     def test_pedidos_en_estados_variados(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
         estados = set(Pedido.objects.values_list("estado", flat=True))
@@ -137,4 +146,11 @@ class TestSeedMasivo:
             call_command("seed_imagenes_demo")
 
         assert ImagenProducto.objects.count() == Producto.objects.count()
-        assert Puesto.objects.filter(portada__isnull=False).exclude(portada="").exists()
+        assert (
+            Puesto.objects.exclude(portada="").exclude(portada__isnull=True).count()
+            == Puesto.objects.count()
+        )
+        assert (
+            Puesto.objects.exclude(logo="").exclude(logo__isnull=True).count()
+            == Puesto.objects.count()
+        )
