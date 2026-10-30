@@ -59,11 +59,11 @@ def test_con_medios_en_un_almacen_externo_la_csp_permite_esas_imagenes(settings)
     """Con S3/Supabase las fotos vienen de otro dominio: sin esto el navegador las bloquea."""
     settings.MEDIA_URL = "https://abc123.storage.supabase.co/storage/v1/object/public/productos/"
 
-    img = _directivas(_csp(_Peticion()))["img-src"]
+    origenes = _directivas(_csp(_Peticion()))["img-src"].split()
 
-    assert "https://abc123.storage.supabase.co" in img
-    assert "/storage/v1" not in img  # solo el origen, no la ruta
-    assert "'self'" in img
+    assert "https://abc123.storage.supabase.co" in origenes  # solo el origen, sin la ruta
+    assert "'self'" in origenes
+    assert not any("/storage/v1" in origen for origen in origenes)
 
 
 def test_con_medios_locales_la_csp_no_abre_otros_origenes(settings):
