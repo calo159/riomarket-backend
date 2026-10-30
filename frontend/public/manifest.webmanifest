@@ -1,11 +1,17 @@
 {
-  "name": "RioMarket",
+  "name": "RioMarket · Mercado de Riohacha",
   "short_name": "RioMarket",
-  "start_url": "/",
+  "description": "Compra a los puestos del mercado de Riohacha desde el celular: productos, pedidos y retiro o domicilio.",
+  "lang": "es",
+  "start_url": "/tienda",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#00626D",
   "background_color": "#ffffff",
-  "theme_color": "#22c55e",
   "icons": [
-    {"src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml"}
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

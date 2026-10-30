@@ -11,7 +11,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from apps.common.views import FrontendCatchAllView, HealthCheckView
+from apps.common.views import ArchivoFrontendView, FrontendCatchAllView, HealthCheckView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -49,6 +49,14 @@ else:
 frontend_dist = settings.BASE_DIR / "frontend" / "dist"
 if frontend_dist.exists():
     urlpatterns += [
+        # Archivos reales del build que no son rutas de la aplicación. En producción WhiteNoise
+        # ya los entrega antes de llegar aquí; esta ruta cubre el resto de entornos y evita que
+        # el catch-all los sustituya por index.html.
+        re_path(
+            r"^(?P<path>sw\.js|offline\.html|offline\.js|manifest\.webmanifest|favicon\.svg"
+            r"|theme-init\.js|icons/[\w.-]+)$",
+            ArchivoFrontendView.as_view(),
+        ),
         re_path(
             r"^(?!api/|admin/|static/|media/|assets/|schema/|docs/|theme-init\.js$)"
             r".*$",

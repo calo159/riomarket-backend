@@ -86,3 +86,18 @@ def test_el_origen_de_medios_no_se_aplica_a_scripts(settings):
 
     assert "supabase" not in directivas["script-src"]
     assert "supabase" not in directivas["connect-src"]
+
+
+def test_la_csp_de_la_app_cubre_mapa_y_service_worker_sin_abrir_scripts_externos():
+    """Leaflet va empaquetado (mismo origen); solo las teselas de OSM son externas, como imagen."""
+    directivas = _directivas(_csp(_Peticion()))
+
+    assert directivas["script-src"] == "'self'"
+    assert "https://tile.openstreetmap.org" in directivas["img-src"].split()
+    assert "openstreetmap" not in directivas["script-src"]
+    assert "openstreetmap" not in directivas["connect-src"]
+    # El service worker (/sw.js) y el manifest son del mismo origen: caen en default-src 'self'
+    # (worker-src -> script-src -> default-src; manifest-src -> default-src).
+    assert directivas["default-src"] == "'self'"
+    assert "worker-src" not in directivas
+    assert "manifest-src" not in directivas
