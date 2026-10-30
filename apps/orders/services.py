@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
 from apps.catalog.models import Producto, Puesto
@@ -217,11 +217,19 @@ def _iterar_lineas(lineas, productos: dict[int, Producto], puesto: Puesto):
 
 
 def _reponer_stock(pedido: Pedido) -> None:
-    """Regla 4: cancelar repone el stock exactamente una vez (por transición)."""
-    for item in pedido.items.all():
-        producto = item.id_producto
-        producto.stock += item.cantidad
-        producto.save(update_fields=["stock"])
+    """Regla 4: cancelar repone el stock exactamente una vez (por transición).
+
+    Se suma en la base con ``F()``: una copia vieja del producto no pisa una venta concurrente.
+    """
+    for producto_id, cantidad in pedido.items.values_list("id_producto_id", "cantidad"):
+        Producto.objects.filter(pk=producto_id).update(stock=F("stock") + cantidad)
+
+
+def _liberar_cupon(pedido: Pedido) -> None:
+    """Un pedido cancelado no consume usos del cupón (límites totales y por usuario)."""
+    from apps.promotions.models import UsoCupon
+
+    UsoCupon.objects.filter(id_pedido=pedido).delete()
 
 
 # ---------------------------------------------------------------------------
@@ -274,7 +282,7 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
     return pedido
 
 
-def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
+def _validar_transicion(pedido: Pedido, destino: str) -> None:
     permitidas = TRANSICIONES[pedido.estado]
     if destino not in permitidas:
         raise ValidationError(
@@ -285,14 +293,26 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
                 )
             }
         )
+
+
+def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
+    _validar_transicion(pedido, destino)
     permissions.exigir(usuario, permissions.ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
         _exigir_pago_aprobado(pedido)
     estado_anterior = pedido.estado
-    # Stock + estado en una sola transacción: o pasa todo o no pasa nada.
+    # Stock + estado en una sola transacción: o pasa todo o no pasa nada. El pedido se
+    # bloquea y se relee: dos peticiones simultáneas (o una instancia vieja) no repiten
+    # la reposición de stock ni pisan un estado más reciente.
     with transaction.atomic():
+        actual = Pedido.objects.select_for_update().only("estado").get(pk=pedido.pk)
+        if actual.estado != pedido.estado:
+            pedido.estado = actual.estado
+            _validar_transicion(pedido, destino)
+            estado_anterior = pedido.estado
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
+            _liberar_cupon(pedido)
             _reembolsar_o_anular_pago(pedido)
         pedido.estado = destino
         pedido.save(update_fields=["estado", "fecha_actualizacion"])
