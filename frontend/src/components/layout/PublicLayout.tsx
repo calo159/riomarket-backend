@@ -210,6 +210,8 @@ export function PublicLayout() {
               Riohacha, La Guajira · Colombia
               <br />
               Soporte: soporte@riomarket.test
+              <br />
+              <Link className="pie-enlace" to="/creditos-fotos">Créditos de fotos</Link>
             </p>
           </div>
         </div>

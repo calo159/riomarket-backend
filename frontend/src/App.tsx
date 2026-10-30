@@ -38,6 +38,7 @@ const PuestosAdmin = lazy(() => import('./pages/admin/PuestosAdmin').then((modul
 const PagosAdmin = lazy(() => import('./pages/admin/PagosAdmin').then((modulo) => ({ default: modulo.PagosAdmin })));
 const Auditoria = lazy(() => import('./pages/admin/Auditoria').then((modulo) => ({ default: modulo.Auditoria })));
 const CuponesAdmin = lazy(() => import('./pages/admin/CuponesAdmin').then((modulo) => ({ default: modulo.CuponesAdmin })));
+const CreditosFotos = lazy(() => import('./pages/CreditosFotos').then((modulo) => ({ default: modulo.CreditosFotos })));
 const SinPermiso = lazy(() => import('./pages/SinPermiso').then((modulo) => ({ default: modulo.SinPermiso })));
 const NoEncontrado = lazy(() => import('./pages/NoEncontrado').then((modulo) => ({ default: modulo.NoEncontrado })));
 
@@ -58,6 +59,7 @@ export function App() {
           <Route element={<PublicLayout />}>
             <Route index element={<Inicio />} />
             <Route path="catalogo" element={<Catalogo />} />
+            <Route path="creditos-fotos" element={<CreditosFotos />} />
             <Route path="productos/:id" element={<ProductoDetalle />} />
             <Route path="puestos/:id" element={<PuestoDetalle />} />
             <Route path="login" element={<Login />} />
