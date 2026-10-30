@@ -210,3 +210,13 @@ class TestSeedMapaYContacto:
         )
         call_command("seed_masivo", "--password", "ClaveSegura1!")
         assert str(Puesto.objects.get(nombre="Tejidos Guajiro").latitud) == "11.500000"
+
+    def test_corrige_el_punto_generico_que_dejo_seed_demo(self):
+        call_command("seed_demo")
+        # seed_demo deja el mismo punto en sus dos puestos: aquí se separan.
+        assert Puesto.objects.filter(latitud="11.544000", longitud="-72.907000").count() == 2
+
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+
+        assert Puesto.objects.count() == 6
+        assert len({(p.latitud, p.longitud) for p in Puesto.objects.all()}) == 6

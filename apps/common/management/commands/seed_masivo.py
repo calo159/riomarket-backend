@@ -189,6 +189,9 @@ CATEGORIAS = [
     ("Dulces típicos", "Comida"),
 ]
 
+# Punto único que ``seed_demo`` pone a todos sus puestos (centro del río de Riohacha).
+COORDENADAS_GENERICAS_SEED_DEMO = (Decimal("11.544000"), Decimal("-72.907000"))
+
 PUESTOS = {
     "palenque": {
         "vendedor": "carmen",
@@ -507,9 +510,14 @@ class Command(BaseCommand):
             )
             if not creado:
                 # El seed corre en cada despliegue: los puestos que ya existen se ponen al día
-                # sin duplicarse. Coordenadas solo si faltan (no pisa lo que edite el vendedor).
+                # sin duplicarse. Coordenadas solo si faltan o son el punto genérico de ``seed_demo``
+                # (todos los puestos en el mismo punto): no pisa lo que edite el vendedor.
                 cambios = []
-                if puesto.latitud is None or puesto.longitud is None:
+                if (
+                    puesto.latitud is None
+                    or puesto.longitud is None
+                    or (puesto.latitud, puesto.longitud) == COORDENADAS_GENERICAS_SEED_DEMO
+                ):
                     puesto.latitud = campos["latitud"]
                     puesto.longitud = campos["longitud"]
                     cambios += ["latitud", "longitud"]
