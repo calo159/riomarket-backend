@@ -45,14 +45,10 @@ if _redis_url:
         }
     }
 else:
-    # Sin Redis: caché en la base de datos, compartida entre workers y reinicios (a diferencia de
-    # LocMem, donde cada worker cuenta aparte). La tabla se crea al arrancar (createcachetable).
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-            "LOCATION": "cache_riomarket",
-        }
-    }
+    # Sin Redis: caché local por proceso. Una caché en la base de datos añadía ~6 consultas a cada
+    # petición (el throttling toca la caché en todas) y volvía lenta toda la API. Con LocMem cada
+    # worker cuenta sus intentos aparte; para un límite compartido define REDIS_URL.
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 # Frontend unificado: WhiteNoise sirve los assets del build de Vite.
 # El index.html lo entrega Django para que apliquen las cabeceras de seguridad.

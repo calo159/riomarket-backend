@@ -107,7 +107,7 @@ Rama `mejora/auditoria-general` (la rama `mejora/optimizacion` cerró R-06, R-13
 | I-06 | MEDIO | README promete un `.env` versionado; un clon limpio no arranca | Corregido | README actualizado |
 | I-07 | MEDIO | Sin `DATABASE_URL`, producción cae en SQLite efímero sin avisar | Propuesto |  |
 | I-08 | MEDIO | `index.html` y estáticos se sirven sin CSP ni `X-Frame-Options` | Corregido | `f2391d0` (+ prueba de orden de middleware) |
-| I-09 | MEDIO | Límites de peticiones por proceso (sin Redis, 2 workers) | Corregido en parte | Caché compartida en la BD (`createcachetable`); Redis sigue siendo opcional con `REDIS_URL` |
+| I-09 | MEDIO | Límites de peticiones por proceso (sin Redis, 2 workers) | Corregido en parte | La caché en la BD se revirtió: sumaba ~6 consultas a cada petición. Sin `REDIS_URL` vuelve a LocMem (límite por worker); con Redis el límite es compartido |
 | I-10 | MEDIO | Versiones instaladas distintas a las fijadas; sin lockfile | Propuesto |  |
 | I-11 | MEDIO | `ALLOWED_HOSTS`/`CSRF_TRUSTED_ORIGINS` abiertos a todo `onrender.com` | Propuesto | Usar el hostname exacto |
 | I-12 | MEDIO | `entrega/*.sql|json` obsoletos, con hashes de contraseña | Propuesto | Se conservan por ser entregables del curso; `LEEME_ENTREGA.md` y `docs/README.md` los marcan como históricos (anteriores al RBAC) |
