@@ -9,6 +9,8 @@ stack, pruebas y despliegue.
   estados y matriz de permisos por rol.
 - [Despliegue](despliegue.md): Render, Supabase, límites del plan free y
   variables de producción.
+- [Auditoría general (seguridad, rendimiento y calidad)](AUDITORIA.md): hallazgos, estado de
+  cada uno y propuestas pendientes.
 - [Auditoría y mantenimiento](MANTENIMIENTO.md): línea base, herramientas,
   dependencias, datos demo y decisiones de limpieza.
 - [Alcance del frontend](alcance-frontend.md): encargo original y estado actual

@@ -78,7 +78,7 @@ El vendedor confirma, prepara y marca el pedido como en camino (entregado al dom
 
 ## Inicio rápido
 
-Requisitos: Python 3.12, Node.js 20+ y PostgreSQL 16 (o Docker). El repositorio incluye un `.env` para la demo; haz una copia antes de reemplazarlo.
+Requisitos: Python 3.12, Node.js 20+ y PostgreSQL 16 (o Docker). El `.env` **no** se versiona: cópialo desde `.env.example` y completa `SECRET_KEY`, `FERNET_KEY` y `DATABASE_URL`.
 
 ### 1. Backend
 
@@ -106,7 +106,7 @@ python manage.py seed_masivo
 python manage.py runserver
 ```
 
-El `.env` incluido apunta a la base de la demo; si prefieres otra base, haz una copia del archivo y cambia `DATABASE_URL`. El backend queda en <http://127.0.0.1:8000>: salud en `/api/health/`, Swagger en `/api/docs/`, Redoc en `/api/docs/redoc/`, esquema en `/api/schema/` y administración en `/admin/`.
+Tu `.env` define la base (`DATABASE_URL`). El backend queda en <http://127.0.0.1:8000>: salud en `/api/health/`, Swagger en `/api/docs/`, Redoc en `/api/docs/redoc/`, esquema en `/api/schema/` y administración en `/admin/`.
 
 ### 2. Frontend (otra terminal)
 
@@ -356,7 +356,7 @@ python manage.py makemigrations --check --dry-run
 python manage.py spectacular --file schema.yaml --validate
 ```
 
-Resultado actual: **483 pruebas en verde**, lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
+Resultado actual: **más de 740 pruebas en verde** (`pytest -q`), lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
 
 Frontend (`cd frontend`):
 
@@ -367,7 +367,7 @@ npm test
 npm run build
 ```
 
-Resultado: **10 pruebas en 3 archivos**, con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
+Resultado: **54 pruebas en 10 archivos** (`npx vitest run`), con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
 
 Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` mantiene **12 avisos** (2 críticos, 2 altos y 8 moderados), principalmente en herramientas de desarrollo; el detalle está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
 
@@ -389,7 +389,7 @@ La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.o
 - No se crean ni eliminan usuarios desde el panel (solo cambian de rol o se suspenden) y no hay cambio de contraseña.
 - `media/` y `media_privado/` usan disco local, que es efímero en Render. La foto de la cédula se cifra y se sirve solo por una vista autorizada.
 - Las imágenes y la cédula se validan por tipo y tamaño; los tokens y secretos no se registran en los logs.
-- **`.env` está versionado a propósito para la entrega** y contiene credenciales de la demo. El repositorio es público: cuando termine la calificación, rota la contraseña de la base o haz el repositorio privado.
+- **`.env` ya no se versiona**, pero estuvo en el historial de git: rota la contraseña de la base, `SECRET_KEY` y `FERNET_KEY` (si hay cédulas cifradas con la clave anterior, re-cífralas). Ver [`docs/AUDITORIA.md`](docs/AUDITORIA.md).
 - No hay archivo `LICENSE`; el responsable debe elegir uno antes de reutilizar el código fuera del contexto académico.
 
 El detalle de los controles (JWT, cookies, CSP, cifrado con Fernet, límites de peticiones y permisos) está en [`SEGURIDAD.md`](SEGURIDAD.md).
