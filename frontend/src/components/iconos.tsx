@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cn } from '../lib/utils';
 
 /** Iconos propios de las categorías del diseño (trazo de 24x24). */
@@ -96,7 +96,10 @@ export function IconoCategoria({ nombre, className }: { nombre?: string | null; 
   );
 }
 
-/** Círculo de color con el icono de la categoría. */
+/**
+ * Círculo de la categoría: foto real del producto típico (``/categorias/<clave>.webp``).
+ * Las categorías sin foto, o si la foto falla, usan el icono sobre su color.
+ */
 export function MedallaCategoria({
   nombre,
   className,
@@ -106,8 +109,26 @@ export function MedallaCategoria({
   className?: string;
   iconoClassName?: string;
 }) {
+  const clave = claveCategoria(nombre);
+  const [falla, setFalla] = useState(false);
+  if (clave !== 'generico' && !falla) {
+    return (
+      <span className={cn('block overflow-hidden rounded-full bg-slate-100 ring-1 ring-black/5', className)}>
+        <img
+          src={`/categorias/${clave}.webp`}
+          alt=""
+          width={160}
+          height={160}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+          onError={() => setFalla(true)}
+        />
+      </span>
+    );
+  }
   return (
-    <span className={cn('grid place-items-center rounded-full', COLORES[claveCategoria(nombre)], className)}>
+    <span className={cn('grid place-items-center rounded-full', COLORES[clave], className)}>
       <IconoCategoria nombre={nombre} className={iconoClassName} />
     </span>
   );
