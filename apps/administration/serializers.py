@@ -6,8 +6,8 @@ from rest_framework import serializers
 from apps.accounts.models import Usuario
 from apps.administration import services
 from apps.common.motivo import MOTIVO_MAX, MOTIVO_MIN
-from apps.rbac.acceso import recursos_de_usuario
 from apps.rbac.models import Recurso, Rol
+from apps.rbac.permissions import recursos_de_request
 
 
 class UsuarioAdminSerializer(serializers.ModelSerializer):
@@ -75,7 +75,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
         # Recursos del actor y total de admins se calculan una vez por respuesta (sin N+1).
         cache = self.context.setdefault("_cache_acciones", {})
         if "recursos" not in cache:
-            cache["recursos"] = recursos_de_usuario(request.user)
+            cache["recursos"] = recursos_de_request(request)
             cache["admins"] = services._admins_activos()
         return services.acciones_permitidas(obj, request.user, cache["recursos"], cache["admins"])
 
