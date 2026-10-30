@@ -7,12 +7,15 @@
 """
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Avg, Count, Q, QuerySet
+from django.db.models import Avg, Count, OuterRef, QuerySet, Subquery
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Puesto
+from apps.common.query import parametro_entero
 from apps.orders.models import Pedido
+from apps.rbac.acceso import tiene_recurso
 from apps.reviews.models import Resena
 
 ORDENAMIENTO_RESENA = (
@@ -65,7 +68,7 @@ def _exigir_pedido_entregado(usuario, puesto: Puesto, id_pedido=None) -> None:
 
 
 def _exigir_dueno_o_admin(resena: Resena, usuario) -> None:
-    if usuario.es_administrador:
+    if tiene_recurso(usuario, "admin.resenas"):
         return
     if resena.id_usuario_id != usuario.pk:
         raise PermissionDenied("Solo el autor de la reseña puede modificarla.")
@@ -140,7 +143,7 @@ def eliminar_resena(*, resena: Resena, usuario) -> None:
 
 def visibles_resenas(usuario, qs: QuerySet[Resena]) -> QuerySet[Resena]:
     """Admin: todas. Vendedor: las de sus puestos. Demás: solo visibles."""
-    if usuario and usuario.is_authenticated and usuario.es_administrador:
+    if usuario and usuario.is_authenticated and tiene_recurso(usuario, "admin.resenas"):
         return qs
     if usuario and usuario.is_authenticated and usuario.rol == Usuario.Rol.VENDEDOR:
         return qs.filter(id_puesto__id_vendedor=usuario)
@@ -148,28 +151,37 @@ def visibles_resenas(usuario, qs: QuerySet[Resena]) -> QuerySet[Resena]:
 
 
 def filtrar_resenas(qs: QuerySet[Resena], params) -> QuerySet[Resena]:
-    puesto = params.get("puesto")
-    if puesto:
-        if not puesto.isdigit():
-            raise ValidationError({"puesto": "Debe ser un ID entero."})
-        qs = qs.filter(id_puesto_id=int(puesto))
-    cal_min = params.get("calificacion_min")
-    cal_max = params.get("calificacion_max")
-    if cal_min:
-        qs = qs.filter(calificacion__gte=int(cal_min))
-    if cal_max:
-        qs = qs.filter(calificacion__lte=int(cal_max))
-    if params.get("vendedor"):
-        qs = qs.filter(id_puesto__id_vendedor_id=params.get("vendedor"))
+    puesto = parametro_entero(params, "puesto")
+    if puesto is not None:
+        qs = qs.filter(id_puesto_id=puesto)
+    cal_min = parametro_entero(params, "calificacion_min")
+    if cal_min is not None:
+        qs = qs.filter(calificacion__gte=cal_min)
+    cal_max = parametro_entero(params, "calificacion_max")
+    if cal_max is not None:
+        qs = qs.filter(calificacion__lte=cal_max)
+    vendedor = parametro_entero(params, "vendedor")
+    if vendedor is not None:
+        qs = qs.filter(id_puesto__id_vendedor_id=vendedor)
     if params.get("con_respuesta") == "true":
         qs = qs.exclude(respuesta="")
     return qs
 
 
 def anotar_reputacion(qs: QuerySet[Puesto]) -> QuerySet[Puesto]:
-    """Añade ``calificacion_promedio`` y ``cantidad_resenas`` (solo visibles)."""
-    visibles = Q(resenas__visible=True)
+    """Añade ``calificacion_promedio`` y ``cantidad_resenas`` (solo visibles).
+
+    Son subconsultas (no ``Count`` con join): así el ``COUNT`` de la paginación no
+    arrastra la tabla de reseñas ni obliga a agrupar por todas las columnas del puesto.
+    """
+    visibles = (
+        Resena.objects.filter(id_puesto=OuterRef("pk"), visible=True).order_by().values("id_puesto")
+    )
     return qs.annotate(
-        calificacion_promedio=Avg("resenas__calificacion", filter=visibles),
-        cantidad_resenas=Count("resenas", filter=visibles, distinct=True),
+        calificacion_promedio=Subquery(
+            visibles.annotate(valor=Avg("calificacion")).values("valor")
+        ),
+        cantidad_resenas=Coalesce(
+            Subquery(visibles.annotate(total=Count("pk")).values("total")), 0
+        ),
     )

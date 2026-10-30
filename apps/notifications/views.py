@@ -41,7 +41,7 @@ class NotificacionViewSet(
     http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
-        qs = Notificacion.objects.select_related("id_usuario", "id_pedido")
+        qs = Notificacion.objects.all()
         qs = services.visibles_notificaciones(self.request.user, qs)
         qs = services.filtrar_notificaciones(qs, self.request.query_params)
         return aplicar_ordenamiento(

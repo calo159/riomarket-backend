@@ -1,5 +1,7 @@
 """Serializers de cupones."""
 
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from apps.promotions.models import Cupon
@@ -24,6 +26,10 @@ class CuponSerializer(serializers.ModelSerializer):
             "fecha_creacion",
         )
         read_only_fields = ("id", "fecha_creacion")
+        extra_kwargs = {  # noqa: RUF012
+            "monto_minimo_pedido": {"min_value": Decimal("0")},
+            "tope_descuento": {"min_value": Decimal("0")},
+        }
 
 
 class ValidarCuponSerializer(serializers.Serializer):

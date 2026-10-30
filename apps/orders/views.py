@@ -7,13 +7,10 @@ Patrón de permisos (igual que catálogo, con la lógica en services):
 - ``partial_update``: solo el comprador dueño, mientras sea pendiente.
 - Acciones de transición: autenticado; quién puede pasar de un estado a
   otro decide ``services`` (regla 5) → 403/400.
-- Entrega: el vendedor marca ``enviar`` (en camino / listo para retirar) y
-  SOLO el comprador (o el administrador) ``entregar``; el comprador puede
-  reportar ``no-recibido`` mientras el pedido esté en camino.
 """
 
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
-from rest_framework import serializers, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,25 +19,19 @@ from apps.common.permissions import EsComprador
 from apps.common.query import aplicar_ordenamiento
 from apps.orders import services
 from apps.orders.models import Pedido
-from apps.orders.serializers import PedidoSerializer
+from apps.orders.serializers import PedidoSerializer, ReportarNoRecibidoSerializer
 
 PARAMETROS_PEDIDO = [
     OpenApiParameter(name="estado", enum=Pedido.Estado.values, description="Estado del pedido"),
     OpenApiParameter(name="tipo_entrega", enum=Pedido.TipoEntrega.values),
     OpenApiParameter(name="puesto", type=OpenApiTypes.INT, description="ID del puesto"),
+    OpenApiParameter(
+        name="con_no_recibido",
+        type=OpenApiTypes.BOOL,
+        description="Solo pedidos con reporte de no recibido (true) o sin reporte (false)",
+    ),
     OpenApiParameter(name="ordering", enum=list(services.ORDENAMIENTO_PEDIDO)),
 ]
-
-
-class NoRecibidoSerializer(serializers.Serializer):
-    """Cuerpo opcional del reporte "no me ha llegado"."""
-
-    motivo = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        max_length=services.MOTIVO_NO_RECIBIDO_MAX,
-        help_text="Detalle opcional (ej. 'el domiciliario no contesta').",
-    )
 
 
 class PedidoViewSet(viewsets.ModelViewSet):
@@ -56,7 +47,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Pedido.objects.select_related("id_puesto", "id_comprador").prefetch_related("items")
+        qs = Pedido.objects.select_related("id_puesto").prefetch_related("items")
         qs = services.visibles_pedidos(self.request.user, qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO)
 
@@ -105,8 +96,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         description=(
-            "El vendedor ya entregó el pedido al domiciliario o está listo para "
-            "retirar (en_preparacion → en_camino)."
+            "El vendedor marca que entregó el pedido al domiciliario o que está "
+            "listo para retirar (en_preparacion → en_camino)."
         ),
         responses=PedidoSerializer,
     )
@@ -118,33 +109,33 @@ class PedidoViewSet(viewsets.ModelViewSet):
     @extend_schema(
         description=(
             "El comprador confirma que recibió el pedido (en_camino → entregado). "
-            "El vendedor no puede hacerlo; el administrador sí (resolver disputas)."
+            "El vendedor no puede marcar entregado; el administrador solo para resolver disputas."
         ),
         responses=PedidoSerializer,
     )
     @action(detail=True, methods=["post"])
     def entregar(self, request, pk=None):
-        """``POST /pedidos/{id}/entregar/`` (comprador o administrador)."""
+        """``POST /pedidos/{id}/entregar/`` (comprador del pedido o administrador)."""
         return self._ejecutar_transicion(request, services.marcar_entregado)
 
     @extend_schema(
+        request=ReportarNoRecibidoSerializer,
         description=(
-            "El comprador reporta que el pedido en camino aún no le llega. "
-            "El estado no cambia; se registra el reporte y se avisa al vendedor."
+            "El comprador reporta que no recibió el pedido en camino. No cambia el "
+            "estado, notifica al vendedor y solo se permite una vez."
         ),
-        request=NoRecibidoSerializer,
         responses=PedidoSerializer,
     )
     @action(detail=True, methods=["post"], url_path="no-recibido")
     def no_recibido(self, request, pk=None):
-        """``POST /pedidos/{id}/no-recibido/`` (comprador o administrador)."""
+        """``POST /pedidos/{id}/no-recibido/`` (comprador del pedido o administrador)."""
         pedido = self.get_object()
-        entrada = NoRecibidoSerializer(data=request.data)
-        entrada.is_valid(raise_exception=True)
+        serializer = ReportarNoRecibidoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         pedido = services.reportar_no_recibido(
             pedido=pedido,
             usuario=request.user,
-            motivo=entrada.validated_data.get("motivo", ""),
+            motivo=serializer.validated_data.get("motivo", ""),
         )
         return Response(self.get_serializer(pedido).data)
 

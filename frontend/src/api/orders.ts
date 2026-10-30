@@ -5,6 +5,7 @@ export interface FiltrosPedido {
   estado?: string;
   tipo_entrega?: string;
   puesto?: number | string;
+  con_no_recibido?: boolean | string;
   ordering?: string;
   page?: number;
   page_size?: number;
@@ -44,15 +45,21 @@ export async function actualizarPedido(
   return data;
 }
 
-export type AccionPedido = 'confirmar' | 'en-preparacion' | 'enviar' | 'entregar' | 'cancelar';
+export type AccionPedido =
+  | 'confirmar'
+  | 'en-preparacion'
+  | 'enviar'
+  | 'entregar'
+  | 'cancelar';
 
 export async function ejecutarAccionPedido(id: number, accion: AccionPedido): Promise<Pedido> {
   const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/${accion}/`, {});
   return data;
 }
 
-/** El comprador avisa que el pedido en camino todavía no le llega. */
-export async function reportarNoRecibido(id: number, motivo = ''): Promise<Pedido> {
-  const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/no-recibido/`, { motivo });
+export async function reportarNoRecibido(id: number, motivo?: string): Promise<Pedido> {
+  const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/no-recibido/`, {
+    motivo: motivo?.trim() || undefined,
+  });
   return data;
 }

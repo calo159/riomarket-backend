@@ -58,8 +58,8 @@ al menos 100 registros de dominio.
 5. **Confirmar el cobro (como vendedor `carmen`)** →
    `POST /api/payments/pagos/{id}/confirmar-efectivo/` con `{}`.
 6. **Confirmar y enviar (como vendedor `carmen`)** → `POST /api/orders/pedidos/{id}/confirmar/`,
-   luego `POST /api/orders/pedidos/{id}/en-preparacion/` y `.../enviar/`. La recepción
-   la confirma el comprador con `POST /api/orders/pedidos/{id}/entregar/`.
+   luego `.../en-preparacion/` y `.../enviar/`. **Confirmar la recepción (como comprador `luis`)** →
+   `POST /api/orders/pedidos/{id}/entregar/`; si no llegó, `.../no-recibido/` con `{"motivo":"..."}`.
 
 ## 6. Archivos de respaldo
 - `entrega/datos_riomarket.sql` — volcado completo (esquema + datos, incluidas

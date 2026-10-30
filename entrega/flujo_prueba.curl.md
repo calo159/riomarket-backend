@@ -58,7 +58,9 @@ curl -s -X POST "http://127.0.0.1:8000/api/payments/pagos/$PAGO/confirmar-efecti
   -H "Content-Type: application/json" -d '{}'
 ```
 
-## 6. Confirmar y enviar (vendedor Carmen) y recibir (comprador)
+## 6. Confirmar, enviar y recibir
+
+El vendedor (Carmen) confirma, prepara y marca el pedido en camino:
 
 ```bash
 for accion in confirmar en-preparacion enviar; do
@@ -73,6 +75,17 @@ curl -s -X POST "http://127.0.0.1:8000/api/orders/pedidos/$PEDIDO/entregar/" \
   -H "Authorization: Bearer $TOKEN_COMPRADOR" \
   -H "Content-Type: application/json" -d '{}'
 ```
+
+Solo el comprador confirma que lo recibió:
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/api/orders/pedidos/$PEDIDO/entregar/" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+```
+
+Si no le llegó, el comprador reporta con
+`POST /api/orders/pedidos/$PEDIDO/no-recibido/` y `{"motivo":"..."}` (opcional);
+el estado sigue en `en_camino` y puede confirmar la entrega después.
 
 El pedido queda en `entregado` y el pago en `aprobado`. Para renovar el access
 del comprador usa `POST /api/auth/token/refresh/` con `-b "$COOKIE_COMP"` y

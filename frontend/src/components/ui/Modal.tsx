@@ -18,13 +18,15 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const tituloId = useId();
+  const cerrarRef = useRef(onCerrar);
+  cerrarRef.current = onCerrar;
 
   useEffect(() => {
     if (!abierto) return;
     const anterior = document.activeElement as HTMLElement | null;
     ref.current?.focus();
     const alPresionar = (evento: KeyboardEvent) => {
-      if (evento.key === 'Escape') onCerrar();
+      if (evento.key === 'Escape') cerrarRef.current();
     };
     document.addEventListener('keydown', alPresionar);
     document.body.style.overflow = 'hidden';
@@ -33,7 +35,7 @@ export function Modal({
       document.body.style.overflow = '';
       anterior?.focus();
     };
-  }, [abierto, onCerrar]);
+  }, [abierto]);
 
   if (!abierto) return null;
 

@@ -91,8 +91,7 @@ export function ProductoDetalle() {
 
   const reemplazar = () => {
     if (!tienda) return;
-    reemplazarCon(datos, tienda);
-    for (let i = 1; i < cantidad; i += 1) agregar(datos, tienda);
+    reemplazarCon(datos, tienda, cantidad);
     setConfirmarReemplazo(false);
     toast.exito('Carrito actualizado con este producto.');
     if (accionPendiente === 'comprar') {

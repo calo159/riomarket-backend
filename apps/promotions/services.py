@@ -164,13 +164,17 @@ def _exigir_cupon_aplicable(cupon: Cupon, *, usuario, puesto, subtotal: Decimal)
 
 
 def aplicar_cupon(*, usuario, codigo: str, puesto, subtotal: Decimal):
-    """Valida el cupón y devuelve ``(cupon, descuento)`` con la fila bloqueada."""
+    """Valida el cupón y devuelve ``(cupon, descuento)`` con la fila bloqueada.
+
+    El bloqueo y la validación van en una misma transacción: ``select_for_update`` fuera
+    de ``atomic`` falla en PostgreSQL. Dentro de ``crear_pedido`` se anida en la suya.
+    """
     codigo = (codigo or "").strip().upper()
-    try:
-        cupon = Cupon.objects.select_for_update().get(codigo=codigo)
-    except Cupon.DoesNotExist as exc:
-        raise ValidationError({"codigo": "El cupón no existe."}) from exc
     with transaction.atomic():
+        try:
+            cupon = Cupon.objects.select_for_update().get(codigo=codigo)
+        except Cupon.DoesNotExist as exc:
+            raise ValidationError({"codigo": "El cupón no existe."}) from exc
         descuento = _exigir_cupon_aplicable(
             cupon, usuario=usuario, puesto=puesto, subtotal=subtotal
         )

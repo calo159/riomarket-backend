@@ -15,6 +15,8 @@ from apps.orders import services as orders_services
 from apps.orders.models import Pedido
 from apps.payments import services as pagos_services
 from apps.payments.models import Pago
+from apps.rbac.defaults import sembrar
+from apps.rbac.models import Recurso, Rol, RolRecurso
 
 # Río de la bahía de Riohacha (para puestos con domicilio)
 LAT_RIOHACHA = "11.544"
@@ -38,6 +40,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         password = options["password"]
+        sembrar(Rol, Recurso, RolRecurso)
 
         if options["if_empty"] and Usuario.objects.exists():
             self.stdout.write("Seed omitido: la base ya tiene usuarios.")

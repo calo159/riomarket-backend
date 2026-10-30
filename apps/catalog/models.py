@@ -158,6 +158,7 @@ class Producto(models.Model):
         verbose_name = "producto"
         verbose_name_plural = "productos"
         ordering = ["nombre"]
+        indexes = [models.Index(fields=["estado", "nombre"], name="producto_estado_nombre_idx")]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(precio__gte=Decimal("0")),

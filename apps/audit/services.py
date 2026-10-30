@@ -5,11 +5,14 @@ rompe la acción de negocio que lo invoca (igual que las notificaciones).
 """
 
 import logging
+from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from apps.audit.models import RegistroAuditoria
+from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +52,7 @@ def registrar(
 
 
 def visibles_registros(usuario, qs: QuerySet[RegistroAuditoria]) -> QuerySet[RegistroAuditoria]:
-    if not usuario or not usuario.is_authenticated or not usuario.es_administrador:
+    if not usuario or not usuario.is_authenticated or not tiene_recurso(usuario, "admin.auditoria"):
         return qs.none()
     return qs
 
@@ -73,15 +76,26 @@ def filtrar_registros(qs: QuerySet[RegistroAuditoria], params) -> QuerySet[Regis
         if not str(id_entidad).isdigit():
             raise ValidationError({"id_entidad": "Debe ser un ID entero."})
         qs = qs.filter(id_entidad=int(id_entidad))
-    desde = params.get("desde")
+    desde = _inicio_del_dia(params.get("desde"), "desde")
     if desde:
-        qs = qs.filter(fecha_creacion__date__gte=desde)
-    hasta = params.get("hasta")
+        qs = qs.filter(fecha_creacion__gte=desde)
+    hasta = _inicio_del_dia(params.get("hasta"), "hasta")
     if hasta:
-        qs = qs.filter(fecha_creacion__date__lte=hasta)
+        # Rango [inicio, día siguiente): usa el índice de fecha (``__date`` lo anulaba).
+        qs = qs.filter(fecha_creacion__lt=hasta + timedelta(days=1))
     return qs
 
 
+def _inicio_del_dia(valor: str | None, campo: str):
+    if not valor:
+        return None
+    try:
+        dia = date.fromisoformat(valor)
+    except ValueError as exc:
+        raise ValidationError({campo: "Usa el formato AAAA-MM-DD."}) from exc
+    return timezone.make_aware(datetime.combine(dia, time.min))
+
+
 def exigir_admin(usuario) -> None:
-    if not (usuario and usuario.is_authenticated and usuario.es_administrador):
+    if not (usuario and usuario.is_authenticated and tiene_recurso(usuario, "admin.auditoria")):
         raise PermissionDenied("Solo el administrador consulta la auditoría.")

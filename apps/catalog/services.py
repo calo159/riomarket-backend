@@ -11,13 +11,16 @@ aisladamente desde tests y reutilizables por otras capas (admin, comandos):
 
 from decimal import Decimal
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
+from django.http import Http404
 
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
 from apps.common.image_processing import make_thumbnail, process_product_image
+from apps.common.motivo import validar_motivo
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
+from apps.rbac.acceso import tiene_recurso
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
 # de columnas: un valor fuera de lista no llega a ``order_by``).
@@ -65,7 +68,7 @@ def actualizar_puesto(*, puesto: Puesto, usuario, datos: dict) -> Puesto:
     for atributo, valor in datos.items():
         setattr(puesto, atributo, valor)
     puesto.full_clean()
-    puesto.save()
+    puesto.save(update_fields=list(datos) or None)
     return puesto
 
 
@@ -178,10 +181,29 @@ def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
     if "precio" in datos:
         _validar_precio(datos["precio"])
 
-    for atributo, valor in datos.items():
-        setattr(producto, atributo, valor)
-    producto.full_clean()
-    producto.save()
+    from django.db import transaction
+
+    with transaction.atomic():
+        # El estado se relee bajo bloqueo: una moderación hecha mientras el vendedor editaba
+        # no se revierte, y no se puede desbloquear con una copia vieja del producto.
+        producto.estado = (
+            Producto.objects.select_for_update().only("estado").get(pk=producto.pk).estado
+        )
+        if not usuario.es_administrador and (
+            datos.get("estado") == Producto.Estado.BLOQUEADO
+            or (
+                producto.estado == Producto.Estado.BLOQUEADO
+                and "estado" in datos
+                and datos["estado"] != Producto.Estado.BLOQUEADO
+            )
+        ):
+            raise PermissionDenied("Solo un administrador puede bloquear o desbloquear productos.")
+
+        for atributo, valor in datos.items():
+            setattr(producto, atributo, valor)
+        producto.full_clean()
+        # Solo se escriben los campos editados: no pisa stock ni estado de otros procesos.
+        producto.save(update_fields=list(datos) or None)
     return producto
 
 
@@ -195,6 +217,90 @@ def _validar_precio(precio) -> None:
         raise ValidationError({"precio": "El precio no es un número válido."}) from exc
     if precio < Decimal("0"):
         raise ValidationError({"precio": "El precio no puede ser negativo."})
+
+
+# ---------------------------------------------------------------------------
+# Moderación (solo administradores)
+# ---------------------------------------------------------------------------
+def _exigir_moderador(actor, recurso: str) -> None:
+    """Modera quien tenga el recurso RBAC correspondiente (no solo el rol administrador)."""
+    if not (actor and actor.is_authenticated and actor.is_active):
+        raise PermissionDenied("Tu cuenta no puede moderar el catálogo.")
+    if not tiene_recurso(actor, recurso):
+        raise PermissionDenied("Tu cuenta no tiene acceso para moderar esto.")
+
+
+def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
+    from apps.notifications.models import Notificacion
+    from apps.notifications.services import crear_notificacion
+
+    try:
+        crear_notificacion(
+            usuario=usuario,
+            tipo=Notificacion.Tipo.GENERAL,
+            titulo=titulo,
+            mensaje=mensaje,
+        )
+    except Exception:  # pragma: no cover - la notificación no rompe la moderación
+        import logging
+
+        logging.getLogger(__name__).exception("No se pudo notificar al vendedor %s", usuario.pk)
+
+
+def _auditar_moderacion(
+    actor, entidad: str, id_entidad: int, anterior: str, nuevo: str, motivo: str = ""
+):
+    from apps.audit.services import registrar
+
+    registrar(
+        usuario=actor,
+        accion="actualizar",
+        entidad=entidad,
+        id_entidad=id_entidad,
+        detalle={"campo": "estado", "de": anterior, "a": nuevo, "motivo": motivo},
+    )
+
+
+def moderar_puesto(*, puesto: Puesto, actor, estado: str, motivo: str = "") -> Puesto:
+    """Suspende o reactiva un puesto (recurso admin.puestos)."""
+    _exigir_moderador(actor, "admin.puestos")
+    if estado not in Puesto.Estado.values:
+        raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
+    if puesto.estado == estado:
+        raise ValidationError({"estado": "El puesto ya tiene ese estado."})
+    if estado != Puesto.Estado.ACTIVO:
+        motivo = validar_motivo(motivo)
+    motivo = (motivo or "").strip()
+    anterior = puesto.estado
+    puesto.estado = estado
+    puesto.save(update_fields=["estado"])
+    mensaje = f"Tu puesto {puesto.nombre} pasó de {anterior} a {estado}."
+    if motivo:
+        mensaje += f" Motivo: {motivo}"
+    _notificar_propietario(puesto.id_vendedor, "Cambio en tu puesto", mensaje)
+    _auditar_moderacion(actor, "puesto", puesto.pk, anterior, estado, motivo)
+    return puesto
+
+
+def moderar_producto(*, producto: Producto, actor, estado: str, motivo: str = "") -> Producto:
+    """Bloquea o reactiva un producto (recurso admin.productos)."""
+    _exigir_moderador(actor, "admin.productos")
+    if estado not in Producto.Estado.values:
+        raise ValidationError({"estado": f"Estado inválido: {estado!r}."})
+    if producto.estado == estado:
+        raise ValidationError({"estado": "El producto ya tiene ese estado."})
+    if estado != Producto.Estado.ACTIVO:
+        motivo = validar_motivo(motivo)
+    motivo = (motivo or "").strip()
+    anterior = producto.estado
+    producto.estado = estado
+    producto.save(update_fields=["estado"])
+    mensaje = f"Tu producto {producto.nombre} pasó de {anterior} a {estado}."
+    if motivo:
+        mensaje += f" Motivo: {motivo}"
+    _notificar_propietario(producto.id_puesto.id_vendedor, "Cambio en tu producto", mensaje)
+    _auditar_moderacion(actor, "producto", producto.pk, anterior, estado, motivo)
+    return producto
 
 
 # ---------------------------------------------------------------------------
@@ -226,21 +332,36 @@ def agregar_imagen(*, producto, archivo, alt: str = "") -> ImagenProducto:
         return imagen
 
 
-def reordenar_imagenes(*, producto, orden_ids: list) -> list:
+def reordenar_imagenes(*, producto, orden_ids) -> list:
+    """Reordena según la lista de ids; rechaza listas mal formadas o más largas que las imágenes."""
     from django.db import transaction
 
+    if not isinstance(orden_ids, list) or not all(
+        isinstance(valor, int) and not isinstance(valor, bool) for valor in orden_ids
+    ):
+        raise ValidationError({"orden": "Debe ser una lista de ids de imagen (enteros)."})
+    validas = set(producto.imagenes.values_list("pk", flat=True))
+    if len(orden_ids) > len(validas):
+        raise ValidationError({"orden": "La lista tiene más ids que imágenes del producto."})
     with transaction.atomic():
         for idx, img_id in enumerate(orden_ids):
-            ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
+            if img_id in validas:
+                ImagenProducto.objects.filter(id_producto=producto, pk=img_id).update(orden=idx)
     return list(producto.imagenes.all())
 
 
-def marcar_imagen_principal(*, producto, imagen_id: int) -> ImagenProducto:
+def marcar_imagen_principal(*, producto, imagen_id) -> ImagenProducto:
     from django.db import transaction
 
+    try:
+        imagen_id = int(imagen_id)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError({"imagen": "El id de la imagen debe ser un entero."}) from exc
     with transaction.atomic():
+        imagen = ImagenProducto.objects.filter(id_producto=producto, pk=imagen_id).first()
+        if imagen is None:
+            raise Http404("La imagen no existe en este producto.")
         ImagenProducto.objects.filter(id_producto=producto).update(es_principal=False)
-        imagen = ImagenProducto.objects.get(id_producto=producto, pk=imagen_id)
         imagen.es_principal = True
         imagen.save(update_fields=["es_principal"])
     return imagen
@@ -283,7 +404,7 @@ def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
     Un público que pida ``?estado=suspendido`` obtiene vacío (nunca puestos
     suspendidos de terceros); el dueño sí ve los suyos en cualquier estado.
     """
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.puestos"):
         pass
     elif usuario.is_authenticated:
         queryset = queryset.filter(Q(estado=Puesto.Estado.ACTIVO) | Q(id_vendedor=usuario))
@@ -299,7 +420,7 @@ def visibles_puestos(usuario, queryset: QuerySet, params) -> QuerySet:
 
 def visibles_productos(usuario, queryset: QuerySet, params) -> QuerySet:
     """Igual que ``visibles_puestos`` pero con la cadena Producto→Puesto."""
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.productos"):
         pass
     elif usuario.is_authenticated:
         queryset = queryset.filter(
@@ -319,7 +440,7 @@ def visibles_productos(usuario, queryset: QuerySet, params) -> QuerySet:
 
 
 def visibles_imagenes(usuario, queryset: QuerySet) -> QuerySet:
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.productos"):
         return queryset
     if usuario.is_authenticated:
         return queryset.filter(
@@ -346,14 +467,14 @@ def filtrar_puestos(queryset: QuerySet, params) -> QuerySet:
         )
     categoria = parametro_entero(params, "categoria")
     if categoria:
-        queryset = queryset.filter(categorias_asignadas__id_categoria=categoria)
+        queryset = queryset.filter(categorias_asignadas__id_categoria=categoria).distinct()
     vendedor = parametro_entero(params, "vendedor")
     if vendedor:
         queryset = queryset.filter(id_vendedor=vendedor)
     domicilio = parametro_booleano(params, "domicilio")
     if domicilio is not None:
         queryset = queryset.filter(ofrece_domicilio=domicilio)
-    return queryset.distinct()
+    return queryset
 
 
 def filtrar_productos(queryset: QuerySet, params) -> QuerySet:

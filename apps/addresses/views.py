@@ -35,7 +35,7 @@ class DireccionViewSet(viewsets.ModelViewSet):
         return DireccionSerializer
 
     def get_queryset(self):
-        qs = Direccion.objects.select_related("id_usuario")
+        qs = Direccion.objects.all()
         qs = services.visibles_direcciones(self.request.user, qs)
         return aplicar_ordenamiento(
             qs, self.request.query_params.get("ordering"), services.ORDENAMIENTO_DIRECCION

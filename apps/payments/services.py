@@ -19,9 +19,10 @@ from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.common import pricing
-from apps.common.query import parametro_entero
+from apps.common.query import parametro_booleano, parametro_entero
 from apps.orders.models import Pedido
 from apps.payments.models import Pago
+from apps.rbac.acceso import tiene_recurso
 
 ORDENAMIENTO_PAGO = ("fecha_creacion", "-fecha_creacion", "id", "-id")
 
@@ -191,6 +192,10 @@ def simular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> 
     if not sandbox_habilitado():
         raise PermissionDenied("La simulación de pagos está deshabilitada.")
     _autorizar_gestion(pago, usuario)
+    if pago.metodo_pago != Pago.MetodoPago.SIMULADO:
+        raise ValidationError(
+            {"metodo_pago": "Solo se pueden simular los pagos con método «simulado»."}
+        )
     datos = datos or {}
     accion = (datos.get("accion") or "aprobar").strip().lower()
     if accion not in ("aprobar", "rechazar"):
@@ -210,7 +215,9 @@ def confirmar_efectivo(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
     """El vendedor del puesto (o admin) confirma que cobró en efectivo."""
     if not (usuario and usuario.is_active):
         raise PermissionDenied("Se requiere una cuenta activa.")
-    es_vendedor_puesto = pago.id_pedido.id_puesto.id_vendedor_id == usuario.pk
+    es_vendedor_puesto = (
+        pago.id_pedido.id_puesto.id_vendedor_id == usuario.pk and usuario.puede_publicar()
+    )
     if not (usuario.es_administrador or es_vendedor_puesto):
         raise PermissionDenied(
             "Solo el vendedor del puesto o un administrador pueden confirmar el cobro."
@@ -229,7 +236,7 @@ def confirmar_efectivo(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
 
 
 def marcar_reembolsado(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> Pago:
-    if not (usuario and usuario.is_active and usuario.es_administrador):
+    if not (usuario and usuario.is_active and tiene_recurso(usuario, "admin.pagos")):
         raise PermissionDenied("Solo el administrador puede marcar un reembolso.")
     datos = datos or {}
     return _aplicar_estado(
@@ -242,7 +249,7 @@ def marcar_reembolsado(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
 
 
 def anular_pago(*, pago: Pago, usuario: Usuario, datos: dict | None = None) -> Pago:
-    if not (usuario and usuario.is_active and usuario.es_administrador):
+    if not (usuario and usuario.is_active and tiene_recurso(usuario, "admin.pagos")):
         raise PermissionDenied("Solo el administrador puede anular un pago.")
     datos = datos or {}
     return _aplicar_estado(
@@ -302,6 +309,9 @@ def procesar_webhook(*, proveedor: str, cuerpo: bytes, payload: dict, firma: str
     if pago is None:
         raise ValidationError({"referencia": "No existe un pago con esa referencia."})
     destino = Pago.Estado.APROBADO if evento["estado"] == "aprobado" else Pago.Estado.RECHAZADO
+    if pago.estado == destino:
+        # Las pasarelas reintentan: repetir un evento ya aplicado responde 200 sin cambios.
+        return pago
     return _aplicar_estado(
         pago=pago,
         destino=destino,
@@ -327,6 +337,9 @@ def filtrar_pagos(qs: QuerySet[Pago], params: dict) -> QuerySet[Pago]:
     estado = params.get("estado")
     if estado and estado in Pago.Estado.values:
         qs = qs.filter(estado=estado)
+    por_confirmar = parametro_booleano(params, "por_confirmar")
+    if por_confirmar:
+        qs = qs.filter(estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO))
     metodo = params.get("metodo_pago")
     if metodo and metodo in Pago.MetodoPago.values:
         qs = qs.filter(metodo_pago=metodo)

@@ -4,11 +4,9 @@
    suficiente. Al crearlo el stock se descuenta de forma atómica (bloqueo de
    filas) y los precios se congelan en los ítems; al cancelar se repone.
 5. El estado solo avanza por transiciones válidas y quien puede ejecutarlas
-   depende del rol: el vendedor dueño confirma, prepara y marca "en camino"
-   (ya lo entregó al domiciliario o está listo para retirar); SOLO el
-   comprador confirma que lo recibió (``entregado``) o reporta que no le ha
-   llegado; el comprador también puede cancelar mientras el pedido no salga
-   del puesto, y el administrador puede todo (resuelve disputas).
+   depende del rol: el vendedor dueño confirma y avanza la preparación, el
+   comprador puede cancelar mientras el pedido no salga del puesto, y el
+   administrador puede todo.
 
 Las autorizaciones viven aquí (``PermissionDenied`` → 403 en la API) para
 que sean verificables aisladas desde tests, igual que las del catálogo.
@@ -19,15 +17,15 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
 from apps.catalog.models import Producto, Puesto
 from apps.common import pricing
-from apps.common.query import parametro_entero, validar_estado_parametro
-from apps.orders import permissions as rbac
+from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
+from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
-from apps.orders.permissions import Accion
+from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +42,6 @@ TRANSICIONES: dict[str, tuple[str, ...]] = {
     Pedido.Estado.CANCELADO: (),
 }
 
-# Qué acción RBAC (apps.orders.permissions) corresponde a cada estado destino.
-ACCION_POR_DESTINO: dict[str, str] = {
-    Pedido.Estado.CONFIRMADO: Accion.CONFIRMAR,
-    Pedido.Estado.EN_PREPARACION: Accion.EN_PREPARACION,
-    Pedido.Estado.EN_CAMINO: Accion.ENVIAR,
-    Pedido.Estado.ENTREGADO: Accion.ENTREGAR,
-    Pedido.Estado.CANCELADO: Accion.CANCELAR,
-}
-
-MOTIVO_NO_RECIBIDO_MAX = 200
-
 
 # ---------------------------------------------------------------------------
 # Regla 4: creación
@@ -66,14 +53,11 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     ``direccion_entrega``, ``referencia_entrega``, ``notas`` e ``items``
     (lista de ``{"id_producto": Producto, "cantidad": int}``).
     """
-    if not rbac.puede(usuario, Accion.CREAR):
-        raise ValidationError(
-            {
-                "no_autorizado": (
-                    "Solo los compradores activos pueden crear pedidos (regla de negocio 4)."
-                )
-            }
-        )
+    permissions.exigir(
+        usuario,
+        permissions.Accion.CREAR,
+        mensaje="Solo los compradores activos pueden crear pedidos.",
+    )
     lineas = _normalizar_items(datos.get("items"))
     puesto = datos.get("id_puesto")
     if puesto is None:
@@ -138,15 +122,19 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
         pedido.total = subtotal + pedido.tarifa_domicilio - descuento
         pedido.full_clean()
         pedido.save()
-        for producto, cantidad in items_a_crear:
-            ItemPedido.objects.create(
-                id_pedido=pedido,
-                id_producto=producto,
-                nombre_producto=producto.nombre,
-                unidad_medida=producto.unidad_medida,
-                precio_unitario=producto.precio,
-                cantidad=cantidad,
-            )
+        ItemPedido.objects.bulk_create(
+            [
+                ItemPedido(
+                    id_pedido=pedido,
+                    id_producto=producto,
+                    nombre_producto=producto.nombre,
+                    unidad_medida=producto.unidad_medida,
+                    precio_unitario=producto.precio,
+                    cantidad=cantidad,
+                )
+                for producto, cantidad in items_a_crear
+            ]
+        )
         if cupon is not None:
             from apps.promotions import services as promos_services
 
@@ -160,7 +148,7 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
 
 def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
     """El comprador edita dirección/referencia/notas mientras sea pendiente."""
-    rbac.exigir(usuario, Accion.EDITAR, pedido)
+    permissions.exigir(usuario, permissions.Accion.EDITAR, pedido)
     if pedido.estado != Pedido.Estado.PENDIENTE:
         raise ValidationError({"estado": "Solo se puede editar un pedido pendiente."})
     permitidos = ("direccion_entrega", "referencia_entrega", "notas")
@@ -233,11 +221,19 @@ def _iterar_lineas(lineas, productos: dict[int, Producto], puesto: Puesto):
 
 
 def _reponer_stock(pedido: Pedido) -> None:
-    """Regla 4: cancelar repone el stock exactamente una vez (por transición)."""
-    for item in pedido.items.all():
-        producto = item.id_producto
-        producto.stock += item.cantidad
-        producto.save(update_fields=["stock"])
+    """Regla 4: cancelar repone el stock exactamente una vez (por transición).
+
+    Se suma en la base con ``F()``: una copia vieja del producto no pisa una venta concurrente.
+    """
+    for producto_id, cantidad in pedido.items.values_list("id_producto_id", "cantidad"):
+        Producto.objects.filter(pk=producto_id).update(stock=F("stock") + cantidad)
+
+
+def _liberar_cupon(pedido: Pedido) -> None:
+    """Un pedido cancelado no consume usos del cupón (límites totales y por usuario)."""
+    from apps.promotions.models import UsoCupon
+
+    UsoCupon.objects.filter(id_pedido=pedido).delete()
 
 
 # ---------------------------------------------------------------------------
@@ -256,28 +252,32 @@ def marcar_enviado(*, pedido: Pedido, usuario) -> Pedido:
 
 
 def marcar_entregado(*, pedido: Pedido, usuario) -> Pedido:
-    """Solo el comprador (o el administrador) confirma que recibió el pedido."""
     return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.ENTREGADO)
 
 
-def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido:
-    """El comprador avisa que el pedido "en camino" todavía no le llega.
+def cancelar_pedido(*, pedido: Pedido, usuario) -> Pedido:
+    return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.CANCELADO)
 
-    No cambia el estado: el pedido sigue ``en_camino`` (si llega tarde, el
-    comprador aún puede confirmarlo). Queda registrado y se avisa al vendedor.
+
+def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido:
+    """El comprador avisa que el pedido no le llegó (o no lo pudo retirar).
+
+    No cambia el estado: si el pedido llega después, el comprador todavía puede
+    confirmar la entrega. Solo se permite una vez y mientras esté en camino.
     """
-    rbac.exigir(usuario, Accion.NO_RECIBIDO, pedido)
+    permissions.exigir(
+        usuario,
+        permissions.Accion.NO_RECIBIDO,
+        pedido,
+        mensaje="Solo el comprador del pedido puede reportar que no lo recibió.",
+    )
     if pedido.estado != Pedido.Estado.EN_CAMINO:
-        raise ValidationError(
-            {"estado": "Solo puedes reportar que no te llegó un pedido que va en camino."}
-        )
+        raise ValidationError({"estado": "Solo se puede reportar un pedido que esté en camino."})
     if pedido.no_recibido_en is not None:
-        raise ValidationError({"estado": "Ya reportaste que este pedido no te ha llegado."})
+        raise ValidationError({"no_recibido": "Ya reportaste que este pedido no te llegó."})
     motivo = (motivo or "").strip()
-    if len(motivo) > MOTIVO_NO_RECIBIDO_MAX:
-        raise ValidationError(
-            {"motivo": f"El motivo no puede superar {MOTIVO_NO_RECIBIDO_MAX} caracteres."}
-        )
+    if len(motivo) > 200:
+        raise ValidationError({"motivo": "El motivo no puede superar 200 caracteres."})
     pedido.no_recibido_en = timezone.now()
     pedido.motivo_no_recibido = motivo
     pedido.save(update_fields=["no_recibido_en", "motivo_no_recibido", "fecha_actualizacion"])
@@ -286,11 +286,7 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
     return pedido
 
 
-def cancelar_pedido(*, pedido: Pedido, usuario) -> Pedido:
-    return _transicionar(pedido=pedido, usuario=usuario, destino=Pedido.Estado.CANCELADO)
-
-
-def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
+def _validar_transicion(pedido: Pedido, destino: str) -> None:
     permitidas = TRANSICIONES[pedido.estado]
     if destino not in permitidas:
         raise ValidationError(
@@ -301,14 +297,26 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
                 )
             }
         )
-    rbac.exigir(usuario, ACCION_POR_DESTINO[destino], pedido)
+
+
+def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
+    _validar_transicion(pedido, destino)
+    permissions.exigir(usuario, permissions.ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
         _exigir_pago_aprobado(pedido)
     estado_anterior = pedido.estado
-    # Stock + estado en una sola transacción: o pasa todo o no pasa nada.
+    # Stock + estado en una sola transacción: o pasa todo o no pasa nada. El pedido se
+    # bloquea y se relee: dos peticiones simultáneas (o una instancia vieja) no repiten
+    # la reposición de stock ni pisan un estado más reciente.
     with transaction.atomic():
+        actual = Pedido.objects.select_for_update().only("estado").get(pk=pedido.pk)
+        if actual.estado != pedido.estado:
+            pedido.estado = actual.estado
+            _validar_transicion(pedido, destino)
+            estado_anterior = pedido.estado
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
+            _liberar_cupon(pedido)
             _reembolsar_o_anular_pago(pedido)
         pedido.estado = destino
         pedido.save(update_fields=["estado", "fecha_actualizacion"])
@@ -408,26 +416,23 @@ def _notificar_no_recibido(pedido: Pedido) -> None:
 
 
 def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
-    """Acciones que ``usuario`` puede ejecutar AHORA sobre ``pedido``.
-
-    Cruza el RBAC (rol + relación con el pedido) con el estado actual, de modo
-    que el frontend muestre solo botones que la API aceptaría. No sustituye la
-    validación de cada acción: la API sigue siendo la autoridad.
-    """
-    disponibles = []
-    for destino in TRANSICIONES[pedido.estado]:
-        accion = ACCION_POR_DESTINO[destino]
-        if rbac.puede(usuario, accion, pedido):
-            disponibles.append(str(accion))
-    if pedido.estado == Pedido.Estado.PENDIENTE and rbac.puede(usuario, Accion.EDITAR, pedido):
-        disponibles.append(str(Accion.EDITAR))
+    """Acciones que ``usuario`` puede ejecutar ahora (RBAC segun el estado)."""
+    acciones: list[str] = []
+    if pedido.estado == Pedido.Estado.PENDIENTE and permissions.puede(
+        usuario, permissions.Accion.EDITAR, pedido
+    ):
+        acciones.append(permissions.Accion.EDITAR.value)
+    for destino in TRANSICIONES.get(pedido.estado, ()):
+        accion = permissions.ACCION_POR_DESTINO[destino]
+        if permissions.puede(usuario, accion, pedido):
+            acciones.append(accion)
     if (
         pedido.estado == Pedido.Estado.EN_CAMINO
         and pedido.no_recibido_en is None
-        and rbac.puede(usuario, Accion.NO_RECIBIDO, pedido)
+        and permissions.puede(usuario, permissions.Accion.NO_RECIBIDO, pedido)
     ):
-        disponibles.append(str(Accion.NO_RECIBIDO))
-    return disponibles
+        acciones.append(permissions.Accion.NO_RECIBIDO.value)
+    return acciones
 
 
 # ---------------------------------------------------------------------------
@@ -435,10 +440,14 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
 # ---------------------------------------------------------------------------
 def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     """Cada cual ve lo suyo: comprador sus pedidos, vendedor los de sus puestos."""
-    if usuario.is_authenticated and usuario.es_administrador:
+    if usuario.is_authenticated and tiene_recurso(usuario, "admin.pedidos"):
         pass
     elif usuario.is_authenticated:
-        queryset = queryset.filter(Q(id_comprador=usuario) | Q(id_puesto__id_vendedor=usuario))
+        # Subconsulta en vez de OR sobre un join: permite usar los índices de las FK.
+        queryset = queryset.filter(
+            Q(id_comprador=usuario)
+            | Q(id_puesto__in=Puesto.objects.filter(id_vendedor=usuario).values("pk"))
+        )
     else:
         queryset = queryset.none()
 
@@ -462,4 +471,8 @@ def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     puesto = parametro_entero(params, "puesto")
     if puesto:
         queryset = queryset.filter(id_puesto=puesto)
+
+    con_no_recibido = parametro_booleano(params, "con_no_recibido")
+    if con_no_recibido is not None:
+        queryset = queryset.filter(no_recibido_en__isnull=not con_no_recibido)
     return queryset

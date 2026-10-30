@@ -35,8 +35,10 @@ _PLANTILLAS = {
     "en_camino": (
         Notificacion.Tipo.PEDIDO_EN_CAMINO,
         "Pedido en camino",
-        "Tu pedido #{pedido} va en camino o está listo para retirar. "
-        "Cuando lo recibas, confírmalo en la app.",
+        (
+            "Tu pedido #{pedido} va en camino o está listo para retirar. "
+            "Cuando lo recibas, confírmalo en la app."
+        ),
     ),
     "entregado": (
         Notificacion.Tipo.PEDIDO_ENTREGADO,
@@ -88,22 +90,6 @@ def notificar_pedido_creado(*, pedido):
     ]
 
 
-def notificar_no_recibido(*, pedido):
-    """Avisa al vendedor que el comprador reportó que el pedido no le ha llegado."""
-    return [
-        crear_notificacion(
-            usuario=pedido.id_puesto.id_vendedor,
-            tipo=Notificacion.Tipo.GENERAL,
-            titulo="El comprador no ha recibido el pedido",
-            mensaje=(
-                f"El comprador del pedido #{pedido.pk} reporta que aún no le llega."
-                + (f" Detalle: {pedido.motivo_no_recibido}" if pedido.motivo_no_recibido else "")
-            ),
-            id_pedido=pedido,
-        )
-    ]
-
-
 def notificar_cambio_estado_pedido(*, pedido, estado_anterior):
     """Notifica a las partes cuando el pedido cambia de estado.
 
@@ -126,6 +112,22 @@ def notificar_cambio_estado_pedido(*, pedido, estado_anterior):
     ]
     _enviar_emails(notificaciones)
     return notificaciones
+
+
+def notificar_no_recibido(*, pedido):
+    """Avisa al vendedor que el comprador reportó que no recibió el pedido."""
+    cuerpo = f"El comprador reportó que no recibió el pedido #{pedido.pk}."
+    if pedido.motivo_no_recibido:
+        cuerpo += f" Motivo: {pedido.motivo_no_recibido}"
+    return [
+        crear_notificacion(
+            usuario=pedido.id_puesto.id_vendedor,
+            tipo=Notificacion.Tipo.GENERAL,
+            titulo="El comprador no recibió su pedido",
+            mensaje=cuerpo,
+            id_pedido=pedido,
+        )
+    ]
 
 
 def _enviar_emails(notificaciones) -> None:

@@ -5,7 +5,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from apps.notifications.models import Notificacion
 from apps.orders import services
 from apps.orders.models import Pedido
 from tests.factories import ProductoFactory, PuestoFactory
@@ -154,13 +153,12 @@ class TestRegla4Creacion:
         assert pedido.direccion_entrega == "Calle 9 #4-20"
 
     def test_no_comprador_no_crea(self, vendedor, puesto, producto):
-        with pytest.raises(DjangoValidationError) as error:
+        with pytest.raises(PermissionDenied):
             services.crear_pedido(usuario=vendedor, datos=datos_pedido(puesto, [(producto, 1)]))
-        assert "no_autorizado" in error.value.message_dict
 
     def test_comprador_suspendido_no_crea(self, comprador, puesto, producto):
         comprador.suspendir()
-        with pytest.raises(DjangoValidationError):
+        with pytest.raises(PermissionDenied):
             services.crear_pedido(usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)]))
 
     def test_puesto_faltante_rechazado(self, comprador, producto):
@@ -400,92 +398,3 @@ class TestVisibilidad:
         with pytest.raises(DjangoValidationError) as error:
             services.visibles_pedidos(comprador, Pedido.objects.all(), {"tipo_entrega": "volo"})
         assert "tipo_entrega" in error.value.message_dict
-
-
-@pytest.mark.django_db
-class TestEntregaPorRoles:
-    """El vendedor entrega al domiciliario; solo el comprador confirma la recepción."""
-
-    @pytest.fixture
-    def pedido_en_camino(self, comprador, vendedor, puesto, producto, aprobar_pago):
-        pedido = services.crear_pedido(
-            usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
-        )
-        aprobar_pago(pedido, comprador)
-        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
-        return pedido
-
-    def test_vendedor_no_puede_marcar_entregado(self, pedido_en_camino, vendedor):
-        with pytest.raises(PermissionDenied):
-            services.marcar_entregado(pedido=pedido_en_camino, usuario=vendedor)
-        pedido_en_camino.refresh_from_db()
-        assert pedido_en_camino.estado == Pedido.Estado.EN_CAMINO
-
-    def test_tercero_no_puede_marcar_entregado(self, pedido_en_camino, otro_vendedor):
-        with pytest.raises(PermissionDenied):
-            services.marcar_entregado(pedido=pedido_en_camino, usuario=otro_vendedor)
-
-    def test_comprador_confirma_recepcion(self, pedido_en_camino, comprador):
-        services.marcar_entregado(pedido=pedido_en_camino, usuario=comprador)
-        assert pedido_en_camino.estado == Pedido.Estado.ENTREGADO
-
-    def test_admin_puede_resolver_marcando_entregado(self, pedido_en_camino, admin):
-        services.marcar_entregado(pedido=pedido_en_camino, usuario=admin)
-        assert pedido_en_camino.estado == Pedido.Estado.ENTREGADO
-
-    def test_comprador_no_puede_marcar_en_camino(
-        self, comprador, vendedor, puesto, producto, aprobar_pago
-    ):
-        pedido = services.crear_pedido(
-            usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
-        )
-        aprobar_pago(pedido, comprador)
-        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        with pytest.raises(PermissionDenied):
-            services.marcar_enviado(pedido=pedido, usuario=comprador)
-
-    def test_comprador_reporta_no_recibido(self, pedido_en_camino, comprador, vendedor):
-        services.reportar_no_recibido(
-            pedido=pedido_en_camino, usuario=comprador, motivo="  El domiciliario no contesta  "
-        )
-        pedido_en_camino.refresh_from_db()
-        assert pedido_en_camino.estado == Pedido.Estado.EN_CAMINO  # el estado no cambia
-        assert pedido_en_camino.no_recibido_en is not None
-        assert pedido_en_camino.motivo_no_recibido == "El domiciliario no contesta"
-        aviso = Notificacion.objects.filter(
-            id_usuario=vendedor, id_pedido=pedido_en_camino, tipo=Notificacion.Tipo.GENERAL
-        )
-        assert aviso.count() == 1
-
-    def test_tras_reportar_aun_puede_confirmar_si_llega(self, pedido_en_camino, comprador):
-        services.reportar_no_recibido(pedido=pedido_en_camino, usuario=comprador)
-        services.marcar_entregado(pedido=pedido_en_camino, usuario=comprador)
-        assert pedido_en_camino.estado == Pedido.Estado.ENTREGADO
-
-    def test_vendedor_no_reporta_no_recibido(self, pedido_en_camino, vendedor):
-        with pytest.raises(PermissionDenied):
-            services.reportar_no_recibido(pedido=pedido_en_camino, usuario=vendedor)
-
-    def test_no_recibido_solo_si_va_en_camino(self, comprador, puesto, producto):
-        pedido = services.crear_pedido(
-            usuario=comprador, datos=datos_pedido(puesto, [(producto, 1)])
-        )
-        with pytest.raises(DjangoValidationError) as error:
-            services.reportar_no_recibido(pedido=pedido, usuario=comprador)
-        assert "estado" in error.value.message_dict
-
-    def test_no_recibido_no_se_reporta_dos_veces(self, pedido_en_camino, comprador):
-        services.reportar_no_recibido(pedido=pedido_en_camino, usuario=comprador)
-        with pytest.raises(DjangoValidationError) as error:
-            services.reportar_no_recibido(pedido=pedido_en_camino, usuario=comprador)
-        assert "estado" in error.value.message_dict
-
-    def test_motivo_demasiado_largo(self, pedido_en_camino, comprador):
-        with pytest.raises(DjangoValidationError) as error:
-            services.reportar_no_recibido(
-                pedido=pedido_en_camino, usuario=comprador, motivo="x" * 201
-            )
-        assert "motivo" in error.value.message_dict

@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { useSession } from '../auth/SessionProvider';
 import type { Carrito, ItemCarrito, Producto, Puesto } from '../lib/types';
 import { numero } from '../lib/format';
 import { urlAbsoluta as absoluta } from '../lib/utils';
@@ -39,7 +41,7 @@ interface ContextoCarrito {
   totalItems: number;
   subtotal: number;
   agregar: (producto: Producto, puesto: Puesto) => 'agregado' | 'otro_puesto';
-  reemplazarCon: (producto: Producto, puesto: Puesto) => void;
+  reemplazarCon: (producto: Producto, puesto: Puesto, cantidad?: number) => void;
   cambiarCantidad: (productoId: number, cantidad: number) => void;
   quitar: (productoId: number) => void;
   vaciar: () => void;
@@ -49,6 +51,16 @@ const Contexto = createContext<ContextoCarrito | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [carrito, setCarrito] = useState<Carrito | null>(cargarCarrito);
+  const { usuario } = useSession();
+  const usuarioAnterior = useRef<number | null>(usuario?.id ?? null);
+
+  // En un equipo compartido el carrito de una persona no debe pasar a la siguiente: se vacía
+  // cuando la sesión termina o cambia de cuenta. Un visitante que inicia sesión lo conserva.
+  useEffect(() => {
+    const actual = usuario?.id ?? null;
+    if (usuarioAnterior.current !== null && usuarioAnterior.current !== actual) setCarrito(null);
+    usuarioAnterior.current = actual;
+  }, [usuario?.id]);
 
   useEffect(() => {
     guardarCarrito(carrito);
@@ -105,12 +117,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const reemplazarCon = useCallback(
-    (producto: Producto, puesto: Puesto) => {
+    (producto: Producto, puesto: Puesto, cantidad = 1) => {
+      const tope = producto.stock ?? cantidad;
       setCarrito({
         puestoId: puesto.id,
         puestoNombre: puesto.nombre,
         ofreceDomicilio: Boolean(puesto.ofrece_domicilio),
-        items: [crearItem(producto, 1)],
+        items: [crearItem(producto, Math.max(1, Math.min(cantidad, tope)))],
       });
     },
     [crearItem],

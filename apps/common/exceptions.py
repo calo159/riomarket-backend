@@ -10,6 +10,7 @@
 """
 
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from django.db.models import ProtectedError
 from rest_framework import exceptions
 from rest_framework.views import exception_handler
@@ -24,6 +25,16 @@ def api_exception_handler(exc, context):
                 "no_eliminable": (
                     "No se puede eliminar: registros relacionados lo "
                     "referencian (historial de pedidos). Desactívalo en vez de eliminarlo."
+                )
+            }
+        )
+    elif isinstance(exc, IntegrityError):
+        # Carreras (doble clic, peticiones simultáneas) que chocan con una restricción única.
+        exc = exceptions.ValidationError(
+            detail={
+                "conflicto": (
+                    "La operación choca con un registro existente o ya se está procesando. "
+                    "Actualiza la pantalla e inténtalo de nuevo."
                 )
             }
         )

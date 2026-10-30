@@ -35,6 +35,8 @@ from apps.payments import services as pagos_services
 from apps.payments.models import Pago
 from apps.promotions import services as promos_services
 from apps.promotions.models import Cupon, UsoCupon
+from apps.rbac.defaults import sembrar
+from apps.rbac.models import Recurso, Rol, RolRecurso
 from apps.reviews import services as reviews_services
 from apps.reviews.models import Resena
 
@@ -415,6 +417,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.password = options["password"]
+        sembrar(Rol, Recurso, RolRecurso)
 
         if options["if_empty"] and self._total_registros() >= TOTAL_MINIMO:
             self.stdout.write(
@@ -650,8 +653,13 @@ class Command(BaseCommand):
                     if metodo == Pago.MetodoPago.EFECTIVO:
                         pagos_services.confirmar_efectivo(pago=pago, usuario=vendedor, datos={})
                     else:
-                        pagos_services.simular_pago(
-                            pago=pago, usuario=comprador, datos={"accion": "aprobar"}
+                        # Datos de demo: aprueba como lo haría la pasarela (simular_pago solo
+                        # admite el método «simulado»).
+                        pagos_services._aplicar_estado(
+                            pago=pago,
+                            destino=Pago.Estado.APROBADO,
+                            referencia=f"seed-{pago.pk}",
+                            origen="seed",
                         )
 
             self._avanzar_estado(
@@ -669,6 +677,7 @@ class Command(BaseCommand):
         if estado in ("en_camino", "entregado"):
             orders_services.marcar_enviado(pedido=pedido, usuario=vendedor)
         if estado == "entregado":
+            # Solo el comprador confirma la recepción (Fase 1 de RBAC).
             orders_services.marcar_entregado(pedido=pedido, usuario=comprador)
 
     # ------------------------------------------------------------------

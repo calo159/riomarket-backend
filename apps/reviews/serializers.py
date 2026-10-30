@@ -43,6 +43,7 @@ class ResenaEscrituraSerializer(serializers.ModelSerializer):
     id_pedido = serializers.PrimaryKeyRelatedField(
         queryset=Pedido.objects.all(), required=False, allow_null=True
     )
+    calificacion = serializers.IntegerField(min_value=1, max_value=5)
 
     class Meta:
         model = Resena

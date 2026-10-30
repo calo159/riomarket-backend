@@ -8,6 +8,11 @@ from .base import *
 
 DEBUG = False
 
+if SECRET_KEY.startswith("change-me") or len(SECRET_KEY) < 32:
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured("SECRET_KEY de producción insegura: genera una de 50+ caracteres.")
+
 # La demo cobra domicilio y comisión como el resto del proyecto. Se pueden
 # sobreescribir por entorno sin tocar código (0.00 para desactivarlos).
 DOMICILIO_TARIFA_BASE = Decimal(env("DOMICILIO_TARIFA_BASE", default="3000.00"))

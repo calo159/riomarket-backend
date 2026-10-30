@@ -1,15 +1,13 @@
-"""RBAC de pedidos: qué rol puede ejecutar qué acción y sobre qué pedidos.
+"""RBAC formal de los pedidos (Fase 2).
 
-Una sola tabla (``PERMISOS``) responde dos preguntas:
+La tabla ``PERMISOS`` declara, por rol, qué acciones puede ejecutar y con qué
+relación respecto al pedido. Toda autorización de pedidos pasa por aquí para
+que sea verificable aisladamente y no dependa del frontend.
 
-1. ¿Tiene el ROL permiso para la acción?  (comprador, vendedor, administrador)
-2. ¿Con qué RELACIÓN con el pedido? Tener el rol no basta: el comprador solo
-   actúa sobre SUS pedidos y el vendedor solo sobre los de SU puesto.
-
-Cambiar quién puede hacer qué es editar esta tabla; ``services`` y la API
-(``acciones_permitidas``) leen de aquí, así backend y frontend no se
-contradicen. El estado del pedido (qué transición es válida ahora) se valida
-aparte, en la máquina de estados de ``services``.
+Reglas:
+- Anónimo o cuenta suspendida: nunca puede.
+- El comprador actúa sobre SU pedido; el vendedor sobre los de SU puesto.
+- El administrador puede todo menos crear pedidos (eso es del comprador).
 """
 
 from django.core.exceptions import PermissionDenied
@@ -19,82 +17,90 @@ from apps.accounts.models import Usuario
 
 
 class Accion(models.TextChoices):
-    """Acciones sobre un pedido. El valor coincide con la ruta del endpoint."""
-
-    CREAR = "crear", "Crear pedido"
-    EDITAR = "editar", "Editar dirección/notas"
-    CONFIRMAR = "confirmar", "Confirmar pedido"
+    CREAR = "crear", "Crear"
+    EDITAR = "editar", "Editar"
+    CONFIRMAR = "confirmar", "Confirmar"
     EN_PREPARACION = "en-preparacion", "Pasar a preparación"
-    ENVIAR = "enviar", "Marcar en camino / listo para retirar"
-    ENTREGAR = "entregar", "Confirmar que se recibió"
-    NO_RECIBIDO = "no-recibido", "Reportar que no llegó"
-    CANCELAR = "cancelar", "Cancelar pedido"
+    ENVIAR = "enviar", "Enviar"
+    ENTREGAR = "entregar", "Confirmar entrega"
+    NO_RECIBIDO = "no-recibido", "Reportar no recibido"
+    CANCELAR = "cancelar", "Cancelar"
 
 
 class Relacion(models.TextChoices):
-    """Vínculo exigido entre el usuario y el pedido concreto."""
-
     COMPRADOR_DEL_PEDIDO = "comprador_del_pedido", "Comprador del pedido"
-    VENDEDOR_DEL_PUESTO = "vendedor_del_puesto", "Vendedor dueño del puesto"
+    VENDEDOR_DEL_PUESTO = "vendedor_del_puesto", "Vendedor del puesto"
 
 
-_C = Relacion.COMPRADOR_DEL_PEDIDO
-_V = Relacion.VENDEDOR_DEL_PUESTO
-
-# rol -> {acción: relación exigida (None = sin relación, aplica a cualquier pedido)}
-PERMISOS: dict[str, dict[str, Relacion | None]] = {
+PERMISOS: dict[str, dict[str, str | None]] = {
     Usuario.Rol.COMPRADOR: {
-        Accion.CREAR: None,  # crea pedidos propios: no hay pedido previo
-        Accion.EDITAR: _C,
-        Accion.ENTREGAR: _C,  # solo quien recibe confirma la recepción
-        Accion.NO_RECIBIDO: _C,
-        Accion.CANCELAR: _C,
+        Accion.CREAR: None,
+        Accion.EDITAR: Relacion.COMPRADOR_DEL_PEDIDO,
+        Accion.ENTREGAR: Relacion.COMPRADOR_DEL_PEDIDO,
+        Accion.NO_RECIBIDO: Relacion.COMPRADOR_DEL_PEDIDO,
+        Accion.CANCELAR: Relacion.COMPRADOR_DEL_PEDIDO,
     },
     Usuario.Rol.VENDEDOR: {
-        Accion.CONFIRMAR: _V,
-        Accion.EN_PREPARACION: _V,
-        Accion.ENVIAR: _V,  # "ya se lo entregué al domiciliario / está listo"
-        Accion.CANCELAR: _V,
+        Accion.CONFIRMAR: Relacion.VENDEDOR_DEL_PUESTO,
+        Accion.EN_PREPARACION: Relacion.VENDEDOR_DEL_PUESTO,
+        Accion.ENVIAR: Relacion.VENDEDOR_DEL_PUESTO,
+        Accion.CANCELAR: Relacion.VENDEDOR_DEL_PUESTO,
     },
-    # El administrador modera y resuelve disputas, pero no crea pedidos.
-    Usuario.Rol.ADMINISTRADOR: {accion: None for accion in Accion if accion != Accion.CREAR},
+    Usuario.Rol.ADMINISTRADOR: {
+        Accion.EDITAR: None,
+        Accion.CONFIRMAR: None,
+        Accion.EN_PREPARACION: None,
+        Accion.ENVIAR: None,
+        Accion.ENTREGAR: None,
+        Accion.NO_RECIBIDO: None,
+        Accion.CANCELAR: None,
+    },
 }
 
-_MENSAJES_DENEGADO: dict[str, str] = {
-    Accion.EDITAR: "Solo el comprador puede editar su pedido.",
-    Accion.CONFIRMAR: "Solo el vendedor del puesto puede realizar esta acción.",
-    Accion.EN_PREPARACION: "Solo el vendedor del puesto puede realizar esta acción.",
-    Accion.ENVIAR: "Solo el vendedor del puesto puede realizar esta acción.",
-    Accion.ENTREGAR: "Solo el comprador del pedido puede confirmar que lo recibió.",
-    Accion.NO_RECIBIDO: "Solo el comprador del pedido puede realizar esta acción.",
-    Accion.CANCELAR: "Solo las partes del pedido pueden realizar esta acción.",
+ACCION_POR_DESTINO: dict[str, str] = {
+    "confirmado": Accion.CONFIRMAR,
+    "en_preparacion": Accion.EN_PREPARACION,
+    "en_camino": Accion.ENVIAR,
+    "entregado": Accion.ENTREGAR,
+    "cancelado": Accion.CANCELAR,
 }
 
 
-def _cumple_relacion(usuario, relacion: Relacion, pedido) -> bool:
+def _relacion_cumplida(usuario, pedido, relacion: str) -> bool:
     if pedido is None:
         return False
     if relacion == Relacion.COMPRADOR_DEL_PEDIDO:
         return pedido.id_comprador_id == usuario.pk
-    return pedido.id_puesto.id_vendedor_id == usuario.pk
+    if relacion == Relacion.VENDEDOR_DEL_PUESTO:
+        return pedido.id_puesto_id is not None and pedido.id_puesto.id_vendedor_id == usuario.pk
+    return False
 
 
 def puede(usuario, accion: str, pedido=None) -> bool:
-    """¿Puede ``usuario`` ejecutar ``accion`` (sobre ``pedido``, si aplica)?"""
-    if not (usuario and getattr(usuario, "is_authenticated", False) and usuario.is_active):
+    """``True`` solo si el rol, el estado de la cuenta y la relación lo permiten."""
+    if not usuario or not getattr(usuario, "is_authenticated", False):
         return False
-    permisos_del_rol = PERMISOS.get(usuario.rol, {})
-    if accion not in permisos_del_rol:
+    if not getattr(usuario, "is_active", False):
         return False
-    relacion = permisos_del_rol[accion]
-    return relacion is None or _cumple_relacion(usuario, relacion, pedido)
+    reglas = PERMISOS.get(usuario.rol)
+    if not reglas or accion not in reglas:
+        return False
+    relacion = reglas[accion]
+    if relacion is None:
+        return True
+    if (
+        usuario.rol == Usuario.Rol.VENDEDOR
+        and accion != Accion.CANCELAR
+        and not usuario.puede_publicar()
+    ):
+        # Un vendedor sin verificación aprobada no opera pedidos (sí puede cancelar).
+        return False
+    return _relacion_cumplida(usuario, pedido, relacion)
 
 
-def exigir(usuario, accion: str, pedido=None) -> None:
-    """Lanza ``PermissionDenied`` (→ 403) si el usuario no puede la acción."""
-    if not (usuario and getattr(usuario, "is_authenticated", False) and usuario.is_active):
-        raise PermissionDenied("Se requiere una cuenta activa.")
-    if not puede(usuario, accion, pedido):
-        raise PermissionDenied(
-            _MENSAJES_DENEGADO.get(accion, "No tienes permiso para realizar esta acción.")
-        )
+def exigir(usuario, accion: str, pedido=None, mensaje: str | None = None) -> None:
+    """Lanza ``PermissionDenied`` (403) con un mensaje legible si no puede."""
+    if puede(usuario, accion, pedido):
+        return
+    etiqueta = Accion(accion).label.lower() if accion in Accion.values else accion
+    raise PermissionDenied(mensaje or f"No tienes permiso para {etiqueta} este pedido.")

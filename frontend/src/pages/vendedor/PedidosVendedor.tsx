@@ -12,6 +12,7 @@ import { ConfirmarModal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
+import { invalidarMenu } from '../../navigation/useMenu';
 
 const TAMANO = 12;
 
@@ -19,7 +20,6 @@ const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono:
   pendiente: { accion: 'confirmar', etiqueta: 'Confirmar pedido', icono: CheckCircle2 },
   confirmado: { accion: 'en-preparacion', etiqueta: 'Pasar a preparación', icono: Package },
   en_preparacion: { accion: 'enviar', etiqueta: 'Entregado al domiciliario / listo', icono: Truck },
-  // En camino: ya no hay acción del vendedor; solo el comprador confirma la recepción.
   en_camino: null,
   entregado: null,
   cancelado: null,
@@ -48,7 +48,7 @@ export function PedidosVendedor() {
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });
-      void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+      void invalidarMenu(queryClient);
       setCancelar(null);
       toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');
     },
@@ -59,7 +59,7 @@ export function PedidosVendedor() {
     <div>
       <EncabezadoPagina
         titulo="Pedidos"
-        descripcion="Confirma, avanza y gestiona los pedidos de tus puestos."
+        descripcion="Confirma, prepara y entrega los pedidos. El comprador confirma la recepción final."
         acciones={
           <select
             className="input w-auto"
@@ -94,11 +94,10 @@ export function PedidosVendedor() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const permitidas = pedido.acciones_permitidas ?? [];
-              const candidata = SIGUIENTE[pedido.estado];
-              const siguiente = candidata && permitidas.includes(candidata.accion) ? candidata : null;
-              const puedeCancelar = permitidas.includes('cancelar');
-              const Icono = siguiente?.icono;
+              const siguiente = SIGUIENTE[pedido.estado];
+              const siguientePermitido = siguiente && pedido.acciones_permitidas?.includes(siguiente.accion) ? siguiente : null;
+              const puedeCancelar = pedido.acciones_permitidas?.includes('cancelar');
+              const Icono = siguientePermitido?.icono;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
@@ -112,33 +111,27 @@ export function PedidosVendedor() {
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length} {pedido.items.length === 1 ? 'producto' : 'productos'}
                     </p>
+                    {pedido.estado === 'en_camino' && (
+                      <p className={`mt-1 text-xs ${pedido.no_recibido_en ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                        {pedido.no_recibido_en
+                          ? 'El comprador reportó que no le ha llegado. Espera la resolución del administrador.'
+                          : 'Esperando que el comprador confirme la recepción.'}
+                      </p>
+                    )}
                   </div>
                   <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>
                   <div className="flex flex-wrap gap-2 sm:justify-end">
                     <Link to={`/pedidos/${pedido.id}`} className="btn-secondary py-1.5 text-xs">
                       Ver detalle <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
-                    {pedido.estado === 'en_camino' && (
-                      <p
-                        className={
-                          pedido.no_recibido_en
-                            ? 'self-center rounded-lg bg-rose-50 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
-                            : 'self-center text-xs text-slate-500 dark:text-slate-400'
-                        }
-                      >
-                        {pedido.no_recibido_en
-                          ? 'El comprador reporta que no le ha llegado'
-                          : 'Esperando que el comprador confirme'}
-                      </p>
-                    )}
-                    {siguiente && Icono && (
+                    {siguientePermitido && Icono && (
                       <button
                         type="button"
                         className="btn-primary py-1.5 text-xs"
-                        onClick={() => accion.mutate({ id: pedido.id, tipo: siguiente.accion })}
+                        onClick={() => accion.mutate({ id: pedido.id, tipo: siguientePermitido.accion })}
                         disabled={accion.isPending}
                       >
-                        <Icono className="h-3.5 w-3.5" /> {siguiente.etiqueta}
+                        <Icono className="h-3.5 w-3.5" /> {siguientePermitido.etiqueta}
                       </button>
                     )}
                     {puedeCancelar && (

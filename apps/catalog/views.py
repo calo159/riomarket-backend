@@ -24,11 +24,15 @@ from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto
 from apps.catalog.serializers import (
     CategoriaSerializer,
     ImagenProductoSerializer,
+    ModerarProductoSerializer,
+    ModerarPuestoSerializer,
     ProductoSerializer,
     PuestoSerializer,
 )
-from apps.common.permissions import EsAdministrador, EsDuenoOAdmin, EsVendedorAprobado
+from apps.common.permissions import EsDuenoOAdmin, EsVendedorAprobado
 from apps.common.query import aplicar_ordenamiento, parametro_entero
+from apps.rbac.acceso import tiene_recurso
+from apps.rbac.permissions import TieneRecurso
 from apps.reviews.services import anotar_reputacion
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
@@ -66,12 +70,12 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
-        return [IsAuthenticated(), EsAdministrador()]
+        return [IsAuthenticated(), TieneRecurso("admin.categorias")()]
 
     def get_queryset(self):
         qs = Categoria.objects.all()
         usuario = self.request.user
-        if usuario.is_authenticated and usuario.es_administrador:
+        if usuario.is_authenticated and tiene_recurso(usuario, "admin.categorias"):
             return qs
         return qs.filter(activa=True)
 
@@ -96,15 +100,15 @@ class PuestoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
+        if self.action == "moderar":
+            return [TieneRecurso("admin.puestos")()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Puesto.objects.select_related("id_vendedor").prefetch_related(
-            "categorias_asignadas__id_categoria"
-        )
+        qs = Puesto.objects.prefetch_related("categorias_asignadas__id_categoria")
         qs = services.visibles_puestos(self.request.user, qs, params)
         qs = services.filtrar_puestos(qs, params)
         qs = anotar_reputacion(qs)
@@ -144,6 +148,21 @@ class PuestoViewSet(viewsets.ModelViewSet):
         numero = parametro_entero({"categoria_id": categoria_id}, "categoria_id")
         return get_object_or_404(Categoria, id=numero or 0)
 
+    @extend_schema(
+        request=ModerarPuestoSerializer,
+        responses=PuestoSerializer,
+        description="Suspende, reactiva o inactiva un puesto (solo administrador).",
+    )
+    @action(detail=True, methods=["post"])
+    def moderar(self, request, pk=None):
+        puesto = self.get_object()
+        serializer = ModerarPuestoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        puesto = services.moderar_puesto(
+            puesto=puesto, actor=request.user, **serializer.validated_data
+        )
+        return Response(self._serializar_refrescado(puesto))
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -161,6 +180,8 @@ class ProductoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ("list", "retrieve"):
             return [AllowAny()]
+        if self.action == "moderar":
+            return [TieneRecurso("admin.productos")()]
         if self.action == "create":
             return [EsVendedorAprobado()]
         return [EsVendedorAprobado(), EsDuenoOAdmin()]
@@ -194,7 +215,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="imagenes/reordenar")
     def reordenar_imagenes(self, request, pk=None):
         producto = self.get_object()
-        orden_ids = request.data.get("orden") or request.data.get("imagenes") or []
+        orden_ids = request.data.get("orden", request.data.get("imagenes", []))
         imagenes = services.reordenar_imagenes(producto=producto, orden_ids=orden_ids)
         return Response(ImagenProductoSerializer(imagenes, many=True).data)
 
@@ -203,6 +224,22 @@ class ProductoViewSet(viewsets.ModelViewSet):
         producto = self.get_object()
         imagen = services.marcar_imagen_principal(producto=producto, imagen_id=imagen_id)
         return Response(ImagenProductoSerializer(imagen).data)
+
+    @extend_schema(
+        request=ModerarProductoSerializer,
+        responses=ProductoSerializer,
+        description="Bloquea o reactiva un producto (solo administrador).",
+    )
+    @action(detail=True, methods=["post"])
+    def moderar(self, request, pk=None):
+        producto = self.get_object()
+        serializer = ModerarProductoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        producto = services.moderar_producto(
+            producto=producto, actor=request.user, **serializer.validated_data
+        )
+        producto = self.get_queryset().get(pk=producto.pk)
+        return Response(self.get_serializer(producto).data)
 
 
 class ImagenProductoViewSet(viewsets.ModelViewSet):

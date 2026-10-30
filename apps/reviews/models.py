@@ -46,6 +46,7 @@ class Resena(models.Model):
         verbose_name = "reseña"
         verbose_name_plural = "reseñas"
         ordering = ["-fecha_creacion"]
+        indexes = [models.Index(fields=["id_puesto", "visible"], name="resena_puesto_visible_idx")]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(calificacion__gte=1, calificacion__lte=5),

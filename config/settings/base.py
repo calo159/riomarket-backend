@@ -76,13 +76,17 @@ INSTALLED_APPS = [
     "apps.reviews",
     "apps.promotions",
     "apps.audit",
+    "apps.administration",
+    "apps.rbac",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # Las cabeceras de seguridad van ANTES de WhiteNoise: si no, index.html y los
+    # estáticos se sirven sin CSP ni X-Frame-Options.
     "apps.common.security_headers.SecurityHeadersMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -238,6 +242,8 @@ SPECTACULAR_SETTINGS = {
 # Validación estricta de archivos subidos
 # ---------------------------------------------------------------------------
 # Tamaño máximo de imagen (bytes): 2 MB
+# Tope de píxeles al decodificar (una bomba de descompresión cabe en pocos KB).
+MAX_IMAGE_PIXELS = env.int("MAX_IMAGE_PIXELS", default=25_000_000)
 MAX_IMAGE_SIZE = env.int("MAX_IMAGE_SIZE", default=2 * 1024 * 1024)
 ALLOWED_IMAGE_CONTENT_TYPES = env.list(
     "ALLOWED_IMAGE_CONTENT_TYPES", default=["image/jpeg", "image/png", "image/webp"]

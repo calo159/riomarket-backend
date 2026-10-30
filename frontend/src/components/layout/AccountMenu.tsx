@@ -2,18 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useSession } from '../../auth/SessionProvider';
+import { useMenu } from '../../navigation/useMenu';
+import { MenuItems } from './MenuItems';
+import { itemsDe } from '../../navigation/tipos';
 import { iniciales } from '../../lib/utils';
 import { ETIQUETAS_ROL } from '../../lib/format';
-import { MenuItems } from '../../navigation/MenuItems';
-import { menuParaRol } from '../../navigation/menu';
-import { useMenuBadges } from '../../navigation/useMenuBadges';
 
 export function AccountMenu() {
   const { usuario, rol, cerrarSesion } = useSession();
+  const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const badges = useMenuBadges();
 
   useEffect(() => {
     if (!abierto) return;
@@ -32,8 +32,6 @@ export function AccountMenu() {
   }, [abierto]);
 
   if (!usuario) return null;
-
-  const enlaces = menuParaRol(rol, 'cuenta');
 
   const salir = async () => {
     setAbierto(false);
@@ -69,14 +67,8 @@ export function AccountMenu() {
               {ETIQUETAS_ROL[rol ?? ''] ?? rol}
             </span>
           </div>
-          <div className="p-1.5">
-            <MenuItems
-              items={enlaces}
-              variante="movil"
-              badges={badges}
-              onNavegar={() => setAbierto(false)}
-              ariaLabel="Menú de cuenta"
-            />
+          <div className="p-1.5" onClick={() => setAbierto(false)}>
+            <MenuItems items={itemsDe(menu, 'cuenta')} badges={badges} variante="cuenta" />
           </div>
           <div className="border-t p-1.5">
             <button

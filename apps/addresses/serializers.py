@@ -36,3 +36,13 @@ class DireccionEscrituraSerializer(serializers.ModelSerializer):
             "es_predeterminada",
             "activa",
         )
+
+    def validate_latitud(self, valor):
+        if valor is not None and not -90 <= valor <= 90:
+            raise serializers.ValidationError("La latitud debe estar entre -90 y 90.")
+        return valor
+
+    def validate_longitud(self, valor):
+        if valor is not None and not -180 <= valor <= 180:
+            raise serializers.ValidationError("La longitud debe estar entre -180 y 180.")
+        return valor

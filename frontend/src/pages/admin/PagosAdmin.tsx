@@ -1,30 +1,75 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2, RefreshCw, XCircle, XOctagon } from 'lucide-react';
 import { anularPago, listarPagos, reembolsarPago, simularPago } from '../../api/payments';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
-import { CargandoBloque, EstadoError } from '../../components/ui/Estado';
+import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
+import { ConfirmarModal } from '../../components/ui/Modal';
 import { formatearFechaHora, formatearMoneda, ETIQUETAS_PAGO } from '../../lib/format';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
+import { invalidarMenu } from '../../navigation/useMenu';
 
 const SANDBOX = import.meta.env.VITE_SANDBOX_PAGOS === 'true';
 
 export function PagosAdmin() {
   const queryClient = useQueryClient();
   const toast = useToast();
-  const pagos = useQuery({ queryKey: ['pagos', 'admin', 'list'], queryFn: () => listarPagos({ page_size: 100, ordering: '-fecha_creacion' }) });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const estado = searchParams.get('estado') ?? '';
+  const porConfirmar = searchParams.get('por_confirmar') === 'true';
+  const [pendiente, setPendiente] = useState<{ id: number; accion: 'reembolsar' | 'anular' } | null>(null);
 
-  const invalidar = () => void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+  useEffect(() => {
+    document.title = 'Pagos · Administración · RioMarket';
+  }, []);
+
+  const cambiarEstado = (valor: string) => {
+    const siguiente = new URLSearchParams(searchParams);
+    if (valor) siguiente.set('estado', valor);
+    else siguiente.delete('estado');
+    if (valor) siguiente.delete('por_confirmar');
+    setSearchParams(siguiente, { replace: true });
+  };
+
+  const alternarPorConfirmar = (activo: boolean) => {
+    const siguiente = new URLSearchParams(searchParams);
+    if (activo) {
+      siguiente.set('por_confirmar', 'true');
+      siguiente.delete('estado');
+    } else {
+      siguiente.delete('por_confirmar');
+    }
+    setSearchParams(siguiente, { replace: true });
+  };
+
+  const pagos = useQuery({
+    queryKey: ['pagos', 'admin', 'list', estado, porConfirmar],
+    queryFn: () =>
+      listarPagos({
+        page_size: 100,
+        ordering: '-fecha_creacion',
+        estado: estado || undefined,
+        por_confirmar: porConfirmar ? true : undefined,
+      }),
+  });
+
+  const invalidar = () => {
+    void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+    void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+    void invalidarMenu(queryClient);
+  };
 
   const reembolsar = useMutation({
     mutationFn: (id: number) => reembolsarPago(id),
-    onSuccess: () => { invalidar(); toast.exito('Pago reembolsado.'); },
-    onError: (error) => toast.error(mensajeDeError(error)),
+    onSuccess: () => { invalidar(); setPendiente(null); toast.exito('Pago reembolsado.'); },
+    onError: (error) => { setPendiente(null); toast.error(mensajeDeError(error)); },
   });
 
   const anular = useMutation({
     mutationFn: (id: number) => anularPago(id),
-    onSuccess: () => { invalidar(); toast.exito('Pago anulado.'); },
+    onSuccess: () => { invalidar(); setPendiente(null); toast.exito('Pago anulado.'); },
     onError: (error) => toast.error(mensajeDeError(error)),
   });
 
@@ -39,7 +84,36 @@ export function PagosAdmin() {
 
   return (
     <div>
-      <EncabezadoPagina titulo="Pagos" descripcion="Seguimiento y gestión administrativa de pagos." />
+      <EncabezadoPagina
+        titulo="Pagos"
+        descripcion="Seguimiento y gestión administrativa de pagos."
+        acciones={
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className="input w-auto"
+              value={porConfirmar ? '' : estado}
+              onChange={(evento) => cambiarEstado(evento.target.value)}
+              aria-label="Filtrar por estado"
+            >
+              <option value="">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="procesando">Procesando</option>
+              <option value="aprobado">Aprobados</option>
+              <option value="rechazado">Rechazados</option>
+              <option value="reembolsado">Reembolsados</option>
+              <option value="anulado">Anulados</option>
+            </select>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={porConfirmar}
+                onChange={(evento) => alternarPorConfirmar(evento.target.checked)}
+              />
+              Solo por confirmar
+            </label>
+          </div>
+        }
+      />
       {pagos.isLoading && <CargandoBloque mensaje="Cargando pagos…" />}
       {pagos.isError && <EstadoError mensaje="No pudimos cargar pagos." onReintentar={() => void pagos.refetch()} />}
       <div className="overflow-x-auto card">
@@ -74,6 +148,7 @@ export function PagosAdmin() {
                           onClick={() => simular.mutate({ id: pago.id, accion: 'aprobar' })}
                           disabled={simular.isPending}
                           title="Aprobar en sandbox"
+                          aria-label={`Aprobar el pago #${pago.id} en sandbox`}
                         >
                           <CheckCircle2 className="h-4 w-4" />
                         </button>
@@ -83,16 +158,17 @@ export function PagosAdmin() {
                           onClick={() => simular.mutate({ id: pago.id, accion: 'rechazar' })}
                           disabled={simular.isPending}
                           title="Rechazar en sandbox"
+                          aria-label={`Rechazar el pago #${pago.id} en sandbox`}
                         >
                           <XCircle className="h-4 w-4" />
                         </button>
                       </>
                     )}
                     {['aprobado', 'procesando'].includes(pago.estado) && (
-                      <button type="button" className="btn-ghost p-2" onClick={() => reembolsar.mutate(pago.id)} title="Reembolsar"><RefreshCw className="h-4 w-4" /></button>
+                      <button type="button" className="btn-ghost p-2" onClick={() => setPendiente({ id: pago.id, accion: 'reembolsar' })} title="Reembolsar" aria-label={`Reembolsar el pago #${pago.id}`}><RefreshCw className="h-4 w-4" /></button>
                     )}
                     {!['aprobado', 'reembolsado'].includes(pago.estado) && (
-                      <button type="button" className="btn-ghost p-2 text-rose-600" onClick={() => anular.mutate(pago.id)} title="Anular"><XOctagon className="h-4 w-4" /></button>
+                      <button type="button" className="btn-ghost p-2 text-rose-600" onClick={() => setPendiente({ id: pago.id, accion: 'anular' })} title="Anular" aria-label={`Anular el pago #${pago.id}`}><XOctagon className="h-4 w-4" /></button>
                     )}
                   </div>
                 </td>
@@ -101,6 +177,32 @@ export function PagosAdmin() {
           </tbody>
         </table>
       </div>
+      {pagos.data && pagos.data.results.length === 0 && (
+        <EstadoVacio titulo="Sin pagos" descripcion="No hay pagos con esos filtros." />
+      )}
+      {pagos.data && pagos.data.count > pagos.data.results.length && (
+        <p className="mt-2 text-xs text-slate-500">
+          Mostrando {pagos.data.results.length} de {pagos.data.count} pagos. Filtra por estado para ver el resto.
+        </p>
+      )}
+
+      <ConfirmarModal
+        abierto={pendiente !== null}
+        titulo={pendiente?.accion === 'reembolsar' ? `¿Reembolsar el pago #${pendiente.id}?` : `¿Anular el pago #${pendiente?.id ?? ''}?`}
+        descripcion={
+          pendiente?.accion === 'reembolsar'
+            ? 'Se marcará el pago como reembolsado. Esta acción no se puede deshacer.'
+            : 'El pago quedará anulado y no podrá cobrarse. Esta acción no se puede deshacer.'
+        }
+        textoConfirmar={pendiente?.accion === 'reembolsar' ? 'Reembolsar' : 'Anular'}
+        cargando={reembolsar.isPending || anular.isPending}
+        onConfirmar={() => {
+          if (!pendiente) return;
+          if (pendiente.accion === 'reembolsar') reembolsar.mutate(pendiente.id);
+          else anular.mutate(pendiente.id);
+        }}
+        onCerrar={() => setPendiente(null)}
+      />
     </div>
   );
 }

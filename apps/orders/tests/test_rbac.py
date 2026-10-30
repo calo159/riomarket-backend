@@ -1,184 +1,195 @@
-"""Pruebas del RBAC de pedidos: matriz rol x relación x acción.
-
-Cubren ``apps.orders.permissions`` (quién PUEDE) y ``acciones_permitidas``
-en la API (quién puede AHORA, según el estado del pedido).
-"""
+"""Pruebas de la matriz RBAC de pedidos y de ``acciones_permitidas``."""
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import PermissionDenied
 
 from apps.accounts.models import Usuario
-from apps.orders import permissions as rbac
-from apps.orders import services
+from apps.orders import permissions, services
 from apps.orders.models import Pedido
 from apps.orders.permissions import Accion
-from tests.factories import UsuarioFactory
+from tests.factories import PedidoFactory, ProductoFactory, PuestoFactory, UsuarioFactory
 
-from .conftest import PEDIDOS
-
-
-@pytest.fixture
-def pedido(comprador, puesto, producto):
-    return services.crear_pedido(
-        usuario=comprador,
-        datos={
-            "id_puesto": puesto,
-            "tipo_entrega": Pedido.TipoEntrega.RETIRO,
-            "items": [{"id_producto": producto, "cantidad": 1}],
-        },
-    )
+PEDIDOS = "/api/orders/pedidos/"
 
 
-@pytest.fixture
-def otro_comprador():
-    return UsuarioFactory(rol=Usuario.Rol.COMPRADOR)
-
-
-# actor -> acciones que le corresponden SOBRE ESTE pedido (sin mirar el estado).
-ESPERADO = {
-    "comprador_del_pedido": {
-        Accion.EDITAR,
-        Accion.ENTREGAR,
-        Accion.NO_RECIBIDO,
-        Accion.CANCELAR,
-    },
-    "otro_comprador": set(),
-    "vendedor_del_puesto": {
-        Accion.CONFIRMAR,
-        Accion.EN_PREPARACION,
-        Accion.ENVIAR,
-        Accion.CANCELAR,
-    },
-    "otro_vendedor": set(),
-    "admin": {accion for accion in Accion if accion != Accion.CREAR},
-}
-
-
-@pytest.fixture
-def actores(comprador, otro_comprador, vendedor, otro_vendedor, admin):
-    return {
-        "comprador_del_pedido": comprador,
-        "otro_comprador": otro_comprador,
-        "vendedor_del_puesto": vendedor,
-        "otro_vendedor": otro_vendedor,
-        "admin": admin,
-    }
+def pedido_en(estado, comprador, puesto, **extra):
+    return PedidoFactory(estado=estado, id_comprador=comprador, id_puesto=puesto, **extra)
 
 
 @pytest.mark.django_db
-class TestMatrizRBAC:
-    @pytest.mark.parametrize("actor", list(ESPERADO))
-    @pytest.mark.parametrize("accion", [a for a in Accion if a != Accion.CREAR])
-    def test_matriz_completa(self, actor, accion, actores, pedido):
-        esperado = accion in ESPERADO[actor]
-        assert rbac.puede(actores[actor], accion, pedido) is esperado
+class TestMatrizDeclarada:
+    def test_cada_rol_tiene_entrada(self):
+        assert set(permissions.PERMISOS) == set(Usuario.Rol.values)
 
-    @pytest.mark.parametrize("actor", list(ESPERADO))
-    @pytest.mark.parametrize("accion", [a for a in Accion if a != Accion.CREAR])
-    def test_exigir_lanza_403_cuando_no_puede(self, actor, accion, actores, pedido):
-        if accion in ESPERADO[actor]:
-            rbac.exigir(actores[actor], accion, pedido)
-        else:
-            with pytest.raises(PermissionDenied):
-                rbac.exigir(actores[actor], accion, pedido)
+    def test_cada_accion_esta_declarada_en_algun_rol(self):
+        declaradas = {str(accion) for reglas in permissions.PERMISOS.values() for accion in reglas}
+        assert declaradas == set(Accion.values)
 
-    def test_solo_el_comprador_activo_crea(self, comprador, vendedor, admin):
-        assert rbac.puede(comprador, Accion.CREAR)
-        assert not rbac.puede(vendedor, Accion.CREAR)
-        assert not rbac.puede(admin, Accion.CREAR)
+    def test_destinos_de_transicion_tienen_accion(self):
+        destinos = {destino for destinos in services.TRANSICIONES.values() for destino in destinos}
+        assert destinos <= set(permissions.ACCION_POR_DESTINO)
 
-    def test_anonimo_no_puede_nada(self, pedido):
-        for accion in Accion:
-            assert not rbac.puede(AnonymousUser(), accion, pedido)
-
-    def test_cuenta_inactiva_pierde_todos_los_permisos(self, vendedor, pedido):
-        vendedor.estado = Usuario.Estado.SUSPENDIDO
-        vendedor.save(update_fields=["estado"])
-        assert not rbac.puede(vendedor, Accion.CONFIRMAR, pedido)
-        with pytest.raises(PermissionDenied):
-            rbac.exigir(vendedor, Accion.CONFIRMAR, pedido)
-
-    def test_todo_rol_conocido_tiene_entrada_en_la_matriz(self):
-        assert set(rbac.PERMISOS) == set(Usuario.Rol.values)
-
-    def test_entregar_es_solo_del_comprador_y_admin(self):
-        con_permiso = {
-            rol for rol, acciones in rbac.PERMISOS.items() if Accion.ENTREGAR in acciones
+    def test_acciones_por_rol(self):
+        assert set(permissions.PERMISOS[Usuario.Rol.COMPRADOR]) == {
+            Accion.CREAR,
+            Accion.EDITAR,
+            Accion.ENTREGAR,
+            Accion.NO_RECIBIDO,
+            Accion.CANCELAR,
         }
-        assert con_permiso == {Usuario.Rol.COMPRADOR, Usuario.Rol.ADMINISTRADOR}
+        assert set(permissions.PERMISOS[Usuario.Rol.VENDEDOR]) == {
+            Accion.CONFIRMAR,
+            Accion.EN_PREPARACION,
+            Accion.ENVIAR,
+            Accion.CANCELAR,
+        }
+        assert set(permissions.PERMISOS[Usuario.Rol.ADMINISTRADOR]) == set(Accion.values) - {
+            Accion.CREAR
+        }
 
 
 @pytest.mark.django_db
-class TestAccionesPermitidasEnApi:
-    """El campo ``acciones_permitidas`` refleja RBAC + estado, por usuario."""
+class TestSujeto:
+    def test_anonimo_no_puede_nada(self, comprador, puesto):
+        pedido = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        anonimo = AnonymousUser()
+        assert all(not permissions.puede(anonimo, accion, pedido) for accion in Accion.values)
 
-    @staticmethod
-    def _acciones(cliente, pedido):
-        respuesta = cliente.get(f"{PEDIDOS}{pedido.pk}/")
+    def test_suspendido_no_puede_nada(self, comprador, puesto):
+        pedido = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        comprador.suspendir()
+        comprador.refresh_from_db()
+        assert all(not permissions.puede(comprador, accion, pedido) for accion in Accion.values)
+
+    def test_comprador_crea(self, comprador, vendedor, admin):
+        assert permissions.puede(comprador, Accion.CREAR)
+        assert not permissions.puede(vendedor, Accion.CREAR)
+        assert not permissions.puede(admin, Accion.CREAR)
+
+
+@pytest.mark.django_db
+class TestRelaciones:
+    def test_comprador_solo_su_pedido(self, comprador, puesto):
+        otro = UsuarioFactory(rol=Usuario.Rol.COMPRADOR)
+        propio = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        ajeno = pedido_en(Pedido.Estado.EN_CAMINO, otro, puesto)
+        for accion in (Accion.EDITAR, Accion.ENTREGAR, Accion.NO_RECIBIDO, Accion.CANCELAR):
+            assert permissions.puede(comprador, accion, propio)
+            assert not permissions.puede(comprador, accion, ajeno)
+            assert not permissions.puede(otro, accion, propio)
+
+    def test_vendedor_solo_su_puesto(self, vendedor, comprador, puesto):
+        otro_vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
+        otro_puesto = PuestoFactory(id_vendedor=otro_vendedor)
+        propio = pedido_en(Pedido.Estado.CONFIRMADO, comprador, puesto)
+        ajeno = pedido_en(Pedido.Estado.CONFIRMADO, comprador, otro_puesto)
+        for accion in (Accion.CONFIRMAR, Accion.EN_PREPARACION, Accion.ENVIAR, Accion.CANCELAR):
+            assert permissions.puede(vendedor, accion, propio)
+            assert not permissions.puede(vendedor, accion, ajeno)
+            assert not permissions.puede(otro_vendedor, accion, propio)
+
+    def test_vendedor_no_toca_acciones_del_comprador(self, vendedor, comprador, puesto):
+        pedido = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        for accion in (Accion.EDITAR, Accion.ENTREGAR, Accion.NO_RECIBIDO):
+            assert not permissions.puede(vendedor, accion, pedido)
+
+    def test_administrador_puede_operar_cualquier_pedido(self, admin, comprador, puesto):
+        pedido = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        for accion in set(Accion.values) - {Accion.CREAR}:
+            assert permissions.puede(admin, accion, pedido)
+
+
+@pytest.mark.django_db
+class TestAccionesDisponibles:
+    @pytest.mark.parametrize(
+        "estado,rol,esperadas",
+        [
+            (Pedido.Estado.PENDIENTE, Usuario.Rol.COMPRADOR, ["editar", "cancelar"]),
+            (Pedido.Estado.PENDIENTE, Usuario.Rol.VENDEDOR, ["confirmar", "cancelar"]),
+            (
+                Pedido.Estado.PENDIENTE,
+                Usuario.Rol.ADMINISTRADOR,
+                ["editar", "confirmar", "cancelar"],
+            ),
+            (Pedido.Estado.CONFIRMADO, Usuario.Rol.COMPRADOR, ["cancelar"]),
+            (Pedido.Estado.CONFIRMADO, Usuario.Rol.VENDEDOR, ["en-preparacion", "cancelar"]),
+            (
+                Pedido.Estado.CONFIRMADO,
+                Usuario.Rol.ADMINISTRADOR,
+                ["en-preparacion", "cancelar"],
+            ),
+            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.COMPRADOR, ["cancelar"]),
+            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.VENDEDOR, ["enviar", "cancelar"]),
+            (Pedido.Estado.EN_CAMINO, Usuario.Rol.COMPRADOR, ["entregar", "no-recibido"]),
+            (Pedido.Estado.EN_CAMINO, Usuario.Rol.VENDEDOR, []),
+            (Pedido.Estado.EN_CAMINO, Usuario.Rol.ADMINISTRADOR, ["entregar", "no-recibido"]),
+            (Pedido.Estado.ENTREGADO, Usuario.Rol.COMPRADOR, []),
+            (Pedido.Estado.ENTREGADO, Usuario.Rol.ADMINISTRADOR, []),
+            (Pedido.Estado.CANCELADO, Usuario.Rol.COMPRADOR, []),
+            (Pedido.Estado.CANCELADO, Usuario.Rol.VENDEDOR, []),
+        ],
+    )
+    def test_matriz_estado_rol(self, estado, rol, esperadas, comprador, vendedor, admin, puesto):
+        actores = {
+            Usuario.Rol.COMPRADOR: comprador,
+            Usuario.Rol.VENDEDOR: vendedor,
+            Usuario.Rol.ADMINISTRADOR: admin,
+        }
+        pedido = pedido_en(estado, comprador, puesto)
+        assert services.acciones_disponibles(pedido, actores[rol]) == esperadas
+
+    def test_no_recibido_se_oculta_tras_reportar(self, comprador, puesto):
+        from django.utils import timezone
+
+        pedido = pedido_en(
+            Pedido.Estado.EN_CAMINO,
+            comprador,
+            puesto,
+            no_recibido_en=timezone.now(),
+        )
+        assert services.acciones_disponibles(pedido, comprador) == ["entregar"]
+
+    def test_entrega_no_disponible_para_terceros(self, comprador, otro_vendedor, puesto):
+        pedido = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        assert services.acciones_disponibles(pedido, otro_vendedor) == []
+
+
+@pytest.mark.django_db
+class TestAccionesEnApi:
+    def _crear(self, estado, comprador, puesto):
+        producto = ProductoFactory(id_puesto=puesto)
+        return producto, pedido_en(estado, comprador, puesto)
+
+    def test_comprador_ve_entregar_y_no_recibido(self, cliente_comprador, comprador, puesto):
+        _, pedido = self._crear(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        respuesta = cliente_comprador.get(f"{PEDIDOS}{pedido.pk}/")
         assert respuesta.status_code == 200
-        return set(respuesta.data["acciones_permitidas"])
+        assert respuesta.data["acciones_permitidas"] == ["entregar", "no-recibido"]
 
-    def test_pendiente(self, cliente_comprador, cliente_vendedor, cliente_admin, pedido):
-        assert self._acciones(cliente_comprador, pedido) == {"editar", "cancelar"}
-        assert self._acciones(cliente_vendedor, pedido) == {"confirmar", "cancelar"}
-        assert self._acciones(cliente_admin, pedido) == {"editar", "confirmar", "cancelar"}
+    def test_vendedor_no_ve_entregar(self, cliente_vendedor, comprador, puesto):
+        _, pedido = self._crear(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        respuesta = cliente_vendedor.get(f"{PEDIDOS}{pedido.pk}/")
+        assert respuesta.status_code == 200
+        assert respuesta.data["acciones_permitidas"] == []
 
-    def test_en_camino_reparte_los_roles_sin_conflicto(
-        self,
-        cliente_comprador,
-        cliente_vendedor,
-        cliente_admin,
-        pedido,
-        comprador,
-        vendedor,
-        aprobar_pago,
-    ):
-        aprobar_pago(pedido, comprador)
-        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        # En preparación el vendedor marca "en camino"; el comprador aún no entrega.
-        assert "enviar" in self._acciones(cliente_vendedor, pedido)
-        assert "entregar" not in self._acciones(cliente_comprador, pedido)
+    def test_vendedor_no_puede_entregar(self, cliente_vendedor, comprador, puesto):
+        _, pedido = self._crear(Pedido.Estado.EN_CAMINO, comprador, puesto)
+        respuesta = cliente_vendedor.post(f"{PEDIDOS}{pedido.pk}/entregar/", {}, format="json")
+        assert respuesta.status_code == 403
 
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
-        assert self._acciones(cliente_comprador, pedido) == {"entregar", "no-recibido"}
-        assert self._acciones(cliente_vendedor, pedido) == set()
-        assert self._acciones(cliente_admin, pedido) == {"entregar", "no-recibido"}
+    def test_comprador_no_puede_enviar(self, cliente_comprador, comprador, puesto):
+        _, pedido = self._crear(Pedido.Estado.EN_PREPARACION, comprador, puesto)
+        respuesta = cliente_comprador.post(f"{PEDIDOS}{pedido.pk}/enviar/", {}, format="json")
+        assert respuesta.status_code == 403
 
-    def test_no_recibido_desaparece_tras_reportar(
-        self, cliente_comprador, pedido, comprador, vendedor, aprobar_pago
-    ):
-        aprobar_pago(pedido, comprador)
-        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
-        services.reportar_no_recibido(pedido=pedido, usuario=comprador)
-        assert self._acciones(cliente_comprador, pedido) == {"entregar"}
-
-    def test_estado_cancelado_sin_acciones(
-        self, cliente_comprador, cliente_vendedor, pedido, comprador
-    ):
-        services.cancelar_pedido(pedido=pedido, usuario=comprador)
-        assert self._acciones(cliente_comprador, pedido) == set()
-        assert self._acciones(cliente_vendedor, pedido) == set()
-
-    def test_estado_entregado_sin_acciones(
-        self,
-        cliente_comprador,
-        cliente_vendedor,
-        pedido,
-        comprador,
-        vendedor,
-        aprobar_pago,
-    ):
-        aprobar_pago(pedido, comprador)
-        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
-        services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
-        services.marcar_enviado(pedido=pedido, usuario=vendedor)
-        services.marcar_entregado(pedido=pedido, usuario=comprador)
-        assert self._acciones(cliente_comprador, pedido) == set()
-        assert self._acciones(cliente_vendedor, pedido) == set()
-
-    def test_vendedor_ajeno_no_ve_el_pedido(self, cliente_otro_vendedor, pedido):
-        assert cliente_otro_vendedor.get(f"{PEDIDOS}{pedido.pk}/").status_code == 404
+    def test_administrador_no_crea_pedido(self, cliente_admin, puesto, producto):
+        respuesta = cliente_admin.post(
+            PEDIDOS,
+            {
+                "id_puesto": puesto.pk,
+                "tipo_entrega": Pedido.TipoEntrega.RETIRO,
+                "items": [{"id_producto": producto.pk, "cantidad": 1}],
+            },
+            format="json",
+        )
+        assert respuesta.status_code == 403

@@ -22,7 +22,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
-from apps.common.permissions import EsAdministrador
 from apps.common.query import aplicar_ordenamiento
 from apps.payments import services
 from apps.payments.models import Pago
@@ -36,9 +35,15 @@ from apps.payments.serializers import (
     ReembolsarPagoSerializer,
     SimularPagoSerializer,
 )
+from apps.rbac.permissions import TieneRecurso
 
 PARAMETROS_PAGO = [
     OpenApiParameter(name="estado", enum=Pago.Estado.values),
+    OpenApiParameter(
+        name="por_confirmar",
+        type=OpenApiTypes.BOOL,
+        description="Solo pagos pendientes o procesando",
+    ),
     OpenApiParameter(name="metodo_pago", enum=Pago.MetodoPago.values),
     OpenApiParameter(name="pedido", type=OpenApiTypes.INT, description="ID del pedido"),
     OpenApiParameter(name="ordering", enum=list(services.ORDENAMIENTO_PAGO)),
@@ -53,7 +58,7 @@ class PagoViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ("marcar_reembolsado", "anular"):
-            return [EsAdministrador()]
+            return [TieneRecurso("admin.pagos")()]
         return [IsAuthenticated()]
 
     def get_serializer_class(self):
@@ -71,11 +76,7 @@ class PagoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Pago.objects.select_related(
-            "id_pedido",
-            "id_pedido__id_comprador",
-            "id_pedido__id_puesto",
-        )
+        qs = Pago.objects.select_related("id_pedido", "id_pedido__id_puesto")
         qs = services.visibles_pagos(self.request.user, qs, params)
         qs = services.filtrar_pagos(qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PAGO)

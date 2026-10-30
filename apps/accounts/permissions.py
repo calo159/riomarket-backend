@@ -4,6 +4,12 @@ from django.conf import settings
 from rest_framework import permissions
 
 
+def _mismo_origen(origen: str, permitido: str) -> bool:
+    """Compara el origen completo; un prefijo (``riomarket.com.evil.com``) no cuenta."""
+    permitido = permitido.rstrip("/")
+    return origen == permitido or origen.startswith(permitido + "/")
+
+
 class RequiereCabeceraCSRFPersonalizada(permissions.BasePermission):
     message = "Cabecera CSRF personalizada requerida."
 
@@ -21,4 +27,4 @@ class RequiereCabeceraCSRFPersonalizada(permissions.BasePermission):
         allowed = list(getattr(settings, "CSRF_TRUSTED_ORIGINS", []) or []) + list(
             getattr(settings, "CORS_ALLOWED_ORIGINS", []) or []
         )
-        return any(a and origin.startswith(a.strip()) for a in allowed)
+        return any(a and _mismo_origen(origin, a.strip()) for a in allowed)

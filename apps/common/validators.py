@@ -16,6 +16,9 @@ from PIL import Image, UnidentifiedImageError
 EXTENSIONES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 
 
+FORMATOS_PERMITIDOS = {"JPEG", "PNG", "WEBP"}
+
+
 def validate_image_file(archivo):
     """Valida un ``UploadedFile``. Lanza ``ValidationError`` si no cumple."""
     if archivo is None:
@@ -35,6 +38,15 @@ def validate_image_file(archivo):
     archivo.seek(0)
     try:
         with Image.open(archivo) as img:
+            if img.format not in FORMATOS_PERMITIDOS:
+                raise ValidationError(
+                    "Formato de imagen no permitido: use JPEG, PNG o WEBP.", code="invalid_image"
+                )
+            if img.width * img.height > settings.MAX_IMAGE_PIXELS:
+                raise ValidationError(
+                    "La imagen tiene demasiados píxeles: reduce sus dimensiones.",
+                    code="invalid_image",
+                )
             img.verify()
     except (UnidentifiedImageError, OSError) as exc:
         raise ValidationError("El archivo no es una imagen válida.", code="invalid_image") from exc

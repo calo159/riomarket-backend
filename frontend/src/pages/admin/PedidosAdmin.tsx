@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle2, ClipboardList, Package, Truck, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
@@ -11,6 +11,7 @@ import { ConfirmarModal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
+import { invalidarMenu } from '../../navigation/useMenu';
 
 const TAMANO = 15;
 
@@ -26,17 +27,33 @@ const SIGUIENTE: Record<string, { accion: AccionPedido; etiqueta: string; icono:
 export function PedidosAdmin() {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pagina, setPagina] = useState(1);
-  const [estado, setEstado] = useState('');
   const [cancelar, setCancelar] = useState<number | null>(null);
+  const estado = searchParams.get('estado') ?? '';
+  const soloNoRecibidos = searchParams.get('con_no_recibido') === 'true';
+
+  const cambiarFiltro = (clave: 'estado' | 'con_no_recibido', valor: string) => {
+    const siguiente = new URLSearchParams(searchParams);
+    if (valor) siguiente.set(clave, valor);
+    else siguiente.delete(clave);
+    setSearchParams(siguiente, { replace: true });
+    setPagina(1);
+  };
 
   useEffect(() => {
     document.title = 'Pedidos · Administración · RioMarket';
   }, []);
 
   const pedidos = useQuery({
-    queryKey: ['pedidos', 'admin', pagina, estado],
-    queryFn: () => listarPedidos({ page: pagina, page_size: TAMANO, estado: estado || undefined }),
+    queryKey: ['pedidos', 'admin', pagina, estado, soloNoRecibidos],
+    queryFn: () =>
+      listarPedidos({
+        page: pagina,
+        page_size: TAMANO,
+        estado: estado || undefined,
+        con_no_recibido: soloNoRecibidos ? true : undefined,
+      }),
     placeholderData: (anterior) => anterior,
   });
 
@@ -45,7 +62,7 @@ export function PedidosAdmin() {
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });
-      void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+      void invalidarMenu(queryClient);
       setCancelar(null);
       toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');
     },
@@ -58,23 +75,32 @@ export function PedidosAdmin() {
         titulo="Pedidos"
         descripcion="Todos los pedidos de la plataforma y sus transiciones."
         acciones={
-          <select
-            className="input w-auto"
-            value={estado}
-            onChange={(evento) => {
-              setEstado(evento.target.value);
-              setPagina(1);
-            }}
-            aria-label="Filtrar por estado"
-          >
-            <option value="">Todos</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="confirmado">Confirmados</option>
-            <option value="en_preparacion">En preparación</option>
-            <option value="en_camino">En camino</option>
-            <option value="entregado">Entregados</option>
-            <option value="cancelado">Cancelados</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className="input w-auto"
+              value={estado}
+              onChange={(evento) => cambiarFiltro('estado', evento.target.value)}
+              aria-label="Filtrar por estado"
+            >
+              <option value="">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="confirmado">Confirmados</option>
+              <option value="en_preparacion">En preparación</option>
+              <option value="en_camino">En camino</option>
+              <option value="entregado">Entregados</option>
+              <option value="cancelado">Cancelados</option>
+            </select>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={soloNoRecibidos}
+                onChange={(evento) =>
+                  cambiarFiltro('con_no_recibido', evento.target.checked ? 'true' : '')
+                }
+              />
+              Solo con reporte de no recibido
+            </label>
+          </div>
         }
       />
 
@@ -91,11 +117,10 @@ export function PedidosAdmin() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => {
-              const permitidas = pedido.acciones_permitidas ?? [];
-              const candidata = SIGUIENTE[pedido.estado];
-              const siguiente = candidata && permitidas.includes(candidata.accion) ? candidata : null;
-              const puedeCancelar = permitidas.includes('cancelar');
-              const Icono = siguiente?.icono;
+              const siguiente = SIGUIENTE[pedido.estado];
+              const siguientePermitido = siguiente && pedido.acciones_permitidas?.includes(siguiente.accion) ? siguiente : null;
+              const puedeCancelar = pedido.acciones_permitidas?.includes('cancelar');
+              const Icono = siguientePermitido?.icono;
               return (
                 <article key={pedido.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
@@ -112,20 +137,26 @@ export function PedidosAdmin() {
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length}{' '}
                       {pedido.items.length === 1 ? 'producto' : 'productos'} · Puesto #{pedido.id_puesto}
                     </p>
+                    {pedido.estado === 'en_camino' && pedido.no_recibido_en && (
+                      <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">
+                        Disputa: el comprador reportó que no le llegó el {formatearFechaHora(pedido.no_recibido_en)}.
+                        {pedido.motivo_no_recibido ? ` Motivo: ${pedido.motivo_no_recibido}.` : ''} Revisa y resuelve con "Marcar entregado" o cancela/reembolsa.
+                      </p>
+                    )}
                   </div>
                   <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>
                   <div className="flex flex-wrap gap-2 sm:justify-end">
                     <Link to={`/pedidos/${pedido.id}`} className="btn-secondary py-1.5 text-xs">
                       Ver detalle <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
-                    {siguiente && Icono && (
+                    {siguientePermitido && Icono && (
                       <button
                         type="button"
                         className="btn-primary py-1.5 text-xs"
-                        onClick={() => accion.mutate({ id: pedido.id, tipo: siguiente.accion })}
+                        onClick={() => accion.mutate({ id: pedido.id, tipo: siguientePermitido.accion })}
                         disabled={accion.isPending}
                       >
-                        <Icono className="h-3.5 w-3.5" /> {siguiente.etiqueta}
+                        <Icono className="h-3.5 w-3.5" /> {siguientePermitido.etiqueta}
                       </button>
                     )}
                     {puedeCancelar && (
