@@ -12,6 +12,7 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import type { Puesto } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
 
@@ -32,7 +33,7 @@ export function PuestosAdmin() {
   }, []);
 
   const puestos = useQuery({
-    queryKey: ['puestos', 'admin', pagina, busqueda, estado],
+    queryKey: claves.puestos.admin(pagina, busqueda, estado),
     queryFn: () =>
       listarPuestos({
         page: pagina,
@@ -47,8 +48,8 @@ export function PuestosAdmin() {
     mutationFn: ({ id, nuevo }: { id: number; nuevo: 'activo' | 'suspendido' }) =>
       moderarPuesto(id, { estado: nuevo, motivo: motivo.trim() }),
     onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['puestos'] });
-      void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+      void queryClient.invalidateQueries({ queryKey: claves.puestos.todos });
+      void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
       setObjetivo(null);
       setMotivo('');
       setError('');

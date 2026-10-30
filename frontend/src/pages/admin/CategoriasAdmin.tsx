@@ -14,6 +14,7 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Categoria } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 interface FormularioCategoria {
   nombre: string;
@@ -36,11 +37,11 @@ export function CategoriasAdmin() {
     document.title = 'Categorías · Administración · RioMarket';
   }, []);
 
-  const categorias = useQuery({ queryKey: ['categorias'], queryFn: listarCategorias });
+  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias });
 
   const refrescar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['categorias'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+    void queryClient.invalidateQueries({ queryKey: claves.categorias });
+    void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
   };
 
   const guardar = useMutation({

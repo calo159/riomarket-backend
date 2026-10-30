@@ -18,6 +18,7 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 const VACIO: DatosRecurso = {
   codigo: '',
@@ -47,14 +48,14 @@ export function RecursosAdmin() {
   }, []);
 
   const recursos = useQuery({
-    queryKey: ['admin-recursos', busqueda, ambito, activo],
+    queryKey: claves.adminRecursos.lista(busqueda, ambito, activo),
     queryFn: () =>
       listarRecursos({ q: busqueda.trim() || undefined, ambito: ambito || undefined, activo: activo || undefined }),
   });
 
   const refrescar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['admin-recursos'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    void queryClient.invalidateQueries({ queryKey: claves.adminRecursos.todos });
+    void queryClient.invalidateQueries({ queryKey: claves.adminRoles });
     void invalidarMenu(queryClient);
   };
 

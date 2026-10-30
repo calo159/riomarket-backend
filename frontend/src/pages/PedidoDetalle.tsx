@@ -26,6 +26,7 @@ import { formatearFechaHora, formatearMoneda, ETIQUETAS_PAGO, ETIQUETAS_PEDIDO }
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { cn } from '../lib/utils';
 import { invalidarMenu } from '../navigation/useMenu';
+import { claves } from '../lib/queryKeys';
 
 const PASOS = ['pendiente', 'confirmado', 'en_preparacion', 'en_camino', 'entregado'];
 const SANDBOX_PAGOS = import.meta.env.VITE_SANDBOX_PAGOS === 'true';
@@ -51,20 +52,20 @@ export function PedidoDetalle() {
   const [errorResena, setErrorResena] = useState('');
 
   const pedido = useQuery({
-    queryKey: ['pedido', id],
+    queryKey: claves.pedido(id),
     queryFn: () => obtenerPedido(id!),
     enabled: Boolean(id),
     refetchInterval: 30_000,
   });
 
   const pagos = useQuery({
-    queryKey: ['pagos', 'pedido', id],
+    queryKey: claves.pagos.deUnPedido(id),
     queryFn: () => listarPagos({ pedido: id!, page_size: 20 }),
     enabled: Boolean(id),
   });
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'puesto', pedido.data?.id_puesto],
+    queryKey: claves.resenas.deUnPuesto(pedido.data?.id_puesto),
     queryFn: () => listarResenas({ puesto: pedido.data!.id_puesto, page_size: 50 }),
     enabled: Boolean(pedido.data?.id_puesto),
   });
@@ -74,10 +75,10 @@ export function PedidoDetalle() {
   }, [pedido.data]);
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['pedido', id] });
-    void queryClient.invalidateQueries({ queryKey: ['pagos', 'pedido', id] });
-    void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-    void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    void queryClient.invalidateQueries({ queryKey: claves.pedido(id) });
+    void queryClient.invalidateQueries({ queryKey: claves.pagos.deUnPedido(id) });
+    void queryClient.invalidateQueries({ queryKey: claves.pedidos.todos });
+    void queryClient.invalidateQueries({ queryKey: claves.notificaciones.todos });
     void invalidarMenu(queryClient);
   };
 
@@ -160,7 +161,7 @@ export function PedidoDetalle() {
         comentario: comentario.trim() || undefined,
       }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['resenas'] });
+      void queryClient.invalidateQueries({ queryKey: claves.resenas.todos });
       setComentario('');
       setErrorResena('');
       toast.exito('¡Gracias por tu reseña!');

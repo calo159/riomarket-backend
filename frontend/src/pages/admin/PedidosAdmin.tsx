@@ -12,6 +12,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
 
@@ -46,7 +47,7 @@ export function PedidosAdmin() {
   }, []);
 
   const pedidos = useQuery({
-    queryKey: ['pedidos', 'admin', pagina, estado, soloNoRecibidos],
+    queryKey: claves.pedidos.admin(pagina, estado, soloNoRecibidos),
     queryFn: () =>
       listarPedidos({
         page: pagina,
@@ -60,8 +61,8 @@ export function PedidosAdmin() {
   const accion = useMutation({
     mutationFn: ({ id, tipo }: { id: number; tipo: AccionPedido }) => ejecutarAccionPedido(id, tipo),
     onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['pedidos'] });
-      void queryClient.invalidateQueries({ queryKey: ['pagos'] });
+      void queryClient.invalidateQueries({ queryKey: claves.pedidos.todos });
+      void queryClient.invalidateQueries({ queryKey: claves.pagos.todos });
       void invalidarMenu(queryClient);
       setCancelar(null);
       toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');

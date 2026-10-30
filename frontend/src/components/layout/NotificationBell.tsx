@@ -1,20 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { contarNoLeidas } from '../../api/notifications';
+import { useMenu } from '../../navigation/useMenu';
 import { useSession } from '../../auth/SessionProvider';
 
 export function NotificationBell() {
   const { autenticado } = useSession();
-  const { data } = useQuery({
-    queryKey: ['notificaciones', 'contador'],
-    queryFn: contarNoLeidas,
-    enabled: autenticado,
-    refetchInterval: 60_000,
-  });
+  // El conteo viaja en los badges del menú (que ya se sondea cada minuto): sin sondeo propio.
+  const { badges } = useMenu();
 
   if (!autenticado) return null;
-  const cantidad = data ?? 0;
+  const cantidad = badges.notificaciones ?? 0;
 
   return (
     <Link

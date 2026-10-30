@@ -10,6 +10,7 @@ import { formatearFechaHora, formatearMoneda, ETIQUETAS_PAGO } from '../../lib/f
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 const SANDBOX = import.meta.env.VITE_SANDBOX_PAGOS === 'true';
 
@@ -45,7 +46,7 @@ export function PagosAdmin() {
   };
 
   const pagos = useQuery({
-    queryKey: ['pagos', 'admin', 'list', estado, porConfirmar],
+    queryKey: claves.pagos.admin(estado, porConfirmar),
     queryFn: () =>
       listarPagos({
         page_size: 100,
@@ -56,8 +57,8 @@ export function PagosAdmin() {
   });
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['pagos'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+    void queryClient.invalidateQueries({ queryKey: claves.pagos.todos });
+    void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
     void invalidarMenu(queryClient);
   };
 

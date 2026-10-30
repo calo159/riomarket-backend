@@ -22,6 +22,7 @@ import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CargandoBloque } from '../../components/ui/Estado';
 import { formatearFechaHora, formatearMoneda, numero, ETIQUETAS_VERIFICACION } from '../../lib/format';
+import { claves } from '../../lib/queryKeys';
 
 export function PanelVendedor() {
   const { usuario } = useSession();
@@ -30,22 +31,22 @@ export function PanelVendedor() {
     document.title = 'Panel de vendedor · RioMarket';
   }, []);
 
-  const verificacion = useQuery({ queryKey: ['mi-verificacion'], queryFn: miVerificacion });
+  const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
   const puestos = useQuery({
-    queryKey: ['puestos', 'vendedor', usuario?.id],
+    queryKey: claves.puestos.vendedor(usuario?.id),
     queryFn: () => listarPuestos({ vendedor: usuario!.id, page_size: 100 }),
     enabled: Boolean(usuario),
   });
   const productos = useQuery({
-    queryKey: ['productos', 'vendedor', 'total'],
+    queryKey: claves.productos.vendedorTotal,
     queryFn: () => listarProductos({ page_size: 1 }),
   });
   const pendientes = useQuery({
-    queryKey: ['pedidos', 'vendedor', 'pendientes'],
+    queryKey: claves.pedidos.vendedorPendientes,
     queryFn: () => listarPedidos({ estado: 'pendiente', page_size: 5, ordering: '-fecha_creacion' }),
   });
   const pagos = useQuery({
-    queryKey: ['pagos', 'vendedor', 'aprobados'],
+    queryKey: claves.pagos.vendedorAprobados,
     queryFn: () => listarPagos({ estado: 'aprobado', page_size: 100 }),
   });
 

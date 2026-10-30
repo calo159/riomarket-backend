@@ -10,6 +10,7 @@ import { urlAbsoluta } from '../lib/utils';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
+import { claves } from '../lib/queryKeys';
 
 const TAMANO = 12;
 
@@ -19,13 +20,13 @@ export function PuestoDetalle() {
   const [pagina, setPagina] = useState(1);
 
   const puesto = useQuery({
-    queryKey: ['puesto', id],
+    queryKey: claves.puesto(id),
     queryFn: () => obtenerPuesto(id!),
     enabled: Boolean(id),
   });
 
   const productos = useQuery({
-    queryKey: ['productos', 'puesto', id, categoria, pagina],
+    queryKey: claves.productos.deUnPuesto(id, categoria, pagina),
     queryFn: () =>
       listarProductos({
         puesto: id!,
@@ -38,7 +39,7 @@ export function PuestoDetalle() {
   });
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'puesto', id],
+    queryKey: claves.resenas.deUnPuesto(id),
     queryFn: () => listarResenas({ puesto: id!, page_size: 10 }),
     enabled: Boolean(id),
   });

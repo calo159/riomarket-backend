@@ -22,6 +22,7 @@ import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
 import { Estrellas } from '../components/ui/Estrellas';
 import { useSession } from '../auth/SessionProvider';
 import { Imagen } from '../components/Imagen';
+import { claves } from '../lib/queryKeys';
 
 export function ProductoDetalle() {
   const { id } = useParams();
@@ -35,19 +36,19 @@ export function ProductoDetalle() {
   const [accionPendiente, setAccionPendiente] = useState<'agregar' | 'comprar'>('agregar');
 
   const producto = useQuery({
-    queryKey: ['producto', id],
+    queryKey: claves.producto(id),
     queryFn: () => obtenerProducto(id!),
     enabled: Boolean(id),
   });
 
   const puesto = useQuery({
-    queryKey: ['puesto', producto.data?.id_puesto],
+    queryKey: claves.puesto(producto.data?.id_puesto),
     queryFn: () => obtenerPuesto(producto.data!.id_puesto),
     enabled: Boolean(producto.data?.id_puesto),
   });
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'puesto', producto.data?.id_puesto],
+    queryKey: claves.resenas.deUnPuesto(producto.data?.id_puesto),
     queryFn: () => listarResenas({ puesto: producto.data!.id_puesto, page_size: 6 }),
     enabled: Boolean(producto.data?.id_puesto),
   });

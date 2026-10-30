@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { formatearFechaHora, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { validarImagen } from '../../lib/utils';
+import { claves } from '../../lib/queryKeys';
 
 export function Verificacion() {
   const { recargarPerfil } = useSession();
@@ -24,12 +25,12 @@ export function Verificacion() {
     document.title = 'Verificación · RioMarket';
   }, []);
 
-  const verificacion = useQuery({ queryKey: ['mi-verificacion'], queryFn: miVerificacion });
+  const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
 
   const enviar = useMutation({
     mutationFn: () => enviarVerificacion(cedula.trim(), foto!),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['mi-verificacion'] });
+      void queryClient.invalidateQueries({ queryKey: claves.miVerificacion });
       void recargarPerfil();
       setCedula('');
       setFoto(null);

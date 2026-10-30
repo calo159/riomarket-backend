@@ -8,6 +8,7 @@ import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
 import { formatearFechaHora, formatearMoneda } from '../lib/format';
+import { claves } from '../lib/queryKeys';
 
 const TAMANO = 10;
 
@@ -20,7 +21,7 @@ export function MisPedidos() {
   }, []);
 
   const pedidos = useQuery({
-    queryKey: ['pedidos', 'comprador', pagina, estado],
+    queryKey: claves.pedidos.comprador(pagina, estado),
     queryFn: () => listarPedidos({ page: pagina, page_size: TAMANO, estado: estado || undefined }),
     placeholderData: (anterior) => anterior,
   });

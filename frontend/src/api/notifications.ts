@@ -6,11 +6,6 @@ export async function listarNotificaciones(params: { leida?: boolean; tipo?: str
   return data;
 }
 
-export async function contarNoLeidas(): Promise<number> {
-  const { data } = await api.get<{ no_leidas: number }>('/notifications/notificaciones/contador/');
-  return data.no_leidas;
-}
-
 export async function marcarLeida(id: number): Promise<Notificacion> {
   const { data } = await api.post<Notificacion>(`/notifications/notificaciones/${id}/leida/`, {});
   return data;

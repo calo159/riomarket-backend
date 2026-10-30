@@ -4,9 +4,10 @@ import { listarAuditoria } from '../../api/audit';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError } from '../../components/ui/Estado';
 import { formatearFechaHora } from '../../lib/format';
+import { claves } from '../../lib/queryKeys';
 
 export function Auditoria() {
-  const logs = useQuery({ queryKey: ['auditoria'], queryFn: () => listarAuditoria({ page_size: 100 }) });
+  const logs = useQuery({ queryKey: claves.auditoria, queryFn: () => listarAuditoria({ page_size: 100 }) });
   return (
     <div>
       <EncabezadoPagina titulo="Auditoría" descripcion="Registro de acciones críticas." />

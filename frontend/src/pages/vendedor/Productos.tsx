@@ -23,6 +23,7 @@ import { formatearMoneda } from '../../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { validarImagen } from '../../lib/utils';
 import type { Categoria, Producto, Puesto } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const VACIO: DatosProducto = {
   id_puesto: 0,
@@ -51,16 +52,16 @@ export function ProductosVendedor() {
     document.title = 'Productos · RioMarket';
   }, []);
 
-  const verificacion = useQuery({ queryKey: ['mi-verificacion'], queryFn: miVerificacion });
-  const puestos = useQuery({ queryKey: ['puestos', 'vendedor', usuario?.id], queryFn: () => listarPuestos({ vendedor: usuario!.id, page_size: 100 }), enabled: Boolean(usuario) });
-  const productos = useQuery({ queryKey: ['productos', 'vendedor'], queryFn: () => listarProductos({ page_size: 100 }) });
+  const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
+  const puestos = useQuery({ queryKey: claves.puestos.vendedor(usuario?.id), queryFn: () => listarPuestos({ vendedor: usuario!.id, page_size: 100 }), enabled: Boolean(usuario) });
+  const productos = useQuery({ queryKey: claves.productos.vendedor, queryFn: () => listarProductos({ page_size: 100 }) });
 
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
   const puestoPorId = useMemo(() => new Map((puestos.data?.results ?? []).map((puesto) => [puesto.id, puesto])), [puestos.data]);
   const mios = useMemo(() => (productos.data?.results ?? []).filter((producto) => puestoPorId.has(producto.id_puesto)), [productos.data, puestoPorId]);
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['productos'] });
+    void queryClient.invalidateQueries({ queryKey: claves.productos.todos });
   };
 
   const guardar = useMutation({

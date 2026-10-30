@@ -20,6 +20,7 @@ import { formatearFecha, ETIQUETAS_ROL, ETIQUETAS_VERIFICACION } from '../../lib
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import type { Rol } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
 const ROLES: Rol[] = ['comprador', 'vendedor', 'administrador'];
@@ -70,7 +71,7 @@ export function Usuarios() {
   }, []);
 
   const usuarios = useQuery({
-    queryKey: ['usuarios', pagina, busqueda, rol, estado, rolAsignado],
+    queryKey: claves.usuarios.lista(pagina, busqueda, rol, estado, rolAsignado),
     queryFn: () =>
       listarUsuarios({
         page: pagina,
@@ -82,12 +83,12 @@ export function Usuarios() {
       }),
     placeholderData: (anterior) => anterior,
   });
-  const roles = useQuery({ queryKey: ['admin-roles'], queryFn: listarRoles });
+  const roles = useQuery({ queryKey: claves.adminRoles, queryFn: listarRoles });
 
   const refrescar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['usuarios'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+    void queryClient.invalidateQueries({ queryKey: claves.usuarios.todos });
+    void queryClient.invalidateQueries({ queryKey: claves.adminRoles });
+    void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
     void invalidarMenu(queryClient);
   };
 

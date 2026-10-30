@@ -20,6 +20,7 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 type Vista = 'lista' | 'matriz';
 
@@ -56,12 +57,12 @@ export function RolesAdmin() {
     document.title = 'Roles · Administración · RioMarket';
   }, []);
 
-  const roles = useQuery({ queryKey: ['admin-roles'], queryFn: listarRoles });
-  const recursos = useQuery({ queryKey: ['admin-recursos'], queryFn: () => listarRecursos() });
+  const roles = useQuery({ queryKey: claves.adminRoles, queryFn: listarRoles });
+  const recursos = useQuery({ queryKey: claves.adminRecursos.todos, queryFn: () => listarRecursos() });
 
   const refrescar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
-    void queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+    void queryClient.invalidateQueries({ queryKey: claves.adminRoles });
+    void queryClient.invalidateQueries({ queryKey: claves.usuarios.todos });
     void invalidarMenu(queryClient);
   };
 

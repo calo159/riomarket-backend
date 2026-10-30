@@ -14,13 +14,14 @@ import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError } from '../../components/ui/Estado';
 import { formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
+import { claves } from '../../lib/queryKeys';
 
 export function PanelAdmin() {
   useEffect(() => {
     document.title = 'Administración · RioMarket';
   }, []);
 
-  const resumen = useQuery({ queryKey: ['admin-resumen'], queryFn: obtenerResumenAdmin });
+  const resumen = useQuery({ queryKey: claves.adminResumen, queryFn: obtenerResumenAdmin });
 
   if (resumen.isLoading) return <CargandoBloque mensaje="Cargando el resumen…" />;
   if (resumen.isError || !resumen.data) {
