@@ -1055,6 +1055,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/pagos/resumen/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Pagos aprobados visibles para el vendedor (o todos, si es administrador) y el neto total que recibe: lo que muestra el panel del vendedor. */
+        get: operations["payments_pagos_resumen_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/webhook/{proveedor}/": {
         parameters: {
             query?: never;
@@ -2330,6 +2347,11 @@ export interface components {
         RestablecerContrasenaRequest: {
             token: string;
             nueva: string;
+        };
+        ResumenIngresos: {
+            pagos_aprobados: number;
+            /** @description Decimal con 2 cifras */
+            ingresos_aprobados: string;
         };
         Rol: {
             readonly id: number;
@@ -4812,6 +4834,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Pago"];
+                };
+            };
+        };
+    };
+    payments_pagos_resumen_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenIngresos"];
                 };
             };
         };

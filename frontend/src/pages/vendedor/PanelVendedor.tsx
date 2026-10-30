@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 import { listarPuestos, listarProductos } from '../../api/catalog';
 import { listarPedidos } from '../../api/orders';
-import { listarPagos } from '../../api/payments';
+import { obtenerResumenIngresos } from '../../api/payments';
 import { miVerificacion } from '../../api/verification';
 import { useSession } from '../../auth/SessionProvider';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CargandoBloque } from '../../components/ui/Estado';
-import { formatearFechaHora, formatearMoneda, numero, ETIQUETAS_VERIFICACION } from '../../lib/format';
+import { formatearFechaHora, formatearMoneda, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
 
 export function PanelVendedor() {
@@ -45,22 +45,18 @@ export function PanelVendedor() {
     queryKey: claves.pedidos.vendedorPendientes,
     queryFn: () => listarPedidos({ estado: 'pendiente', page_size: 5, ordering: '-fecha_creacion' }),
   });
-  const pagos = useQuery({
-    queryKey: claves.pagos.vendedorAprobados,
-    queryFn: () => listarPagos({ estado: 'aprobado', page_size: 100 }),
+  const ingresos = useQuery({
+    queryKey: claves.pagos.resumenIngresos,
+    queryFn: obtenerResumenIngresos,
   });
 
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
-  const ingresos = (pagos.data?.results ?? []).reduce(
-    (suma, pago) => suma + numero(pago.neto_vendedor ?? pago.total_cobrado),
-    0,
-  );
 
   const tarjetas = [
     { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300' },
     { etiqueta: 'Productos', valor: productos.data?.count ?? 0, icono: Package, to: '/vendedor/productos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
     { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' },
-    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
   ];
 
   return (

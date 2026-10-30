@@ -16,6 +16,17 @@ export async function listarPagos(filtros: FiltrosPago = {}): Promise<Paginado<P
   return data;
 }
 
+export interface ResumenIngresos {
+  pagos_aprobados: number;
+  /** Neto que recibe el vendedor por sus pagos aprobados (decimal con 2 cifras). */
+  ingresos_aprobados: string;
+}
+
+export async function obtenerResumenIngresos(): Promise<ResumenIngresos> {
+  const { data } = await api.get<ResumenIngresos>('/payments/pagos/resumen/');
+  return data;
+}
+
 export async function crearPago(datos: { pedido: number; metodo_pago: string; notas?: string }): Promise<Pago> {
   const { data } = await api.post<Pago>('/payments/pagos/', datos);
   return data;

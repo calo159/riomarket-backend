@@ -71,7 +71,7 @@ export const claves = {
     todos: ['pagos'] as const,
     admin: (estado: Filtro, porConfirmar: Filtro) => ['pagos', 'admin', 'list', estado, porConfirmar] as const,
     deUnPedido: (pedidoId: Id) => ['pagos', 'pedido', idClave(pedidoId)] as const,
-    vendedorAprobados: ['pagos', 'vendedor', 'aprobados'] as const,
+    resumenIngresos: ['pagos', 'resumen'] as const,
   },
 
   producto: (id: Id) => ['producto', idClave(id)] as const,
