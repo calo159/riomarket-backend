@@ -11,6 +11,7 @@ import { useToast } from '../components/ui/Toast';
 import { formatearFecha, ETIQUETAS_ROL } from '../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { iniciales } from '../lib/utils';
+import { claves } from '../lib/queryKeys';
 
 export function Perfil() {
   const { recargarPerfil, cerrarSesion } = useSession();
@@ -26,7 +27,7 @@ export function Perfil() {
     document.title = 'Mi perfil · RioMarket';
   }, []);
 
-  const perfil = useQuery({ queryKey: ['perfil'], queryFn: obtenerPerfil });
+  const perfil = useQuery({ queryKey: claves.perfil, queryFn: obtenerPerfil });
 
   useEffect(() => {
     if (perfil.data && !inicializado) {
@@ -44,7 +45,7 @@ export function Perfil() {
       setCorreo(datos.correo);
       setCelular(datos.celular);
       setErrores({});
-      void queryClient.invalidateQueries({ queryKey: ['perfil'] });
+      void queryClient.invalidateQueries({ queryKey: claves.perfil });
       void recargarPerfil();
       toast.exito('Perfil actualizado.');
     },

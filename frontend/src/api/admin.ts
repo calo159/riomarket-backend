@@ -1,16 +1,16 @@
 import { api } from '../lib/http';
 import type { Paginado, Rol } from '../lib/types';
 
-export type AccionUsuario = 'cambiar-rol' | 'roles' | 'suspender' | 'reactivar';
-export type EstadoUsuario = 'activo' | 'suspendido';
+type AccionUsuario = 'cambiar-rol' | 'roles' | 'suspender' | 'reactivar';
+type EstadoUsuario = 'activo' | 'suspendido';
 
-export interface RolAsignado {
+interface RolAsignado {
   id: number;
   nombre: string;
   es_sistema: boolean;
 }
 
-export interface PuestoResumenUsuario {
+interface PuestoResumenUsuario {
   id: number;
   nombre: string;
   estado: string;
@@ -32,7 +32,7 @@ export interface UsuarioAdmin {
   acciones_permitidas: AccionUsuario[];
 }
 
-export interface FiltrosUsuario {
+interface FiltrosUsuario {
   rol?: string;
   estado?: string;
   rol_asignado?: number;
@@ -42,7 +42,7 @@ export interface FiltrosUsuario {
   page_size?: number;
 }
 
-export interface ResumenAdmin {
+interface ResumenAdmin {
   usuarios: {
     total: number;
     activos: number;
@@ -182,7 +182,7 @@ export interface RecursoAdmin {
 
 export type DatosRecurso = Omit<RecursoAdmin, 'id' | 'es_sistema' | 'total_roles'>;
 
-export interface FiltrosRecurso {
+interface FiltrosRecurso {
   ambito?: string;
   activo?: string;
   q?: string;

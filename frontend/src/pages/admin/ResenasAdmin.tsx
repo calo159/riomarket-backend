@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import type { Resena } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
 
@@ -26,7 +27,7 @@ export function ResenasAdmin() {
   }, []);
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'admin', pagina, calificacion],
+    queryKey: claves.resenas.admin(pagina, calificacion),
     queryFn: () =>
       listarResenas({
         page: pagina,
@@ -40,8 +41,8 @@ export function ResenasAdmin() {
   const borrar = useMutation({
     mutationFn: (id: number) => eliminarResena(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['resenas'] });
-      void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+      void queryClient.invalidateQueries({ queryKey: claves.resenas.todos });
+      void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
       setEliminar(null);
       toast.exito('Reseña eliminada.');
     },

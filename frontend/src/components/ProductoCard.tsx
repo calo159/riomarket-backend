@@ -17,7 +17,7 @@ export function ImagenProducto({
   producto: Producto;
   className?: string;
 }) {
-  const img0 = producto.imagenes?.[0] as any;
+  const img0 = producto.imagenes?.[0];
   const url = urlAbsoluta(img0?.url || img0?.miniatura);
   return (
     <Imagen
@@ -26,6 +26,8 @@ export function ImagenProducto({
       contenedorClassName={className}
       className="transition duration-300 group-hover:scale-105"
       alt={img0?.alt || producto.nombre}
+      width={img0?.ancho ?? undefined}
+      height={img0?.alto ?? undefined}
     />
   );
 }

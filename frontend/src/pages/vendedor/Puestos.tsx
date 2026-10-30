@@ -22,6 +22,7 @@ import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Categoria, Puesto } from '../../lib/types';
 import { cn } from '../../lib/utils';
+import { claves } from '../../lib/queryKeys';
 
 const VACIO: DatosPuesto = {
   nombre: '',
@@ -48,19 +49,19 @@ export function Puestos() {
     document.title = 'Mis puestos · RioMarket';
   }, []);
 
-  const verificacion = useQuery({ queryKey: ['mi-verificacion'], queryFn: miVerificacion });
+  const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
   const puestos = useQuery({
-    queryKey: ['puestos', 'vendedor', usuario?.id],
+    queryKey: claves.puestos.vendedor(usuario?.id),
     queryFn: () => listarPuestos({ vendedor: usuario!.id, page_size: 100 }),
     enabled: Boolean(usuario),
   });
-  const categorias = useQuery({ queryKey: ['categorias'], queryFn: listarCategorias });
+  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias });
 
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['puestos'] });
-    void queryClient.invalidateQueries({ queryKey: ['productos'] });
+    void queryClient.invalidateQueries({ queryKey: claves.puestos.todos });
+    void queryClient.invalidateQueries({ queryKey: claves.productos.todos });
   };
 
   const guardar = useMutation({

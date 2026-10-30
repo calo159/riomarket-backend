@@ -22,6 +22,7 @@ import { validarCupon } from '../api/coupons';
 import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
+import { claves } from '../lib/queryKeys';
 
 const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
 
@@ -50,13 +51,13 @@ export function Checkout() {
   }, []);
 
   const puesto = useQuery({
-    queryKey: ['puesto', carrito?.puestoId],
+    queryKey: claves.puesto(carrito?.puestoId),
     queryFn: () => obtenerPuesto(carrito!.puestoId),
     enabled: Boolean(carrito?.puestoId),
   });
 
   const direcciones = useQuery({
-    queryKey: ['direcciones'],
+    queryKey: claves.direcciones,
     queryFn: listarDirecciones,
   });
 
@@ -110,7 +111,7 @@ export function Checkout() {
     },
     onSuccess: (pedido) => {
       vaciar();
-      if (guardarEnLibreta) void queryClient.invalidateQueries({ queryKey: ['direcciones'] });
+      if (guardarEnLibreta) void queryClient.invalidateQueries({ queryKey: claves.direcciones });
       toast.exito('¡Pedido creado! Ahora puedes registrar el pago.');
       navigate(`/pedidos/${pedido.id}?nuevo=1`);
     },

@@ -69,7 +69,7 @@ export function EstadoError({
   );
 }
 
-export function EsqueletoTarjeta() {
+function EsqueletoTarjeta() {
   return (
     <div className="card overflow-hidden p-4">
       <div className="skeleton mb-4 h-40 w-full" />

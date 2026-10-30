@@ -3,21 +3,24 @@ import { Bike, MapPin, Star, Store } from 'lucide-react';
 import type { Puesto } from '../lib/types';
 import { Imagen } from './Imagen';
 import { urlAbsoluta } from '../lib/utils';
+import { formatearCalificacion } from '../lib/format';
 
 export function PuestoCard({ puesto }: { puesto: Puesto }) {
   const categorias = puesto.categorias as unknown as { id: number; nombre: string }[];
-  const puestoAny = puesto as any;
-  const logo = urlAbsoluta(puestoAny.logo || puestoAny.url_logo);
+  const logo = urlAbsoluta(puesto.logo);
+  const portada = urlAbsoluta(puesto.portada);
   return (
     <Link
       to={`/puestos/${puesto.id}`}
       className="card group flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg"
     >
-      {(puestoAny.portada || puestoAny.url_portada) && (
+      {portada && (
         <div className="relative h-28 w-full">
           <Imagen
-            src={urlAbsoluta(puestoAny.portada || puestoAny.url_portada)}
+            src={portada}
             fallbackNombre={puesto.nombre}
+            width={400}
+            height={112}
             contenedorClassName="h-full w-full"
           />
         </div>
@@ -27,6 +30,8 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
           <Imagen
             src={logo}
             fallbackNombre={puesto.nombre}
+            width={48}
+            height={48}
             contenedorClassName="h-12 w-12 shrink-0 rounded-xl"
           />
         ) : (
@@ -54,7 +59,7 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
       <div className="mt-4 flex items-center justify-between border-t px-5 pb-5 pt-3 text-xs text-slate-500 dark:text-slate-400">
         <span className="inline-flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          {puesto.calificacion_promedio ? puesto.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+          {formatearCalificacion(puesto.calificacion_promedio)}
           {puesto.cantidad_resenas > 0 && ` (${puesto.cantidad_resenas})`}
         </span>
         {puesto.ofrece_domicilio ? (

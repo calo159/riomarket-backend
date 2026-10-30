@@ -1,9 +1,10 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
 import { api } from '../lib/http';
 import { useSession } from '../auth/SessionProvider';
+import { claves } from '../lib/queryKeys';
 import { MENU_FALLBACK, type MenuRespuesta } from './tipos';
 
-const CLAVE_MENU = ['menu'] as const;
+const CLAVE_MENU = claves.menu;
 
 export function useMenu() {
   const { autenticado, usuario } = useSession();
@@ -14,7 +15,6 @@ export function useMenu() {
       return data;
     },
     refetchInterval: 60_000,
-    staleTime: 30_000,
     retry: 1,
   });
 

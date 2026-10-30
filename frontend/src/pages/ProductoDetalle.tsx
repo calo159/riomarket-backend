@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { listarResenas } from '../api/reviews';
 import { obtenerProducto, obtenerPuesto } from '../api/catalog';
-import { formatearMoneda } from '../lib/format';
+import { formatearCalificacion, formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { useCart } from '../cart/CartProvider';
 import { useToast } from '../components/ui/Toast';
@@ -22,6 +22,7 @@ import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
 import { Estrellas } from '../components/ui/Estrellas';
 import { useSession } from '../auth/SessionProvider';
 import { Imagen } from '../components/Imagen';
+import { claves } from '../lib/queryKeys';
 
 export function ProductoDetalle() {
   const { id } = useParams();
@@ -35,19 +36,19 @@ export function ProductoDetalle() {
   const [accionPendiente, setAccionPendiente] = useState<'agregar' | 'comprar'>('agregar');
 
   const producto = useQuery({
-    queryKey: ['producto', id],
+    queryKey: claves.producto(id),
     queryFn: () => obtenerProducto(id!),
     enabled: Boolean(id),
   });
 
   const puesto = useQuery({
-    queryKey: ['puesto', producto.data?.id_puesto],
+    queryKey: claves.puesto(producto.data?.id_puesto),
     queryFn: () => obtenerPuesto(producto.data!.id_puesto),
     enabled: Boolean(producto.data?.id_puesto),
   });
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'puesto', producto.data?.id_puesto],
+    queryKey: claves.resenas.deUnPuesto(producto.data?.id_puesto),
     queryFn: () => listarResenas({ puesto: producto.data!.id_puesto, page_size: 6 }),
     enabled: Boolean(producto.data?.id_puesto),
   });
@@ -132,17 +133,20 @@ export function ProductoDetalle() {
         <div>
           <div className="card aspect-square overflow-hidden">
             <Imagen
-              src={urlAbsoluta((imagen as any)?.url || (imagen as any)?.miniatura)}
+              src={urlAbsoluta(imagen?.url || imagen?.miniatura)}
               fallbackNombre={datos.nombre}
               contenedorClassName="h-full w-full"
-              alt={(imagen as any)?.alt || datos.nombre}
+              alt={imagen?.alt || datos.nombre}
+              width={imagen?.ancho ?? undefined}
+              height={imagen?.alto ?? undefined}
+              loading="eager" // es la imagen principal, visible al abrir la página
             />
           </div>
           {imagenes.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {imagenes.map((item, indice) => (
                 <button
-                  key={(item as any).id}
+                  key={item.id}
                   type="button"
                   onClick={() => setImagenActiva(indice)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 ${
@@ -151,8 +155,10 @@ export function ProductoDetalle() {
                   aria-label={`Ver imagen ${indice + 1}`}
                 >
                   <Imagen
-                    src={urlAbsoluta((item as any)?.miniatura || (item as any)?.url)}
+                    src={urlAbsoluta(item.miniatura || item.url)}
                     fallbackNombre={datos.nombre}
+                    width={80}
+                    height={80}
                     contenedorClassName="h-full w-full"
                   />
                 </button>
@@ -182,7 +188,7 @@ export function ProductoDetalle() {
             {tienda && (
               <span className="inline-flex items-center gap-1">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                {tienda.calificacion_promedio ? tienda.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+                {formatearCalificacion(tienda.calificacion_promedio)}
                 {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas})`}
               </span>
             )}

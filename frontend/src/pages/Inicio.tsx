@@ -18,19 +18,20 @@ import { PuestoCard } from '../components/PuestoCard';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
+import { claves } from '../lib/queryKeys';
 
 export function Inicio() {
   const [busqueda, setBusqueda] = useState('');
   const navigate = useNavigate();
   const { autenticado, rol } = useSession();
 
-  const categorias = useQuery({ queryKey: ['categorias'], queryFn: listarCategorias, staleTime: 5 * 60_000 });
+  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
   const productos = useQuery({
-    queryKey: ['productos', 'inicio'],
+    queryKey: claves.productos.inicio,
     queryFn: () => listarProductos({ page_size: 8, ordering: '-id' }),
   });
   const puestos = useQuery({
-    queryKey: ['puestos', 'inicio'],
+    queryKey: claves.puestos.inicio,
     queryFn: () => listarPuestos({ page_size: 6, ordering: 'nombre' }),
   });
 

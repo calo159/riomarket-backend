@@ -4,8 +4,8 @@ export function cn(...clases: ClassValue[]): string {
   return clsx(clases);
 }
 
-export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
-export const TAMANO_MAXIMO_IMAGEN = 2 * 1024 * 1024;
+const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
+const TAMANO_MAXIMO_IMAGEN = 2 * 1024 * 1024;
 
 export function validarImagen(archivo: File): string | null {
   if (!TIPOS_IMAGEN.includes(archivo.type)) {

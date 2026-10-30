@@ -7,6 +7,7 @@ import { ProductoCard } from '../components/ProductoCard';
 import { EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
+import { claves } from '../lib/queryKeys';
 
 const TAMANO = 12;
 
@@ -44,9 +45,9 @@ export function Catalogo() {
     [params, pagina],
   );
 
-  const categorias = useQuery({ queryKey: ['categorias'], queryFn: listarCategorias, staleTime: 5 * 60_000 });
+  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
   const productos = useQuery({
-    queryKey: ['productos', 'catalogo', filtros],
+    queryKey: claves.productos.catalogo(filtros),
     queryFn: () => listarProductos(filtros),
     placeholderData: (anterior) => anterior,
   });

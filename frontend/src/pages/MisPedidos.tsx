@@ -7,7 +7,8 @@ import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
-import { formatearFechaHora, formatearMoneda } from '../lib/format';
+import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../lib/format';
+import { claves } from '../lib/queryKeys';
 
 const TAMANO = 10;
 
@@ -20,7 +21,7 @@ export function MisPedidos() {
   }, []);
 
   const pedidos = useQuery({
-    queryKey: ['pedidos', 'comprador', pagina, estado],
+    queryKey: claves.pedidos.comprador(pagina, estado),
     queryFn: () => listarPedidos({ page: pagina, page_size: TAMANO, estado: estado || undefined }),
     placeholderData: (anterior) => anterior,
   });
@@ -41,12 +42,9 @@ export function MisPedidos() {
             aria-label="Filtrar por estado"
           >
             <option value="">Todos los estados</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="confirmado">Confirmados</option>
-            <option value="en_preparacion">En preparación</option>
-            <option value="en_camino">En camino</option>
-            <option value="entregado">Entregados</option>
-            <option value="cancelado">Cancelados</option>
+            {OPCIONES_FILTRO_PEDIDO.map((opcion) => (
+              <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+            ))}
           </select>
         }
       />

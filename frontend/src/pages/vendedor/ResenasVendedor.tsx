@@ -9,6 +9,7 @@ import { Estrellas } from '../../components/ui/Estrellas';
 import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
+import { claves } from '../../lib/queryKeys';
 
 export function ResenasVendedor() {
   const { usuario } = useSession();
@@ -18,7 +19,7 @@ export function ResenasVendedor() {
   const [respuesta, setRespuesta] = useState('');
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'vendedor', usuario?.id],
+    queryKey: claves.resenas.vendedor(usuario?.id),
     queryFn: () => listarResenas({ vendedor: usuario!.id, page_size: 100 }),
     enabled: Boolean(usuario),
   });
@@ -26,7 +27,7 @@ export function ResenasVendedor() {
   const responder = useMutation({
     mutationFn: ({ id, texto }: { id: number; texto: string }) => responderResena(id, texto),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['resenas'] });
+      void queryClient.invalidateQueries({ queryKey: claves.resenas.todos });
       setAbierto(null);
       setRespuesta('');
       toast.exito('Respuesta publicada.');

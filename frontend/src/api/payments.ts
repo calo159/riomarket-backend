@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Paginado, Pago, PagoVendedor } from '../lib/types';
 
-export interface FiltrosPago {
+interface FiltrosPago {
   estado?: string;
   por_confirmar?: boolean | string;
   metodo_pago?: string;
@@ -13,6 +13,17 @@ export interface FiltrosPago {
 
 export async function listarPagos(filtros: FiltrosPago = {}): Promise<Paginado<PagoVendedor>> {
   const { data } = await api.get<Paginado<PagoVendedor>>('/payments/pagos/', { params: filtros });
+  return data;
+}
+
+export interface ResumenIngresos {
+  pagos_aprobados: number;
+  /** Neto que recibe el vendedor por sus pagos aprobados (decimal con 2 cifras). */
+  ingresos_aprobados: string;
+}
+
+export async function obtenerResumenIngresos(): Promise<ResumenIngresos> {
+  const { data } = await api.get<ResumenIngresos>('/payments/pagos/resumen/');
   return data;
 }
 

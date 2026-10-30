@@ -10,6 +10,8 @@ import { formatearFechaHora } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
 import { mensajeDeError } from '../lib/errors';
 import { cn } from '../lib/utils';
+import { claves } from '../lib/queryKeys';
+import { invalidarMenu } from '../navigation/useMenu';
 
 const TAMANO = 15;
 
@@ -24,13 +26,14 @@ export function Notificaciones() {
   }, []);
 
   const notificaciones = useQuery({
-    queryKey: ['notificaciones', pagina, soloNoLeidas],
+    queryKey: claves.notificaciones.lista(pagina, soloNoLeidas),
     queryFn: () => listarNotificaciones({ page: pagina, page_size: TAMANO, leida: soloNoLeidas ? false : undefined }),
     placeholderData: (anterior) => anterior,
   });
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    void queryClient.invalidateQueries({ queryKey: claves.notificaciones.todos });
+    void invalidarMenu(queryClient); // el contador de la campana sale de los badges del menú
   };
 
   const leer = useMutation({

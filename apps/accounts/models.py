@@ -79,6 +79,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         verbose_name = "usuario"
         verbose_name_plural = "usuarios"
         ordering = ["-fecha_registro"]
+        # El listado de administración filtra por rol o estado y ordena por registro reciente.
+        indexes = [
+            models.Index(fields=["rol", "-fecha_registro"], name="usuario_rol_registro_idx"),
+            models.Index(fields=["estado", "-fecha_registro"], name="usuario_estado_registro_idx"),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(rol__in=["comprador", "vendedor", "administrador"]),

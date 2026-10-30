@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Paginado, Pedido } from '../lib/types';
 
-export interface FiltrosPedido {
+interface FiltrosPedido {
   estado?: string;
   tipo_entrega?: string;
   puesto?: number | string;
@@ -34,14 +34,6 @@ export async function obtenerPedido(id: number | string): Promise<Pedido> {
 
 export async function crearPedido(datos: DatosPedido): Promise<Pedido> {
   const { data } = await api.post<Pedido>('/orders/pedidos/', datos);
-  return data;
-}
-
-export async function actualizarPedido(
-  id: number,
-  datos: Partial<Pick<Pedido, 'direccion_entrega' | 'referencia_entrega' | 'notas'>>,
-): Promise<Pedido> {
-  const { data } = await api.patch<Pedido>(`/orders/pedidos/${id}/`, datos);
   return data;
 }
 

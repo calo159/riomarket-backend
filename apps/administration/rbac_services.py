@@ -14,7 +14,7 @@ from django.db.models.functions import Coalesce, Lower
 from apps.audit.models import RegistroAuditoria
 from apps.audit.services import registrar
 from apps.common.motivo import validar_motivo
-from apps.rbac.acceso import recursos_de_usuario
+from apps.rbac.acceso import invalidar_cache_peticion, recursos_de_usuario
 from apps.rbac.defaults import ADMINISTRADOR, RECURSOS_OBLIGATORIOS_ADMIN
 from apps.rbac.models import Recurso, Rol, RolRecurso, UsuarioRol
 
@@ -159,6 +159,8 @@ def fijar_recursos_de_rol(*, rol: Rol, actor, recursos_ids: list[int], motivo: s
         RolRecurso.objects.bulk_create(
             [RolRecurso(id_rol=rol, id_recurso=r) for c, r in nuevos.items() if c not in actuales]
         )
+        # ``bulk_create`` no emite señales: se vacía la caché de la petición a mano.
+        invalidar_cache_peticion()
     if set(actuales) != set(nuevos):
         _auditar(
             actor,

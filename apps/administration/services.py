@@ -370,20 +370,43 @@ def _conteos(modelo, campo: str, valores) -> dict[str, int]:
     return cuentas
 
 
+def _conteos_por_valor(campo: str, valores, prefijo: str) -> dict:
+    """Expresiones de ``aggregate`` que cuentan cada valor del campo en una sola consulta."""
+    return {f"{prefijo}_{valor}": Count("id", filter=Q(**{campo: valor})) for valor in valores}
+
+
+def _extraer_conteos(fila: dict, valores, prefijo: str) -> dict[str, int]:
+    return {valor: fila[f"{prefijo}_{valor}"] for valor in valores}
+
+
 def resumen() -> dict:
+    # Una consulta por tabla (agregaciones condicionales) en lugar de una por cifra.
     usuarios = Usuario.objects.aggregate(
         total=Count("id"),
         activos=Count("id", filter=Q(estado=Usuario.Estado.ACTIVO)),
         suspendidos=Count("id", filter=Q(estado=Usuario.Estado.SUSPENDIDO)),
+        **_conteos_por_valor("rol", Usuario.Rol.values, "rol"),
     )
-    roles = _conteos(Usuario, "rol", Usuario.Rol.values)
-    pedidos_por_estado = _conteos(Pedido, "estado", Pedido.Estado.values)
+    roles = _extraer_conteos(usuarios, Usuario.Rol.values, "rol")
+    pedidos = Pedido.objects.aggregate(
+        con_no_recibido=Count("id", filter=Q(no_recibido_en__isnull=False)),
+        **_conteos_por_valor("estado", Pedido.Estado.values, "estado"),
+    )
+    pedidos_por_estado = _extraer_conteos(pedidos, Pedido.Estado.values, "estado")
     puestos_por_estado = _conteos(Puesto, "estado", Puesto.Estado.values)
     productos_por_estado = _conteos(Producto, "estado", Producto.Estado.values)
-    pagos = Pago.objects.filter(estado=Pago.Estado.APROBADO).aggregate(
-        total=Sum("total_cobrado"),
-        comision=Sum("comision_plataforma"),
+    pagos = Pago.objects.aggregate(
+        total=Count("id"),
+        por_confirmar=Count(
+            "id", filter=Q(estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO))
+        ),
+        vendido=Sum("total_cobrado", filter=Q(estado=Pago.Estado.APROBADO)),
+        comision=Sum("comision_plataforma", filter=Q(estado=Pago.Estado.APROBADO)),
     )
+    resenas = Resena.objects.aggregate(
+        total=Count("id"), ocultas=Count("id", filter=Q(visible=False))
+    )
+    cupones = _contar_cupones()
     return {
         "usuarios": {
             "total": usuarios["total"],
@@ -397,14 +420,12 @@ def resumen() -> dict:
             "activos": sum(
                 n for e, n in pedidos_por_estado.items() if e not in Pedido.ESTADOS_FINALES
             ),
-            "con_no_recibido": Pedido.objects.filter(no_recibido_en__isnull=False).count(),
+            "con_no_recibido": pedidos["con_no_recibido"],
         },
         "pagos": {
-            "total": Pago.objects.count(),
-            "por_confirmar": Pago.objects.filter(
-                estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
-            ).count(),
-            "total_vendido": _dinero(pagos["total"]),
+            "total": pagos["total"],
+            "por_confirmar": pagos["por_confirmar"],
+            "total_vendido": _dinero(pagos["vendido"]),
             "comision": _dinero(pagos["comision"]),
         },
         "verificaciones_pendientes": Vendedor.objects.filter(
@@ -419,22 +440,13 @@ def resumen() -> dict:
             "por_estado": productos_por_estado,
             "bloqueados": productos_por_estado[Producto.Estado.BLOQUEADO],
         },
-        "resenas": {
-            "total": Resena.objects.count(),
-            "ocultas": Resena.objects.filter(visible=False).count(),
-        },
-        "cupones": {
-            "total": _contar_cupones(),
-            "activos": _contar_cupones(activos=True),
-        },
+        "resenas": resenas,
+        "cupones": cupones,
         "generado_en": timezone.now().isoformat(),
     }
 
 
-def _contar_cupones(activos: bool = False) -> int:
+def _contar_cupones() -> dict:
     from apps.promotions.models import Cupon
 
-    qs = Cupon.objects.all()
-    if activos:
-        qs = qs.filter(activo=True)
-    return qs.count()
+    return Cupon.objects.aggregate(total=Count("id"), activos=Count("id", filter=Q(activo=True)))

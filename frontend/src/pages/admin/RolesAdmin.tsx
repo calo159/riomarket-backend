@@ -20,15 +20,16 @@ import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 type Vista = 'lista' | 'matriz';
 
 /** Un rol "administrador" de sistema no puede perder los recursos que sostienen el panel. */
-export function esObligatorio(rol: RolAdmin, recurso: RecursoAdmin): boolean {
+function esObligatorio(rol: RolAdmin, recurso: RecursoAdmin): boolean {
   return rol.es_sistema && rol.nombre === 'administrador' && RECURSOS_OBLIGATORIOS_ADMIN.includes(recurso.codigo);
 }
 
-export function agruparRecursos(recursos: RecursoAdmin[]): { clave: string; titulo: string; items: RecursoAdmin[] }[] {
+function agruparRecursos(recursos: RecursoAdmin[]): { clave: string; titulo: string; items: RecursoAdmin[] }[] {
   const grupos: { clave: string; titulo: string; items: RecursoAdmin[] }[] = [];
   for (const recurso of recursos) {
     const clave = `${recurso.ambito}|${recurso.grupo}`;
@@ -56,12 +57,12 @@ export function RolesAdmin() {
     document.title = 'Roles · Administración · RioMarket';
   }, []);
 
-  const roles = useQuery({ queryKey: ['admin-roles'], queryFn: listarRoles });
-  const recursos = useQuery({ queryKey: ['admin-recursos'], queryFn: () => listarRecursos() });
+  const roles = useQuery({ queryKey: claves.adminRoles, queryFn: listarRoles });
+  const recursos = useQuery({ queryKey: claves.adminRecursos.todos, queryFn: () => listarRecursos() });
 
   const refrescar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
-    void queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+    void queryClient.invalidateQueries({ queryKey: claves.adminRoles });
+    void queryClient.invalidateQueries({ queryKey: claves.usuarios.todos });
     void invalidarMenu(queryClient);
   };
 
@@ -354,7 +355,7 @@ function FormularioRol({
   );
 }
 
-export function PermisosModal({
+function PermisosModal({
   rol,
   recursos,
   onCerrar,

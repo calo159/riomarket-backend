@@ -16,6 +16,7 @@ import { ConfirmarModal, Modal } from '../components/ui/Modal';
 import { useToast } from '../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import type { Direccion } from '../lib/types';
+import { claves } from '../lib/queryKeys';
 
 const VACIO: DatosDireccion = {
   alias: '',
@@ -37,10 +38,10 @@ export function Direcciones() {
     document.title = 'Mis direcciones · RioMarket';
   }, []);
 
-  const direcciones = useQuery({ queryKey: ['direcciones'], queryFn: listarDirecciones });
+  const direcciones = useQuery({ queryKey: claves.direcciones, queryFn: listarDirecciones });
 
   const invalidar = () => {
-    void queryClient.invalidateQueries({ queryKey: ['direcciones'] });
+    void queryClient.invalidateQueries({ queryKey: claves.direcciones });
   };
 
   const guardar = useMutation({

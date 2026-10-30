@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearFechaHora, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
+import { claves } from '../../lib/queryKeys';
 
 export function Verificaciones() {
   const queryClient = useQueryClient();
@@ -46,14 +47,14 @@ export function Verificaciones() {
     };
   }, [cedula]);
 
-  const solicitudes = useQuery({ queryKey: ['solicitudes', filtro], queryFn: () => listarSolicitudes(filtro || undefined) });
+  const solicitudes = useQuery({ queryKey: claves.solicitudes.lista(filtro), queryFn: () => listarSolicitudes(filtro || undefined) });
 
   const decidir = useMutation({
     mutationFn: ({ id, estado, motivo_rechazo }: { id: number; estado: 'aprobado' | 'rechazado'; motivo_rechazo?: string }) =>
       decidirSolicitud(id, { estado, motivo_rechazo }),
     onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['solicitudes'] });
-      void queryClient.invalidateQueries({ queryKey: ['mi-verificacion'] });
+      void queryClient.invalidateQueries({ queryKey: claves.solicitudes.todos });
+      void queryClient.invalidateQueries({ queryKey: claves.miVerificacion });
       void invalidarMenu(queryClient);
       setRechazar(null);
       setAprobar(null);

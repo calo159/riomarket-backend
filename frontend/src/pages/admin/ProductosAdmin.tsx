@@ -12,6 +12,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import type { Producto } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const TAMANO = 15;
 
@@ -38,7 +39,7 @@ export function ProductosAdmin() {
   };
 
   const productos = useQuery({
-    queryKey: ['productos', 'admin', pagina, busqueda, estado],
+    queryKey: claves.productos.admin(pagina, busqueda, estado),
     queryFn: () => listarProductos(filtros),
     placeholderData: (anterior) => anterior,
   });
@@ -47,8 +48,8 @@ export function ProductosAdmin() {
     mutationFn: ({ id, nuevo }: { id: number; nuevo: 'activo' | 'bloqueado' }) =>
       moderarProducto(id, { estado: nuevo, motivo: motivo.trim() }),
     onSuccess: (_, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['productos'] });
-      void queryClient.invalidateQueries({ queryKey: ['admin-resumen'] });
+      void queryClient.invalidateQueries({ queryKey: claves.productos.todos });
+      void queryClient.invalidateQueries({ queryKey: claves.adminResumen });
       setObjetivo(null);
       setMotivo('');
       setError('');

@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearFecha, formatearMoneda, hoyBogota } from '../../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Cupon } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const HOY = hoyBogota();
 
@@ -41,10 +42,10 @@ export function CuponesAdmin() {
     document.title = 'Cupones · Administración';
   }, []);
 
-  const cupones = useQuery({ queryKey: ['cupones', 'admin'], queryFn: () => listarCupones({ page_size: 100 }) });
-  const puestos = useQuery({ queryKey: ['puestos', 'todos'], queryFn: () => listarPuestos({ page_size: 200 }) });
+  const cupones = useQuery({ queryKey: claves.cupones.admin, queryFn: () => listarCupones({ page_size: 100 }) });
+  const puestos = useQuery({ queryKey: claves.puestos.todosParaSeleccion, queryFn: () => listarPuestos({ page_size: 200 }) });
 
-  const invalidar = () => void queryClient.invalidateQueries({ queryKey: ['cupones'] });
+  const invalidar = () => void queryClient.invalidateQueries({ queryKey: claves.cupones.todos });
 
   const guardar = useMutation({
     mutationFn: () => (editando ? actualizarCupon(editando.id, formulario) : crearCupon(formulario)),

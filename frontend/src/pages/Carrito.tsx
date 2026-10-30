@@ -62,6 +62,8 @@ export function Carrito() {
                   fallbackNombre={item.nombre}
                   contenedorClassName="h-full w-full"
                   alt={item.nombre}
+                  width={112}
+                  height={112}
                 />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col">

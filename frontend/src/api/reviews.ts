@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Paginado, Resena } from '../lib/types';
 
-export interface FiltrosResena {
+interface FiltrosResena {
   puesto?: number | string;
   vendedor?: number | string;
   calificacion_min?: number;

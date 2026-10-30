@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Cupon, Paginado, RespuestaValidarCupon } from '../lib/types';
 
-export interface FiltrosCupon {
+interface FiltrosCupon {
   activo?: boolean | string;
   puesto?: number | string;
   tipo?: string;

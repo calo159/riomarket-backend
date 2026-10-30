@@ -10,6 +10,8 @@ import { urlAbsoluta } from '../lib/utils';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
+import { formatearCalificacion } from '../lib/format';
+import { claves } from '../lib/queryKeys';
 
 const TAMANO = 12;
 
@@ -19,13 +21,13 @@ export function PuestoDetalle() {
   const [pagina, setPagina] = useState(1);
 
   const puesto = useQuery({
-    queryKey: ['puesto', id],
+    queryKey: claves.puesto(id),
     queryFn: () => obtenerPuesto(id!),
     enabled: Boolean(id),
   });
 
   const productos = useQuery({
-    queryKey: ['productos', 'puesto', id, categoria, pagina],
+    queryKey: claves.productos.deUnPuesto(id, categoria, pagina),
     queryFn: () =>
       listarProductos({
         puesto: id!,
@@ -38,7 +40,7 @@ export function PuestoDetalle() {
   });
 
   const resenas = useQuery({
-    queryKey: ['resenas', 'puesto', id],
+    queryKey: claves.resenas.deUnPuesto(id),
     queryFn: () => listarResenas({ puesto: id!, page_size: 10 }),
     enabled: Boolean(id),
   });
@@ -59,9 +61,8 @@ export function PuestoDetalle() {
 
   const tienda = puesto.data;
   const categorias = tienda.categorias as unknown as { id: number; nombre: string }[];
-  const tiendaAny = tienda as any;
-  const portada = urlAbsoluta(tiendaAny.portada || tiendaAny.url_portada);
-  const logo = urlAbsoluta(tiendaAny.logo || tiendaAny.url_logo);
+  const portada = urlAbsoluta(tienda.portada);
+  const logo = urlAbsoluta(tienda.logo);
 
   const cambiarCategoria = (nueva: number | null) => {
     setCategoria(nueva);
@@ -79,6 +80,9 @@ export function PuestoDetalle() {
                 fallbackNombre={tienda.nombre}
                 contenedorClassName="h-full w-full"
                 alt={`Portada de ${tienda.nombre}`}
+                width={1200}
+                height={400}
+                loading="eager" // portada del puesto: visible al abrir la página
               />
             </div>
           )}
@@ -89,6 +93,8 @@ export function PuestoDetalle() {
                 fallbackNombre={tienda.nombre}
                 contenedorClassName="h-20 w-20 shrink-0 rounded-2xl"
                 alt={`Logo de ${tienda.nombre}`}
+                width={80}
+                height={80}
               />
             ) : (
               <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -108,7 +114,7 @@ export function PuestoDetalle() {
                 <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {tienda.direccion}</span>
                 <span className="inline-flex items-center gap-1.5">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  {tienda.calificacion_promedio ? tienda.calificacion_promedio.toFixed(1) : 'Sin reseñas'}
+                  {formatearCalificacion(tienda.calificacion_promedio)}
                   {tienda.cantidad_resenas > 0 && ` (${tienda.cantidad_resenas} reseñas)`}
                 </span>
                 {tienda.horario && <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" /> {tienda.horario}</span>}

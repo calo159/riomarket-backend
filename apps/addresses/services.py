@@ -4,6 +4,7 @@
 - Exactamente una predeterminada por usuario; la primera dirección activa
   queda predeterminada automáticamente.
 - Desactivar una dirección deja de ser predeterminada.
+- Al eliminar la predeterminada, otra dirección activa del dueño la releva.
 """
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -95,7 +96,21 @@ def marcar_predeterminada(*, direccion: Direccion, usuario: Usuario) -> Direccio
 def eliminar_direccion(*, direccion: Direccion, usuario: Usuario) -> None:
     _exigir_gestor(usuario)
     _exigir_dueno(direccion, usuario)
-    direccion.delete()
+    with transaction.atomic():
+        era_predeterminada = direccion.es_predeterminada
+        propietario = direccion.id_usuario
+        direccion.delete()
+        if era_predeterminada:
+            # Al borrar la predeterminada, la activa más reciente del dueño la releva.
+            relevo = (
+                Direccion.objects.select_for_update()
+                .filter(id_usuario=propietario, activa=True)
+                .order_by("-fecha_creacion", "-pk")
+                .first()
+            )
+            if relevo is not None:
+                relevo.es_predeterminada = True
+                relevo.save(update_fields=["es_predeterminada", "fecha_actualizacion"])
 
 
 def visibles_direcciones(usuario: Usuario, qs: QuerySet[Direccion]) -> QuerySet[Direccion]:

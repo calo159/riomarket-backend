@@ -13,6 +13,7 @@ import { useToast } from '../../components/ui/Toast';
 import { formatearFecha, formatearMoneda, hoyBogota } from '../../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Cupon } from '../../lib/types';
+import { claves } from '../../lib/queryKeys';
 
 const HOY = hoyBogota();
 
@@ -44,19 +45,19 @@ export function Cupones() {
     document.title = 'Cupones · RioMarket';
   }, []);
 
-  const verificacion = useQuery({ queryKey: ['mi-verificacion'], queryFn: miVerificacion });
+  const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
   const puestos = useQuery({
-    queryKey: ['puestos', 'vendedor', usuario?.id],
+    queryKey: claves.puestos.vendedor(usuario?.id),
     queryFn: () => listarPuestos({ vendedor: usuario!.id, page_size: 100 }),
     enabled: Boolean(usuario),
   });
-  const cupones = useQuery({ queryKey: ['cupones', 'vendedor'], queryFn: () => listarCupones({ page_size: 100 }) });
+  const cupones = useQuery({ queryKey: claves.cupones.vendedor, queryFn: () => listarCupones({ page_size: 100 }) });
 
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
   const puestosMios = puestos.data?.results ?? [];
   const mios = (cupones.data?.results ?? []).filter((cupon) => cupon.id_puesto && puestosMios.some((p) => p.id === cupon.id_puesto));
 
-  const invalidar = () => void queryClient.invalidateQueries({ queryKey: ['cupones'] });
+  const invalidar = () => void queryClient.invalidateQueries({ queryKey: claves.cupones.todos });
 
   const guardar = useMutation({
     mutationFn: () => (editando ? actualizarCupon(editando.id, formulario) : crearCupon(formulario)),

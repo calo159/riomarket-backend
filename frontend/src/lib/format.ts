@@ -37,6 +37,11 @@ export function formatearFechaHora(valor: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? '—' : fechaHora.format(d);
 }
 
+/** Calificación con un decimal; ``vacio`` es lo que se muestra si aún no hay reseñas. */
+export function formatearCalificacion(valor: number | null | undefined, vacio = 'Sin reseñas'): string {
+  return valor ? valor.toFixed(1) : vacio;
+}
+
 export function numero(valor: string | number | null | undefined): number {
   const n = Number(valor ?? 0);
   return Number.isFinite(n) ? n : 0;
@@ -50,6 +55,16 @@ export const ETIQUETAS_PEDIDO: Record<string, string> = {
   entregado: 'Entregado',
   cancelado: 'Cancelado',
 };
+
+/** Opciones del filtro por estado de pedido (plural, como se lee en una lista filtrada). */
+export const OPCIONES_FILTRO_PEDIDO: { valor: string; etiqueta: string }[] = [
+  { valor: 'pendiente', etiqueta: 'Pendientes' },
+  { valor: 'confirmado', etiqueta: 'Confirmados' },
+  { valor: 'en_preparacion', etiqueta: 'En preparación' },
+  { valor: 'en_camino', etiqueta: 'En camino' },
+  { valor: 'entregado', etiqueta: 'Entregados' },
+  { valor: 'cancelado', etiqueta: 'Cancelados' },
+];
 
 export const ETIQUETAS_PAGO: Record<string, string> = {
   pendiente: 'Pendiente',

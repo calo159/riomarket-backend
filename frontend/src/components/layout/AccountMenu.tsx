@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useSession } from '../../auth/SessionProvider';
@@ -13,6 +13,7 @@ export function AccountMenu() {
   const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
+  const idPanel = useId();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export function AccountMenu() {
         className="btn-ghost gap-2 py-1.5 pl-1.5 pr-2.5"
         onClick={() => setAbierto((valor) => !valor)}
         aria-expanded={abierto}
-        aria-haspopup="menu"
+        aria-controls={idPanel}
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-800 dark:bg-brand-950 dark:text-brand-200">
           {iniciales(usuario.nombre)}
@@ -56,8 +57,9 @@ export function AccountMenu() {
       </button>
 
       {abierto && (
+        // Es un panel de enlaces (no un role="menu", que exigiría menuitems y navegación con flechas).
         <div
-          role="menu"
+          id={idPanel}
           className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border bg-white shadow-xl dark:bg-slate-900"
         >
           <div className="border-b px-4 py-3">
