@@ -89,29 +89,6 @@ class SuspenderSerializer(serializers.Serializer):
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
 
 
-class MenuEnlaceSerializer(serializers.Serializer):
-    to = serializers.CharField()
-    etiqueta = serializers.CharField()
-    icono = serializers.CharField()
-    fin = serializers.BooleanField(required=False)
-    badge = serializers.CharField(required=False)
-
-
-class MenuGrupoSerializer(serializers.Serializer):
-    grupo = serializers.CharField(allow_null=True)
-    items = MenuEnlaceSerializer(many=True)
-
-
-class MenuSerializer(serializers.Serializer):
-    rol = serializers.CharField()
-    inicio = serializers.CharField()
-    publico = MenuEnlaceSerializer(many=True)
-    cuenta = MenuEnlaceSerializer(many=True)
-    panel = MenuGrupoSerializer(many=True)
-    panel_titulo = serializers.CharField(allow_null=True)
-    badges = serializers.DictField(child=serializers.IntegerField())
-
-
 class RolesUsuarioSerializer(serializers.Serializer):
     roles = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=True)
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)

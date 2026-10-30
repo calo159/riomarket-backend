@@ -13,7 +13,7 @@ from apps.accounts.views import (
     RegistroView,
     RestablecerContrasenaView,
 )
-from apps.administration.views import MenuView
+from apps.rbac.views import MenuView
 
 urlpatterns = [
     path("registro/", RegistroView.as_view(), name="auth-registro"),
