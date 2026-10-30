@@ -11,7 +11,7 @@ Marketplace local para los puestos de mercado de Riohacha (Colombia). Incluye la
 ## Contenido
 
 - [Qué es](#qué-es-riomarket) · [Funcionalidades](#funcionalidades-y-estado) · [Arquitectura](#arquitectura) · [Stack](#stack) · [Inicio](#inicio-rápido) · [Datos](#datos-demo)
-- [Configuración](#configuración) · [Autenticación](#autenticación-y-roles) · [API](#api) · [Frontend](#frontend) · [Pruebas](#pruebas)
+- [Configuración](#configuración) · [Autenticación](#autenticación-y-roles) · [API](#api) · [Administración y RBAC](#administración-y-rbac) · [Frontend](#frontend) · [Pruebas](#pruebas)
 - [Despliegue](#despliegue-en-render) · [Seguridad](#seguridad-y-limitaciones) · [Estructura](#estructura) · [Documentación](#documentación) · [Problemas](#solución-de-problemas) · [Roadmap](#roadmap) · [Contribuir y licencia](#contribuir-licencia-y-autores)
 
 ## Qué es RioMarket
@@ -29,7 +29,7 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
 | Paneles | Listo | Comprador, vendedor y administrador en una sola SPA |
-| Administración | Listo | Usuarios (rol y suspensión con auditoría), menú dinámico, moderación de puestos/productos, categorías, reseñas y resumen |
+| Administración y RBAC | Listo | Usuarios (rol base, roles adicionales y baneo), roles, recursos, menú dinámico por recursos, moderación de puestos/productos, categorías, reseñas y resumen, todo con auditoría |
 | Pasarela y contraseñas | No incluido | Sin pago real ni cambio de contraseña |
 
 ## Arquitectura
@@ -172,7 +172,7 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - Renovar y cerrar sesión exigen la cabecera `X-Requested-With: XMLHttpRequest`; el frontend la envía automáticamente. El refresh rota y el anterior queda en lista negra.
 - El login devuelve `{access, usuario}`. Si el refresh falla, la SPA limpia la sesión y redirige a `/login?expirada=1`.
 - **Comprador:** compra, direcciones y reseñas. **Vendedor:** catálogo propio, pedidos y cupones. **Administrador:** usuarios, verificaciones, moderación, pagos y auditoría.
-- El menú de la SPA sale de `GET /api/auth/menu/` según el rol y la cuenta activa; si el administrador cambia el rol, el menú cambia al volver a entrar.
+- El menú de la SPA sale de `GET /api/auth/menu/`: son los **recursos** que los roles de la persona le otorgan (ver [Administración y RBAC](#administración-y-rbac)). Si el administrador cambia un rol o un recurso, el menú cambia en la siguiente petición.
 
 ### RBAC de pedidos
 
@@ -203,32 +203,135 @@ La API está documentada con OpenAPI (Swagger en `/api/docs/`). Módulos princip
 
 La paginación usa `page`, `page_size` (máximo 100) y `ordering` con listas blancas por módulo. Los errores tienen siempre la forma `{"success": false, "status_code": 400, "errors": {...}}`.
 
-## Administración
+## Administración y RBAC
 
-Los endpoints de `/api/admin/` exigen un administrador activo. Cambiar rol o suspender exige `motivo` (mínimo 5 caracteres), invalida las sesiones del afectado y deja un registro de auditoría.
+El administrador gestiona **usuarios, roles y recursos** con el modelo RBAC del diagrama del profesor (app `apps/rbac`, API en `/api/admin/`).
 
-| Método | Ruta | Uso |
+```mermaid
+erDiagram
+    usuario ||--o{ usuario_has_rol : "tiene"
+    rol ||--o{ usuario_has_rol : "se asigna"
+    rol ||--o{ rol_has_recurso : "otorga"
+    recurso ||--o{ rol_has_recurso : "pertenece"
+    usuario { int Usua_ID PK
+              string nombre
+              string email
+              string telefono
+              string direccion }
+    usuario_has_rol { int Usuario_ID FK
+                      int Rol_ID FK }
+    rol { int Rol_ID PK
+          string Rol_nombre }
+    rol_has_recurso { int Rol_ID FK
+                      int recurso_id FK }
+    recurso { int idrecurso PK
+              string nombre }
+```
+
+La relación usuario–rol y rol–recurso es **N:M** a través de `usuario_has_rol` y `rol_has_recurso` (tablas con esos nombres exactos). En el código: `usuario` es `accounts.Usuario` (correo, celular y direcciones viven allí y en `addresses`), y `rol`, `recurso` y las dos tablas puente son los modelos de `apps/rbac`.
+
+### Cómo funciona
+
+- **Rol base + roles adicionales.** `Usuario.rol` (comprador, vendedor, administrador) se conserva como *rol base*: de él dependen los pedidos, el panel del vendedor y el JWT. Cada rol base existe también como `Rol` de sistema y una señal mantiene su fila en `usuario_has_rol`. Los roles base son excluyentes; los **roles personalizados se suman**.
+- **Permisos efectivos** = recursos *activos* de los roles *activos* del usuario (asignados + rol base) **más** los recursos públicos. Anónimos y cuentas suspendidas solo ven lo público. No hay atajo por rol base: si se le quita `admin.auditoria` al rol administrador, el acceso se pierde de verdad.
+- **Menú dinámico.** `GET /api/auth/menu/` devuelve `{rol, roles, recursos, items, badges}`; los ítems son los recursos activos con ruta que el usuario puede ver. El frontend pinta lo que llega y protege cada ruta de panel con su recurso.
+- **Candados anti-bloqueo:** los roles y recursos de sistema no se eliminan ni desactivan (en roles solo se edita la descripción; en recursos no se cambian `codigo`, `ruta`, `ambito`, `es_publico`); el rol administrador no puede perder `admin.usuarios`, `admin.roles`, `admin.recursos` ni `admin.resumen`; nunca queda el sistema sin un administrador activo.
+- **Candados anti-escalada:** nadie cambia su propio rol, sus roles adicionales ni se suspende; solo un administrador base otorga el rol administrador o modifica/suspende a otro administrador; quien no es administrador base no puede cambiar los recursos de un rol que él mismo tiene.
+- Cada acción sensible exige `motivo` (5 a 300 caracteres), se **audita** (entidad `usuario|rol|recurso|puesto|producto`, con campo, de, a y motivo) y, si afecta a una persona, la **notifica**. Cambiar el rol base o banear además **invalida sus sesiones**; los cambios de rol↔recurso no lo necesitan porque los permisos se calculan en cada petición.
+
+### Reglas de los usuarios
+
+- **Cambio de rol base** (`cambiar-rol`): rol distinto y válido, motivo obligatorio y sin pedidos activos (como comprador o en sus puestos). A vendedor reutiliza su registro de verificación o crea uno *pendiente* (no publica hasta que lo aprueben); de vendedor a otro rol sus puestos activos pasan a `inactivo` y se conserva la verificación.
+- **Banear = suspender:** no inicia sesión, conserva rol e historial; sus puestos activos pasan a `suspendido` y no se tocan los pedidos. **Reactivar** solo devuelve la cuenta (los puestos se reactivan desde Puestos). No se borran usuarios.
+
+### Catálogo de recursos por defecto
+
+Todos son de sistema (`es_sistema`). «Rol» indica quién los recibe al sembrar; el administrador puede reasignarlos.
+
+| Ámbito | Recursos (código → ruta) | Rol |
 | --- | --- | --- |
-| GET | `/api/admin/usuarios/` | Listado con filtros `rol`, `estado`, `q` y `ordering`; incluye `acciones_permitidas` |
-| POST | `/api/admin/usuarios/{id}/cambiar-rol/` | `{rol, motivo}` entre comprador, vendedor y administrador |
-| POST | `/api/admin/usuarios/{id}/suspender/` | `{motivo}`: ban lógico; conserva rol e historial |
-| POST | `/api/admin/usuarios/{id}/reactivar/` | Devuelve la cuenta a activa (los puestos se reactivan aparte) |
-| GET | `/api/admin/resumen/` | Métricas del panel y alertas de atención |
-| POST | `/api/catalog/puestos/{id}/moderar/` | `{estado: activo\|suspendido, motivo}` |
-| POST | `/api/catalog/productos/{id}/moderar/` | `{estado: activo\|bloqueado, motivo}` |
-| GET | `/api/auth/menu/` | Menú público del rol actual; no requiere autenticación |
+| Público | `catalogo` → `/catalogo` (visible sin sesión) | todos |
+| Cuenta | `mis_pedidos`, `direcciones` → `/mis-pedidos`, `/direcciones` | comprador |
+| Cuenta | `notificaciones`, `perfil` → `/notificaciones`, `/perfil` | los tres |
+| Panel vendedor | `vendedor.resumen` (`/vendedor`), `.verificacion`, `.puestos`, `.productos`, `.pedidos`, `.cupones`, `.resenas` (`/vendedor/...`) | vendedor |
+| Panel admin · Accesos | `admin.usuarios`, `admin.roles`, `admin.recursos` | administrador |
+| Panel admin · Gestión | `admin.verificaciones`, `admin.puestos`, `admin.productos`, `admin.categorias` | administrador |
+| Panel admin · Operación | `admin.pedidos`, `admin.pagos`, `admin.cupones`, `admin.resenas` | administrador |
+| Panel admin · Sistema | `admin.auditoria` | administrador |
+| Panel admin | `admin.resumen` → `/admin` | administrador |
+
+`python manage.py seed_rbac` (también lo llaman `seed_demo` y `seed_masivo`) es idempotente: solo **agrega** lo que falta, no sobrescribe ediciones del administrador ni re-vincula recursos que él quitó.
+
+### Qué se hace cumplir en el backend y qué solo en el menú
+
+| Control | Backend (`TieneRecurso` / `tiene_recurso`) | Solo menú y rutas del frontend |
+| --- | --- | --- |
+| `admin.usuarios`, `admin.roles`, `admin.recursos`, `admin.resumen` | Sí | — |
+| `admin.puestos`, `admin.productos` (moderar y ver todo) | Sí | — |
+| `admin.categorias` (escritura), `admin.verificaciones`, `admin.pagos` (reembolsar/anular), `admin.auditoria` | Sí | — |
+| `admin.resenas` (borrar/ver cualquier reseña), `admin.pedidos` (ver todos los pedidos) | Sí, en la visibilidad global | Menú y ruta |
+| `admin.cupones` | — | Menú y ruta |
+| `mis_pedidos`, `direcciones`, `notificaciones`, `perfil`, `vendedor.*` | — (las reglas de negocio siguen ligadas al **rol base**) | Menú y ruta |
+
+Las acciones de pedido (crear, confirmar, enviar, entregar…) siguen la matriz por rol base de la sección *RBAC de pedidos*.
+
+### Estados del pedido y quién ejecuta cada transición
+
+```mermaid
+stateDiagram-v2
+    [*] --> pendiente: comprador crea
+    pendiente --> confirmado: vendedor
+    confirmado --> en_preparacion: vendedor
+    en_preparacion --> en_camino: vendedor ("ya lo entregué al domiciliario / lo vinieron a buscar")
+    en_camino --> entregado: comprador (o administrador en disputas)
+    en_camino --> en_camino: comprador reporta "no me ha llegado" (una vez, no cambia el estado)
+    pendiente --> cancelado: comprador / vendedor / administrador
+    confirmado --> cancelado: comprador / vendedor / administrador
+    en_preparacion --> cancelado: comprador / vendedor / administrador
+```
+
+### Endpoints
+
+| Método | Ruta | Recurso | Uso |
+| --- | --- | --- | --- |
+| GET | `/api/admin/usuarios/` | `admin.usuarios` | Filtros `rol`, `estado`, `rol_asignado`, `q`, `ordering`; incluye `roles_asignados` y `acciones_permitidas` |
+| POST | `/api/admin/usuarios/{id}/cambiar-rol/` | + `admin.roles` | `{rol, motivo}` |
+| PUT | `/api/admin/usuarios/{id}/roles/` | + `admin.roles` | `{roles: [ids personalizados], motivo}` reemplaza los roles adicionales |
+| POST | `/api/admin/usuarios/{id}/suspender/` · `reactivar/` | `admin.usuarios` | `{motivo}` / sin cuerpo |
+| GET/POST | `/api/admin/roles/` · GET/PATCH/DELETE `/{id}/` | `admin.roles` | CRUD de roles; eliminar solo sin usuarios |
+| PUT | `/api/admin/roles/{id}/recursos/` | `admin.roles` | `{recursos: [ids], motivo}` |
+| GET/POST | `/api/admin/recursos/` · GET/PATCH/DELETE `/{id}/` | `admin.recursos` | Filtros `ambito`, `activo`, `q`; eliminar informa `roles_afectados` |
+| GET | `/api/admin/resumen/` | `admin.resumen` | Métricas y alertas |
+| POST | `/api/catalog/puestos/{id}/moderar/` | `admin.puestos` | `{estado: activo\|inactivo\|suspendido, motivo}` (motivo obligatorio al restringir) |
+| POST | `/api/catalog/productos/{id}/moderar/` | `admin.productos` | `{estado: activo\|bloqueado, motivo}` |
+| GET | `/api/auth/menu/` | público | Menú del usuario actual (anónimo: solo lo público) |
 
 ```bash
 TOKEN="<access del administrador>"
-curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/cambiar-rol/ \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"rol": "vendedor", "motivo": "Solicitó publicar sus productos"}'
+H=(-H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json")
 
-curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/suspender/ \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+# 1. Crear un rol y darle recursos (ids de GET /api/admin/recursos/)
+curl -X POST http://127.0.0.1:8000/api/admin/roles/ "${H[@]}" \
+  -d '{"nombre": "moderador", "descripcion": "Modera puestos y productos"}'
+curl -X PUT http://127.0.0.1:8000/api/admin/roles/4/recursos/ "${H[@]}" \
+  -d '{"recursos": [14, 15, 22], "motivo": "Equipo de moderación"}'
+
+# 2. Crear un recurso nuevo
+curl -X POST http://127.0.0.1:8000/api/admin/recursos/ "${H[@]}" \
+  -d '{"codigo": "admin.reportes", "nombre": "Reportes", "ambito": "panel_admin", "ruta": "/admin/reportes", "icono": "BarChart", "grupo": "Operación", "orden": 9}'
+
+# 3. Asignar roles adicionales a un usuario
+curl -X PUT http://127.0.0.1:8000/api/admin/usuarios/12/roles/ "${H[@]}" \
+  -d '{"roles": [4], "motivo": "Pasa al equipo de moderación"}'
+
+# 4. Cambiar el rol base y banear
+curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/cambiar-rol/ "${H[@]}" \
+  -d '{"rol": "vendedor", "motivo": "Solicitó publicar sus productos"}'
+curl -X POST http://127.0.0.1:8000/api/admin/usuarios/12/suspender/ "${H[@]}" \
   -d '{"motivo": "Incumplimiento reiterado de las normas"}'
 
-curl http://127.0.0.1:8000/api/auth/menu/
+# 5. Menú del usuario actual (sin token: solo lo público)
+curl http://127.0.0.1:8000/api/auth/menu/ -H "Authorization: Bearer $TOKEN"
 ```
 
 ## Frontend
