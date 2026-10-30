@@ -68,7 +68,7 @@ def actualizar_puesto(*, puesto: Puesto, usuario, datos: dict) -> Puesto:
     for atributo, valor in datos.items():
         setattr(puesto, atributo, valor)
     puesto.full_clean()
-    puesto.save()
+    puesto.save(update_fields=list(datos) or None)
     return puesto
 
 
@@ -181,20 +181,29 @@ def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
     if "precio" in datos:
         _validar_precio(datos["precio"])
 
-    if not usuario.es_administrador and (
-        datos.get("estado") == Producto.Estado.BLOQUEADO
-        or (
-            producto.estado == Producto.Estado.BLOQUEADO
-            and "estado" in datos
-            and datos["estado"] != Producto.Estado.BLOQUEADO
-        )
-    ):
-        raise PermissionDenied("Solo un administrador puede bloquear o desbloquear productos.")
+    from django.db import transaction
 
-    for atributo, valor in datos.items():
-        setattr(producto, atributo, valor)
-    producto.full_clean()
-    producto.save()
+    with transaction.atomic():
+        # El estado se relee bajo bloqueo: una moderación hecha mientras el vendedor editaba
+        # no se revierte, y no se puede desbloquear con una copia vieja del producto.
+        producto.estado = (
+            Producto.objects.select_for_update().only("estado").get(pk=producto.pk).estado
+        )
+        if not usuario.es_administrador and (
+            datos.get("estado") == Producto.Estado.BLOQUEADO
+            or (
+                producto.estado == Producto.Estado.BLOQUEADO
+                and "estado" in datos
+                and datos["estado"] != Producto.Estado.BLOQUEADO
+            )
+        ):
+            raise PermissionDenied("Solo un administrador puede bloquear o desbloquear productos.")
+
+        for atributo, valor in datos.items():
+            setattr(producto, atributo, valor)
+        producto.full_clean()
+        # Solo se escriben los campos editados: no pisa stock ni estado de otros procesos.
+        producto.save(update_fields=list(datos) or None)
     return producto
 
 

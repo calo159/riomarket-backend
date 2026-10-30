@@ -69,7 +69,7 @@ def actualizar_perfil(*, usuario: Usuario, datos: dict) -> Usuario:
     usuario.nombre = datos.get("nombre", usuario.nombre)
     usuario.correo = correo
     usuario.celular = celular
-    usuario.save()
+    usuario.save(update_fields=["nombre", "correo", "celular"])
     return usuario
 
 
