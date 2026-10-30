@@ -88,6 +88,13 @@ def puede(usuario, accion: str, pedido=None) -> bool:
     relacion = reglas[accion]
     if relacion is None:
         return True
+    if (
+        usuario.rol == Usuario.Rol.VENDEDOR
+        and accion != Accion.CANCELAR
+        and not usuario.puede_publicar()
+    ):
+        # Un vendedor sin verificación aprobada no opera pedidos (sí puede cancelar).
+        return False
     return _relacion_cumplida(usuario, pedido, relacion)
 
 

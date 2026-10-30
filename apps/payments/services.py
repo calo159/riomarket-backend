@@ -215,7 +215,9 @@ def confirmar_efectivo(*, pago: Pago, usuario: Usuario, datos: dict | None = Non
     """El vendedor del puesto (o admin) confirma que cobró en efectivo."""
     if not (usuario and usuario.is_active):
         raise PermissionDenied("Se requiere una cuenta activa.")
-    es_vendedor_puesto = pago.id_pedido.id_puesto.id_vendedor_id == usuario.pk
+    es_vendedor_puesto = (
+        pago.id_pedido.id_puesto.id_vendedor_id == usuario.pk and usuario.puede_publicar()
+    )
     if not (usuario.es_administrador or es_vendedor_puesto):
         raise PermissionDenied(
             "Solo el vendedor del puesto o un administrador pueden confirmar el cobro."

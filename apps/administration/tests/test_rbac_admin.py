@@ -217,7 +217,7 @@ class TestRoles:
 
     def test_no_modifica_recursos_de_un_rol_propio_si_no_es_admin_base(self):
         gestor = UsuarioFactory()
-        propio = rol_con("gestores", "admin.roles")
+        propio = rol_con("gestores", "admin.roles", "admin.puestos")
         dar_rol(gestor, propio)
         r = cliente(gestor).put(
             f"{ROLES}{propio.pk}/recursos/",

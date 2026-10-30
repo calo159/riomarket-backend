@@ -14,6 +14,7 @@ from django.db.models.functions import Lower
 from apps.audit.models import RegistroAuditoria
 from apps.audit.services import registrar
 from apps.common.motivo import validar_motivo
+from apps.rbac.acceso import recursos_de_usuario
 from apps.rbac.defaults import ADMINISTRADOR, RECURSOS_OBLIGATORIOS_ADMIN
 from apps.rbac.models import Recurso, Rol, RolRecurso, UsuarioRol
 
@@ -117,6 +118,17 @@ def fijar_recursos_de_rol(*, rol: Rol, actor, recursos_ids: list[int], motivo: s
     recursos = list(Recurso.objects.filter(pk__in=ids))
     if len(recursos) != len(ids):
         raise ValidationError({"recursos": "Alguno de los recursos indicados no existe."})
+    if not actor.es_administrador:
+        # Anti-escalada: quien no es administrador base no toca los roles de sistema (afectarían
+        # a todos sus usuarios) ni entrega recursos que él mismo no tiene.
+        if rol.es_sistema:
+            raise PermissionDenied("Solo un administrador puede modificar los roles de sistema.")
+        propios = recursos_de_usuario(actor)
+        ajenos = sorted(r.codigo for r in recursos if r.codigo not in propios)
+        if ajenos:
+            raise PermissionDenied(
+                "No puedes otorgar recursos que tú no tienes: " + ", ".join(ajenos) + "."
+            )
     if rol.es_sistema and rol.nombre == ADMINISTRADOR:
         faltan = set(RECURSOS_OBLIGATORIOS_ADMIN) - {r.codigo for r in recursos}
         if faltan:
