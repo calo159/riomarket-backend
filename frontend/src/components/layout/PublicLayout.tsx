@@ -90,7 +90,8 @@ export function PublicLayout() {
               className="btn-ghost p-2.5 md:hidden"
               onClick={() => setMenuAbierto((valor) => !valor)}
               aria-expanded={menuAbierto}
-              aria-label="Abrir menú"
+              aria-controls="menu-movil"
+              aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
             >
               {menuAbierto ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -98,7 +99,7 @@ export function PublicLayout() {
         </div>
 
         {menuAbierto && (
-          <div className="border-t px-4 py-3 md:hidden">
+          <div id="menu-movil" className="border-t px-4 py-3 md:hidden">
             <form onSubmit={buscar} className="mb-3" role="search">
               <label className="relative block">
                 <span className="sr-only">Buscar productos</span>

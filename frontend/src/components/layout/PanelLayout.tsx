@@ -74,11 +74,18 @@ export function PanelLayout() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="Cerrar menú"
+            aria-hidden="true"
+            tabIndex={-1}
             className="absolute inset-0 bg-slate-950/50"
             onClick={() => setAbierto(false)}
           />
-          <aside className="relative h-full w-72 max-w-[85vw] border-r bg-white shadow-2xl dark:bg-slate-900">
+          <aside
+            id="menu-movil-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú de navegación"
+            className="relative h-full w-72 max-w-[85vw] border-r bg-white shadow-2xl dark:bg-slate-900"
+          >
             <button
               type="button"
               className="btn-ghost absolute right-2 top-3 p-2"
@@ -99,6 +106,8 @@ export function PanelLayout() {
             className="btn-ghost p-2 lg:hidden"
             onClick={() => setAbierto(true)}
             aria-label="Abrir menú"
+            aria-expanded={abierto}
+            aria-controls="menu-movil-panel"
           >
             <Menu className="h-5 w-5" />
           </button>
