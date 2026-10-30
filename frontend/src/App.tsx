@@ -5,6 +5,7 @@ import { PanelLayout } from './components/layout/PanelLayout';
 import { RutaProtegida } from './auth/RutaProtegida';
 import { CargandoPantalla } from './components/ui/Estado';
 
+const Landing = lazy(() => import('./pages/Landing').then((modulo) => ({ default: modulo.Landing })));
 const Inicio = lazy(() => import('./pages/Inicio').then((modulo) => ({ default: modulo.Inicio })));
 const Catalogo = lazy(() => import('./pages/Catalogo').then((modulo) => ({ default: modulo.Catalogo })));
 const ProductoDetalle = lazy(() => import('./pages/ProductoDetalle').then((modulo) => ({ default: modulo.ProductoDetalle })));
@@ -56,8 +57,10 @@ export function App() {
       <DesplazarArriba />
       <Suspense fallback={<CargandoPantalla mensaje="Cargando página…" />}>
         <Routes>
+          <Route index element={<Landing />} />
+
           <Route element={<PublicLayout />}>
-            <Route index element={<Inicio />} />
+            <Route path="tienda" element={<Inicio />} />
             <Route path="catalogo" element={<Catalogo />} />
             <Route path="creditos-fotos" element={<CreditosFotos />} />
             <Route path="productos/:id" element={<ProductoDetalle />} />
@@ -151,7 +154,7 @@ export function App() {
             </Route>
           </Route>
 
-          <Route path="/inicio" element={<Navigate to="/" replace />} />
+          <Route path="/inicio" element={<Navigate to="/tienda" replace />} />
           <Route path="*" element={<NoEncontrado />} />
         </Routes>
       </Suspense>

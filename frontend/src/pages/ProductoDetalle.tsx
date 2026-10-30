@@ -134,7 +134,7 @@ export function ProductoDetalle() {
   return (
     <div className="mx-auto max-w-[1240px] px-3 pb-8 sm:px-5">
       <nav className="flex flex-wrap items-center gap-1 py-3 text-[13px] text-slate-500 dark:text-slate-400" aria-label="Ruta de navegación">
-        <Link to="/" className="link">Inicio</Link>
+        <Link to="/tienda" className="link">Inicio</Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <Link to={categoriaNombre ? `/catalogo?categoria=${datos.id_categoria}` : '/catalogo'} className="link">
           {categoriaNombre ?? 'Catálogo'}

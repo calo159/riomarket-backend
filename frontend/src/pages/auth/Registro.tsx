@@ -90,7 +90,7 @@ export function Registro() {
   }, []);
 
   if (estado === 'cargando') return <CargandoPantalla mensaje="Comprobando tu sesión…" />;
-  if (estado === 'autenticado') return <Navigate to="/" replace />;
+  if (estado === 'autenticado') return <Navigate to="/tienda" replace />;
 
   const enviar = async (datos: Formulario) => {
     try {

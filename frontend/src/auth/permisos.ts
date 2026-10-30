@@ -4,5 +4,5 @@ import type { Rol } from '../lib/types';
 export function inicioPorRol(rol: Rol | null | undefined): string {
   if (rol === 'vendedor') return '/vendedor';
   if (rol === 'administrador') return '/admin';
-  return '/';
+  return '/tienda';
 }
