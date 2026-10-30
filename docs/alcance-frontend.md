@@ -71,7 +71,7 @@ Quiero que construyas el frontend completo de RioMarket, una app de compra y ven
 - Verificación: subir cédula y foto (JPG/PNG/WebP, máx. 2 MB), ver estado, reenviar si fue rechazado.
 - Puestos: CRUD, asignar/quitar categorías, lat/long si ofrece domicilio.
 - Productos: CRUD, subir/eliminar imágenes, stock, precio, categorías del puesto.
-- Pedidos: filtros, transiciones (confirmar, en preparación, enviar, entregar, cancelar), confirmar pago en efectivo.
+- Pedidos: filtros, transiciones (confirmar, en preparación, enviar o marcar listo para recoger, entregar o entregar y cobrar, cancelar), confirmar pago en efectivo.
 - Cupones: CRUD de cupones de sus puestos.
 - Reseñas: listado y respuesta.
 

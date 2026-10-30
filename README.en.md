@@ -13,7 +13,7 @@ Demo (Render): <https://riomarket.onrender.com>. The free service sleeps and the
 ## What it does
 
 - One order belongs to **one stall**; the server computes totals and updates stock transactionally.
-- Order flow: `pendiente → confirmado → en_preparacion → en_camino → entregado` (or `cancelado`).
+- Order flow: delivery `pendiente → confirmado → en_preparacion → en_camino → entregado`; pickup `pendiente → confirmado → en_preparacion → listo_para_recoger → entregado` (cash is collected at the stall); both can end in `cancelado`.
   The **seller** confirms, prepares and ships; only the **buyer** (or an admin) confirms delivery,
   and the buyer can report "it has not arrived".
 - Sellers must be verified (encrypted ID number, private ID photo) before publishing.

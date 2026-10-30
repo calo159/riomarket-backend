@@ -418,7 +418,8 @@ export function Checkout() {
             <span className="precio text-2xl">{formatearMoneda(total)}</span>
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            El servidor confirma los montos finales al crear el pedido. El pago se registra en el siguiente paso.
+            El servidor confirma los montos finales al crear el pedido.{' '}
+            {tipoEntrega === 'retiro' ? 'Pagas en el puesto al recoger.' : 'El pago se registra en el siguiente paso.'}
           </p>
           <button
             type="button"

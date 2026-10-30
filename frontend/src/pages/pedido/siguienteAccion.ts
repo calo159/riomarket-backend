@@ -1,8 +1,8 @@
-import { CheckCircle2, Package, Truck } from 'lucide-react';
+import { CheckCircle2, Package, Store, Truck } from 'lucide-react';
 import type { AccionPedido } from '../../api/orders';
 import type { Pedido } from '../../lib/types';
 
-export type IconoSiguiente = 'confirmar' | 'preparar' | 'enviar' | 'entregar';
+export type IconoSiguiente = 'confirmar' | 'preparar' | 'enviar' | 'listo' | 'entregar';
 
 export interface SiguienteAccion {
   accion: AccionPedido;
@@ -14,6 +14,7 @@ export const ICONOS_SIGUIENTE: Record<IconoSiguiente, typeof CheckCircle2> = {
   confirmar: CheckCircle2,
   preparar: Package,
   enviar: Truck,
+  listo: Store,
   entregar: CheckCircle2,
 };
 
@@ -51,7 +52,7 @@ export function siguienteAccion(
       break;
     case 'en_preparacion':
       candidata = esRetiro
-        ? { accion: 'listo-para-recoger', etiqueta: 'Marcar listo para recoger', icono: 'enviar' }
+        ? { accion: 'listo-para-recoger', etiqueta: 'Marcar listo para recoger', icono: 'listo' }
         : {
             accion: 'enviar',
             etiqueta: contexto === 'admin' ? 'En camino' : 'Entregado al domiciliario',

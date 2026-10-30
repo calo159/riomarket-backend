@@ -36,6 +36,7 @@ stack, pruebas y despliegue.
 - [ADR-006: promociones y cupones](ADR-006-promociones-cupones.md)
 - [ADR-007: auditoría de acciones](ADR-007-auditoria.md)
 - [ADR-008: almacenamiento de imágenes](ADR-008-almacenamiento-imagenes.md)
+- [ADR-009: retiro en el puesto y pago al recoger](ADR-009-retiro-y-pago-al-recoger.md)
 
 ## Entrega
 

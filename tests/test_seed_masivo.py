@@ -54,7 +54,7 @@ class TestSeedMasivo:
         assert Puesto.objects.count() == 6
         assert Producto.objects.count() == 40
         assert Direccion.objects.count() == 10
-        assert Pedido.objects.count() == 33
+        assert Pedido.objects.count() == 30
         assert Pago.objects.count() >= 25
         assert Resena.objects.count() == 15
         assert Cupon.objects.count() == 5
@@ -66,7 +66,7 @@ class TestSeedMasivo:
         assert _conteo_total() == primera_total
         assert Usuario.objects.count() == 15
         assert Producto.objects.count() == 40
-        assert Pedido.objects.count() == 33
+        assert Pedido.objects.count() == 30
 
     def test_if_empty_omite_base_ya_sembrada(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
@@ -134,7 +134,7 @@ class TestSeedMasivo:
 
     def test_retiro_en_efectivo_se_paga_al_recoger(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
-        pedido = Pedido.objects.get(notas__startswith="[SM-31]")
+        pedido = Pedido.objects.get(notas__startswith="[SM-28]")
         assert pedido.estado == "listo_para_recoger"
         assert pedido.pago.metodo_pago == "efectivo"
         assert pedido.pago.estado == "pendiente"

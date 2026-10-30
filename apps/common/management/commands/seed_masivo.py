@@ -346,16 +346,11 @@ PEDIDOS = [
     # 2 confirmados
     ("SM-26", 5, "cocina", [(6, 1)], "confirmado", "domicilio", True, "simulado", True, None),
     ("SM-27", 6, "pescaderia", [(2, 1)], "confirmado", "retiro", True, "transferencia", True, None),
-    # 2 en preparación
-    ("SM-28", 7, "dulces", [(2, 3)], "en_preparacion", "retiro", True, "simulado", True, None),
+    # 1 en preparación y 1 listo para recoger (retiro pagado al recoger: efectivo sin cobrar)
+    ("SM-28", 7, "dulces", [(2, 3)], "listo_para_recoger", "retiro", True, "efectivo", False, None),
     ("SM-29", 8, "palenque", [(2, 1)], "en_preparacion", "retiro", True, "efectivo", True, None),
     # 1 en camino (domicilio)
     ("SM-30", 9, "palenque", [(0, 1)], "en_camino", "domicilio", True, "simulado", True, None),
-    # 2 retiros que se pagan al recoger (efectivo sin cobrar): uno confirmado y uno listo
-    ("SM-31", 1, "cocina", [(0, 2)], "listo_para_recoger", "retiro", True, "efectivo", False, None),
-    ("SM-32", 3, "frutas", [(0, 2)], "confirmado", "retiro", True, "efectivo", False, None),
-    # 1 listo para recoger con el pago ya aprobado (otro método)
-    ("SM-33", 4, "tejidos", [(0, 1)], "listo_para_recoger", "retiro", True, "nequi", True, None),
     # 4 pendientes (2 con pago pendiente, 2 sin pago)
     ("SM-22", 1, "frutas", [(3, 1)], "pendiente", "retiro", True, "simulado", False, None),
     ("SM-23", 2, "tejidos", [(0, 1)], "pendiente", "retiro", False, "simulado", False, None),
