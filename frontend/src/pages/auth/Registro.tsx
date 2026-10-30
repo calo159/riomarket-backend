@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Store, ShoppingBag } from 'lucide-react';
 import { registrarUsuario } from '../../api/auth';
 import { useSession } from '../../auth/SessionProvider';
@@ -16,29 +16,44 @@ import { cn } from '../../lib/utils';
 
 const esquema = z
   .object({
-    nombre: z.string().trim().min(3, 'Escribe tu nombre completo.').max(120, 'El nombre es muy largo.'),
-    correo: z.string().trim().min(1, 'Escribe tu correo.').email('Escribe un correo válido.'),
+    nombre: z
+      .string()
+      .check(
+        z.trim(),
+        z.minLength(3, 'Escribe tu nombre completo.'),
+        z.maxLength(120, 'El nombre es muy largo.'),
+      ),
+    correo: z.pipe(
+      z.string().check(z.trim(), z.minLength(1, 'Escribe tu correo.')),
+      z.email('Escribe un correo válido.'),
+    ),
     celular: z
       .string()
-      .trim()
-      .min(7, 'Escribe un celular válido.')
-      .max(20, 'El celular es muy largo.')
-      .regex(/^[0-9+\s()-]+$/, 'Usa solo números, espacios o el signo +.'),
+      .check(
+        z.trim(),
+        z.minLength(7, 'Escribe un celular válido.'),
+        z.maxLength(20, 'El celular es muy largo.'),
+        z.regex(/^[0-9+\s()-]+$/, 'Usa solo números, espacios o el signo +.'),
+      ),
     rol: z.enum(['comprador', 'vendedor']),
     password: z
       .string()
-      .min(8, 'La contraseña debe tener al menos 8 caracteres.')
-      .regex(/[A-Za-z]/, 'Incluye al menos una letra.')
-      .regex(/[0-9]/, 'Incluye al menos un número.'),
-    confirmar: z.string().min(1, 'Repite tu contraseña.'),
-    acepta: z.boolean().refine((valor) => valor, {
-      message: 'Debes aceptar las condiciones para continuar.',
-    }),
+      .check(
+        z.minLength(8, 'La contraseña debe tener al menos 8 caracteres.'),
+        z.regex(/[A-Za-z]/, 'Incluye al menos una letra.'),
+        z.regex(/[0-9]/, 'Incluye al menos un número.'),
+      ),
+    confirmar: z.string().check(z.minLength(1, 'Repite tu contraseña.')),
+    acepta: z
+      .boolean()
+      .check(z.refine((valor) => valor, { message: 'Debes aceptar las condiciones para continuar.' })),
   })
-  .refine((datos) => datos.password === datos.confirmar, {
-    path: ['confirmar'],
-    message: 'Las contraseñas no coinciden.',
-  });
+  .check(
+    z.refine((datos) => datos.password === datos.confirmar, {
+      path: ['confirmar'],
+      message: 'Las contraseñas no coinciden.',
+    }),
+  );
 
 type Formulario = z.infer<typeof esquema>;
 

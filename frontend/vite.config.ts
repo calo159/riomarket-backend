@@ -7,6 +7,19 @@ export default defineConfig({
   build: {
     // Evita el polyfill inline para poder usar una CSP estricta (script-src 'self').
     modulePreload: { polyfill: false },
+    rollupOptions: {
+      output: {
+        // Las librerías cambian poco: separadas del código de la app, el navegador las conserva
+        // en caché entre despliegues. Los formularios (zod, react-hook-form) ya van en su chunk.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return "vendor-react";
+          if (/node_modules\/(react-router|react-router-dom)\//.test(id)) return "vendor-router";
+          if (/node_modules\/(@tanstack|axios)\//.test(id)) return "vendor-datos";
+          return undefined;
+        },
+      },
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

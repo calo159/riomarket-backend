@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 import {
   AlertCircle,
   ArrowRight,
@@ -22,9 +22,13 @@ import { CargandoPantalla } from '../../components/ui/Estado';
 import { Campo } from '../../components/ui/Campos';
 import { Logo } from '../../components/layout/Logo';
 
+// zod/mini (en lugar de zod clásico) para no cargar en el bundle los métodos que no se usan.
 const esquema = z.object({
-  correo: z.string().trim().min(1, 'Escribe tu correo.').email('Escribe un correo válido.'),
-  password: z.string().min(1, 'Escribe tu contraseña.'),
+  correo: z.pipe(
+    z.string().check(z.trim(), z.minLength(1, 'Escribe tu correo.')),
+    z.email('Escribe un correo válido.'),
+  ),
+  password: z.string().check(z.minLength(1, 'Escribe tu contraseña.')),
 });
 
 type Formulario = z.infer<typeof esquema>;
