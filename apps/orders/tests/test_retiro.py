@@ -324,7 +324,7 @@ class TestEntregaConCobro:
     def test_si_el_cobro_falla_el_pedido_no_queda_entregado(
         self, comprador, vendedor, puesto, producto, monkeypatch
     ):
-        pedido, _pago_ = _retiro_efectivo_listo(comprador, vendedor, puesto, producto)
+        pedido, _ = _retiro_efectivo_listo(comprador, vendedor, puesto, producto)
 
         def romper(**_kwargs):
             raise DjangoValidationError({"pago": "falló"})
