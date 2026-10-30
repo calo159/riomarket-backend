@@ -5,6 +5,9 @@ from rest_framework import serializers
 
 from apps.accounts.models import Usuario
 from apps.administration import services
+from apps.common.motivo import MOTIVO_MAX, MOTIVO_MIN
+from apps.rbac.acceso import recursos_de_usuario
+from apps.rbac.models import Recurso, Rol
 
 
 class UsuarioAdminSerializer(serializers.ModelSerializer):
@@ -13,6 +16,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
     pedidos_activos = serializers.SerializerMethodField()
     puestos = serializers.SerializerMethodField()
     acciones_permitidas = serializers.SerializerMethodField()
+    roles_asignados = serializers.SerializerMethodField()
 
     class Meta:
         model = Usuario
@@ -28,6 +32,7 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
             "pedidos_como_comprador",
             "pedidos_activos",
             "puestos",
+            "roles_asignados",
             "acciones_permitidas",
         )
 
@@ -56,20 +61,32 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
         ]
 
     @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_roles_asignados(self, obj) -> list[dict]:
+        return [
+            {"id": a.id_rol_id, "nombre": a.id_rol.nombre, "es_sistema": a.id_rol.es_sistema}
+            for a in obj.asignaciones_rol.all()
+        ]
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
     def get_acciones_permitidas(self, obj) -> list[str]:
         request = self.context.get("request")
         if request is None:
             return []
-        return services.acciones_permitidas(obj, request.user)
+        # Recursos del actor y total de admins se calculan una vez por respuesta (sin N+1).
+        cache = self.context.setdefault("_cache_acciones", {})
+        if "recursos" not in cache:
+            cache["recursos"] = recursos_de_usuario(request.user)
+            cache["admins"] = services._admins_activos()
+        return services.acciones_permitidas(obj, request.user, cache["recursos"], cache["admins"])
 
 
 class CambiarRolSerializer(serializers.Serializer):
     rol = serializers.ChoiceField(choices=Usuario.Rol.values)
-    motivo = serializers.CharField(min_length=services.MOTIVO_MIN, max_length=300)
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
 
 
 class SuspenderSerializer(serializers.Serializer):
-    motivo = serializers.CharField(min_length=services.MOTIVO_MIN, max_length=300)
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
 
 
 class MenuEnlaceSerializer(serializers.Serializer):
@@ -93,3 +110,67 @@ class MenuSerializer(serializers.Serializer):
     panel = MenuGrupoSerializer(many=True)
     panel_titulo = serializers.CharField(allow_null=True)
     badges = serializers.DictField(child=serializers.IntegerField())
+
+
+class RolesUsuarioSerializer(serializers.Serializer):
+    roles = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=True)
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+
+class RolSerializer(serializers.ModelSerializer):
+    total_usuarios = serializers.IntegerField(read_only=True)
+    total_recursos = serializers.IntegerField(read_only=True)
+    recursos = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Rol
+        fields = (
+            "id",
+            "nombre",
+            "descripcion",
+            "activo",
+            "es_sistema",
+            "total_usuarios",
+            "total_recursos",
+            "recursos",
+        )
+        read_only_fields = ("id", "es_sistema")
+        extra_kwargs = {"nombre": {"validators": []}}
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_recursos(self, obj) -> list[int]:
+        return sorted(v.id_recurso_id for v in obj.vinculos.all())
+
+
+class RolRecursosSerializer(serializers.Serializer):
+    recursos = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=True)
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+
+class RecursoSerializer(serializers.ModelSerializer):
+    total_roles = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Recurso
+        fields = (
+            "id",
+            "codigo",
+            "nombre",
+            "descripcion",
+            "ambito",
+            "ruta",
+            "icono",
+            "grupo",
+            "orden",
+            "es_publico",
+            "es_sistema",
+            "activo",
+            "total_roles",
+        )
+        read_only_fields = ("id", "es_sistema")
+
+    def validate_ruta(self, valor):
+        valor = valor.strip()
+        if valor and not valor.startswith("/"):
+            raise serializers.ValidationError("La ruta debe estar vacía o empezar con «/».")
+        return valor

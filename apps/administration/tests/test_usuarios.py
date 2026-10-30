@@ -55,7 +55,7 @@ class TestListado:
         assert respuesta.status_code == 200
         assert respuesta.data["pedidos_como_comprador"] == 2
         assert respuesta.data["pedidos_activos"] == 1
-        assert respuesta.data["acciones_permitidas"] == ["cambiar-rol", "suspender"]
+        assert respuesta.data["acciones_permitidas"] == ["cambiar-rol", "roles", "suspender"]
 
     def test_admin_no_ve_acciones_sobre_si_mismo(self, cliente_admin, admin):
         respuesta = cliente_admin.get(f"{USUARIOS}{admin.pk}/")
