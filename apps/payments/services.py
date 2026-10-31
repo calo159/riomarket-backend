@@ -387,6 +387,19 @@ def visibles_pagos(usuario: Usuario, qs: QuerySet[Pago], params: dict) -> QueryS
     return qs.filter(id_pedido__id_comprador_id=usuario.pk)
 
 
+def expresion_neto_vendedor() -> Greatest:
+    """Neto del vendedor por pago, calculado en la base: subtotal - comisión - descuento (mín. 0).
+
+    Es la misma regla que ``Pago.neto_vendedor``. ``resumen_ingresos`` y el panel de ventas
+    (``estadisticas.ventas``) la comparten para que sus totales nunca se separen.
+    """
+    return Greatest(
+        F("subtotal_pedido") - F("comision_plataforma") - F("descuento_aplicado"),
+        Value(Decimal("0.00")),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
+
+
 def resumen_ingresos(usuario: Usuario) -> dict:
     """Pagos aprobados visibles para el usuario y lo que recibe el vendedor (neto) en total.
 
@@ -397,11 +410,7 @@ def resumen_ingresos(usuario: Usuario) -> dict:
     if not (usuario and usuario.is_active and (usuario.es_administrador or usuario.es_vendedor)):
         raise PermissionDenied("Solo vendedores y administradores ven el resumen de ingresos.")
     aprobados = visibles_pagos(usuario, Pago.objects.all(), {}).filter(estado=Pago.Estado.APROBADO)
-    neto = Greatest(
-        F("subtotal_pedido") - F("comision_plataforma") - F("descuento_aplicado"),
-        Value(Decimal("0.00")),
-        output_field=DecimalField(max_digits=12, decimal_places=2),
-    )
+    neto = expresion_neto_vendedor()
     datos = aprobados.aggregate(cantidad=Count("pk"), ingresos=Sum(neto))
     return {
         "pagos_aprobados": datos["cantidad"],
