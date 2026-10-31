@@ -17,6 +17,14 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   deja un registro de acceso con método, ruta sin query string, estado, duración y número de usuario,
   sin cuerpos, cabeceras, cookies ni datos personales. `/api/health/` suma `version` (commit corto),
   `migraciones`, `almacenamiento_externo` y `hora_servidor` sin quitar `status` ni `database`.
+- **Pruebas end-to-end por rol en el CI ([ADR-016](docs/ADR-016-pruebas-end-to-end.md)).** Trabajo
+  `e2e` (solo en pull requests y en `main`) que levanta PostgreSQL, siembra los datos de demostración,
+  construye el frontend y lo sirve desde Django con la configuración de producción. Cubre al comprador
+  (retiro con pago al recoger y encargo, en celular), a la vendedora (de «Confirmar» a «Entregar y
+  cobrar», aceptar un encargo y panel de ventas), al administrador (resumen, auditoría del sistema,
+  usuarios y roles) y a una persona sin sesión (landing, tienda, mapa y créditos de fotos). Cada
+  prueba usa su propio comprador del seed y limpia lo que crea; un reintento por prueba solo en el CI,
+  con las reintentadas anotadas en el resumen; trazas, capturas y vídeo solo si falla (7 días).
 - **Umbral de cobertura en el CI.** El backend falla bajo el 91 % (medido 94 % con ramas); el
   workflow ya revisa también el formato de `scripts/`.
 

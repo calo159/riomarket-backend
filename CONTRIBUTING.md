@@ -43,6 +43,12 @@ cd frontend
 npm run lint && npm run typecheck && npm test && npm run build
 ```
 
+Las pruebas end-to-end (Playwright) corren en el CI solo en pull requests y en `main`. Para correrlas
+en local, con la base sembrada y el servidor levantado, siga «Modo CI en local» en
+[frontend/README.md](frontend/README.md#modo-ci-en-local-e2e_ci1) y use `E2E_CI=1 npx playwright test`
+dentro de `frontend/`. Si cambia un texto o un botón que recorren, ajuste la prueba y su enlace en
+`docs/requisitos.yml`.
+
 Si cambia serializers o rutas, regenere los tipos del frontend con el backend corriendo
 (`npm run gen:api`) y valide el esquema: `python manage.py spectacular --file schema.yaml --validate`.
 
@@ -70,7 +76,7 @@ existen.
 
 Escriba un ADR en `docs/` cuando una decisión cambie el comportamiento, los datos o la operación y
 alguien pudiera preguntar «¿por qué así?» (nuevos estados, reglas de negocio, almacenamiento,
-dependencias, seguridad). Use el siguiente número libre (hoy, **ADR-015**), el nombre
+dependencias, seguridad). Use el siguiente número libre (hoy, **ADR-016**), el nombre
 `ADR-NNN-tema-en-minusculas.md`, y enlácelo desde [docs/README.md](docs/README.md). Siga la forma de los
 existentes: contexto, decisión, consecuencias y, si aplica, alternativas descartadas.
 

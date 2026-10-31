@@ -410,7 +410,7 @@ npm test
 npm run build
 ```
 
-Resultado: **260 pruebas en 41 archivos** (`npx vitest run`), con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
+Resultado: **260 pruebas en 41 archivos** (`npx vitest run`), con lint, typecheck y build en verde. Las pruebas end-to-end (Playwright, `frontend/e2e/`) cubren un recorrido por rol con el sistema completo: comprador (retiro con pago al recoger y encargo, en celular), vendedor (confirmar a «Entregar y cobrar», aceptar un encargo y panel de ventas), administrador (resumen, auditoría del sistema, usuarios y roles) y anónimo (landing, tienda, mapa y créditos de fotos), además del smoke. Corren en el CI solo en pull requests y en `main` ([ADR-016](docs/ADR-016-pruebas-end-to-end.md)); en local, `npx playwright install chromium` y `npm run test:e2e` (o `E2E_CI=1 npx playwright test` para el modo del CI, ver [`frontend/README.md`](frontend/README.md#modo-ci-en-local-e2e_ci1)).
 
 Dependencias (31/10/2026): `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` reporta **17 avisos moderados**, todos en herramientas de desarrollo (ESLint), y **ninguno** en las dependencias de producción (`npm audit --omit=dev`). La línea base anterior está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md); los límites aceptados, en [`SECURITY.md`](SECURITY.md).
 
@@ -482,7 +482,7 @@ riomarket-backend/
 - Integrar una pasarela de pago real con webhooks firmados y conciliación.
 - Añadir alta de usuarios desde el panel y pantallas de recuperación y cambio de contraseña en la SPA (la API ya existe).
 - Enviar correos transaccionales y notificaciones en tiempo real.
-- Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol.
+- Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol (hoy cubren los recorridos principales; faltan, por ejemplo, la compra a domicilio con pago sandbox y «Dar más tiempo»).
 
 ## Contribuir, licencia y autores
 

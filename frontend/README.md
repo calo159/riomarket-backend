@@ -72,7 +72,7 @@ La tarifa mostrada es solo un estimado: el backend calcula el total definitivo.
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Tests unitarios con Vitest |
 | `npm run test:watch` | Vitest en modo watch |
-| `npm run test:e2e` | Smoke tests con Playwright |
+| `npm run test:e2e` | Pruebas end-to-end con Playwright (smoke y recorridos por rol) |
 | `npm run gen:api` | Regenera los tipos desde el OpenAPI local |
 
 Para E2E la primera vez:
@@ -83,7 +83,27 @@ npm run test:e2e
 ```
 
 Playwright levanta su propio servidor de Vite. Si ya hay uno en el puerto 3000,
-lo reutiliza fuera de CI.
+lo reutiliza fuera de CI. Las pruebas por rol (`e2e/comprador`, `vendedor`, `admin` y `anonimo`) necesitan
+además el backend en `127.0.0.1:8000` con la base sembrada (`migrate`, `seed_masivo`,
+`seed_imagenes_demo`, `cancelar_pedidos_vencidos`) y los límites de peticiones subidos solo en ese
+proceso (`THROTTLE_ANON`, `THROTTLE_USER` y `THROTTLE_LOGIN` en `100000/min`).
+
+### Modo CI en local (`E2E_CI=1`)
+
+Es lo que corre el trabajo `e2e` del CI: Django sirve el frontend construido (como en producción) en el
+puerto 8000 y Playwright lo levanta. Desde la raíz del repositorio, en Git Bash:
+
+```bash
+(cd frontend && VITE_DEMO_MODE=true VITE_SANDBOX_PAGOS=true VITE_TARIFA_DOMICILIO=3000 npm run build)
+export DJANGO_SETTINGS_MODULE=config.settings.prod ALLOWED_HOSTS=127.0.0.1,localhost   SECURE_SSL_REDIRECT=False SECRET_KEY=<una de 32 o más caracteres> FERNET_KEY=<clave Fernet>   PAYMENTS_SANDBOX_ENABLED=True DATABASE_URL=<una base vacía, nunca la de producción>   THROTTLE_ANON=100000/min THROTTLE_USER=100000/min THROTTLE_LOGIN=100000/min
+python manage.py migrate --noinput && python manage.py seed_masivo   && python manage.py seed_imagenes_demo && python manage.py cancelar_pedidos_vencidos
+cd frontend && E2E_CI=1 npx playwright test       # con CI=1 también aplica el reintento del CI
+```
+
+Cada prueba usa su propio comprador del seed y limpia lo que crea; aun así, la prueba de la auditoría
+necesita una base recién sembrada (la auditoría muestra solo las últimas 100 acciones). Para ver una
+prueba fallida: `npx playwright show-trace test-results/<carpeta>/trace.zip`. Decisiones en
+[ADR-016](../docs/ADR-016-pruebas-end-to-end.md).
 
 ## Autenticación
 
@@ -156,7 +176,7 @@ credenciales de comprador, vendedor y administrador.
 
 ```text
 frontend/
-├── e2e/                     # smoke tests Playwright
+├── e2e/                     # Playwright: smoke y recorridos por rol
 ├── src/
 │   ├── api/                 # funciones tipadas por recurso
 │   ├── auth/                # sesión, tokens, RBAC y guards
@@ -181,7 +201,8 @@ frontend/
 - `npm test`: 18 pruebas de utilidades, interceptores HTTP (refresh compartido,
   reintento y pérdida de sesión), rutas protegidas, menú dinámico con fallback y
   modales de moderación de usuarios.
-- `npm run test:e2e`: smoke de la landing, de `/tienda`, login y navegación al registro.
+- `npm run test:e2e`: smoke de la landing, de `/tienda`, login y navegación al registro, y 12
+  recorridos por rol en un navegador real (comprador en celular, vendedor, administrador y anónimo).
 - `npm run lint`, `npm run typecheck` y `npm run build` también corren en CI.
 
 ## Limitaciones conocidas
