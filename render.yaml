@@ -38,7 +38,7 @@ services:
       - key: DOMICILIO_TARIFA_BASE
         value: "3000.00"
       - key: PLATFORM_COMMISSION_PERCENTAGE
-        value: "5.00"
+        value: "8.00"
       # Almacenamiento S3-compatible (opcional). Si no se configuran, usa disco local (efímero).
       - key: STORAGE_S3_ENDPOINT
         sync: false

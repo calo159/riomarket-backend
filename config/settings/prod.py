@@ -17,7 +17,7 @@ if SECRET_KEY.startswith("change-me") or len(SECRET_KEY) < 32:
 # La demo cobra domicilio y comisión como el resto del proyecto. Se pueden
 # sobreescribir por entorno sin tocar código (0.00 para desactivarlos).
 DOMICILIO_TARIFA_BASE = Decimal(env("DOMICILIO_TARIFA_BASE", default="3000.00"))
-PLATFORM_COMMISSION_PERCENTAGE = Decimal(env("PLATFORM_COMMISSION_PERCENTAGE", default="5.00"))
+PLATFORM_COMMISSION_PERCENTAGE = Decimal(env("PLATFORM_COMMISSION_PERCENTAGE", default="8.00"))
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 # Orígenes HTTPS reales del panel/administración (nunca "*")

@@ -9,7 +9,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
-Sin cambios pendientes.
+### Cambiado
+
+- **Comisión de la plataforma: del 5 % al 8 %.** Nuevo valor por defecto de `PLATFORM_COMMISSION_PERCENTAGE`
+  en producción, `render.yaml`, `.env.example` y documentación. Solo afecta a los pagos nuevos: los ya
+  registrados conservan la comisión con que se calcularon. En un servicio ya creado hay que cambiar la
+  variable en Environment de Render.
 
 ## [1.0.0] - 2026-10-31
 
