@@ -13,6 +13,11 @@ interface Props {
   ahora?: number;
 }
 
+/** Termina una frase con la fecha sin duplicar el punto de «p. m.». */
+function finDeFrase(fecha: string): string {
+  return fecha.endsWith('.') ? fecha : `${fecha}.`;
+}
+
 /** Cuántas veces puede el vendedor dar más tiempo (igual que el backend). */
 const MAX_EXTENSIONES = 2;
 
@@ -63,7 +68,7 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
           <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             {datos.motivo_cancelacion === 'no_recogido'
-              ? `Se canceló solo: no se recogió antes del ${formatearFechaHora(datos.fecha_actualizacion)}.`
+              ? `Se canceló solo: no se recogió antes del ${finDeFrase(formatearFechaHora(datos.fecha_actualizacion))}`
               : 'Se canceló solo: el puesto no lo confirmó a tiempo.'}{' '}
             {esComprador
               ? 'El producto volvió a la venta. Puedes hacer un pedido nuevo.'
@@ -110,6 +115,8 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
 function AvisoPlazo({ datos, esComprador, ahora }: { datos: Pedido; esComprador: boolean; ahora: number }) {
   if (!datos.vence_en || !['pendiente', 'listo_para_recoger'].includes(datos.estado)) return null;
   const fecha = formatearFechaHora(datos.vence_en);
+  // «p. m.» ya trae su punto: al cerrar la frase no se duplica.
+  const fechaFinal = finDeFrase(fecha);
   const vencido = yaVencio(datos.vence_en, ahora);
   const porVencer = estaPorVencer(datos.vence_en, ahora);
   const listo = datos.estado === 'listo_para_recoger';
@@ -125,7 +132,7 @@ function AvisoPlazo({ datos, esComprador, ahora }: { datos: Pedido; esComprador:
         {esComprador ? (
           listo ? (
             <>
-              <p className="font-bold">Recógelo antes del {fecha}.</p>
+              <p className="font-bold">Recógelo antes del {fechaFinal}</p>
               <p>Si no pasas, el pedido se cancela solo y el producto vuelve a la venta.</p>
             </>
           ) : (

@@ -23,7 +23,7 @@ function pedido(extra: Partial<Record<keyof Pedido, unknown>>): Pedido {
 describe('AvisosPedido: apartar con plazo', () => {
   it('muestra_recogelo_antes_del: el comprador sabe hasta cuándo y qué pasa si no pasa', () => {
     render(<AvisosPedido datos={pedido({})} esNuevo={false} esComprador efectivoPendiente ahora={AHORA} />);
-    expect(screen.getByText(`Recógelo antes del ${formatearFechaHora(VENCE)}.`)).toBeInTheDocument();
+    expect(screen.getByText((texto) => texto.startsWith(`Recógelo antes del ${formatearFechaHora(VENCE)}`) && texto.endsWith('.') && !texto.endsWith('..'))).toBeInTheDocument();
     expect(
       screen.getByText('Si no pasas, el pedido se cancela solo y el producto vuelve a la venta.'),
     ).toBeInTheDocument();
