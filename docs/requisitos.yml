@@ -1,0 +1,571 @@
+# Fuente de verdad de la matriz de trazabilidad (ver docs/trazabilidad.md).
+#
+# Cada requisito se verifica con `python scripts/trazabilidad.py --check` (paso del CI):
+#   - `pruebas` de pytest: `ruta.py`, `ruta.py::Clase` o `ruta.py::Clase::prueba` (también una
+#     carpeta terminada en `/` o un patrón con `*`). Debe existir en `pytest --collect-only`.
+#   - `pruebas` de Vitest/Playwright: `frontend/...::nombre` con el texto exacto del `it`/`test`.
+#   - `endpoints`: `MÉTODO /ruta/` tal como sale del esquema OpenAPI generado (con `{id}`).
+#   - `pantallas`: rutas de `frontend/src/App.tsx` (con `:id`).
+#   - `evidencia`: archivos que respaldan un requisito que no se prueba solo con código.
+#   - `pendiente: true`: el requisito se declara pero aún no está completo (no falla el check).
+# Un RF necesita al menos una prueba; un RNF, una prueba o una evidencia.
+# Al añadir una función al producto, añada o amplíe su requisito aquí y regenere la matriz.
+
+- id: RF-01
+  titulo: Registro e inicio de sesión con refresh en cookie HttpOnly
+  actor: [comprador, vendedor, administrador]
+  origen: README (Autenticación y roles)
+  pantallas: ["/login", "/registro"]
+  endpoints:
+    - "POST /api/auth/registro/"
+    - "POST /api/auth/login/"
+    - "POST /api/auth/token/refresh/"
+    - "POST /api/auth/logout/"
+    - "GET /api/auth/perfil/"
+  pruebas:
+    - "apps/accounts/tests/test_auth.py::TestRegistro::test_registro_comprador_ok"
+    - "apps/accounts/tests/test_auth.py::TestRegistro::test_registro_rol_administrador_rechazado"
+    - "apps/accounts/tests/test_auth.py::TestLogin::test_login_ok_devuelve_tokens_y_usuario"
+    - "apps/accounts/tests/test_auth.py::TestLogin::test_login_usuario_suspendido"
+    - "apps/accounts/tests/test_auth.py::TestRefreshYLogout::test_refresh_rota_y_blanquea_el_anterior"
+    - "apps/accounts/tests/test_auth.py::TestRefreshYLogout::test_logout_blanquea_el_refresh"
+    - "apps/accounts/tests/test_auth.py::TestPerfil"
+    - "frontend/src/pages/auth/Login.test.tsx::con datos válidos inicia sesión (y recorta los espacios del correo)"
+    - "frontend/src/auth/SessionProvider.test.tsx::con_pista_restaura_la_sesion"
+    - "frontend/src/lib/http.test.ts::comparte un solo refresh entre peticiones simultáneas que reciben 401"
+    - "frontend/e2e/smoke.spec.ts::muestra el login y permite ir al registro"
+
+- id: RF-02
+  titulo: Recuperar y cambiar la contraseña (solo API; la SPA no tiene pantalla)
+  actor: [comprador, vendedor, administrador]
+  origen: AUDITORIA S-04 y S-05
+  endpoints:
+    - "POST /api/auth/recuperar-contrasena/"
+    - "POST /api/auth/restablecer-contrasena/"
+    - "POST /api/auth/perfil/cambiar-contrasena/"
+  pruebas:
+    - "apps/accounts/tests/test_recuperacion.py::TestSolicitar"
+    - "apps/accounts/tests/test_recuperacion.py::TestRestablecer"
+  evidencia: ["docs/AUDITORIA.md"]
+
+- id: RF-03
+  titulo: Verificación de vendedor con cédula cifrada y foto privada
+  actor: [vendedor, administrador]
+  origen: ADR-002
+  pantallas: ["/vendedor/verificacion", "/admin/verificaciones"]
+  endpoints:
+    - "POST /api/verificacion/mi-verificacion/"
+    - "GET /api/verificacion/mi-verificacion/"
+    - "GET /api/verificacion/solicitudes/"
+    - "PATCH /api/verificacion/solicitudes/{id}/"
+    - "GET /api/verificacion/solicitudes/{id}/cedula/"
+  pruebas:
+    - "apps/accounts/tests/test_verificacion.py::TestServicioSolicitud::test_crea_solicitud_cifrando_datos"
+    - "apps/accounts/tests/test_verificacion.py::TestServicioSolicitud::test_misma_cedula_entre_cuentas_rechazada"
+    - "apps/accounts/tests/test_verificacion.py::TestEndpointColaAdmin::test_admin_aprueba_solicitud"
+    - "apps/accounts/tests/test_verificacion.py::TestCedulaPrivada"
+    - "apps/accounts/tests/test_cedula_privada.py"
+    - "apps/common/tests/test_crypto.py::test_cifrar_descifrar_roundtrip"
+    - "apps/common/tests/test_crypto.py::test_huella_no_revela_el_dato"
+    - "frontend/src/pages/admin/Verificaciones.test.tsx::muestra la foto de la cédula antes de decidir"
+    - "frontend/src/pages/admin/Verificaciones.test.tsx::aprobar pide confirmación y no decide al primer clic"
+
+- id: RF-04
+  titulo: Solo un vendedor aprobado publica y opera pedidos (regla 1)
+  actor: [vendedor]
+  origen: README (Qué es RioMarket)
+  pantallas: ["/vendedor/puestos", "/vendedor/productos"]
+  endpoints:
+    - "POST /api/catalog/puestos/"
+    - "POST /api/catalog/productos/"
+  pruebas:
+    - "apps/catalog/tests/test_services.py::TestRegla1"
+    - "apps/accounts/tests/test_verificacion.py::TestReglaUnoReal"
+    - "apps/orders/tests/test_vendedor_verificado.py::test_vendedor_no_aprobado_no_confirma_cobros_ni_pedidos"
+    - "apps/orders/tests/test_vendedor_verificado.py::test_vendedor_aprobado_sigue_operando"
+
+- id: RF-05
+  titulo: Un producto solo puede estar en una categoría del puesto (regla 2)
+  actor: [vendedor]
+  origen: README (Qué es RioMarket)
+  pantallas: ["/vendedor/productos"]
+  endpoints:
+    - "POST /api/catalog/productos/"
+    - "POST /api/catalog/puestos/{id}/categorias/"
+  pruebas:
+    - "apps/catalog/tests/test_services.py::TestRegla2"
+    - "apps/catalog/tests/test_models.py::TestProducto::test_regla2_categoria_no_asignada_rechazada_por_clean"
+    - "apps/catalog/tests/test_services.py::TestAsignacionCategorias::test_quitar_categoria_con_productos_rechazado"
+
+- id: RF-06
+  titulo: Un puesto con domicilio exige coordenadas (regla 3)
+  actor: [vendedor]
+  origen: README (Qué es RioMarket)
+  pantallas: ["/vendedor/puestos"]
+  endpoints:
+    - "POST /api/catalog/puestos/"
+  pruebas:
+    - "apps/catalog/tests/test_services.py::TestRegla3::test_domicilio_sin_coordenadas_rechazado"
+    - "apps/catalog/tests/test_models.py::TestPuesto::test_domicilio_sin_coordenadas_rechazado_en_bd"
+    - "apps/catalog/tests/test_models.py::TestPuesto::test_domicilio_con_coordenadas_ok"
+
+- id: RF-07
+  titulo: Pedido de un solo puesto con stock atómico y precios congelados (regla 4)
+  actor: [comprador]
+  origen: ADR-003
+  pantallas: ["/carrito", "/checkout"]
+  endpoints:
+    - "POST /api/orders/pedidos/"
+  pruebas:
+    - "apps/orders/tests/test_services.py::TestRegla4Creacion::test_crea_pedido_y_descuenta_stock"
+    - "apps/orders/tests/test_services.py::TestRegla4Creacion::test_congela_precio_en_el_item"
+    - "apps/orders/tests/test_services.py::TestRegla4Creacion::test_calcula_subtotal_y_total"
+    - "apps/orders/tests/test_services.py::TestRegla4Creacion::test_stock_insuficiente_no_descuenta_nada"
+    - "apps/orders/tests/test_services.py::TestRegla4Creacion::test_producto_de_otro_puesto_rechazado"
+    - "apps/orders/tests/test_concurrencia.py::TestCancelarUnaSolaVez::test_dos_cancelaciones_con_instancias_viejas_reponen_el_stock_una_vez"
+    - "apps/orders/tests/test_concurrencia.py::TestCancelarUnaSolaVez::test_reponer_stock_no_pisa_una_venta_concurrente"
+    - "frontend/src/pages/Checkout.test.tsx::avisa que se paga en el puesto al recoger y crea el pedido de retiro"
+
+- id: RF-08
+  titulo: Máquina de estados por tipo de entrega y permisos por rol (regla 5)
+  actor: [comprador, vendedor, administrador]
+  origen: ADR-009
+  pantallas: ["/pedidos/:id", "/vendedor/pedidos", "/admin/pedidos", "/mis-pedidos"]
+  endpoints:
+    - "POST /api/orders/pedidos/{id}/confirmar/"
+    - "POST /api/orders/pedidos/{id}/en-preparacion/"
+    - "POST /api/orders/pedidos/{id}/enviar/"
+    - "POST /api/orders/pedidos/{id}/listo-para-recoger/"
+    - "POST /api/orders/pedidos/{id}/entregar/"
+    - "POST /api/orders/pedidos/{id}/cancelar/"
+  pruebas:
+    - "apps/orders/tests/test_services.py::TestRegla5Transiciones"
+    - "apps/orders/tests/test_rbac.py::TestMatrizDeclarada"
+    - "apps/orders/tests/test_rbac.py::TestAccionesDisponibles::test_matriz_estado_rol"
+    - "apps/orders/tests/test_rbac.py::TestAccionesEnApi::test_vendedor_no_puede_entregar"
+    - "apps/orders/tests/test_retiro.py::test_tabla_de_transiciones"
+    - "apps/orders/tests/test_retiro.py::test_en_camino_imposible_en_retiro_por_la_api"
+    - "apps/orders/tests/test_retiro.py::TestRbacRetiro"
+    - "frontend/src/pages/pedido/siguienteAccion.test.ts::retiro en preparación: «Marcar listo para recoger»"
+    - "frontend/src/pages/pedido/siguienteAccion.test.ts::no ofrece nada que el backend no permita (vendedor en un domicilio en camino)"
+
+- id: RF-09
+  titulo: Pago al recoger en retiros y «Entregar y cobrar»
+  actor: [comprador, vendedor]
+  origen: ADR-009
+  pantallas: ["/checkout", "/pedidos/:id", "/vendedor/pedidos"]
+  endpoints:
+    - "POST /api/orders/pedidos/"
+    - "POST /api/payments/pagos/"
+    - "POST /api/orders/pedidos/{id}/entregar/"
+  pruebas:
+    - "apps/orders/tests/test_retiro.py::TestConfirmarSinPagoAprobado::test_retiro_efectivo_pendiente_se_confirma"
+    - "apps/orders/tests/test_retiro.py::TestConfirmarSinPagoAprobado::test_domicilio_efectivo_pendiente_no_se_confirma"
+    - "apps/orders/tests/test_retiro.py::TestEntregaConCobro::test_vendedor_entrega_y_cobra"
+    - "apps/orders/tests/test_retiro.py::TestEntregaConCobro::test_comprador_no_cierra_un_efectivo_pendiente"
+    - "apps/orders/tests/test_retiro.py::TestEntregaConCobro::test_si_el_cobro_falla_el_pedido_no_queda_entregado"
+    - "apps/orders/tests/test_retiro.py::TestEntregaConCobro::test_flujo_completo_por_api"
+    - "apps/orders/tests/test_acciones_pago.py::test_con_pago_en_efectivo_confirma_solo_el_vendedor_de_ese_pedido"
+    - "frontend/src/pages/PedidoDetalle.test.tsx::el vendedor ve «Entregar y cobrar» con efectivo sin cobrar"
+    - "frontend/src/pages/PedidoDetalle.test.tsx::con efectivo pendiente el comprador no ve botón de entrega y lee «Pagas ahí»"
+
+- id: RF-10
+  titulo: Pagos sandbox, efectivo, reembolso y anulación
+  actor: [comprador, vendedor, administrador]
+  origen: ADR-003
+  pantallas: ["/pedidos/:id", "/admin/pagos"]
+  endpoints:
+    - "POST /api/payments/pagos/"
+    - "POST /api/payments/pagos/{id}/simular/"
+    - "POST /api/payments/pagos/{id}/confirmar-efectivo/"
+    - "POST /api/payments/pagos/{id}/reembolsar/"
+    - "POST /api/payments/pagos/{id}/anular/"
+    - "POST /api/payments/webhook/{proveedor}/"
+  pruebas:
+    - "apps/payments/tests/test_pagos.py::TestCrearPago"
+    - "apps/payments/tests/test_pagos.py::TestSimular"
+    - "apps/payments/tests/test_pagos.py::TestConfirmarEfectivo"
+    - "apps/payments/tests/test_pagos.py::TestTransicionesAdmin"
+    - "apps/payments/tests/test_pagos.py::TestCancelacion"
+    - "apps/payments/tests/test_pagos.py::TestWebhook::test_webhook_firma_invalida"
+    - "apps/payments/tests/test_endurecimiento.py::TestSimularSoloSimulados::test_no_se_simula_un_pago_de_otro_metodo"
+    - "apps/payments/tests/test_endurecimiento.py::TestWebhookValidaMontoYFecha::test_monto_distinto_se_rechaza"
+    - "apps/payments/tests/test_endurecimiento.py::TestWebhookIdempotente"
+
+- id: RF-11
+  titulo: «No me ha llegado» en pedidos a domicilio
+  actor: [comprador, administrador]
+  origen: README (RBAC de pedidos)
+  pantallas: ["/pedidos/:id"]
+  endpoints:
+    - "POST /api/orders/pedidos/{id}/no-recibido/"
+  pruebas:
+    - "apps/orders/tests/test_no_recibido.py::TestReportarNoRecibido"
+    - "apps/orders/tests/test_no_recibido.py::TestEntregaPorRoles"
+    - "apps/orders/tests/test_retiro.py::TestNoRecibidoSoloDomicilio"
+    - "frontend/src/pages/PedidoDetalle.test.tsx::el comprador ve «Ya recibí mi pedido» y «No me ha llegado»"
+
+- id: RF-12
+  titulo: Reseñas solo de pedidos entregados
+  actor: [comprador, vendedor, administrador]
+  origen: ADR-005
+  pantallas: ["/pedidos/:id", "/productos/:id", "/puestos/:id", "/vendedor/resenas", "/admin/resenas"]
+  endpoints:
+    - "POST /api/reviews/resenas/"
+    - "GET /api/reviews/resenas/"
+    - "POST /api/reviews/resenas/{id}/responder/"
+  pruebas:
+    - "apps/reviews/tests/test_resenas.py::TestCrear::test_requiere_pedido_entregado"
+    - "apps/reviews/tests/test_resenas.py::TestCrear::test_duplicada_no_se_crea"
+    - "apps/reviews/tests/test_resenas.py::TestGestion"
+    - "apps/reviews/tests/test_resenas.py::TestReputacionPuesto"
+    - "apps/reviews/tests/test_resenas.py::TestEndpoints"
+
+- id: RF-13
+  titulo: Cupones por puesto
+  actor: [vendedor, comprador]
+  origen: ADR-006
+  pantallas: ["/vendedor/cupones", "/admin/cupones", "/checkout"]
+  endpoints:
+    - "POST /api/promotions/cupones/"
+    - "GET /api/promotions/cupones/"
+    - "POST /api/promotions/cupones/validar/"
+  pruebas:
+    - "apps/promotions/tests/test_cupones.py::TestCrear"
+    - "apps/promotions/tests/test_cupones.py::TestValidacion"
+    - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_cupon_de_otro_puesto_no_aplica"
+    - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_neto_vendedor_resta_descuento"
+    - "apps/orders/tests/test_concurrencia.py::TestCuponAlCancelar::test_cancelar_libera_el_uso_del_cupon"
+
+- id: RF-14
+  titulo: Libreta de direcciones de entrega
+  actor: [comprador]
+  origen: ADR-004
+  pantallas: ["/direcciones", "/checkout"]
+  endpoints:
+    - "POST /api/addresses/direcciones/"
+    - "GET /api/addresses/direcciones/"
+    - "POST /api/addresses/direcciones/{id}/predeterminar/"
+    - "DELETE /api/addresses/direcciones/{id}/"
+  pruebas:
+    - "apps/addresses/tests/test_direcciones.py::TestCrearService"
+    - "apps/addresses/tests/test_direcciones.py::TestPredeterminar"
+    - "apps/addresses/tests/test_direcciones.py::TestVisibilidad"
+    - "apps/addresses/tests/test_direcciones.py::TestEndpoints"
+    - "apps/addresses/tests/test_eliminar.py"
+
+- id: RF-15
+  titulo: Notificaciones dentro de la aplicación
+  actor: [comprador, vendedor, administrador]
+  origen: ADR-004
+  pantallas: ["/notificaciones"]
+  endpoints:
+    - "GET /api/notifications/notificaciones/"
+    - "GET /api/notifications/notificaciones/contador/"
+    - "POST /api/notifications/notificaciones/{id}/leida/"
+    - "POST /api/notifications/notificaciones/marcar-todas/"
+  pruebas:
+    - "apps/notifications/tests/test_notificaciones.py::TestAvisosDePedido"
+    - "apps/notifications/tests/test_notificaciones.py::TestIntegracionPedidos"
+    - "apps/notifications/tests/test_notificaciones.py::TestLectura"
+
+- id: RF-16
+  titulo: Administración de usuarios, roles y recursos con menú dinámico
+  actor: [administrador]
+  origen: README (Administración y RBAC)
+  pantallas: ["/admin", "/admin/usuarios", "/admin/roles", "/admin/recursos"]
+  endpoints:
+    - "GET /api/auth/menu/"
+    - "GET /api/admin/resumen/"
+    - "GET /api/admin/usuarios/"
+    - "POST /api/admin/usuarios/{id}/cambiar-rol/"
+    - "PUT /api/admin/usuarios/{id}/roles/"
+    - "POST /api/admin/usuarios/{id}/suspender/"
+    - "POST /api/admin/usuarios/{id}/reactivar/"
+    - "POST /api/admin/roles/"
+    - "PUT /api/admin/roles/{id}/recursos/"
+    - "POST /api/admin/recursos/"
+  pruebas:
+    - "apps/administration/tests/test_rbac_admin.py::TestPermisosPorRecurso"
+    - "apps/administration/tests/test_rbac_admin.py::TestRoles"
+    - "apps/administration/tests/test_rbac_admin.py::TestRecursos"
+    - "apps/administration/tests/test_usuarios.py::TestCambiarRol"
+    - "apps/administration/tests/test_usuarios.py::TestSuspenderReactivar"
+    - "apps/administration/tests/test_escalada.py::test_no_puede_otorgar_recursos_que_no_tiene"
+    - "apps/rbac/tests/test_nucleo.py::TestPermisosEfectivos"
+    - "apps/rbac/tests/test_menu.py::TestMenuPorRol"
+    - "apps/rbac/tests/test_menu.py::TestMenuDinamico"
+    - "frontend/src/pages/admin/RolesAdmin.test.tsx::bloquea las casillas obligatorias del rol administrador"
+    - "frontend/src/pages/admin/Usuarios.test.tsx::exige motivo antes de banear"
+    - "frontend/src/auth/RutaProtegida.test.tsx::con recurso: redirige a /403 si no lo tiene, aunque el rol base sea administrador"
+
+- id: RF-17
+  titulo: Moderación de puestos y productos
+  actor: [administrador]
+  origen: README (Administración y RBAC)
+  pantallas: ["/admin/puestos", "/admin/productos"]
+  endpoints:
+    - "POST /api/catalog/puestos/{id}/moderar/"
+    - "POST /api/catalog/productos/{id}/moderar/"
+  pruebas:
+    - "apps/administration/tests/test_moderacion.py::TestModerarPuesto"
+    - "apps/administration/tests/test_moderacion.py::TestModerarProducto"
+    - "apps/administration/tests/test_enforcement.py::TestModerarPuesto"
+    - "apps/catalog/tests/test_edicion_concurrente.py::test_editar_un_puesto_no_revierte_la_suspension"
+
+- id: RF-18
+  titulo: Auditoría de acciones sensibles
+  actor: [administrador]
+  origen: ADR-007
+  pantallas: ["/admin/auditoria"]
+  endpoints:
+    - "GET /api/audit/registros/"
+  pruebas:
+    - "apps/audit/tests/test_auditoria.py::TestServicio"
+    - "apps/audit/tests/test_auditoria.py::TestVisibilidad"
+    - "apps/audit/tests/test_auditoria.py::TestFiltros"
+    - "apps/audit/tests/test_auditoria.py::TestHooksPedido"
+
+- id: RF-19
+  titulo: Contacto por WhatsApp por puesto (apagado por defecto)
+  actor: [vendedor, comprador]
+  origen: ADR-010
+  pantallas: ["/puestos/:id", "/productos/:id", "/vendedor/puestos"]
+  endpoints:
+    - "GET /api/catalog/puestos/{id}/"
+    - "PATCH /api/catalog/puestos/{id}/"
+  pruebas:
+    - "apps/catalog/tests/test_whatsapp.py::test_el_default_del_modelo_es_privado"
+    - "apps/catalog/tests/test_whatsapp.py::TestPublicacionDelNumero"
+    - "apps/catalog/tests/test_whatsapp.py::TestElCelularNoSeFiltra"
+    - "apps/catalog/tests/test_whatsapp.py::TestEdicionDelInterruptor"
+    - "frontend/src/components/BotonWhatsapp.test.tsx::con número es un enlace a wa.me en pestaña nueva y sin referrer ni opener"
+    - "frontend/src/pages/vendedor/InterruptorWhatsapp.test.tsx::al activarlo guarda acepta_whatsapp en true solo en ese puesto"
+
+- id: RF-20
+  titulo: Mapa de puestos con OpenStreetMap
+  actor: [comprador]
+  origen: ADR-010
+  pantallas: ["/mapa", "/puestos/:id"]
+  endpoints:
+    - "GET /api/catalog/puestos/"
+  pruebas:
+    - "frontend/src/pages/MapaPuestos.test.tsx::con varios puestos muestra el mapa y la lista con enlaces a cada puesto"
+    - "frontend/src/pages/MapaPuestos.test.tsx::la lista se usa con teclado: «Ver en el mapa» selecciona el puesto"
+    - "frontend/src/pages/MapaPuestos.test.tsx::si el mapa no carga deja la lista con un aviso"
+    - "apps/common/tests/test_seguridad_headers.py::test_la_csp_de_la_app_cubre_mapa_y_service_worker_sin_abrir_scripts_externos"
+
+- id: RF-21
+  titulo: Volver a pedir un pedido entregado o cancelado
+  actor: [comprador]
+  origen: ADR-010
+  pantallas: ["/mis-pedidos", "/pedidos/:id", "/carrito"]
+  pruebas:
+    - "frontend/src/lib/volverAPedir.test.ts::limita la cantidad al stock disponible"
+    - "frontend/src/lib/volverAPedir.test.ts::omite los agotados, los inactivos y los que ya no existen"
+    - "frontend/src/lib/volverAPedir.test.ts::solo para pedidos entregados o cancelados"
+    - "frontend/src/components/BotonVolverAPedir.test.tsx::con un carrito de otro puesto pide confirmación y no lo pisa en silencio"
+
+- id: RF-22
+  titulo: App instalable y página sin conexión
+  actor: [comprador, vendedor]
+  origen: ADR-010
+  pruebas:
+    - "frontend/src/pwa.test.ts::es JSON válido con los campos de una app instalable"
+    - "frontend/src/pwa.test.ts::no guarda en caché respuestas de la red (ni assets ni API)"
+    - "frontend/src/pwa.test.ts::la página sin conexión existe, tiene el botón Reintentar y no usa scripts en línea"
+    - "tests/test_frontend_publico.py::test_sirve_el_archivo_real_con_su_tipo_mime"
+    - "tests/test_frontend_publico.py::test_whitenoise_conoce_el_tipo_del_manifest"
+
+- id: RF-23
+  titulo: Apartar con plazo (los retiros no confirmados o no recogidos se liberan solos)
+  actor: [comprador, vendedor, administrador]
+  origen: ADR-012
+  pantallas: ["/checkout", "/pedidos/:id", "/vendedor/pedidos"]
+  endpoints:
+    - "POST /api/orders/pedidos/"
+    - "POST /api/orders/pedidos/{id}/listo-para-recoger/"
+    - "POST /api/orders/pedidos/{id}/extender-plazo/"
+  pruebas:
+    - "apps/orders/tests/test_vencimientos.py::TestFijarPlazo"
+    - "apps/orders/tests/test_vencimientos.py::TestCancelarVencidos::test_cancela_listo_para_recoger_vencido_y_repone_stock_cupon_y_pago"
+    - "apps/orders/tests/test_vencimientos.py::TestCancelarVencidos::test_nunca_cancela_un_domicilio"
+    - "apps/orders/tests/test_vencimientos.py::TestCancelarVencidos::test_es_idempotente_dos_barridos_cancelan_una_vez"
+    - "apps/orders/tests/test_vencimientos.py::TestCarreraConEntregar"
+    - "apps/orders/tests/test_vencimientos.py::TestExtenderPlazo"
+    - "apps/orders/tests/test_vencimientos.py::TestNotificacionesYAuditoria::test_audita_como_sistema"
+    - "apps/orders/tests/test_middleware_vencimientos.py::test_get_productos_libera_el_stock_vencido"
+    - "apps/orders/tests/test_middleware_vencimientos.py::test_post_no_dispara_el_barrido"
+    - "apps/orders/tests/test_comando_vencidos.py::test_dry_run_no_cancela"
+    - "tests/test_migracion_vence_en.py::test_no_cancela_a_nadie_el_dia_del_despliegue"
+    - "frontend/src/pages/pedido/AvisosPedido.test.tsx::muestra_cancelado_por_plazo: no recogido"
+    - "frontend/src/pages/vendedor/PedidosVendedor.test.tsx::al pulsarlo pide más tiempo y avisa con un mensaje claro"
+    - "frontend/src/pages/Checkout.test.tsx::avisa que el retiro se aparta y se cancela solo si no se recoge a tiempo"
+
+- id: RF-24
+  titulo: Productos por encargo con detalles y fecha pedida
+  actor: [vendedor, comprador]
+  origen: ADR-013
+  pantallas: ["/vendedor/productos", "/productos/:id", "/checkout"]
+  endpoints:
+    - "POST /api/catalog/productos/"
+    - "POST /api/orders/pedidos/"
+  pruebas:
+    - "apps/catalog/tests/test_encargos.py::TestCrearEncargo"
+    - "apps/catalog/tests/test_encargos.py::TestCambiarModalidad"
+    - "apps/catalog/tests/test_encargos.py::TestRestriccionesEnBd"
+    - "apps/orders/tests/test_encargos.py::TestSinStock"
+    - "apps/orders/tests/test_encargos.py::TestPedidoMixto"
+    - "apps/orders/tests/test_encargos.py::TestFechaSolicitada"
+    - "apps/orders/tests/test_encargos.py::TestCantidadYDetalles"
+    - "apps/orders/tests/test_encargos.py::TestPlazos"
+    - "tests/test_migracion_encargos.py::test_items_existentes_quedan_como_stock"
+    - "frontend/src/pages/Checkout.test.tsx::envia_fecha_solicitada_en_iso_y_los_detalles"
+    - "frontend/src/pages/pedido/siguienteAccion.test.ts::aceptar_encargo_en_pendiente"
+    - "frontend/src/lib/encargos.test.ts::la máxima es 60 días después"
+
+- id: RF-25
+  titulo: Panel de ventas del vendedor y del administrador
+  actor: [vendedor, administrador]
+  origen: ADR-014
+  pantallas: ["/vendedor/ventas", "/admin"]
+  endpoints:
+    - "GET /api/payments/ventas/"
+  pruebas:
+    - "apps/payments/tests/test_ventas.py::test_vendedor_ve_solo_sus_puestos"
+    - "apps/payments/tests/test_ventas.py::test_admin_ve_todo_el_mercado"
+    - "apps/payments/tests/test_ventas.py::test_comprador_recibe_403"
+    - "apps/payments/tests/test_ventas.py::test_ingresos_netos_coinciden_con_resumen_ingresos"
+    - "apps/payments/tests/test_ventas.py::test_dia_en_hora_de_colombia"
+    - "apps/payments/tests/test_ventas.py::test_consultas_constantes_por_la_api"
+    - "apps/rbac/tests/test_menu.py::TestRecursoVentas"
+    - "frontend/src/pages/vendedor/Ventas.test.tsx::muestra las cifras que calcula el servidor, el gráfico y lo más vendido"
+    - "frontend/src/pages/vendedor/Ventas.test.tsx::estado vacío sin ventas"
+
+- id: RF-26
+  titulo: Landing, tienda y catálogo públicos
+  actor: [comprador]
+  origen: README (Frontend)
+  pantallas: ["/", "/tienda", "/catalogo", "/puestos/:id", "/productos/:id"]
+  endpoints:
+    - "GET /api/catalog/productos/"
+    - "GET /api/catalog/puestos/"
+    - "GET /api/catalog/categorias/"
+  pruebas:
+    - "frontend/src/pages/Landing.test.tsx::se muestra con un solo h1 y los enlaces principales"
+    - "frontend/src/pages/Landing.test.tsx::muestra los puestos reales con enlace a su página"
+    - "frontend/src/components/ProductoCard.test.tsx::un producto con stock 0 sigue figurando como agotado"
+    - "apps/catalog/tests/test_endpoints.py::TestProductos"
+    - "apps/catalog/tests/test_endpoints.py::TestPuestos"
+    - "apps/catalog/tests/test_endpoints.py::TestCategorias"
+    - "frontend/e2e/smoke.spec.ts::la portada es la landing"
+    - "frontend/e2e/smoke.spec.ts::la tienda vive en /tienda"
+
+- id: RF-27
+  titulo: Carrito de un solo puesto que sobrevive al inicio de sesión
+  actor: [comprador]
+  origen: README (Qué es RioMarket)
+  pantallas: ["/carrito", "/checkout"]
+  pruebas:
+    - "frontend/src/cart/CartProvider.test.tsx::un visitante que inicia sesión conserva el carrito que armó"
+    - "frontend/src/cart/CartProvider.test.tsx::el carrito se vacía cuando la sesión termina"
+    - "frontend/src/cart/CartProvider.test.tsx::agregarLineas no pisa en silencio el carrito de otro puesto"
+    - "frontend/src/cart/CartProvider.test.tsx::mezcla encargos y productos con stock en el mismo carrito"
+
+- id: RF-28
+  titulo: Catálogo del vendedor con imágenes ordenables y miniaturas
+  actor: [vendedor]
+  origen: ADR-008
+  pantallas: ["/vendedor/productos", "/vendedor/puestos"]
+  endpoints:
+    - "POST /api/catalog/productos/{id}/imagenes/"
+    - "POST /api/catalog/productos/{id}/imagenes/reordenar/"
+    - "POST /api/catalog/productos/{id}/imagenes/{imagen_id}/principal/"
+  pruebas:
+    - "apps/catalog/tests/test_endpoints.py::TestImagenes"
+    - "apps/catalog/tests/test_reordenar_imagenes.py::test_reordena_segun_la_lista"
+    - "apps/catalog/tests/test_generar_miniaturas.py::test_genera_miniatura_y_medidas"
+    - "tests/test_robustez.py::TestImagenes"
+
+- id: RNF-01
+  titulo: Cabeceras de seguridad y CSP estricta
+  origen: SEGURIDAD.md
+  pruebas:
+    - "apps/common/tests/test_seguridad_headers.py::test_la_api_usa_una_csp_estricta"
+    - "apps/common/tests/test_seguridad_headers.py::test_con_medios_locales_la_csp_no_abre_otros_origenes"
+    - "apps/common/tests/test_seguridad_headers.py::test_el_origen_de_medios_no_se_aplica_a_scripts"
+    - "tests/test_configuracion.py::test_cabeceras_de_seguridad_van_antes_de_whitenoise"
+    - "tests/test_configuracion.py::test_produccion_rechaza_una_secret_key_insegura"
+  evidencia: ["SEGURIDAD.md"]
+
+- id: RNF-02
+  titulo: Límite de intentos y protección CSRF por origen exacto
+  origen: AUDITORIA S-06 y S-17
+  endpoints:
+    - "POST /api/auth/login/"
+  pruebas:
+    - "apps/accounts/tests/test_auth.py::TestLogin::test_login_throttling_por_scope"
+    - "apps/accounts/tests/test_csrf_origen.py::test_origen_exacto"
+    - "apps/common/tests/test_api_config.py::test_throttling_global_activo"
+    - "apps/common/tests/test_api_config.py::test_jwt_con_rotacion_y_blacklist"
+    - "apps/common/tests/test_api_config.py::test_fernet_validado_al_arrancar"
+  evidencia: ["docs/AUDITORIA.md"]
+
+- id: RNF-03
+  titulo: Número de consultas fijo en listados y resúmenes
+  origen: ADR-011
+  pruebas:
+    - "tests/test_consultas.py::test_listado_de_usuarios_y_su_conteo"
+    - "tests/test_consultas.py::test_listados_personales_no_crecen_con_las_filas"
+    - "tests/test_consultas_listados.py::test_catalogo_no_crece_con_las_filas"
+    - "tests/test_consultas_listados.py::test_pedidos_de_vendedor_y_admin_no_crecen"
+    - "apps/administration/tests/test_resumen_consultas.py::test_resumen_valores_y_consultas"
+    - "apps/orders/tests/test_rendimiento.py::test_cancelar_no_hace_una_consulta_por_producto"
+    - "apps/payments/tests/test_ventas.py::test_consultas_constantes_sin_y_con_puesto"
+  evidencia: ["docs/AUDITORIA.md"]
+
+- id: RNF-04
+  titulo: Rendimiento web medido con Lighthouse
+  origen: ADR-011
+  pruebas:
+    - "tests/test_rendimiento_estaticos.py::test_assets_con_hash_son_inmutables"
+    - "tests/test_rendimiento_estaticos.py::test_el_build_comprimido_se_entrega_en_brotli_y_gzip"
+    - "tests/test_rendimiento_estaticos.py::test_index_html_sin_cache"
+  evidencia: ["docs/rendimiento.md"]
+
+- id: RNF-05
+  titulo: SEO básico (robots.txt, sitemap.xml y metaetiquetas por ruta)
+  origen: ADR-011
+  pruebas:
+    - "tests/test_seo.py::test_robots_es_texto_y_apunta_al_sitemap"
+    - "tests/test_seo.py::test_sitemap_lista_paginas_puestos_y_productos_activos"
+    - "tests/test_seo.py::test_index_de_producto_lleva_su_titulo_escapado"
+    - "tests/test_seo.py::test_index_de_producto_bloqueado_usa_metas_genericas"
+
+- id: RNF-06
+  titulo: Migraciones de datos reversibles e idempotentes
+  origen: ADR-009, ADR-012, ADR-013
+  pruebas:
+    - "tests/test_migracion_*.py"
+    - "tests/test_migracion_retiro.py::test_la_migracion_convierte_solo_los_retiros_en_camino_y_es_reversible"
+    - "tests/test_migracion_encargos.py::test_las_migraciones_son_reversibles_y_se_pueden_repetir"
+    - "tests/test_migracion_vence_en.py::test_revertir_limpia_los_plazos"
+    - "tests/test_migracion_whatsapp.py::test_la_migracion_apaga_el_whatsapp_de_los_puestos_existentes_y_es_reversible"
+
+- id: RNF-07
+  titulo: Observabilidad (salud del servicio hecha; id de petición y registro estructurado pendientes)
+  origen: Plan de mejoras (paquete E2, aún sin unir)
+  pendiente: true
+  endpoints: []
+  pruebas:
+    - "tests/test_smoke.py::test_health_ok"
+
+- id: RNF-08
+  titulo: Accesibilidad (nombres accesibles, teclado y roles ARIA)
+  origen: ADR-010, ADR-011
+  pruebas:
+    - "frontend/src/pages/admin/Verificaciones.test.tsx::los botones solo-icono tienen nombre accesible"
+    - "frontend/src/pages/Landing.test.tsx::el interruptor responde a las flechas del teclado"
+    - "frontend/src/pages/MapaPuestos.test.tsx::la lista se usa con teclado: «Ver en el mapa» selecciona el puesto"
+    - "frontend/src/components/Destacados.test.tsx::mantiene_el_carrusel_accesible_y_las_diapositivas_ocultas_para_lectores"
+  evidencia: ["docs/rendimiento.md"]
