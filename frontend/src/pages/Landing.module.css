@@ -575,6 +575,15 @@
     opacity: 1;
   }
 }
+/* El texto no baja de 4,5:1 antes de encenderse (WCAG AA): tinta al 66 % sobre blanco. */
+@keyframes enciendeTexto {
+  from {
+    opacity: 0.66;
+  }
+  to {
+    opacity: 1;
+  }
+}
 @keyframes brilla {
   to {
     transform: translateX(100%);
@@ -744,6 +753,9 @@
   .nodo h3 {
     animation: enciende linear both;
     animation-timeline: --ruta;
+  }
+  .nodo h3 {
+    animation-name: enciendeTexto;
   }
   .nodo:nth-child(1) .pt,
   .nodo:nth-child(1) h3 {
