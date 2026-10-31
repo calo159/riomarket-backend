@@ -8,9 +8,12 @@ Verifica que:
 - haya pagos en varios estados (aprobado, pendiente, reembolsado/anulado).
 """
 
+from datetime import timedelta
+
 import pytest
 from django.core.management import call_command
 from django.test import override_settings
+from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
 from apps.addresses.models import Direccion
@@ -54,7 +57,7 @@ class TestSeedMasivo:
         assert Puesto.objects.count() == 6
         assert Producto.objects.count() == 40
         assert Direccion.objects.count() == 10
-        assert Pedido.objects.count() == 30
+        assert Pedido.objects.count() == 31
         assert Pago.objects.count() >= 25
         assert Resena.objects.count() == 15
         assert Cupon.objects.count() == 5
@@ -66,7 +69,7 @@ class TestSeedMasivo:
         assert _conteo_total() == primera_total
         assert Usuario.objects.count() == 15
         assert Producto.objects.count() == 40
-        assert Pedido.objects.count() == 30
+        assert Pedido.objects.count() == 31
 
     def test_if_empty_omite_base_ya_sembrada(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
@@ -220,3 +223,78 @@ class TestSeedMapaYContacto:
 
         assert Puesto.objects.count() == 6
         assert len({(p.latitud, p.longitud) for p in Puesto.objects.all()}) == 6
+
+
+@pytest.mark.django_db
+class TestSeedApartarConPlazo:
+    """ADR-012: el seed no debe dejar que el sistema cancele los pedidos demo abiertos."""
+
+    def test_sm31_nace_vencido_y_el_resto_de_abiertos_tiene_plazo_largo(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        ahora = timezone.now()
+        sm31 = Pedido.objects.get(notas__startswith="[SM-31]")
+        assert sm31.estado == "listo_para_recoger"
+        assert sm31.tipo_entrega == "retiro"
+        assert sm31.pago.metodo_pago == "efectivo"
+        assert sm31.pago.estado == "pendiente"
+        assert sm31.vence_en < ahora
+
+        abiertos = Pedido.objects.filter(
+            notas__startswith="[SM-", estado__in=("pendiente", "listo_para_recoger")
+        ).exclude(pk=sm31.pk)
+        assert abiertos.count() == 5  # SM-22..25 y SM-28
+        for pedido in abiertos:
+            assert pedido.vence_en is not None
+            assert pedido.vence_en > ahora + timedelta(days=6)
+
+    def test_el_comando_de_arranque_cancela_solo_sm31(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")
+        sm31 = Pedido.objects.get(notas__startswith="[SM-31]")
+        assert sm31.estado == "cancelado"
+        assert sm31.motivo_cancelacion == "no_recogido"
+        assert sm31.pago.estado == "anulado"
+        # Nada más se tocó: SM-28 sigue listo para recoger, con su efectivo por cobrar.
+        sm28 = Pedido.objects.get(notas__startswith="[SM-28]")
+        assert sm28.estado == "listo_para_recoger"
+        assert sm28.pago.estado == "pendiente"
+        assert (
+            Pedido.objects.filter(estado="cancelado", motivo_cancelacion="no_recogido").count() == 1
+        )
+        # Los cancelados son los 5 de siempre (SM-17..21, a mano) más SM-31 (por plazo).
+        assert Pedido.objects.filter(estado="cancelado").count() == 6
+
+    def test_arranques_repetidos_no_reviven_ni_renuevan_a_sm31(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")
+        stock = dict(Producto.objects.values_list("pk", "stock"))
+        # Segundo arranque (Render reinicia a menudo): seed + comando otra vez.
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")
+        sm31 = Pedido.objects.get(notas__startswith="[SM-31]")
+        assert sm31.estado == "cancelado"
+        assert sm31.vence_en is None
+        assert Pedido.objects.count() == 31
+        assert dict(Producto.objects.values_list("pk", "stock")) == stock  # sin reponer de más
+
+    def test_el_seed_renueva_el_plazo_de_los_demo_abiertos_que_ya_vencieron(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        pasado = timezone.now() - timedelta(hours=3)
+        Pedido.objects.filter(notas__startswith="[SM-28]").update(vence_en=pasado)
+        Pedido.objects.filter(notas__startswith="[SM-22]").update(vence_en=pasado)
+
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")
+
+        for clave in ("SM-28", "SM-22"):
+            pedido = Pedido.objects.get(notas__startswith=f"[{clave}]")
+            assert pedido.estado in ("listo_para_recoger", "pendiente")
+            assert pedido.vence_en > timezone.now() + timedelta(days=6)
+
+    def test_los_pedidos_demo_sin_plazo_siguen_sin_plazo(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        # Domicilios, entregados, cancelados, confirmados y en preparación: jamás reciben plazo.
+        sin_plazo = Pedido.objects.exclude(estado__in=("pendiente", "listo_para_recoger"))
+        assert not sin_plazo.filter(vence_en__isnull=False).exists()
+        assert not Pedido.objects.filter(tipo_entrega="domicilio", vence_en__isnull=False).exists()

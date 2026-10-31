@@ -142,7 +142,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **503 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 30 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar), 28 pagos, 124 notificaciones y 171 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
+`seed_masivo` es idempotente y, en una base limpia, crea **515 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 31 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`, y otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»), 29 pagos, 128 notificaciones y 176 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 

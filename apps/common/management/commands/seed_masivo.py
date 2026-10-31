@@ -17,10 +17,12 @@ Uso::
 """
 
 import os
+from datetime import timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
 from apps.addresses import services as direcciones_services
@@ -360,12 +362,20 @@ PEDIDOS = [
     ("SM-29", 8, "palenque", [(2, 1)], "en_preparacion", "retiro", True, "efectivo", True, None),
     # 1 en camino (domicilio)
     ("SM-30", 9, "palenque", [(0, 1)], "en_camino", "domicilio", True, "simulado", True, None),
+    # 1 retiro «listo para recoger» con el plazo vencido A PROPÓSITO (ADR-012): el comando
+    # cancelar_pedidos_vencidos del arranque lo cancela y la demo muestra «Se canceló solo».
+    ("SM-31", 9, "frutas", [(0, 1)], "listo_para_recoger", "retiro", True, "efectivo", False, None),
     # 4 pendientes (2 con pago pendiente, 2 sin pago)
     ("SM-22", 1, "frutas", [(3, 1)], "pendiente", "retiro", True, "simulado", False, None),
     ("SM-23", 2, "tejidos", [(0, 1)], "pendiente", "retiro", False, "simulado", False, None),
     ("SM-24", 3, "frutas", [(4, 1)], "pendiente", "retiro", True, "simulado", False, None),
     ("SM-25", 4, "pescaderia", [(0, 1)], "pendiente", "retiro", False, "simulado", False, None),
 ]
+
+# Pedidos demo cuyo plazo nace vencido (no se renuevan: son la muestra de «cancelado por plazo»).
+PEDIDOS_VENCIDOS_A_PROPOSITO = ("SM-31",)
+# Los demás pedidos demo abiertos reciben un plazo largo en cada ejecución del seed.
+DIAS_PLAZO_DEMO = 7
 
 # Direcciones de los compradores: (barrio, direccion, alias, referencia)
 DIRECCIONES = [
@@ -450,6 +460,7 @@ class Command(BaseCommand):
         self._crear_pedidos()
         self._crear_resenas()
         self._crear_notificaciones_extra()
+        self._renovar_plazos_demo()
 
         total = self._reportar()
 
@@ -694,6 +705,10 @@ class Command(BaseCommand):
             self._avanzar_estado(
                 pedido=pedido, estado=estado, vendedor=vendedor, comprador=comprador
             )
+            if clave in PEDIDOS_VENCIDOS_A_PROPOSITO:
+                Pedido.objects.filter(pk=pedido.pk).update(
+                    vence_en=timezone.now() - timedelta(minutes=1)
+                )
 
     def _avanzar_estado(self, *, pedido, estado, vendedor, comprador):
         """Recorre los estados válidos del tipo de entrega del pedido (ver ADR-009)."""
@@ -716,6 +731,24 @@ class Command(BaseCommand):
             orders_services.marcar_entregado(
                 pedido=pedido, usuario=vendedor if es_retiro else comprador
             )
+
+    def _renovar_plazos_demo(self):
+        """Apartar con plazo (ADR-012): los pedidos demo abiertos no deben cancelarse solos.
+
+        ``seed_masivo`` corre en cada arranque y no recrea pedidos; sin esto, a las 24 h el
+        sistema cancelaría ``SM-28`` (el caso «Entregar y cobrar» de la demo) y los
+        pendientes. Es idempotente. ``SM-31`` queda fuera a propósito: es el que vence.
+        """
+        abiertos = Pedido.objects.filter(
+            notas__startswith="[SM-",
+            estado__in=(Pedido.Estado.PENDIENTE, Pedido.Estado.LISTO_PARA_RECOGER),
+            vence_en__isnull=False,
+        )
+        for clave in PEDIDOS_VENCIDOS_A_PROPOSITO:
+            abiertos = abiertos.exclude(notas__startswith=f"[{clave}]")
+        abiertos.update(
+            vence_en=timezone.now() + timedelta(days=DIAS_PLAZO_DEMO), aviso_vencimiento_en=None
+        )
 
     # ------------------------------------------------------------------
     # Reseñas
