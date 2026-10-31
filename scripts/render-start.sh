@@ -13,4 +13,6 @@ case "$seed_demo" in
 esac
 # Miniaturas y medidas de las fotos que no las tienen (idempotente; con --limite el arranque no se alarga).
 python manage.py generar_miniaturas --limite 200 || true
+# Apartar con plazo (ADR-012): Render gratis no tiene cron; cada arranque libera lo vencido (acotado).
+python manage.py cancelar_pedidos_vencidos --limite 100 || true
 exec gunicorn config.wsgi:application --bind 0.0.0.0:"$PORT" --workers 2 --threads 4 --timeout 120

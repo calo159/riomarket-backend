@@ -19,6 +19,8 @@ class Notificacion(models.Model):
         PEDIDO_CANCELADO = "pedido_cancelado", "Pedido cancelado"
         PAGO_APROBADO = "pago_aprobado", "Pago aprobado"
         PAGO_RECHAZADO = "pago_rechazado", "Pago rechazado"
+        PEDIDO_POR_VENCER = "pedido_por_vencer", "Pedido por vencer"
+        PEDIDO_VENCIDO = "pedido_vencido", "Pedido cancelado por plazo"
         VERIFICACION = "verificacion", "Verificación"
         GENERAL = "general", "General"
 
@@ -61,6 +63,8 @@ class Notificacion(models.Model):
                         "pedido_cancelado",
                         "pago_aprobado",
                         "pago_rechazado",
+                        "pedido_por_vencer",
+                        "pedido_vencido",
                         "verificacion",
                         "general",
                     ]

@@ -121,6 +121,52 @@ class TestPuestos:
         propio.refresh_from_db()
         assert propio.nombre == "Renombrado"
 
+    def test_dueno_cambia_plazo_retiro(self, cliente_vendedor, vendedor):
+        propio = PuestoFactory(id_vendedor=vendedor)
+        assert propio.plazo_retiro_horas == 24  # valor por defecto
+        respuesta = cliente_vendedor.patch(
+            f"{PUESTOS}{propio.pk}/", {"plazo_retiro_horas": 48}, format="json"
+        )
+        assert respuesta.status_code == status.HTTP_200_OK
+        assert respuesta.data["plazo_retiro_horas"] == 48
+        propio.refresh_from_db()
+        assert propio.plazo_retiro_horas == 48
+
+    @pytest.mark.parametrize("valor", [0, 1, 73, 1000, -5])
+    def test_plazo_retiro_fuera_de_rango_da_400(self, valor, cliente_vendedor, vendedor):
+        propio = PuestoFactory(id_vendedor=vendedor)
+        respuesta = cliente_vendedor.patch(
+            f"{PUESTOS}{propio.pk}/", {"plazo_retiro_horas": valor}, format="json"
+        )
+        assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+        assert "plazo_retiro_horas" in respuesta.data["errors"]
+        propio.refresh_from_db()
+        assert propio.plazo_retiro_horas == 24
+
+    @pytest.mark.parametrize("valor", [2, 72])
+    def test_plazo_retiro_acepta_los_limites(self, valor, cliente_vendedor, vendedor):
+        propio = PuestoFactory(id_vendedor=vendedor)
+        respuesta = cliente_vendedor.patch(
+            f"{PUESTOS}{propio.pk}/", {"plazo_retiro_horas": valor}, format="json"
+        )
+        assert respuesta.status_code == status.HTTP_200_OK
+
+    def test_la_base_rechaza_un_plazo_fuera_de_rango(self, vendedor):
+        from django.db import IntegrityError, transaction
+
+        propio = PuestoFactory(id_vendedor=vendedor)
+        with pytest.raises(IntegrityError), transaction.atomic():
+            Puesto.objects.filter(pk=propio.pk).update(plazo_retiro_horas=1)
+
+    def test_vendedor_ajeno_no_cambia_el_plazo_de_un_puesto(self, cliente_otro_vendedor, vendedor):
+        ajeno = PuestoFactory(id_vendedor=vendedor)
+        respuesta = cliente_otro_vendedor.patch(
+            f"{PUESTOS}{ajeno.pk}/", {"plazo_retiro_horas": 72}, format="json"
+        )
+        assert respuesta.status_code == 403
+        ajeno.refresh_from_db()
+        assert ajeno.plazo_retiro_horas == 24
+
     def test_vendedor_no_cambia_estado_propio(self, cliente_vendedor, vendedor):
         propio = PuestoFactory(id_vendedor=vendedor)
         respuesta = cliente_vendedor.patch(

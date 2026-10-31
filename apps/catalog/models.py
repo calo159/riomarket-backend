@@ -60,6 +60,12 @@ class Puesto(models.Model):
         default=False,
         help_text="Si está activo, el celular del vendedor se muestra a los compradores.",
     )
+    # Apartar con plazo (ADR-012): horas que tiene el cliente para recoger un pedido listo.
+    plazo_retiro_horas = models.PositiveSmallIntegerField(
+        default=24,
+        validators=[MinValueValidator(2), MaxValueValidator(72)],
+        help_text="Horas que tiene el cliente para recoger un pedido listo (entre 2 y 72).",
+    )
 
     class Meta:
         verbose_name = "puesto"
@@ -77,6 +83,10 @@ class Puesto(models.Model):
                 condition=models.Q(ofrece_domicilio=False)
                 | models.Q(latitud__isnull=False, longitud__isnull=False),
                 name="puesto_domicilio_requiere_coordenadas",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(plazo_retiro_horas__gte=2, plazo_retiro_horas__lte=72),
+                name="puesto_plazo_retiro_valido",
             ),
         ]
 

@@ -70,6 +70,7 @@ class PedidoSerializer(serializers.ModelSerializer):
     items = ItemPedidoSerializer(many=True, allow_empty=False, max_length=MAX_LINEAS_POR_PEDIDO)
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
     acciones_permitidas = serializers.SerializerMethodField()
+    horas_extension = serializers.SerializerMethodField()
 
     class Meta:
         model = Pedido
@@ -92,6 +93,10 @@ class PedidoSerializer(serializers.ModelSerializer):
             "total",
             "no_recibido_en",
             "motivo_no_recibido",
+            "vence_en",
+            "extensiones_plazo",
+            "motivo_cancelacion",
+            "horas_extension",
             "acciones_permitidas",
             "items",
             "codigo_cupon",
@@ -111,9 +116,16 @@ class PedidoSerializer(serializers.ModelSerializer):
             "total",
             "no_recibido_en",
             "motivo_no_recibido",
+            "vence_en",
+            "extensiones_plazo",
+            "motivo_cancelacion",
             "fecha_creacion",
             "fecha_actualizacion",
         )
+
+    def get_horas_extension(self, obj) -> int | None:
+        """Horas que suma «Dar más tiempo» (``None`` si el pedido no admite más tiempo)."""
+        return services.horas_de_extension(obj)
 
     def get_acciones_permitidas(self, obj) -> list[str]:
         request = self.context.get("request")

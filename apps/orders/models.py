@@ -37,7 +37,14 @@ class Pedido(models.Model):
         ENTREGADO = "entregado", "Entregado"
         CANCELADO = "cancelado", "Cancelado"
 
+    class MotivoCancelacion(models.TextChoices):
+        """Por qué el SISTEMA canceló el pedido (las cancelaciones manuales dejan ``""``)."""
+
+        NO_RECOGIDO = "no_recogido", "No se recogió a tiempo"
+        NO_CONFIRMADO = "no_confirmado", "El puesto no lo confirmó a tiempo"
+
     ESTADOS_FINALES = (Estado.ENTREGADO, Estado.CANCELADO)
+    MAX_EXTENSIONES_PLAZO = 2
 
     id_comprador = models.ForeignKey(
         "accounts.Usuario",
@@ -122,6 +129,29 @@ class Pedido(models.Model):
         default="",
         help_text="Motivo opcional del reporte de no recibido.",
     )
+    # Apartar con plazo (ADR-012): el stock ya se descontó al crear el pedido; si el retiro
+    # no se confirma o no se recoge a tiempo, el sistema lo cancela y el stock vuelve.
+    vence_en = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Cuándo se cancela solo si nadie lo confirma o lo recoge. Vacío = sin plazo.",
+    )
+    aviso_vencimiento_en = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Cuándo se avisó que el pedido está por vencer (evita repetir el aviso).",
+    )
+    extensiones_plazo = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Veces que el vendedor dio más tiempo (máximo 2).",
+    )
+    motivo_cancelacion = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+        choices=MotivoCancelacion.choices,
+        help_text="Por qué lo canceló el sistema. Vacío si se canceló a mano.",
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -132,6 +162,12 @@ class Pedido(models.Model):
         indexes = [
             models.Index(fields=["estado", "-fecha_creacion"], name="pedido_estado_fecha_idx"),
             models.Index(fields=["id_comprador", "-fecha_creacion"], name="pedido_comprador_idx"),
+            # El barrido de vencidos solo mira pedidos con plazo: índice parcial pequeño.
+            models.Index(
+                fields=["vence_en"],
+                name="pedido_vence_en_idx",
+                condition=models.Q(vence_en__isnull=False),
+            ),
         ]
         constraints = [
             models.CheckConstraint(
@@ -177,6 +213,14 @@ class Pedido(models.Model):
                     | models.Q(latitud_entrega__isnull=False, longitud_entrega__isnull=False)
                 ),
                 name="pedido_coordenadas_completas",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(extensiones_plazo__lte=2),
+                name="pedido_extensiones_plazo_max",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(motivo_cancelacion__in=["", "no_recogido", "no_confirmado"]),
+                name="pedido_motivo_cancelacion_valido",
             ),
         ]
 

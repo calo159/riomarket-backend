@@ -78,6 +78,10 @@ MEDIA_ROOT = BASE_DIR / "test_media"
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# El barrido perezoso sumaría una consulta a las pruebas de número de consultas: se apaga aquí
+# y las pruebas de apps/orders/tests/test_*vencimientos.py lo activan a propósito (ADR-012).
+PEDIDOS_LIBERAR_EN_LECTURA = False
+
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
 }

@@ -50,6 +50,7 @@ class TestMatrizDeclarada:
             Accion.LISTO,
             Accion.ENTREGAR,
             Accion.CANCELAR,
+            Accion.EXTENDER_PLAZO,
         }
         assert set(permissions.PERMISOS[Usuario.Rol.ADMINISTRADOR]) == set(Accion.values) - {
             Accion.CREAR

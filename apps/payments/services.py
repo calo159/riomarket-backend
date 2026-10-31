@@ -151,6 +151,15 @@ def _aplicar_estado(
 ) -> Pago:
     """Mueve el pago a ``destino`` bloqueando la fila y revalidando el estado."""
     with transaction.atomic():
+        if destino == Pago.Estado.APROBADO:
+            # Orden de bloqueos único en todo el sistema: pedido -> pago. El barrido de pedidos
+            # vencidos bloquea primero el pedido; si aquí se bloqueara primero el pago y luego
+            # se actualizara el pedido, dos transacciones podrían esperarse en círculo.
+            list(
+                Pedido.objects.select_for_update()
+                .filter(pk=pago.id_pedido_id)
+                .values_list("pk", flat=True)
+            )
         bloqueado = Pago.objects.select_for_update().get(pk=pago.pk)
         permitidas = TRANSICIONES[bloqueado.estado]
         if destino not in permitidas:
@@ -184,6 +193,11 @@ def _aplicar_estado(
             bloqueado.notas = (bloqueado.notas + "\n" + motivo).strip()
         bloqueado.full_clean()
         bloqueado.save()
+        if destino == Pago.Estado.APROBADO:
+            # Un pedido pagado ya no vence solo (ADR-012): cancelarlo exigiría reembolsar.
+            Pedido.objects.filter(pk=bloqueado.id_pedido_id).update(
+                vence_en=None, aviso_vencimiento_en=None
+            )
     _auditar_pago(usuario, bloqueado, _ACCION_POR_ESTADO.get(destino, destino))
     return bloqueado
 
