@@ -37,6 +37,7 @@ stack, pruebas y despliegue.
 - [ADR-007: auditoría de acciones](ADR-007-auditoria.md)
 - [ADR-008: almacenamiento de imágenes](ADR-008-almacenamiento-imagenes.md)
 - [ADR-009: retiro en el puesto y pago al recoger](ADR-009-retiro-y-pago-al-recoger.md)
+- [ADR-010: contacto por WhatsApp, mapa y app instalable](ADR-010-contacto-mapa-y-pwa.md)
 
 ## Entrega
 

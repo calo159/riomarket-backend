@@ -2012,6 +2012,7 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            acepta_whatsapp?: boolean;
         };
         PatchedRecursoRequest: {
             codigo?: string;
@@ -2193,6 +2194,9 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            acepta_whatsapp?: boolean;
+            /** @description Número para WhatsApp (``57`` + celular), o ``None`` si no debe publicarse. */
+            readonly whatsapp: string | null;
             readonly estado: components["schemas"]["PuestoEstadoEnum"];
             /** Format: double */
             readonly calificacion_promedio: number | null;
@@ -2227,6 +2231,7 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            acepta_whatsapp?: boolean;
         };
         RecuperarContrasena: {
             /** Format: email */

@@ -172,3 +172,51 @@ class TestSeedMasivo:
             Puesto.objects.exclude(logo="").exclude(logo__isnull=True).count()
             == Puesto.objects.count()
         )
+
+
+@pytest.mark.django_db
+class TestSeedMapaYContacto:
+    def test_todos_los_puestos_tienen_coordenadas_distintas_en_riohacha(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        puestos = list(Puesto.objects.all())
+        assert len(puestos) == 6
+        for puesto in puestos:
+            assert puesto.latitud is not None and puesto.longitud is not None
+            assert 11.50 <= float(puesto.latitud) <= 11.60
+            assert -72.95 <= float(puesto.longitud) <= -72.88
+        assert len({(p.latitud, p.longitud) for p in puestos}) == 6
+
+    def test_los_puestos_de_la_demo_publican_whatsapp(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        assert Puesto.objects.filter(acepta_whatsapp=True).count() == 6
+
+    def test_un_despliegue_repone_coordenadas_y_contacto_sin_duplicar(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        # Simula la base ya desplegada: puestos sin coordenadas y con el contacto apagado.
+        Puesto.objects.update(
+            latitud=None, longitud=None, ofrece_domicilio=False, acepta_whatsapp=False
+        )
+
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+
+        assert Puesto.objects.count() == 6
+        assert not Puesto.objects.filter(latitud__isnull=True).exists()
+        assert Puesto.objects.filter(acepta_whatsapp=True).count() == 6
+
+    def test_no_pisa_coordenadas_que_ya_tiene_el_puesto(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        Puesto.objects.filter(nombre="Tejidos Guajiro").update(
+            latitud="11.500000", longitud="-72.800000"
+        )
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        assert str(Puesto.objects.get(nombre="Tejidos Guajiro").latitud) == "11.500000"
+
+    def test_corrige_el_punto_generico_que_dejo_seed_demo(self):
+        call_command("seed_demo")
+        # seed_demo deja el mismo punto en sus dos puestos: aquí se separan.
+        assert Puesto.objects.filter(latitud="11.544000", longitud="-72.907000").count() == 2
+
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+
+        assert Puesto.objects.count() == 6
+        assert len({(p.latitud, p.longitud) for p in Puesto.objects.all()}) == 6

@@ -1,0 +1,98 @@
+/* Estilos del mapa. Se cargan junto con Leaflet, en el chunk diferido del mapa. */
+.mapa-puestos {
+  background: #e9eef0;
+  font-family: inherit;
+  z-index: 0;
+}
+
+/* Marcador: gota turquesa dibujada con CSS, punto blanco al centro. */
+.marcador-puesto {
+  background: transparent;
+  border: 0;
+}
+.marcador-puesto__punta {
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: #00626d;
+  box-shadow: 0 1px 3px rgba(0, 27, 31, 0.45);
+  transform: translateY(6px) rotate(-45deg);
+}
+.marcador-puesto__punta::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.marcador-puesto:focus-visible .marcador-puesto__punta,
+.marcador-puesto:hover .marcador-puesto__punta {
+  background: #004a52;
+}
+.marcador-puesto:focus-visible {
+  outline: none;
+}
+.marcador-puesto:focus-visible .marcador-puesto__punta {
+  box-shadow: 0 0 0 3px #ffb703;
+}
+
+/* Tarjeta del marcador, con la misma tipografía y colores de la tienda. */
+.mapa-puestos .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  color: #1b2a33;
+}
+.mapa-puestos .leaflet-popup-content {
+  margin: 12px 14px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.tarjeta-puesto p {
+  margin: 0;
+}
+.tarjeta-puesto__nombre {
+  font-size: 16px;
+  font-weight: 800;
+}
+.tarjeta-puesto__dato {
+  margin-top: 2px !important;
+  color: #566973;
+}
+.mapa-puestos .tarjeta-puesto__enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-top: 6px;
+  font-weight: 700;
+  color: #00626d;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.mapa-puestos .leaflet-container a.leaflet-popup-close-button {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  line-height: 32px;
+}
+
+html.dark .mapa-puestos .leaflet-popup-content-wrapper,
+html.dark .mapa-puestos .leaflet-popup-tip {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+html.dark .tarjeta-puesto__dato {
+  color: #cbd5e1;
+}
+html.dark .mapa-puestos .tarjeta-puesto__enlace {
+  color: #7db6bc;
+}
+html.dark .mapa-puestos .leaflet-container a.leaflet-popup-close-button {
+  color: #cbd5e1;
+}

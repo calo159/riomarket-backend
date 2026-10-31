@@ -189,6 +189,9 @@ CATEGORIAS = [
     ("Dulces típicos", "Comida"),
 ]
 
+# Punto único que ``seed_demo`` pone a todos sus puestos (centro del río de Riohacha).
+COORDENADAS_GENERICAS_SEED_DEMO = (Decimal("11.544000"), Decimal("-72.907000"))
+
 PUESTOS = {
     "palenque": {
         "vendedor": "carmen",
@@ -199,6 +202,7 @@ PUESTOS = {
         "longitud": "-72.907490",
         "horario": "Lun-Sáb 6:00-14:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
     "tejidos": {
         "vendedor": "diego",
@@ -209,6 +213,7 @@ PUESTOS = {
         "longitud": "-72.909870",
         "horario": "Lun-Dom 9:00-19:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
     "frutas": {
         "vendedor": "rosa",
@@ -219,6 +224,7 @@ PUESTOS = {
         "longitud": "-72.905610",
         "horario": "Lun-Dom 5:30-18:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
     "cocina": {
         "vendedor": "jose",
@@ -229,6 +235,7 @@ PUESTOS = {
         "longitud": "-72.912340",
         "horario": "Mar-Dom 10:00-20:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
     "dulces": {
         "vendedor": "carmen",
@@ -239,6 +246,7 @@ PUESTOS = {
         "longitud": "-72.903220",
         "horario": "Lun-Sáb 7:00-17:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
     "pescaderia": {
         "vendedor": "diego",
@@ -249,6 +257,7 @@ PUESTOS = {
         "longitud": "-72.915670",
         "horario": "Lun-Dom 5:00-15:00",
         "ofrece_domicilio": True,
+        "acepta_whatsapp": True,
     },
 }
 
@@ -496,9 +505,29 @@ class Command(BaseCommand):
         for clave, datos in PUESTOS.items():
             vendedor = self.usuarios[datos["vendedor"]]
             campos = {k: v for k, v in datos.items() if k != "vendedor"}
-            puesto, _ = Puesto.objects.get_or_create(
+            puesto, creado = Puesto.objects.get_or_create(
                 id_vendedor=vendedor, nombre=datos["nombre"], defaults=campos
             )
+            if not creado:
+                # El seed corre en cada despliegue: los puestos que ya existen se ponen al día
+                # sin duplicarse. Coordenadas solo si faltan o son el punto genérico de ``seed_demo``
+                # (todos los puestos en el mismo punto): no pisa lo que edite el vendedor.
+                cambios = []
+                if (
+                    puesto.latitud is None
+                    or puesto.longitud is None
+                    or (puesto.latitud, puesto.longitud) == COORDENADAS_GENERICAS_SEED_DEMO
+                ):
+                    puesto.latitud = campos["latitud"]
+                    puesto.longitud = campos["longitud"]
+                    cambios += ["latitud", "longitud"]
+                # Los celulares de la demo son ficticios: se deja el contacto visible para
+                # la demostración (la migración 0006 lo apagó en los puestos ya existentes).
+                if not puesto.acepta_whatsapp:
+                    puesto.acepta_whatsapp = True
+                    cambios.append("acepta_whatsapp")
+                if cambios:
+                    puesto.save(update_fields=cambios)
             self.puestos[clave] = puesto
 
     def _crear_productos(self):

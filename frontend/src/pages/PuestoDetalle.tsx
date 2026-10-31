@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Bike, Clock, MapPin, PackageSearch, Star } from 'lucide-react';
+import { Bike, Clock, MapPin, Navigation, PackageSearch, Star } from 'lucide-react';
 import { listarProductos, obtenerPuesto } from '../api/catalog';
 import { listarResenas } from '../api/reviews';
 import { ProductoCard } from '../components/ProductoCard';
@@ -14,6 +14,10 @@ import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../co
 import { Paginacion } from '../components/ui/Paginacion';
 import { formatearCalificacion } from '../lib/format';
 import { claves } from '../lib/queryKeys';
+import { BotonWhatsapp } from '../components/BotonWhatsapp';
+import { MapaDiferido } from '../components/mapa/MapaDiferido';
+import { mensajeWhatsappPuesto } from '../lib/whatsapp';
+import { enlaceComoLlegar, enlaceComoLlegarGoogle, puestosConCoordenadas } from '../lib/mapa';
 
 const TAMANO = 12;
 
@@ -64,6 +68,7 @@ export function PuestoDetalle() {
   const tienda = puesto.data;
   const categorias = tienda.categorias as unknown as { id: number; nombre: string }[];
   const portada = urlAbsoluta(tienda.portada);
+  const ubicacion = puestosConCoordenadas([tienda])[0];
 
   const cambiarCategoria = (nueva: number | null) => {
     setCategoria(nueva);
@@ -115,6 +120,11 @@ export function PuestoDetalle() {
                 </span>
               </div>
               {tienda.descripcion && <p className="mt-3 max-w-3xl text-slate-600 dark:text-slate-300">{tienda.descripcion}</p>}
+              <BotonWhatsapp
+                numero={tienda.whatsapp}
+                mensaje={mensajeWhatsappPuesto(tienda.nombre)}
+                className="mt-4"
+              />
               <div className="mt-4 flex flex-wrap gap-2">
                 {categorias.map((item) => (
                   <button
@@ -136,6 +146,41 @@ export function PuestoDetalle() {
           </div>
         </section>
       </div>
+
+      {ubicacion && (
+        <div className="mx-auto max-w-[1240px] px-3 pt-4 sm:px-5">
+          <section className="card grid overflow-hidden md:grid-cols-[minmax(0,1fr)_320px]" aria-labelledby="titulo-ubicacion">
+            <div className="h-56 md:h-64">
+              <MapaDiferido puestos={[ubicacion]} compacto etiqueta={`Ubicación de ${tienda.nombre}`} />
+            </div>
+            <div className="flex flex-col gap-2 p-4">
+              <h2 id="titulo-ubicacion" className="text-lg font-bold">Dónde queda</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{tienda.direccion}</p>
+              {tienda.horario && <p className="text-sm text-slate-600 dark:text-slate-300">{tienda.horario}</p>}
+              <div className="mt-auto flex flex-col gap-2 pt-2">
+                <a
+                  href={enlaceComoLlegar(ubicacion.lat, ubicacion.lng)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-marca"
+                >
+                  <Navigation className="h-4 w-4" aria-hidden="true" /> Cómo llegar
+                  <span className="sr-only"> (OpenStreetMap, se abre en una pestaña nueva)</span>
+                </a>
+                <a
+                  href={enlaceComoLlegarGoogle(ubicacion.lat, ubicacion.lng)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link text-sm"
+                >
+                  Abrir ruta en Google Maps
+                </a>
+                <Link to="/mapa" className="link text-sm">Ver todos los puestos en el mapa</Link>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="mx-auto max-w-[1240px] px-3 py-6 sm:px-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

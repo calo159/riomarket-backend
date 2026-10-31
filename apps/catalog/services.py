@@ -16,6 +16,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 from django.http import Http404
 
+from apps.accounts.models import Usuario
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
 from apps.common.image_processing import make_thumbnail, process_product_image
 from apps.common.motivo import validar_motivo
@@ -78,6 +79,30 @@ def _validar_domicilio(datos: dict) -> None:
         datos.get("latitud") is None or datos.get("longitud") is None
     ):
         raise ValidationError({"latitud": ERROR_DOMICILIO})
+
+
+# ---------------------------------------------------------------------------
+# Contacto por WhatsApp (privacidad del celular del vendedor)
+# ---------------------------------------------------------------------------
+def numero_whatsapp_publico(puesto: Puesto) -> str | None:
+    """Número internacional (``57`` + 10 dígitos) que se puede mostrar, o ``None``.
+
+    Único punto por el que el celular del vendedor sale de la API. Se publica solo si el
+    vendedor activó ``acepta_whatsapp``, el puesto está activo, el vendedor está activo y su
+    identidad está aprobada. Cualquier otro caso devuelve ``None``.
+    """
+    if not puesto.acepta_whatsapp or puesto.estado != Puesto.Estado.ACTIVO:
+        return None
+    vendedor = puesto.id_vendedor
+    if not vendedor.is_active or not vendedor.es_vendedor:
+        return None
+    verificacion = getattr(vendedor, "vendedor", None)
+    if verificacion is None or not verificacion.aprobado:
+        return None
+    celular = Usuario.normalizar_celular(vendedor.celular)
+    if len(celular) != 10 or not celular.isdigit():
+        return None
+    return f"57{celular}"
 
 
 # ---------------------------------------------------------------------------

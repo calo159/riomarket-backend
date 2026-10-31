@@ -7,8 +7,10 @@ import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { EtiquetaEstado } from '../components/ui/EtiquetaEstado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
+import { BotonVolverAPedir } from '../components/BotonVolverAPedir';
 import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../lib/format';
 import { claves } from '../lib/queryKeys';
+import { puedeVolverAPedir } from '../lib/volverAPedir';
 
 const TAMANO = 10;
 
@@ -63,10 +65,10 @@ export function MisPedidos() {
         <>
           <div className="space-y-3">
             {pedidos.data.results.map((pedido) => (
+              <div key={pedido.id} className="card transition hover:border-brand-300 hover:shadow-md">
               <Link
-                key={pedido.id}
                 to={`/pedidos/${pedido.id}`}
-                className="card flex flex-col gap-3 p-4 transition hover:border-brand-300 hover:shadow-md sm:flex-row sm:items-center"
+                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
                   <Package className="h-6 w-6" />
@@ -86,6 +88,12 @@ export function MisPedidos() {
                   <ChevronRight className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                 </div>
               </Link>
+              {puedeVolverAPedir(pedido) && (
+                <div className="flex justify-end border-t border-slate-100 px-4 py-2.5 dark:border-slate-800">
+                  <BotonVolverAPedir pedido={pedido} />
+                </div>
+              )}
+              </div>
             ))}
           </div>
           <Paginacion pagina={pagina} total={pedidos.data.count} tamano={TAMANO} onCambiar={setPagina} cargando={pedidos.isFetching} />

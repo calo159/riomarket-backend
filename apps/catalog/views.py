@@ -108,7 +108,9 @@ class PuestoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Puesto.objects.prefetch_related("categorias_asignadas__id_categoria")
+        qs = Puesto.objects.select_related("id_vendedor__vendedor").prefetch_related(
+            "categorias_asignadas__id_categoria"
+        )
         qs = services.visibles_puestos(self.request.user, qs, params)
         qs = services.filtrar_puestos(qs, params)
         qs = anotar_reputacion(qs)

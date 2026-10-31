@@ -8,6 +8,7 @@ import { CartProvider } from './cart/CartProvider';
 import { ToastProvider } from './components/ui/Toast';
 import { App } from './App';
 import './index.css';
+import { registrarServiceWorker } from './lib/registrarServiceWorker';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+registrarServiceWorker();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
