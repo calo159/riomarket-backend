@@ -148,6 +148,7 @@
     - "apps/orders/tests/test_retiro.py::TestRbacRetiro"
     - "frontend/src/pages/pedido/siguienteAccion.test.ts::retiro en preparación: «Marcar listo para recoger»"
     - "frontend/src/pages/pedido/siguienteAccion.test.ts::no ofrece nada que el backend no permita (vendedor en un domicilio en camino)"
+    - "frontend/e2e/vendedor.spec.ts::avanza un retiro hasta entregar y cobrar"
 
 - id: RF-09
   titulo: Pago al recoger en retiros y «Entregar y cobrar»
@@ -168,6 +169,8 @@
     - "apps/orders/tests/test_acciones_pago.py::test_con_pago_en_efectivo_confirma_solo_el_vendedor_de_ese_pedido"
     - "frontend/src/pages/PedidoDetalle.test.tsx::el vendedor ve «Entregar y cobrar» con efectivo sin cobrar"
     - "frontend/src/pages/PedidoDetalle.test.tsx::con efectivo pendiente el comprador no ve botón de entrega y lee «Pagas ahí»"
+    - "frontend/e2e/comprador.spec.ts::compra en retiro con pago al recoger y ve cuándo vence"
+    - "frontend/e2e/vendedor.spec.ts::avanza un retiro hasta entregar y cobrar"
 
 - id: RF-10
   titulo: Pagos sandbox, efectivo, reembolso y anulación
@@ -298,6 +301,7 @@
     - "frontend/src/pages/admin/RolesAdmin.test.tsx::bloquea las casillas obligatorias del rol administrador"
     - "frontend/src/pages/admin/Usuarios.test.tsx::exige motivo antes de banear"
     - "frontend/src/auth/RutaProtegida.test.tsx::con recurso: redirige a /403 si no lo tiene, aunque el rol base sea administrador"
+    - "frontend/e2e/admin.spec.ts::consulta los usuarios y los roles"
 
 - id: RF-17
   titulo: Moderación de puestos y productos
@@ -325,6 +329,7 @@
     - "apps/audit/tests/test_auditoria.py::TestVisibilidad"
     - "apps/audit/tests/test_auditoria.py::TestFiltros"
     - "apps/audit/tests/test_auditoria.py::TestHooksPedido"
+    - "frontend/e2e/admin.spec.ts::ve en la auditoría el vencimiento hecho por el sistema y el pedido vencido"
 
 - id: RF-19
   titulo: Contacto por WhatsApp por puesto (apagado por defecto)
@@ -354,6 +359,7 @@
     - "frontend/src/pages/MapaPuestos.test.tsx::la lista se usa con teclado: «Ver en el mapa» selecciona el puesto"
     - "frontend/src/pages/MapaPuestos.test.tsx::si el mapa no carga deja la lista con un aviso"
     - "apps/common/tests/test_seguridad_headers.py::test_la_csp_de_la_app_cubre_mapa_y_service_worker_sin_abrir_scripts_externos"
+    - "frontend/e2e/anonimo.spec.ts::el mapa lista los puestos y los marca en el mapa"
 
 - id: RF-21
   titulo: Volver a pedir un pedido entregado o cancelado
@@ -401,6 +407,8 @@
     - "frontend/src/pages/pedido/AvisosPedido.test.tsx::muestra_cancelado_por_plazo: no recogido"
     - "frontend/src/pages/vendedor/PedidosVendedor.test.tsx::al pulsarlo pide más tiempo y avisa con un mensaje claro"
     - "frontend/src/pages/Checkout.test.tsx::avisa que el retiro se aparta y se cancela solo si no se recoge a tiempo"
+    - "frontend/e2e/comprador.spec.ts::compra en retiro con pago al recoger y ve cuándo vence"
+    - "frontend/e2e/admin.spec.ts::ve en la auditoría el vencimiento hecho por el sistema y el pedido vencido"
 
 - id: RF-24
   titulo: Productos por encargo con detalles y fecha pedida
@@ -423,6 +431,8 @@
     - "frontend/src/pages/Checkout.test.tsx::envia_fecha_solicitada_en_iso_y_los_detalles"
     - "frontend/src/pages/pedido/siguienteAccion.test.ts::aceptar_encargo_en_pendiente"
     - "frontend/src/lib/encargos.test.ts::la máxima es 60 días después"
+    - "frontend/e2e/comprador.spec.ts::encarga una bandeja con detalles y fecha"
+    - "frontend/e2e/vendedor.spec.ts::acepta un encargo y queda confirmado"
 
 - id: RF-25
   titulo: Panel de ventas del vendedor y del administrador
@@ -441,12 +451,14 @@
     - "apps/rbac/tests/test_menu.py::TestRecursoVentas"
     - "frontend/src/pages/vendedor/Ventas.test.tsx::muestra las cifras que calcula el servidor, el gráfico y lo más vendido"
     - "frontend/src/pages/vendedor/Ventas.test.tsx::estado vacío sin ventas"
+    - "frontend/e2e/vendedor.spec.ts::abre su panel de ventas y lo ve por día en una tabla"
+    - "frontend/e2e/admin.spec.ts::ve el resumen y las ventas del mercado"
 
 - id: RF-26
   titulo: Landing, tienda y catálogo públicos
   actor: [comprador]
   origen: README (Frontend)
-  pantallas: ["/", "/tienda", "/catalogo", "/puestos/:id", "/productos/:id"]
+  pantallas: ["/", "/tienda", "/catalogo", "/puestos/:id", "/productos/:id", "/creditos-fotos"]
   endpoints:
     - "GET /api/catalog/productos/"
     - "GET /api/catalog/puestos/"
@@ -460,6 +472,9 @@
     - "apps/catalog/tests/test_endpoints.py::TestCategorias"
     - "frontend/e2e/smoke.spec.ts::la portada es la landing"
     - "frontend/e2e/smoke.spec.ts::la tienda vive en /tienda"
+    - "frontend/e2e/anonimo.spec.ts::la landing carga sin errores y lleva a la tienda"
+    - "frontend/e2e/anonimo.spec.ts::la tienda muestra los puestos y el catálogo busca productos"
+    - "frontend/e2e/anonimo.spec.ts::la página de créditos de fotos lista los autores"
 
 - id: RF-27
   titulo: Carrito de un solo puesto que sobrevive al inicio de sesión
@@ -471,6 +486,7 @@
     - "frontend/src/cart/CartProvider.test.tsx::el carrito se vacía cuando la sesión termina"
     - "frontend/src/cart/CartProvider.test.tsx::agregarLineas no pisa en silencio el carrito de otro puesto"
     - "frontend/src/cart/CartProvider.test.tsx::mezcla encargos y productos con stock en el mismo carrito"
+    - "frontend/e2e/comprador.spec.ts::compra en retiro con pago al recoger y ve cuándo vence"
 
 - id: RF-28
   titulo: Catálogo del vendedor con imágenes ordenables y miniaturas
