@@ -1,5 +1,6 @@
 import {
   BadgeCheck,
+  BarChart3,
   Bell,
   BookOpenCheck,
   Circle,
@@ -26,6 +27,7 @@ import {
 
 const ICONOS: Record<string, LucideIcon> = {
   BadgeCheck,
+  BarChart3,
   Bell,
   BookOpenCheck,
   ClipboardList,

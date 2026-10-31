@@ -278,6 +278,7 @@ administrador puede todo lo que aparece abajo.
 | Simular pago (sandbox) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Confirmar cobro en efectivo | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |
 | Reembolsar / anular pago | ⬜ | ⬜ | ⬜ | ⬜ | ✅ |
+| Ver ventas (`/api/payments/ventas/`, recurso `vendedor.ventas`) | ⬜ | ⬜ | ⬜ | ✅ (solo sus puestos) | ✅ (todo el mercado) |
 | Gestionar direcciones propias | ⬜ | ✅ | ✅ | ✅ | ✅ (todas) |
 | Ver/marcar notificaciones propias | ⬜ | ✅ | ✅ | ✅ | ✅ (todas) |
 | Listar reseñas públicas | ✅ | ✅ | ✅ | ✅ | ✅ |

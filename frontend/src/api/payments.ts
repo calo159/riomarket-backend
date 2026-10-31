@@ -1,4 +1,5 @@
 import { api } from '../lib/http';
+import type { components } from '../lib/api-types';
 import type { Paginado, Pago, PagoVendedor } from '../lib/types';
 
 interface FiltrosPago {
@@ -24,6 +25,19 @@ export interface ResumenIngresos {
 
 export async function obtenerResumenIngresos(): Promise<ResumenIngresos> {
   const { data } = await api.get<ResumenIngresos>('/payments/pagos/resumen/');
+  return data;
+}
+
+export type VentasPanel = components['schemas']['VentasPanel'];
+export type VentasDia = components['schemas']['VentasDia'];
+export type VentasProducto = components['schemas']['VentasProducto'];
+export type DiasVentas = 7 | 30 | 90;
+
+/** Ventas (pagos aprobados) del periodo, agregadas en el servidor; ``puesto`` filtra por un puesto. */
+export async function obtenerVentas(parametros: { dias: DiasVentas; puesto?: number | null }): Promise<VentasPanel> {
+  const { data } = await api.get<VentasPanel>('/payments/ventas/', {
+    params: { dias: parametros.dias, puesto: parametros.puesto ?? undefined },
+  });
   return data;
 }
 

@@ -24,6 +24,7 @@ const Verificacion = lazy(() => import('./pages/vendedor/Verificacion').then((mo
 const Puestos = lazy(() => import('./pages/vendedor/Puestos').then((modulo) => ({ default: modulo.Puestos })));
 const ProductosVendedor = lazy(() => import('./pages/vendedor/Productos').then((modulo) => ({ default: modulo.ProductosVendedor })));
 const PedidosVendedor = lazy(() => import('./pages/vendedor/PedidosVendedor').then((modulo) => ({ default: modulo.PedidosVendedor })));
+const Ventas = lazy(() => import('./pages/vendedor/Ventas').then((modulo) => ({ default: modulo.Ventas })));
 const Cupones = lazy(() => import('./pages/vendedor/Cupones').then((modulo) => ({ default: modulo.Cupones })));
 const ResenasVendedor = lazy(() => import('./pages/vendedor/ResenasVendedor').then((modulo) => ({ default: modulo.ResenasVendedor })));
 const PanelAdmin = lazy(() => import('./pages/admin/PanelAdmin').then((modulo) => ({ default: modulo.PanelAdmin })));
@@ -93,6 +94,9 @@ export function App() {
             <Route path="vendedor" element={<PanelLayout />}>
               <Route element={<RutaProtegida recurso="vendedor.resumen" />}>
                 <Route index element={<PanelVendedor />} />
+              </Route>
+              <Route element={<RutaProtegida recurso="vendedor.ventas" />}>
+                <Route path="ventas" element={<Ventas />} />
               </Route>
               <Route element={<RutaProtegida recurso="vendedor.verificacion" />}>
                 <Route path="verificacion" element={<Verificacion />} />

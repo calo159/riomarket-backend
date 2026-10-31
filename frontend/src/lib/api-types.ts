@@ -1106,6 +1106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/ventas/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Ventas (pagos aprobados) de los últimos 7, 30 o 90 días en hora de Colombia: totales, serie diaria, productos más vendidos y pedidos por estado. El vendedor ve solo sus puestos; el administrador, todo el mercado. */
+        get: operations["payments_ventas_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/webhook/{proveedor}/": {
         parameters: {
             query?: never;
@@ -2619,6 +2636,62 @@ export interface components {
             readonly acciones_permitidas: {
                 [key: string]: unknown;
             };
+        };
+        VentasDia: {
+            /** Format: date */
+            fecha: string;
+            pedidos: number;
+            /** @description Decimal con 2 cifras */
+            ventas_brutas: string;
+            /** @description Decimal con 2 cifras */
+            ingresos_netos: string;
+        };
+        VentasPanel: {
+            dias: number;
+            /** Format: date */
+            desde: string;
+            /** Format: date */
+            hasta: string;
+            zona_horaria: string;
+            puesto: components["schemas"]["VentasPuesto"] | null;
+            totales: components["schemas"]["VentasTotales"];
+            por_dia: components["schemas"]["VentasDia"][];
+            top_productos: components["schemas"]["VentasProducto"][];
+            pedidos_por_estado: components["schemas"]["VentasPedidosPorEstado"];
+            cancelados_por_plazo: number;
+            /** Format: date-time */
+            generado_en: string;
+        };
+        VentasPedidosPorEstado: {
+            pendiente: number;
+            confirmado: number;
+            en_preparacion: number;
+            en_camino: number;
+            listo_para_recoger: number;
+            entregado: number;
+            cancelado: number;
+        };
+        VentasProducto: {
+            id_producto: number;
+            nombre: string;
+            unidades: number;
+            /** @description Decimal con 2 cifras */
+            ventas_brutas: string;
+            puesto_nombre: string | null;
+        };
+        VentasPuesto: {
+            id: number;
+            nombre: string;
+        };
+        VentasTotales: {
+            pedidos_pagados: number;
+            unidades: number;
+            /** @description Decimal con 2 cifras */
+            ventas_brutas: string;
+            /** @description Decimal con 2 cifras */
+            ingresos_netos: string;
+            /** @description Decimal con 2 cifras */
+            ticket_promedio: string;
         };
         /** @description Fila de la cola de revisión: identifica al vendedor sin datos sensibles. */
         VerificacionAdminList: {
@@ -5049,6 +5122,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResumenIngresos"];
+                };
+            };
+        };
+    };
+    payments_ventas_retrieve: {
+        parameters: {
+            query?: {
+                dias?: 30 | 7 | 90;
+                /** @description ID del puesto */
+                puesto?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VentasPanel"];
                 };
             };
         };

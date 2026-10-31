@@ -251,6 +251,18 @@ La respuesta del vendedor incluye `comision_plataforma` y `neto_vendedor`:
 En sandbox también puedes simular con `POST /api/payments/pagos/29/simular/`
 (`{"accion":"aprobar"}`) si `PAYMENTS_SANDBOX_ENABLED=True`.
 
+### Panel de ventas
+
+```bash
+# Vendedor: sus puestos, últimos 30 días (por defecto). dias admite 7, 30 o 90.
+curl -s "$BASE/api/payments/ventas/?dias=30" -H "Authorization: Bearer $TOKEN_VEND"
+# Un puesto concreto (ajeno: 403; inexistente: 404). El administrador ve todo el mercado.
+curl -s "$BASE/api/payments/ventas/?dias=7&puesto=3" -H "Authorization: Bearer $TOKEN_VEND"
+```
+
+Responde `totales`, `por_dia` (siempre `dias` fechas, con ceros), `top_productos` (máx. 5),
+`pedidos_por_estado` y `cancelados_por_plazo`. El comprador recibe 403.
+
 ## 7. Avanzar el pedido
 
 Confirmar exige un pago en estado `aprobado` (excepción: un retiro con pago en

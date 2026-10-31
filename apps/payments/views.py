@@ -200,7 +200,8 @@ class PagoWebhookView(APIView):
         return Response({"success": True, "estado": pago.estado})
 
 
-_MONTO = drf_serializers.CharField(help_text="Decimal con 2 cifras")
+def _monto():
+    return drf_serializers.CharField(help_text="Decimal con 2 cifras")
 
 
 class VentasView(APIView):
@@ -240,9 +241,9 @@ class VentasView(APIView):
                     {
                         "pedidos_pagados": drf_serializers.IntegerField(),
                         "unidades": drf_serializers.IntegerField(),
-                        "ventas_brutas": _MONTO,
-                        "ingresos_netos": _MONTO,
-                        "ticket_promedio": _MONTO,
+                        "ventas_brutas": _monto(),
+                        "ingresos_netos": _monto(),
+                        "ticket_promedio": _monto(),
                     },
                 ),
                 "por_dia": inline_serializer(
@@ -250,8 +251,8 @@ class VentasView(APIView):
                     {
                         "fecha": drf_serializers.DateField(),
                         "pedidos": drf_serializers.IntegerField(),
-                        "ventas_brutas": _MONTO,
-                        "ingresos_netos": _MONTO,
+                        "ventas_brutas": _monto(),
+                        "ingresos_netos": _monto(),
                     },
                     many=True,
                 ),
@@ -261,7 +262,7 @@ class VentasView(APIView):
                         "id_producto": drf_serializers.IntegerField(),
                         "nombre": drf_serializers.CharField(),
                         "unidades": drf_serializers.IntegerField(),
-                        "ventas_brutas": _MONTO,
+                        "ventas_brutas": _monto(),
                         "puesto_nombre": drf_serializers.CharField(allow_null=True),
                     },
                     many=True,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, CalendarClock, ClipboardList, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
@@ -25,7 +25,12 @@ export function PedidosVendedor() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [pagina, setPagina] = useState(1);
-  const [estado, setEstado] = useState('');
+  const [params] = useSearchParams();
+  // Los enlaces del panel de ventas llegan con ?estado=: se usa solo si es un estado conocido.
+  const estadoInicial = params.get('estado') ?? '';
+  const [estado, setEstado] = useState(
+    OPCIONES_FILTRO_PEDIDO.some((opcion) => opcion.valor === estadoInicial) ? estadoInicial : '',
+  );
   const [cancelar, setCancelar] = useState<number | null>(null);
   const [cancelaEncargo, setCancelaEncargo] = useState(false);
   const ahora = useAhora();
