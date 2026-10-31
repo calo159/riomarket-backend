@@ -6,7 +6,7 @@ Marketplace local para los puestos de mercado de Riohacha (Colombia). Incluye la
 [![DRF](https://img.shields.io/badge/DRF-3.18-red)](https://www.django-rest-framework.org/) [![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/) [![CI](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/calo159/riomarket-backend/actions/workflows/ci.yml)
 
-> **Demo:** <https://riomarket.onrender.com> (URL por defecto del Blueprint; puede variar). El plan gratuito de Render duerme el servicio tras unos minutos sin tráfico: la primera visita puede tardar cerca de un minuto en responder.
+> **Demo:** <https://riomarket-y67g.onrender.com> (puede variar si se vuelve a desplegar). El plan gratuito de Render duerme el servicio tras unos minutos sin tráfico: la primera visita puede tardar cerca de un minuto en responder.
 
 ## Contenido
 

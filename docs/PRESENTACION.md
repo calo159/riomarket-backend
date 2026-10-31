@@ -21,7 +21,7 @@ Otros usuarios del seed: `jose@riomarket.test` (vendedor, «Cocina de la Abuela�
 
 ## Antes de empezar (2 minutos antes)
 
-1. **Despertar el servicio** si es el de Render: abrir `https://riomarket.onrender.com/api/health/`
+1. **Despertar el servicio** si es el de Render: abrir `https://riomarket-y67g.onrender.com/api/health/`
    (el plan gratis duerme el servicio y la primera respuesta tarda cerca de un minuto). Debe
    responder `{"status": "ok", "database": "up"}`.
 2. Tener **tres ventanas** (o perfiles) del navegador: comprador, vendedor y administrador. Así no se
