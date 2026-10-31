@@ -31,7 +31,12 @@ def test_la_migracion_apaga_el_whatsapp_de_los_puestos_existentes_y_es_reversibl
         _migrar(ANTES)
         Puesto.objects.filter(pk=uno.pk).update(acepta_whatsapp=True)
         _migrar(DATOS)
-        assert Puesto.objects.get(pk=uno.pk).acepta_whatsapp is False
+        # Se lee solo la columna: el esquema de catalog.0006 aún no tiene las columnas posteriores
+        # (como plazo_retiro_horas) que el modelo actual sí selecciona con ``get``.
+        assert (
+            Puesto.objects.filter(pk=uno.pk).values_list("acepta_whatsapp", flat=True).get()
+            is False
+        )
     finally:
         ejecutor = MigrationExecutor(connection)
         ejecutor.migrate(ejecutor.loader.graph.leaf_nodes())

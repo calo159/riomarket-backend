@@ -1,6 +1,7 @@
-import { CheckCircle2, Clock, Package } from 'lucide-react';
+import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
 import { formatearFechaHora } from '../../lib/format';
+import { estaPorVencer, textoCuentaRegresiva, useAhora, yaVencio } from '../../lib/plazo';
 
 interface Props {
   datos: Pedido;
@@ -8,10 +9,21 @@ interface Props {
   esComprador: boolean;
   /** Hay un pago en efectivo sin cobrar (en un retiro se paga en el puesto). */
   efectivoPendiente?: boolean;
+  /** Reloj en milisegundos; solo lo fijan las pruebas (por defecto, el reloj real). */
+  ahora?: number;
 }
 
+/** Termina una frase con la fecha sin duplicar el punto de «p. m.». */
+function finDeFrase(fecha: string): string {
+  return fecha.endsWith('.') ? fecha : `${fecha}.`;
+}
+
+/** Cuántas veces puede el vendedor dar más tiempo (igual que el backend). */
+const MAX_EXTENSIONES = 2;
+
 /** Avisos de contexto sobre el pedido: recién creado, listo para recoger, en camino o con reporte de «no recibido». */
-export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = false }: Props) {
+export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = false, ahora }: Props) {
+  const reloj = useAhora();
   const esRetiro = datos.tipo_entrega === 'retiro';
   const pagaAlRecoger = esRetiro && efectivoPendiente;
   return (
@@ -49,6 +61,22 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
         </div>
       )}
 
+      <AvisoPlazo datos={datos} esComprador={esComprador} ahora={ahora ?? reloj} />
+
+      {datos.estado === 'cancelado' && datos.motivo_cancelacion && (
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+          <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {datos.motivo_cancelacion === 'no_recogido'
+              ? `Se canceló solo: no se recogió antes del ${finDeFrase(formatearFechaHora(datos.fecha_actualizacion))}`
+              : 'Se canceló solo: el puesto no lo confirmó a tiempo.'}{' '}
+            {esComprador
+              ? 'El producto volvió a la venta. Puedes hacer un pedido nuevo.'
+              : 'El stock volvió a tu puesto.'}
+          </p>
+        </div>
+      )}
+
       {!esRetiro && datos.estado === 'en_camino' && (
         <div className="mb-5 space-y-2">
           {datos.no_recibido_en && (
@@ -77,5 +105,56 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Plazo del retiro (apartar con plazo): hasta cuándo se confirma o se recoge y cuánto falta.
+ * Solo aparece si el backend manda `vence_en` (retiros pendientes o listos para recoger sin pagar).
+ */
+function AvisoPlazo({ datos, esComprador, ahora }: { datos: Pedido; esComprador: boolean; ahora: number }) {
+  if (!datos.vence_en || !['pendiente', 'listo_para_recoger'].includes(datos.estado)) return null;
+  const fecha = formatearFechaHora(datos.vence_en);
+  // «p. m.» ya trae su punto: al cerrar la frase no se duplica.
+  const fechaFinal = finDeFrase(fecha);
+  const vencido = yaVencio(datos.vence_en, ahora);
+  const porVencer = estaPorVencer(datos.vence_en, ahora);
+  const listo = datos.estado === 'listo_para_recoger';
+  const usadas = datos.extensiones_plazo ?? 0;
+  const colores = vencido || porVencer
+    ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200'
+    : 'border-slate-300 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200';
+  const Icono = vencido || porVencer ? Clock : Package;
+  return (
+    <div className={`mb-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${colores}`} role="status">
+      <Icono className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="space-y-1">
+        {esComprador ? (
+          listo ? (
+            <>
+              <p className="font-bold">Recógelo antes del {fechaFinal}</p>
+              <p>Si no pasas, el pedido se cancela solo y el producto vuelve a la venta.</p>
+            </>
+          ) : (
+            <p>Si el puesto no lo confirma antes del {fecha}, el pedido se cancela solo.</p>
+          )
+        ) : listo ? (
+          <p>El cliente tiene hasta el {fecha} para recoger. Después se cancela solo y el stock vuelve.</p>
+        ) : (
+          <p>Confírmalo antes del {fecha} o se cancela solo.</p>
+        )}
+        <p className="font-semibold">
+          {textoCuentaRegresiva(datos.vence_en, ahora)}
+          {porVencer && '. Falta poco'}
+          {vencido && !esComprador && '. Da más tiempo ahora si el cliente va en camino'}
+          {'.'}
+        </p>
+        {!esComprador && usadas > 0 && (
+          <p>
+            Ya diste más tiempo {usadas} de {MAX_EXTENSIONES} veces.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

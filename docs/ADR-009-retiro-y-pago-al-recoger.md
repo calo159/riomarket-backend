@@ -76,6 +76,9 @@ stock y anulando (pendiente) o reembolsando (aprobado) el pago.
 
 ## Consecuencias
 
+- Un retiro que nadie confirma o recoge a tiempo se cancela solo: ver
+  [ADR-012](ADR-012-apartar-con-plazo.md).
+
 - El mismo vendedor que prepara el pedido puede cerrar la venta en el puesto,
   sin depender de que el comprador abra la app.
 - El checkout con retiro crea automáticamente el pago en efectivo; si esa segunda

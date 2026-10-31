@@ -132,6 +132,110 @@ def notificar_no_recibido(*, pedido):
     ]
 
 
+def formatear_cuando(valor) -> str:
+    """Fecha y hora en Colombia para los avisos: «31/10 a las 6:00 p. m.»."""
+    local = timezone.localtime(valor)
+    hora = local.hour % 12 or 12
+    sufijo = "a. m." if local.hour < 12 else "p. m."
+    return f"{local.day:02d}/{local.month:02d} a las {hora}:{local.minute:02d} {sufijo}"
+
+
+def _cierre(cuando: str) -> str:
+    """``cuando`` listo para terminar una frase: «p. m.» ya lleva su punto, no se duplica."""
+    return cuando if cuando.endswith(".") else cuando + "."
+
+
+def notificar_pedido_por_vencer(*, pedido):
+    """Avisa que el plazo del pedido se acaba pronto.
+
+    Retiro listo para recoger: al comprador (debe pasar por él). Retiro pendiente: al
+    vendedor (debe confirmarlo).
+    """
+    cuando = formatear_cuando(pedido.vence_en)
+    if pedido.estado == "pendiente":
+        destinatario = pedido.id_puesto.id_vendedor
+        titulo = f"Confirma el pedido #{pedido.pk}"
+        mensaje = (
+            f"Si no lo confirmas antes del {cuando}, el pedido se cancela solo "
+            "y el producto vuelve a la venta."
+        )
+    else:
+        destinatario = pedido.id_comprador
+        titulo = "Tu pedido vence pronto"
+        mensaje = (
+            f"Recoge tu pedido #{pedido.pk} en {pedido.id_puesto.nombre} antes del "
+            f"{_cierre(cuando)} Si no pasas, se cancela solo."
+        )
+    return [
+        crear_notificacion(
+            usuario=destinatario,
+            tipo=Notificacion.Tipo.PEDIDO_POR_VENCER,
+            titulo=titulo,
+            mensaje=mensaje,
+            id_pedido=pedido,
+        )
+    ]
+
+
+def notificar_pedido_vencido(*, pedido, vencio_en, motivo):
+    """Avisa al comprador y al vendedor que el sistema canceló el pedido por plazo.
+
+    No usa ``notificar_cambio_estado_pedido``: su texto («fue cancelado») no explica el motivo.
+    ``vencio_en`` es el plazo que tenía (el pedido ya lo perdió al cancelarse).
+    """
+    cuando = formatear_cuando(vencio_en)
+    puesto = pedido.id_puesto
+    if motivo == "no_recogido":
+        del_comprador = (
+            f"Tu pedido #{pedido.pk} se canceló porque no se recogió antes del {_cierre(cuando)}"
+        )
+        del_vendedor = (
+            f"El pedido #{pedido.pk} se canceló solo: no se recogió a tiempo. "
+            "El stock volvió a tu puesto."
+        )
+    else:
+        del_comprador = (
+            f"Tu pedido #{pedido.pk} se canceló porque {puesto.nombre} no lo confirmó a tiempo."
+        )
+        espera = (
+            f"en {settings.PEDIDOS_PLAZO_CONFIRMACION_HORAS} horas"
+            if pedido.extensiones_plazo == 0
+            else "a tiempo"
+        )
+        del_vendedor = f"El pedido #{pedido.pk} se canceló solo porque no lo confirmaste {espera}."
+    notificaciones = [
+        crear_notificacion(
+            usuario=usuario,
+            tipo=Notificacion.Tipo.PEDIDO_VENCIDO,
+            titulo="Pedido cancelado por plazo",
+            mensaje=mensaje,
+            id_pedido=pedido,
+        )
+        for usuario, mensaje in (
+            (pedido.id_comprador, del_comprador),
+            (puesto.id_vendedor, del_vendedor),
+        )
+    ]
+    _enviar_emails(notificaciones)
+    return notificaciones
+
+
+def notificar_plazo_extendido(*, pedido):
+    """Avisa al comprador que el vendedor le dio más tiempo."""
+    return [
+        crear_notificacion(
+            usuario=pedido.id_comprador,
+            tipo=Notificacion.Tipo.GENERAL,
+            titulo="Tienes más tiempo",
+            mensaje=(
+                f"{pedido.id_puesto.nombre} te dio más tiempo para el pedido #{pedido.pk}: "
+                f"ahora vence el {_cierre(formatear_cuando(pedido.vence_en))}"
+            ),
+            id_pedido=pedido,
+        )
+    ]
+
+
 def _enviar_emails(notificaciones) -> None:
     if not getattr(settings, "NOTIFICATIONS_EMAIL_ENABLED", False):
         return

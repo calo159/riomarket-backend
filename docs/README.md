@@ -41,6 +41,7 @@ stack, pruebas y despliegue.
 - [ADR-009: retiro en el puesto y pago al recoger](ADR-009-retiro-y-pago-al-recoger.md)
 - [ADR-010: contacto por WhatsApp, mapa y app instalable](ADR-010-contacto-mapa-y-pwa.md)
 - [ADR-011: rendimiento de la entrega y SEO](ADR-011-rendimiento-y-seo.md)
+- [ADR-012: apartar con plazo y liberación perezosa del stock](ADR-012-apartar-con-plazo.md)
 
 ## Entrega
 

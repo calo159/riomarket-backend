@@ -13,8 +13,10 @@ que sean verificables aisladas desde tests, igual que las del catálogo.
 """
 
 import logging
+from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import F, Q, QuerySet
@@ -134,6 +136,11 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
             subtotal += producto.precio * cantidad
             items_a_crear.append((producto, cantidad))
 
+        if tipo_entrega == Pedido.TipoEntrega.RETIRO:
+            # Apartar con plazo (ADR-012): si el puesto no lo confirma a tiempo, se cancela solo.
+            pedido.vence_en = timezone.now() + timedelta(
+                hours=settings.PEDIDOS_PLAZO_CONFIRMACION_HORAS
+            )
         pedido.subtotal = subtotal
         cupon, descuento = _resolver_cupon(usuario, puesto, datos.get("codigo_cupon"), subtotal)
         pedido.id_cupon = cupon
@@ -315,6 +322,16 @@ def reportar_no_recibido(*, pedido: Pedido, usuario, motivo: str = "") -> Pedido
 def _validar_transicion(pedido: Pedido, destino: str) -> None:
     permitidas = transiciones_de(pedido)[pedido.estado]
     if destino not in permitidas:
+        if pedido.estado == Pedido.Estado.CANCELADO and pedido.motivo_cancelacion:
+            # El barrido canceló el pedido mientras el vendedor lo tenía abierto.
+            raise ValidationError(
+                {
+                    "estado": (
+                        "Este pedido se canceló solo porque venció su plazo. "
+                        "Pídele al cliente que haga uno nuevo."
+                    )
+                }
+            )
         raise ValidationError(
             {
                 "estado": (
@@ -330,27 +347,84 @@ def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
     permissions.exigir(usuario, permissions.ACCION_POR_DESTINO[destino], pedido)
     if destino == Pedido.Estado.CONFIRMADO:
         _exigir_pago_para_confirmar(pedido)
-    estado_anterior = pedido.estado
-    # Stock + estado en una sola transacción: o pasa todo o no pasa nada. El pedido se
-    # bloquea y se relee: dos peticiones simultáneas (o una instancia vieja) no repiten
-    # la reposición de stock ni pisan un estado más reciente.
+    estado_anterior = _aplicar_transicion(pedido=pedido, destino=destino, usuario=usuario)
+    _notificar_cambio_estado(pedido, estado_anterior)
+    _auditar(usuario, "transicion", pedido, {"de": estado_anterior, "a": destino})
+    return pedido
+
+
+def _aplicar_transicion(
+    *, pedido: Pedido, destino: str, usuario, motivo_cancelacion: str = ""
+) -> str:
+    """Cambia el estado del pedido y todo lo que va con él; devuelve el estado anterior.
+
+    Stock + cupón + pago + estado en una sola transacción: o pasa todo o no pasa nada. El
+    pedido se bloquea y se relee: dos peticiones simultáneas (o una instancia vieja) no
+    repiten la reposición de stock ni pisan un estado más reciente.
+
+    La usan las personas (``_transicionar``, que ya validó permisos) y el barrido de pedidos
+    vencidos (``usuario=None``: el sistema; no cobra en mano). No duplica la reposición de
+    stock, cupón ni pago: es el único camino para cancelar.
+    """
     with transaction.atomic():
-        actual = Pedido.objects.select_for_update().only("estado").get(pk=pedido.pk)
+        actual = (
+            Pedido.objects.select_for_update()
+            .only("estado", "motivo_cancelacion")
+            .get(pk=pedido.pk)
+        )
         if actual.estado != pedido.estado:
             pedido.estado = actual.estado
+            pedido.motivo_cancelacion = actual.motivo_cancelacion
             _validar_transicion(pedido, destino)
-            estado_anterior = pedido.estado
-        if destino == Pedido.Estado.ENTREGADO and pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO:
+        estado_anterior = pedido.estado
+        if (
+            destino == Pedido.Estado.ENTREGADO
+            and pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+            and usuario is not None
+        ):
             _cerrar_cobro_en_mano(pedido, usuario)
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
             _liberar_cupon(pedido)
             _reembolsar_o_anular_pago(pedido)
+            pedido.motivo_cancelacion = motivo_cancelacion
         pedido.estado = destino
-        pedido.save(update_fields=["estado", "fecha_actualizacion"])
-    _notificar_cambio_estado(pedido, estado_anterior)
-    _auditar(usuario, "transicion", pedido, {"de": estado_anterior, "a": destino})
-    return pedido
+        pedido.vence_en = _plazo_al_pasar_a(pedido, destino)
+        pedido.aviso_vencimiento_en = None
+        campos = ["estado", "vence_en", "aviso_vencimiento_en", "fecha_actualizacion"]
+        if destino == Pedido.Estado.CANCELADO:
+            campos.append("motivo_cancelacion")
+        pedido.save(update_fields=campos)
+    return estado_anterior
+
+
+def _plazo_al_pasar_a(pedido: Pedido, destino: str):
+    """``vence_en`` del pedido al llegar a ``destino`` (ADR-012).
+
+    Solo «listo para recoger» con el efectivo aún sin cobrar tiene plazo (el del puesto);
+    cualquier otro destino lo quita: el puesto ya aceptó, se cobró, se entregó o se canceló.
+    """
+    if destino != Pedido.Estado.LISTO_PARA_RECOGER or not _cobro_en_mano_pendiente_en_bd(pedido):
+        return None
+    horas = (
+        Puesto.objects.filter(pk=pedido.id_puesto_id)
+        .values_list("plazo_retiro_horas", flat=True)
+        .first()
+    )
+    return timezone.now() + timedelta(hours=horas or 24)
+
+
+def _cobro_en_mano_pendiente_en_bd(pedido: Pedido) -> bool:
+    """Como ``_cobro_en_mano_pendiente`` pero releyendo el pago (no el ``pedido.pago`` cacheado)."""
+    from apps.payments.models import Pago
+
+    pago = Pago.objects.filter(id_pedido=pedido).first()
+    return (
+        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        and pago is not None
+        and pago.metodo_pago == Pago.MetodoPago.EFECTIVO
+        and pago.estado in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
+    )
 
 
 def _exigir_pago_para_confirmar(pedido: Pedido) -> None:
@@ -506,8 +580,31 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
         and permissions.puede(usuario, permissions.Accion.NO_RECIBIDO, pedido)
     ):
         acciones.append(permissions.Accion.NO_RECIBIDO.value)
+    if plazo_extensible(pedido) and permissions.puede(
+        usuario, permissions.Accion.EXTENDER_PLAZO, pedido
+    ):
+        acciones.append(permissions.Accion.EXTENDER_PLAZO.value)
     acciones.extend(_acciones_de_pago(pedido, usuario))
     return acciones
+
+
+def plazo_extensible(pedido: Pedido) -> bool:
+    """El pedido tiene plazo, está en un estado con plazo y aún admite más tiempo."""
+    return (
+        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
+        and pedido.vence_en is not None
+        and pedido.estado in (Pedido.Estado.PENDIENTE, Pedido.Estado.LISTO_PARA_RECOGER)
+        and pedido.extensiones_plazo < Pedido.MAX_EXTENSIONES_PLAZO
+    )
+
+
+def horas_de_extension(pedido: Pedido) -> int | None:
+    """Cuántas horas suma «Dar más tiempo» a este pedido (``None`` si no se puede)."""
+    if not plazo_extensible(pedido):
+        return None
+    if pedido.estado == Pedido.Estado.PENDIENTE:
+        return settings.PEDIDOS_PLAZO_CONFIRMACION_HORAS
+    return pedido.id_puesto.plazo_retiro_horas
 
 
 def _cobro_en_mano_pendiente(pedido: Pedido) -> bool:

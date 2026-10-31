@@ -93,6 +93,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.rbac.middleware.CacheRecursosMiddleware",
+    # Libera los apartados vencidos al leer catálogo/pedidos (ADR-012). Va tras RBAC.
+    "apps.orders.middleware.LiberarApartadosMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -242,6 +244,18 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {"deepLinking": True, "persistAuthorization": True},
     "COMPONENT_SPLIT_REQUEST": True,
 }
+
+# ---------------------------------------------------------------------------
+# Apartar con plazo (ADR-012)
+# ---------------------------------------------------------------------------
+# Horas que tiene el puesto para confirmar un retiro pendiente antes de que se cancele solo.
+PEDIDOS_PLAZO_CONFIRMACION_HORAS = env.int("PEDIDOS_PLAZO_CONFIRMACION_HORAS", default=24)
+# Cuántas horas antes de vencer se avisa («vence pronto»).
+PEDIDOS_AVISO_ANTES_HORAS = env.int("PEDIDOS_AVISO_ANTES_HORAS", default=2)
+# Render gratis no tiene cron: el barrido corre de forma perezosa al leer catálogo/pedidos.
+PEDIDOS_LIBERAR_EN_LECTURA = env.bool("PEDIDOS_LIBERAR_EN_LECTURA", default=True)
+PEDIDOS_BARRIDO_CADA_SEGUNDOS = 60
+PEDIDOS_BARRIDO_LIMITE = 25
 
 # ---------------------------------------------------------------------------
 # Caché compartida entre procesos (Redis en producción; locmem en dev/tests)

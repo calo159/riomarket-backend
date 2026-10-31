@@ -25,6 +25,7 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Sesión | Listo | JWT de acceso en memoria + refresh en cookie HttpOnly |
 | Catálogo y compra | Listo | Puestos, categorías, productos, imágenes, filtros, carrito y checkout |
 | Pedidos | Listo | Un puesto por pedido, estados, stock transaccional y cancelación |
+| Apartar con plazo | Listo | Un retiro que nadie confirma o recoge a tiempo se cancela solo (24 h, configurable por puesto de 2 a 72 h) y el stock vuelve; el vendedor puede dar más tiempo hasta 2 veces. Domicilios y pedidos pagados no vencen. Sin cron: barrido perezoso al leer y comando al arrancar ([ADR-012](docs/ADR-012-apartar-con-plazo.md)) |
 | Pagos | Listo (sandbox) | Efectivo confirmado por el vendedor y simulación; sin pasarela real |
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
@@ -142,7 +143,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **503 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 30 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar), 28 pagos, 124 notificaciones y 171 registros de auditoría. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
+`seed_masivo` es idempotente y, en una base limpia, crea **515 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 31 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`, y otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»), 29 pagos, 128 notificaciones y 176 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
@@ -167,6 +168,9 @@ Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corres
 | `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` | Orígenes de la SPA y HTTPS | Local / `https://*.onrender.com` |
 | `DOMICILIO_TARIFA_BASE` / `PLATFORM_COMMISSION_PERCENTAGE` | Tarifa de domicilio y comisión | `3000.00` / `5.00` |
 | `PAYMENTS_SANDBOX_ENABLED` / `SEED_DEMO` | Sandbox de pagos y seed en Render | `True` / `true` |
+| `PEDIDOS_PLAZO_CONFIRMACION_HORAS` / `PEDIDOS_AVISO_ANTES_HORAS` / `PEDIDOS_LIBERAR_EN_LECTURA` | Plazo para confirmar un retiro (24), aviso previo (2 h) y barrido al leer (`True`); opcionales | valores por defecto |
+
+Para liberar a mano lo vencido: `python manage.py cancelar_pedidos_vencidos [--dry-run] [--limite N]` (también corre al arrancar en Render).
 
 Para producción genera las claves así:
 

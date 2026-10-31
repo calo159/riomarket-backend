@@ -28,6 +28,7 @@ class Accion(models.TextChoices):
     ENTREGAR = "entregar", "Confirmar entrega"
     NO_RECIBIDO = "no-recibido", "Reportar no recibido"
     CANCELAR = "cancelar", "Cancelar"
+    EXTENDER_PLAZO = "extender-plazo", "Dar más tiempo"
 
 
 class Relacion(models.TextChoices):
@@ -55,6 +56,7 @@ PERMISOS: dict[str, dict[str, str | None]] = {
         # En persona el vendedor entrega y cobra; en domicilio solo confirma el comprador.
         Accion.ENTREGAR: Relacion.VENDEDOR_DEL_PUESTO_EN_RETIRO,
         Accion.CANCELAR: Relacion.VENDEDOR_DEL_PUESTO,
+        Accion.EXTENDER_PLAZO: Relacion.VENDEDOR_DEL_PUESTO,
     },
     Usuario.Rol.ADMINISTRADOR: {
         Accion.EDITAR: None,
@@ -65,6 +67,7 @@ PERMISOS: dict[str, dict[str, str | None]] = {
         Accion.ENTREGAR: None,
         Accion.NO_RECIBIDO: None,
         Accion.CANCELAR: None,
+        Accion.EXTENDER_PLAZO: None,
     },
 }
 

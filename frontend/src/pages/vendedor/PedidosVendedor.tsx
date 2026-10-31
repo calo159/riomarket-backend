@@ -14,6 +14,8 @@ import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { estaPorVencer, textoCuentaRegresiva, useAhora } from '../../lib/plazo';
+import { BotonDarMasTiempo } from '../pedido/BotonDarMasTiempo';
 import { ICONOS_SIGUIENTE, siguienteAccion } from '../pedido/siguienteAccion';
 
 const TAMANO = 12;
@@ -25,6 +27,7 @@ export function PedidosVendedor() {
   const [pagina, setPagina] = useState(1);
   const [estado, setEstado] = useState('');
   const [cancelar, setCancelar] = useState<number | null>(null);
+  const ahora = useAhora();
 
   useEffect(() => {
     document.title = 'Pedidos del puesto · RioMarket';
@@ -43,7 +46,13 @@ export function PedidosVendedor() {
       void queryClient.invalidateQueries({ queryKey: claves.pagos.todos });
       void invalidarMenu(queryClient);
       setCancelar(null);
-      toast.exito(variables.tipo === 'cancelar' ? 'Pedido cancelado.' : 'Pedido actualizado.');
+      toast.exito(
+        variables.tipo === 'cancelar'
+          ? 'Pedido cancelado.'
+          : variables.tipo === 'extender-plazo'
+            ? 'Le diste más tiempo al cliente.'
+            : 'Pedido actualizado.',
+      );
     },
     onError: (error) => toast.error(mensajeDeError(error)),
   });
@@ -100,6 +109,17 @@ export function PedidosVendedor() {
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length} {pedido.items.length === 1 ? 'producto' : 'productos'}
                     </p>
+                    {pedido.vence_en && (
+                      <p
+                        className={`mt-1 text-xs ${
+                          estaPorVencer(pedido.vence_en, ahora)
+                            ? 'font-semibold text-[#A62F11] dark:text-orange-300'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        Vence el {formatearFechaHora(pedido.vence_en)} · {textoCuentaRegresiva(pedido.vence_en, ahora).toLowerCase()}
+                      </p>
+                    )}
                     {pedido.estado === 'listo_para_recoger' && (
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {pedido.acciones_permitidas?.includes('confirmar-pago')
@@ -130,6 +150,12 @@ export function PedidosVendedor() {
                         <Icono className="h-3.5 w-3.5" /> {siguientePermitido.etiqueta}
                       </button>
                     )}
+                    <BotonDarMasTiempo
+                      pedido={pedido}
+                      cargando={accion.isPending && accion.variables?.id === pedido.id && accion.variables.tipo === 'extender-plazo'}
+                      onClick={() => accion.mutate({ id: pedido.id, tipo: 'extender-plazo' })}
+                      className="btn-secondary py-1.5 text-xs"
+                    />
                     {puedeCancelar && (
                       <button
                         type="button"

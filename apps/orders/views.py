@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 from apps.common.permissions import EsComprador
 from apps.common.query import aplicar_ordenamiento
-from apps.orders import services
+from apps.orders import services, vencimientos
 from apps.orders.models import Pedido
 from apps.orders.serializers import PedidoSerializer, ReportarNoRecibidoSerializer
 
@@ -152,6 +152,20 @@ class PedidoViewSet(viewsets.ModelViewSet):
             usuario=request.user,
             motivo=serializer.validated_data.get("motivo", ""),
         )
+        return Response(self.get_serializer(pedido).data)
+
+    @extend_schema(
+        request=None,
+        description=(
+            "El vendedor del puesto (o un administrador) da más tiempo a un retiro pendiente o "
+            "listo para recoger: suma un plazo completo. Máximo dos veces por pedido."
+        ),
+        responses=PedidoSerializer,
+    )
+    @action(detail=True, methods=["post"], url_path="extender-plazo")
+    def extender_plazo(self, request, pk=None):
+        """``POST /pedidos/{id}/extender-plazo/`` (vendedor del puesto o administrador)."""
+        pedido = vencimientos.extender_plazo(pedido=self.get_object(), usuario=request.user)
         return Response(self.get_serializer(pedido).data)
 
     @extend_schema(

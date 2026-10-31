@@ -70,6 +70,7 @@ class PuestoSerializer(serializers.ModelSerializer):
             "longitud",
             "horario",
             "ofrece_domicilio",
+            "plazo_retiro_horas",
             "acepta_whatsapp",
             "whatsapp",
             "estado",
@@ -80,6 +81,11 @@ class PuestoSerializer(serializers.ModelSerializer):
             "portada",
         )
         read_only_fields = ("id", "id_vendedor", "estado")
+
+    def validate_plazo_retiro_horas(self, valor: int) -> int:
+        if not 2 <= valor <= 72:
+            raise serializers.ValidationError("El plazo debe estar entre 2 y 72 horas.")
+        return valor
 
     def get_whatsapp(self, obj) -> str | None:
         """Número para WhatsApp (``57`` + celular), o ``None`` si no debe publicarse."""

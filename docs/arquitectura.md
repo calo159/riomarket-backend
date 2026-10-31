@@ -265,6 +265,8 @@ administrador puede todo lo que aparece abajo.
 | Confirmar recepción (`entregado`) | ⬜ | ✅ (suyo; en retiro con efectivo sin cobrar no) | ⬜ | ✅ (solo retiro: entrega y cobra) | ✅ |
 | Reportar `no-recibido` (domicilio en camino) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Cancelar pedido | ⬜ | ✅ (suyo) | ✅ (de sus puestos) | ✅ (de sus puestos) | ✅ |
+| Dar más tiempo a un retiro (`extender-plazo`, máx. 2 veces) | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |
+| Cancelado por el sistema (plazo vencido, auditoría «Sistema») | — | — | — | — | — |
 | Registrar pago | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Simular pago (sandbox) | ⬜ | ✅ (suyo) | ⬜ | ⬜ | ✅ |
 | Confirmar cobro en efectivo | ⬜ | ⬜ | ⬜ | ✅ (dueño) | ✅ |

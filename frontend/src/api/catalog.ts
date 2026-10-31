@@ -77,6 +77,7 @@ export interface DatosPuesto {
   longitud?: string | null;
   horario?: string;
   ofrece_domicilio?: boolean;
+  plazo_retiro_horas?: number;
   acepta_whatsapp?: boolean;
 }
 

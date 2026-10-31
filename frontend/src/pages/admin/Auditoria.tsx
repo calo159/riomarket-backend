@@ -28,7 +28,7 @@ export function Auditoria() {
             {(logs.data?.results ?? []).map((log) => (
               <tr key={log.id} className="border-b last:border-0">
                 <td className="p-3 text-xs text-slate-500">{formatearFechaHora(log.fecha_creacion)}</td>
-                <td className="p-3">{log.usuario_correo || '—'}</td>
+                <td className="p-3">{log.usuario_correo || (log.id_usuario ? '—' : 'Sistema')}</td>
                 <td className="p-3 font-medium">{log.accion}</td>
                 <td className="p-3">{log.entidad}{log.id_entidad ? ` #${log.id_entidad}` : ''}</td>
                 <td className="p-3">{log.direccion_ip || '—'}</td>

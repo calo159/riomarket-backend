@@ -201,6 +201,9 @@ export function Checkout() {
                 <div>
                   <p className="font-semibold">Retiro en el puesto</p>
                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Sin costo adicional.</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Te apartamos el pedido. Si no lo recoges a tiempo, se cancela solo.
+                  </p>
                 </div>
               </button>
               <button

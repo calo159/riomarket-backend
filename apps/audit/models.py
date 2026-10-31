@@ -20,6 +20,8 @@ class RegistroAuditoria(models.Model):
         ANULAR = "anular", "Anular"
         USAR_CUPON = "usar_cupon", "Usar cupón"
         RESPONDER = "responder", "Responder"
+        VENCIMIENTO = "vencimiento", "Cancelado por plazo"
+        EXTENDER_PLAZO = "extender_plazo", "Más tiempo para recoger"
 
     id_usuario = models.ForeignKey(
         "accounts.Usuario",
