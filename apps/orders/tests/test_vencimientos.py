@@ -559,6 +559,7 @@ class TestNotificacionesYAuditoria:
         ).mensaje
         assert "31/10" in mensaje
         assert "6:00 p. m." in mensaje
+        assert ".." not in mensaje  # «p. m.» ya trae su punto
 
     def test_audita_como_sistema(self, comprador, vendedor, puesto, producto):
         ahora = timezone.now()
@@ -603,6 +604,7 @@ class TestNotificacionesYAuditoria:
         assert aviso.titulo == "Tu pedido vence pronto"
         assert f"Recoge tu pedido #{pedido.pk} en {puesto.nombre} antes del" in aviso.mensaje
         assert "Si no pasas, se cancela solo." in aviso.mensaje
+        assert ".." not in aviso.mensaje
         assert _recargar(pedido).aviso_vencimiento_en is not None
         assert _recargar(pedido).estado == E.LISTO_PARA_RECOGER
 
@@ -966,6 +968,7 @@ class TestExtenderPlazo:
         assert aviso.titulo == "Tienes más tiempo"
         assert puesto.nombre in aviso.mensaje
         assert f"pedido #{pedido.pk}" in aviso.mensaje
+        assert ".." not in aviso.mensaje
         registro = RegistroAuditoria.objects.get(accion="extender_plazo", id_entidad=pedido.pk)
         assert registro.id_usuario_id == vendedor.pk
         assert registro.detalle["extensiones"] == 1

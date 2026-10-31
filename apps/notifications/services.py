@@ -140,6 +140,11 @@ def formatear_cuando(valor) -> str:
     return f"{local.day:02d}/{local.month:02d} a las {hora}:{local.minute:02d} {sufijo}"
 
 
+def _cierre(cuando: str) -> str:
+    """``cuando`` listo para terminar una frase: «p. m.» ya lleva su punto, no se duplica."""
+    return cuando if cuando.endswith(".") else cuando + "."
+
+
 def notificar_pedido_por_vencer(*, pedido):
     """Avisa que el plazo del pedido se acaba pronto.
 
@@ -158,8 +163,8 @@ def notificar_pedido_por_vencer(*, pedido):
         destinatario = pedido.id_comprador
         titulo = "Tu pedido vence pronto"
         mensaje = (
-            f"Recoge tu pedido #{pedido.pk} en {pedido.id_puesto.nombre} antes del {cuando}. "
-            "Si no pasas, se cancela solo."
+            f"Recoge tu pedido #{pedido.pk} en {pedido.id_puesto.nombre} antes del "
+            f"{_cierre(cuando)} Si no pasas, se cancela solo."
         )
     return [
         crear_notificacion(
@@ -182,7 +187,7 @@ def notificar_pedido_vencido(*, pedido, vencio_en, motivo):
     puesto = pedido.id_puesto
     if motivo == "no_recogido":
         del_comprador = (
-            f"Tu pedido #{pedido.pk} se canceló porque no se recogió antes del {cuando}."
+            f"Tu pedido #{pedido.pk} se canceló porque no se recogió antes del {_cierre(cuando)}"
         )
         del_vendedor = (
             f"El pedido #{pedido.pk} se canceló solo: no se recogió a tiempo. "
@@ -224,7 +229,7 @@ def notificar_plazo_extendido(*, pedido):
             titulo="Tienes más tiempo",
             mensaje=(
                 f"{pedido.id_puesto.nombre} te dio más tiempo para el pedido #{pedido.pk}: "
-                f"ahora vence el {formatear_cuando(pedido.vence_en)}."
+                f"ahora vence el {_cierre(formatear_cuando(pedido.vence_en))}"
             ),
             id_pedido=pedido,
         )

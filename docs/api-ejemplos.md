@@ -277,6 +277,21 @@ en_preparacion → en_camino → entregado`. Si no llega, el comprador puede usa
 pedido sigue en `en_camino` y el comprador aún puede confirmarlo después. El
 vendedor no puede entregar un domicilio (`403`).
 
+### Apartar con plazo (retiro)
+
+Un retiro trae `vence_en` (cuándo se cancela solo si nadie lo confirma o lo recoge),
+`extensiones_plazo`, `motivo_cancelacion` (`no_recogido` o `no_confirmado` si lo canceló el
+sistema) y `horas_extension`. El vendedor del puesto (o un administrador) puede dar más
+tiempo hasta dos veces; el comprador recibe `403`:
+
+```bash
+curl -s -X POST "$BASE/api/orders/pedidos/32/extender-plazo/" -H "Authorization: Bearer $TOKEN_VEND" -H "Content-Type: application/json" -d '{}'
+```
+
+Errores `400`: `vence_en` («Este pedido no tiene plazo.»), `extensiones_plazo` («Ya diste más
+tiempo dos veces a este pedido.») y `estado`. Domicilios y pedidos pagados no tienen plazo.
+Ver [ADR-012](ADR-012-apartar-con-plazo.md).
+
 ### Pedido de retiro: «listo para recoger» y pagar al recoger
 
 En un **retiro** nadie lleva el pedido, así que no pasa por `en_camino` ni admite
