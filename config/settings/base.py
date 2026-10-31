@@ -10,6 +10,7 @@ from pathlib import Path
 
 import environ
 
+from config.estaticos import cache_de_fotos_fijas
 from config.logs import construir_logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -164,6 +165,8 @@ WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 # Vite pone un hash de 8 caracteres (base64url) en lo que vive en assets/: se puede cachear un año.
 # Solo assets/: sw.js, manifest, theme-init.js e index.html conservan la caché corta por defecto.
 WHITENOISE_IMMUTABLE_FILE_TEST = r"^/assets/.+-[A-Za-z0-9_-]{8}\.[A-Za-z0-9]+$"
+# Las fotos de categorias/ y landing/ no llevan hash: una semana de caché en vez de 60 s.
+WHITENOISE_ADD_HEADERS_FUNCTION = cache_de_fotos_fijas
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"

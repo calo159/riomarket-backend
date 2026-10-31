@@ -11,6 +11,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Menos peso en la tienda.** El logo de demostración de cada puesto se reduce a 192 px (de 40–134 kB a
+  5–16 kB) y las fotos fijas de `categorias/` y `landing/` se guardan una semana en el navegador, en
+  vez de 60 s. Los despliegues con logos grandes los reducen solos al arrancar; los que subió un
+  vendedor no se tocan.
 - **Comisión de la plataforma: del 5 % al 8 %.** Nuevo valor por defecto de `PLATFORM_COMMISSION_PERCENTAGE`
   en producción, `render.yaml`, `.env.example` y documentación. Solo afecta a los pagos nuevos: los ya
   registrados conservan la comisión con que se calcularon. En un servicio ya creado hay que cambiar la
