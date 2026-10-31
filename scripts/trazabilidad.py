@@ -304,7 +304,14 @@ def validar(requisitos: list[dict], ctx: Contexto) -> list[str]:
 
 def archivos_con_enlaces(raiz: Path) -> list[Path]:
     archivos = sorted((raiz / "docs").glob("*.md"))
-    for nombre in ("README.md", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md"):
+    for nombre in (
+        "README.md",
+        "README.en.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "SEGURIDAD.md",
+        "CONTRIBUTING.md",
+    ):
         if (raiz / nombre).is_file():
             archivos.append(raiz / nombre)
     return archivos
