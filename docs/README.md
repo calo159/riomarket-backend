@@ -54,6 +54,7 @@ stack, pruebas y despliegue.
 - [ADR-012: apartar con plazo y liberación perezosa del stock](ADR-012-apartar-con-plazo.md)
 - [ADR-013: productos por encargo](ADR-013-productos-por-encargo.md)
 - [ADR-014: panel de ventas](ADR-014-panel-de-ventas.md)
+- [ADR-015: observabilidad mínima (id de petición, registro JSON y health)](ADR-015-observabilidad.md)
 
 ## Entrega
 

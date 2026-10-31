@@ -35,7 +35,7 @@ Todo esto debe pasar (es lo que ejecuta el CI):
 ruff check apps config tests scripts
 ruff format --check apps config tests scripts
 python manage.py makemigrations --check --dry-run
-python -m pytest -q
+python -m pytest -q --cov=apps --cov=apps   # falla bajo el umbral de pyproject.toml (91 %)
 python scripts/trazabilidad.py --check
 
 # Frontend

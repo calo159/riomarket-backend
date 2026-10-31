@@ -26,7 +26,8 @@ Usuario demo: `admin@riomarket.test` / `RioMarket2026!`
 
 Verificación rápida:
 
-- `https://TU-SERVICIO.onrender.com/api/health/` → `{"status":"ok","database":"up"}`
+- `https://TU-SERVICIO.onrender.com/api/health/` → `{"status": "ok", "database": "up", "version": "f7b4aa8", "migraciones": "al_dia", "almacenamiento_externo": true, "hora_servidor": "2026-10-31T18:17:04Z"}`
+  (ver «Observabilidad» más abajo).
 - `/` → app; `/admin/` → Django; `/api/docs/` → Swagger.
 - `/robots.txt` → texto plano con `Sitemap:`; `/sitemap.xml` → XML con la tienda,
   el catálogo, el mapa y los puestos y productos activos.
@@ -58,6 +59,28 @@ sembrada.
 - Disco efímero: las imágenes subidas se pierden en cada redeploy. Usa almacenamiento S3-compatible (Supabase Storage/R2/AWS) con las variables `STORAGE_S3_*`.
 - Sin Shell en el plan free: los datos demo y las imágenes se cargan solos en
   cada arranque con `seed_masivo` y `seed_imagenes_demo`.
+
+## Observabilidad ([ADR-015](ADR-015-observabilidad.md))
+
+- Cada respuesta lleva la cabecera `X-Request-ID` (se reutiliza la que envíe el cliente solo si son
+  8 a 64 letras, números o guiones; si no, se genera una). Con ella se busca todo lo ocurrido en una
+  petición: en el visor de **Logs** de Render, filtra por ese valor (`"request_id": "..."`).
+- En producción los registros salen en **JSON de una línea** (`ts`, `nivel`, `logger`, `msg`,
+  `request_id` y, en `apps.acceso`, `metodo`, `ruta` sin query string, `estado`, `duracion_ms` y
+  `usuario_id`). No llevan cuerpo, cabeceras, cookies, correos ni celulares. `LOG_FORMAT=texto`
+  vuelve al formato legible sin cambiar código (opcional; no hay que tocar variables de Render).
+- `/api/health/` (público; Render lo usa como `healthCheckPath`):
+
+  | Campo | Significado |
+  | --- | --- |
+  | `status` / `database` | `ok`/`up`; si la base cae responde 503 con `degraded`/`down` |
+  | `version` | 7 caracteres del commit desplegado (`desconocida` si Render no lo informa) |
+  | `migraciones` | `al_dia`, `pendientes` o `desconocido` (se revisa cada 10 min) |
+  | `almacenamiento_externo` | `true` si las imágenes van a S3; `false` si usan disco efímero |
+  | `hora_servidor` | hora UTC del servidor |
+
+  Las migraciones pendientes o el almacenamiento local **no** provocan 503 (Render reiniciaría el
+  servicio sin necesidad).
 
 ## Si necesitas que la base dure más de 30 días
 
