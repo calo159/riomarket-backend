@@ -11,9 +11,24 @@ import {
 import { useSession } from '../auth/SessionProvider';
 import type { Carrito, ItemCarrito, Producto, Puesto } from '../lib/types';
 import { numero } from '../lib/format';
+import { MAX_CANTIDAD_ENCARGO, MAX_DETALLES, esEncargo } from '../lib/encargos';
 import { urlAbsoluta as absoluta } from '../lib/utils';
 
 const CLAVE_CARRITO = 'riomarket.carrito';
+
+/**
+ * Unidades que admite el producto: 20 en un encargo; el stock en uno con existencias. ``previo`` es
+ * el tope que ya tenía la línea, por si el producto llega sin dato de stock.
+ */
+function topeDelProducto(producto: Producto, previo?: number): number {
+  if (esEncargo(producto)) return MAX_CANTIDAD_ENCARGO;
+  return producto.stock ?? previo ?? 0;
+}
+
+/** Los detalles que se guardan, con el largo permitido. */
+function limpiarDetalles(texto: string | undefined): string {
+  return (texto ?? '').slice(0, MAX_DETALLES);
+}
 
 function cargarCarrito(): Carrito | null {
   try {
@@ -40,18 +55,26 @@ interface ContextoCarrito {
   carrito: Carrito | null;
   totalItems: number;
   subtotal: number;
-  agregar: (producto: Producto, puesto: Puesto) => 'agregado' | 'otro_puesto';
-  reemplazarCon: (producto: Producto, puesto: Puesto, cantidad?: number) => void;
+  /** Suma ``cantidad`` (1 por defecto) del producto; en un encargo, con sus ``detalles``. */
+  agregar: (
+    producto: Producto,
+    puesto: Puesto,
+    opciones?: { cantidad?: number; detalles?: string },
+  ) => 'agregado' | 'otro_puesto';
+  reemplazarCon: (producto: Producto, puesto: Puesto, cantidad?: number, detalles?: string) => void;
   /**
-   * Agrega varios productos de un mismo puesto con su cantidad (limitada al stock). Si el carrito
+   * Agrega varios productos de un mismo puesto con su cantidad (limitada al stock; 20 en un
+   * encargo, con sus detalles). Si el carrito
    * es de otro puesto no hace nada y devuelve ``otro_puesto``, salvo con ``reemplazar``.
    */
   agregarLineas: (
     puesto: Puesto,
-    lineas: { producto: Producto; cantidad: number }[],
+    lineas: { producto: Producto; cantidad: number; detalles?: string }[],
     opciones?: { reemplazar?: boolean },
   ) => 'agregado' | 'otro_puesto';
   cambiarCantidad: (productoId: number, cantidad: number) => void;
+  /** Cambia lo que el comprador escribió para un encargo (sabor, mensaje...). */
+  cambiarDetalles: (productoId: number, texto: string) => void;
   quitar: (productoId: number) => void;
   vaciar: () => void;
 }
@@ -83,7 +106,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', alCambiarStorage);
   }, []);
 
-  const crearItem = useCallback((producto: Producto, cantidad: number): ItemCarrito => {
+  const crearItem = useCallback((producto: Producto, cantidad: number, detalles?: string): ItemCarrito => {
     // El carrito muestra fotos de 64 px: basta la miniatura (cae a la grande si no existe).
     const primera = producto.imagenes?.[0];
     const origen = primera?.miniatura || primera?.url;
@@ -94,34 +117,61 @@ export function CartProvider({ children }: { children: ReactNode }) {
       precio: producto.precio,
       unidadMedida: producto.unidad_medida ?? 'unidad',
       cantidad,
-      stock: producto.stock ?? 0,
+      stock: topeDelProducto(producto),
       imagen,
+      // Carritos guardados antes (sin estos campos) se leen como productos con stock.
+      ...(esEncargo(producto)
+        ? {
+            modalidad: 'encargo' as const,
+            preparacionHoras: producto.preparacion_horas ?? null,
+            pideDetalles: Boolean(producto.pide_detalles),
+            etiquetaDetalles: producto.etiqueta_detalles ?? '',
+            detalles: limpiarDetalles(detalles),
+          }
+        : {}),
     };
   }, []);
 
   const agregar = useCallback(
-    (producto: Producto, puesto: Puesto): 'agregado' | 'otro_puesto' => {
+    (
+      producto: Producto,
+      puesto: Puesto,
+      opciones: { cantidad?: number; detalles?: string } = {},
+    ): 'agregado' | 'otro_puesto' => {
       if (carrito && carrito.puestoId !== puesto.id) return 'otro_puesto';
+      const sumar = Math.max(1, opciones.cantidad ?? 1);
       setCarrito((actual) => {
         if (!actual) {
           return {
             puestoId: puesto.id,
             puestoNombre: puesto.nombre,
             ofreceDomicilio: Boolean(puesto.ofrece_domicilio),
-            items: [crearItem(producto, 1)],
+            items: [crearItem(producto, Math.min(sumar, Math.max(1, topeDelProducto(producto, sumar))), opciones.detalles)],
           };
         }
         const existente = actual.items.find((item) => item.productoId === producto.id);
         if (existente) {
-          const cantidad = Math.min(existente.cantidad + 1, producto.stock ?? existente.stock);
+          const tope = topeDelProducto(producto, existente.stock);
+          const cantidad = Math.min(existente.cantidad + sumar, tope);
           return {
             ...actual,
             items: actual.items.map((item) =>
-              item.productoId === producto.id ? { ...item, cantidad, stock: producto.stock ?? item.stock } : item,
+              item.productoId === producto.id
+                ? {
+                    ...item,
+                    cantidad,
+                    stock: tope,
+                    ...(opciones.detalles ? { detalles: limpiarDetalles(opciones.detalles) } : {}),
+                  }
+                : item,
             ),
           };
         }
-        return { ...actual, items: [...actual.items, crearItem(producto, 1)] };
+        const tope = Math.max(1, topeDelProducto(producto, sumar));
+        return {
+          ...actual,
+          items: [...actual.items, crearItem(producto, Math.min(sumar, tope), opciones.detalles)],
+        };
       });
       return 'agregado';
     },
@@ -129,13 +179,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const reemplazarCon = useCallback(
-    (producto: Producto, puesto: Puesto, cantidad = 1) => {
-      const tope = producto.stock ?? cantidad;
+    (producto: Producto, puesto: Puesto, cantidad = 1, detalles?: string) => {
+      const tope = topeDelProducto(producto, cantidad);
       setCarrito({
         puestoId: puesto.id,
         puestoNombre: puesto.nombre,
         ofreceDomicilio: Boolean(puesto.ofrece_domicilio),
-        items: [crearItem(producto, Math.max(1, Math.min(cantidad, tope)))],
+        items: [crearItem(producto, Math.max(1, Math.min(cantidad, tope)), detalles)],
       });
     },
     [crearItem],
@@ -144,21 +194,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const agregarLineas = useCallback(
     (
       puesto: Puesto,
-      lineas: { producto: Producto; cantidad: number }[],
+      lineas: { producto: Producto; cantidad: number; detalles?: string }[],
       opciones: { reemplazar?: boolean } = {},
     ): 'agregado' | 'otro_puesto' => {
       if (carrito && carrito.puestoId !== puesto.id && !opciones.reemplazar) return 'otro_puesto';
       const base: Carrito | null =
         carrito && carrito.puestoId === puesto.id && !opciones.reemplazar ? carrito : null;
       const items = [...(base?.items ?? [])];
-      for (const { producto, cantidad } of lineas) {
-        const tope = producto.stock ?? cantidad;
+      for (const { producto, cantidad, detalles } of lineas) {
+        const tope = topeDelProducto(producto, cantidad);
         const indice = items.findIndex((item) => item.productoId === producto.id);
         if (indice >= 0) {
           const total = Math.min(items[indice].cantidad + cantidad, tope);
-          items[indice] = { ...items[indice], cantidad: Math.max(1, total), stock: tope };
+          items[indice] = {
+            ...items[indice],
+            cantidad: Math.max(1, total),
+            stock: tope,
+            ...(detalles ? { detalles: limpiarDetalles(detalles) } : {}),
+          };
         } else if (tope > 0) {
-          items.push(crearItem(producto, Math.max(1, Math.min(cantidad, tope))));
+          items.push(crearItem(producto, Math.max(1, Math.min(cantidad, tope)), detalles));
         }
       }
       if (items.length === 0) return 'agregado';
@@ -189,6 +244,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const cambiarDetalles = useCallback((productoId: number, texto: string) => {
+    setCarrito((actual) => {
+      if (!actual) return actual;
+      return {
+        ...actual,
+        items: actual.items.map((item) =>
+          item.productoId === productoId ? { ...item, detalles: limpiarDetalles(texto) } : item,
+        ),
+      };
+    });
+  }, []);
+
   const quitar = useCallback((productoId: number) => {
     setCarrito((actual) => {
       if (!actual) return actual;
@@ -211,10 +278,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       reemplazarCon,
       agregarLineas,
       cambiarCantidad,
+      cambiarDetalles,
       quitar,
       vaciar,
     }),
-    [carrito, totalItems, subtotal, agregar, reemplazarCon, agregarLineas, cambiarCantidad, quitar, vaciar],
+    [
+      carrito,
+      totalItems,
+      subtotal,
+      agregar,
+      reemplazarCon,
+      agregarLineas,
+      cambiarCantidad,
+      cambiarDetalles,
+      quitar,
+      vaciar,
+    ],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

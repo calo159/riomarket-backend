@@ -92,3 +92,22 @@ describe('resumenVolverAPedir', () => {
     expect(resumenVolverAPedir(plan)).toBe('Agregamos 1 de 1 producto; de Mango solo quedan 2.');
   });
 });
+
+describe('planificarVolverAPedir con encargos', () => {
+  const torta = (extra: Partial<Producto> = {}) =>
+    producto(7, { modalidad: 'encargo', stock: 0, preparacion_horas: 24, ...extra } as Partial<Producto>);
+
+  it('un encargo no se omite por tener stock 0: se repite con sus detalles y tope de 20', () => {
+    const plan = planificarVolverAPedir(
+      [{ ...item(7, 30), detalles: 'Maracuyá' }],
+      mapa(torta()),
+    );
+    expect(plan.omitidas).toEqual([]);
+    expect(plan.lineas[0]).toMatchObject({ cantidad: 20, pedida: 30, detalles: 'Maracuyá' });
+  });
+
+  it('un encargo inactivo sí se omite', () => {
+    const plan = planificarVolverAPedir([item(7, 1)], mapa(torta({ estado: 'inactivo' })));
+    expect(plan.omitidas.map((o) => o.motivo)).toEqual(['inactivo']);
+  });
+});

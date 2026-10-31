@@ -7,6 +7,10 @@ interface FiltrosPedido {
   tipo_entrega?: string;
   puesto?: number | string;
   con_no_recibido?: boolean | string;
+  /** Solo pedidos que incluyan este producto. */
+  producto?: number | string;
+  /** Solo pedidos sin terminar (true) o ya terminados (false). */
+  abiertos?: boolean;
   ordering?: string;
   page?: number;
   page_size?: number;
@@ -19,7 +23,9 @@ export interface DatosPedido {
   referencia_entrega?: string;
   id_direccion?: number | null;
   notas?: string;
-  items: { id_producto: number; cantidad: number }[];
+  /** Para cuándo se quiere un encargo (ISO con zona). Obligatoria si hay un producto por encargo. */
+  fecha_solicitada?: string;
+  items: { id_producto: number; cantidad: number; detalles?: string }[];
   codigo_cupon?: string;
 }
 

@@ -32,9 +32,24 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
         <div className="mb-5 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            {pagaAlRecoger
-              ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
-              : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
+            {datos.tiene_encargo
+              ? pagaAlRecoger
+                ? 'Tu encargo fue enviado. El puesto lo revisa y lo acepta o te avisa si no puede. Pagas al recoger.'
+                : 'Tu encargo fue enviado. Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.'
+              : pagaAlRecoger
+                ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
+                : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
+          </p>
+        </div>
+      )}
+
+      {datos.tiene_encargo && datos.estado === 'pendiente' && (
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200" role="status">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {esComprador
+              ? 'Tu encargo está esperando que el puesto lo acepte.'
+              : 'Este encargo espera tu respuesta: acéptalo si puedes hacerlo o cancélalo.'}
           </p>
         </div>
       )}

@@ -13,6 +13,7 @@ import { listarCategorias, listarProductos, obtenerProducto, obtenerPuesto } fro
 import { LogoPuesto } from '../components/PuestoCard';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
 import { formatearMoneda } from '../lib/format';
+import { MAX_DETALLES, esEncargo, etiquetaDeDetalles, formatearPreparacion, topeDe } from '../lib/encargos';
 import { urlAbsoluta } from '../lib/utils';
 import { useCart } from '../cart/CartProvider';
 import { useToast } from '../components/ui/Toast';
@@ -33,6 +34,8 @@ export function ProductoDetalle() {
   const { autenticado } = useSession();
   const [imagenActiva, setImagenActiva] = useState(0);
   const [cantidad, setCantidad] = useState(1);
+  const [detalles, setDetalles] = useState('');
+  const [errorDetalles, setErrorDetalles] = useState('');
   const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
   const [agregado, setAgregado] = useState(false);
   const botonAgregar = useRef<HTMLButtonElement>(null);
@@ -70,6 +73,8 @@ export function ProductoDetalle() {
   useEffect(() => {
     setImagenActiva(0);
     setCantidad(1);
+    setDetalles('');
+    setErrorDetalles('');
   }, [id]);
 
   if (producto.isLoading) return <CargandoPantalla />;
@@ -86,26 +91,44 @@ export function ProductoDetalle() {
   const tienda = puesto.data;
   const imagenes = datos.imagenes ?? [];
   const imagen = imagenes[imagenActiva];
-  const agotado = (datos.stock ?? 0) <= 0;
-  const stockMax = Math.max(0, datos.stock ?? 0);
+  // Un encargo no tiene stock: se pueden pedir hasta 20 y nunca figura como agotado (ADR-013).
+  const encargo = esEncargo(datos);
+  const agotado = !encargo && (datos.stock ?? 0) <= 0;
+  const stockMax = topeDe(datos);
+  const etiquetaDetalles = etiquetaDeDetalles(datos.etiqueta_detalles);
+  const preparacion = formatearPreparacion(datos.preparacion_horas ?? 0);
+
+  /** Un encargo que pide detalles no se agrega sin ellos. */
+  const detallesCompletos = () => {
+    if (encargo && datos.pide_detalles && !detalles.trim()) {
+      setErrorDetalles(`Escribe ${etiquetaDetalles.charAt(0).toLowerCase()}${etiquetaDetalles.slice(1)} para poder encargarlo.`);
+      return false;
+    }
+    setErrorDetalles('');
+    return true;
+  };
 
   const agregarAlCarrito = () => {
-    if (!tienda) return;
+    if (!tienda || !detallesCompletos()) return;
     if (carrito && carrito.puestoId !== tienda.id) {
       setAccionPendiente('agregar');
       setConfirmarReemplazo(true);
       return;
     }
-    for (let i = 0; i < cantidad; i += 1) agregar(datos, tienda);
+    agregar(datos, tienda, { cantidad, detalles: detalles.trim() });
     volarAlCarrito(botonAgregar.current, urlAbsoluta(imagen?.miniatura || imagen?.url));
-    toast.exito(`${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${datos.nombre} en el carrito.`);
+    toast.exito(
+      encargo
+        ? `Encargo de ${datos.nombre} en el carrito.`
+        : `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${datos.nombre} en el carrito.`,
+    );
     setAgregado(true);
     window.setTimeout(() => setAgregado(false), 1500);
   };
 
   const reemplazar = () => {
     if (!tienda) return;
-    reemplazarCon(datos, tienda, cantidad);
+    reemplazarCon(datos, tienda, cantidad, detalles.trim());
     setConfirmarReemplazo(false);
     toast.exito('Carrito actualizado con este producto.');
     if (accionPendiente === 'comprar') {
@@ -115,13 +138,13 @@ export function ProductoDetalle() {
   };
 
   const comprarAhora = () => {
-    if (!tienda) return;
+    if (!tienda || !detallesCompletos()) return;
     if (carrito && carrito.puestoId !== tienda.id) {
       setAccionPendiente('comprar');
       setConfirmarReemplazo(true);
       return;
     }
-    for (let i = 0; i < cantidad; i += 1) agregar(datos, tienda);
+    agregar(datos, tienda, { cantidad, detalles: detalles.trim() });
     if (!autenticado) navigate('/login?redirect=%2Fcheckout');
     else navigate('/checkout');
   };
@@ -131,7 +154,7 @@ export function ProductoDetalle() {
   const calificacion = tienda?.calificacion_promedio ?? datos.puesto_calificacion;
   const nombrePuesto = tienda?.nombre ?? datos.puesto_nombre;
   const domicilio = tienda ? tienda.ofrece_domicilio : datos.puesto_ofrece_domicilio;
-  const quedan = !agotado && stockMax <= 5;
+  const quedan = !encargo && !agotado && stockMax <= 5;
 
   return (
     <div className="mx-auto max-w-[1240px] px-3 pb-8 sm:px-5">
@@ -195,7 +218,13 @@ export function ProductoDetalle() {
 
         <aside className="flex flex-col gap-2.5 self-start rounded-xl border border-slate-200 p-4 dark:border-slate-700 md:p-[18px]" aria-label="Comprar">
           <p className="text-[13px] text-slate-500 dark:text-slate-400">
-            {agotado ? 'Agotado por ahora' : quedan ? `Quedan ${stockMax}` : `${stockMax} disponibles`}
+            {encargo
+              ? `Por encargo · listo en ~${preparacion}`
+              : agotado
+                ? 'Agotado por ahora'
+                : quedan
+                  ? `Quedan ${stockMax}`
+                  : `${stockMax} disponibles`}
             {datos.estado !== 'activo' && (
               <span className="badge ml-2 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Producto {datos.estado}</span>
             )}
@@ -218,6 +247,37 @@ export function ProductoDetalle() {
               <Truck className="h-[18px] w-[18px]" aria-hidden="true" />
               {domicilio ? 'Domicilio en Riohacha o retiro en el puesto' : 'Retiro en el puesto'}
             </p>
+          )}
+
+          {encargo && (
+            <div className="space-y-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
+              <p className="font-medium">
+                Se hace por encargo. {nombrePuesto ?? 'El puesto'} necesita {preparacion} para prepararlo.
+              </p>
+              {datos.pide_detalles && (
+                <div>
+                  <label className="label" htmlFor="detalles-encargo">{etiquetaDetalles}</label>
+                  <textarea
+                    id="detalles-encargo"
+                    rows={3}
+                    maxLength={MAX_DETALLES}
+                    className="input resize-y"
+                    value={detalles}
+                    onChange={(evento) => {
+                      setDetalles(evento.target.value);
+                      if (evento.target.value.trim()) setErrorDetalles('');
+                    }}
+                    aria-invalid={errorDetalles ? true : undefined}
+                    aria-describedby="detalles-ayuda"
+                  />
+                  <div className="mt-1 flex items-start justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span id="detalles-ayuda">El puesto lo lee antes de aceptar tu encargo.</span>
+                    <span className="shrink-0 tabular-nums">{detalles.length}/{MAX_DETALLES}</span>
+                  </div>
+                  {errorDetalles && <p className="field-error" role="alert">{errorDetalles}</p>}
+                </div>
+              )}
+            </div>
           )}
 
           <div className="flex items-center gap-3 text-sm">
@@ -256,7 +316,8 @@ export function ProductoDetalle() {
             onClick={agregarAlCarrito}
             disabled={agotado || !tienda}
           >
-            <ShoppingCart className="h-5 w-5" aria-hidden="true" /> {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" />{' '}
+            {agregado ? 'Agregado al carrito' : encargo ? 'Agregar encargo al carrito' : 'Agregar al carrito'}
           </button>
 
           {nombrePuesto && (

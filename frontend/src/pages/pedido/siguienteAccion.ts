@@ -29,7 +29,7 @@ type Contexto = 'vendedor' | 'admin';
  * entrega es entonces «Entregar y cobrar».
  */
 export function siguienteAccion(
-  pedido: Pick<Pedido, 'estado' | 'tipo_entrega' | 'acciones_permitidas'>,
+  pedido: Pick<Pedido, 'estado' | 'tipo_entrega' | 'acciones_permitidas'> & { tiene_encargo?: boolean },
   contexto: Contexto,
 ): SiguienteAccion | null {
   const permitidas = pedido.acciones_permitidas ?? [];
@@ -39,7 +39,8 @@ export function siguienteAccion(
     case 'pendiente':
       candidata = {
         accion: 'confirmar',
-        etiqueta: contexto === 'admin' ? 'Confirmar' : 'Confirmar pedido',
+        // Aceptar un encargo es confirmar el pedido (ADR-013).
+        etiqueta: pedido.tiene_encargo ? 'Aceptar encargo' : contexto === 'admin' ? 'Confirmar' : 'Confirmar pedido',
         icono: 'confirmar',
       };
       break;
