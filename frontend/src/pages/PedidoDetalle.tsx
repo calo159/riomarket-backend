@@ -16,6 +16,7 @@ import { mensajeDeError } from '../lib/errors';
 import { invalidarMenu } from '../navigation/useMenu';
 import { claves } from '../lib/queryKeys';
 import { AvisosPedido } from './pedido/AvisosPedido';
+import { BotonDarMasTiempo } from './pedido/BotonDarMasTiempo';
 import { PasosPedido } from './pedido/PasosPedido';
 import { EntregaPedido, ProductosPedido } from './pedido/ProductosEntregaPedido';
 import { PagosPedido } from './pedido/PagosPedido';
@@ -79,7 +80,9 @@ export function PedidoDetalle() {
           ? 'Pedido cancelado y stock repuesto.'
           : tipo === 'entregar'
             ? 'Pedido marcado como entregado.'
-            : 'Estado del pedido actualizado.',
+            : tipo === 'extender-plazo'
+              ? 'Le diste más tiempo al cliente.'
+              : 'Estado del pedido actualizado.',
       );
     },
     onError: (error) => toast.error(mensajeDeError(error)),
@@ -172,6 +175,11 @@ export function PedidoDetalle() {
               <CheckCircle2 className="h-4 w-4" /> {etiquetaEntregar}
             </button>
           )}
+          <BotonDarMasTiempo
+            pedido={datos}
+            cargando={accion.isPending && accion.variables === 'extender-plazo'}
+            onClick={() => accion.mutate('extender-plazo')}
+          />
           {puedeReportar && (
             <button
               type="button"

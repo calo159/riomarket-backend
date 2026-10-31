@@ -61,7 +61,8 @@ export type AccionPedido =
   | 'enviar'
   | 'listo-para-recoger'
   | 'entregar'
-  | 'cancelar';
+  | 'cancelar'
+  | 'extender-plazo';
 
 export async function ejecutarAccionPedido(id: number, accion: AccionPedido): Promise<Pedido> {
   const { data } = await api.post<Pedido>(`/orders/pedidos/${id}/${accion}/`, {});

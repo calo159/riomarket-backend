@@ -124,7 +124,7 @@ class PedidoSerializer(serializers.ModelSerializer):
         )
 
     def get_horas_extension(self, obj) -> int | None:
-        """Horas que suma «Dar más tiempo» (``None`` si el pedido no admite más tiempo)."""
+        """Horas que suma «Dar más tiempo» (null si el pedido no admite más tiempo)."""
         return services.horas_de_extension(obj)
 
     def get_acciones_permitidas(self, obj) -> list[str]:

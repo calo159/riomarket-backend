@@ -940,6 +940,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/pedidos/{id}/extender-plazo/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description El vendedor del puesto (o un administrador) da más tiempo a un retiro pendiente o listo para recoger: suma un plazo completo. Máximo dos veces por pedido. */
+        post: operations["orders_pedidos_extender_plazo_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/pedidos/{id}/listo-para-recoger/": {
         parameters: {
             query?: never;
@@ -1620,6 +1637,12 @@ export interface components {
             estado: components["schemas"]["ModerarPuestoEstadoEnum"];
             motivo?: string;
         };
+        /**
+         * @description * `no_recogido` - No se recogió a tiempo
+         *     * `no_confirmado` - El puesto no lo confirmó a tiempo
+         * @enum {string}
+         */
+        MotivoCancelacionEnum: "no_recogido" | "no_confirmado";
         Notificacion: {
             readonly id: number;
             /** Usuario */
@@ -2012,6 +2035,9 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            /** @description Horas que tiene el cliente para recoger un pedido listo (entre 2 y 72). */
+            plazo_retiro_horas?: number;
+            /** @description Si está activo, el celular del vendedor se muestra a los compradores. */
             acepta_whatsapp?: boolean;
         };
         PatchedRecursoRequest: {
@@ -2085,6 +2111,22 @@ export interface components {
             readonly no_recibido_en: string | null;
             /** @description Motivo opcional del reporte de no recibido. */
             readonly motivo_no_recibido: string;
+            /**
+             * Format: date-time
+             * @description Cuándo se cancela solo si nadie lo confirma o lo recoge. Vacío = sin plazo.
+             */
+            readonly vence_en: string | null;
+            /** @description Veces que el vendedor dio más tiempo (máximo 2). */
+            readonly extensiones_plazo: number;
+            /**
+             * @description Por qué lo canceló el sistema. Vacío si se canceló a mano.
+             *
+             *     * `no_recogido` - No se recogió a tiempo
+             *     * `no_confirmado` - El puesto no lo confirmó a tiempo
+             */
+            readonly motivo_cancelacion: components["schemas"]["MotivoCancelacionEnum"];
+            /** @description Horas que suma «Dar más tiempo» (null si el pedido no admite más tiempo). */
+            readonly horas_extension: number | null;
             readonly acciones_permitidas: string[];
             items: components["schemas"]["ItemPedido"][];
             /** Format: date-time */
@@ -2194,6 +2236,9 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            /** @description Horas que tiene el cliente para recoger un pedido listo (entre 2 y 72). */
+            plazo_retiro_horas?: number;
+            /** @description Si está activo, el celular del vendedor se muestra a los compradores. */
             acepta_whatsapp?: boolean;
             /** @description Número para WhatsApp (``57`` + celular), o ``None`` si no debe publicarse. */
             readonly whatsapp: string | null;
@@ -2231,6 +2276,9 @@ export interface components {
             longitud?: string | null;
             horario?: string;
             ofrece_domicilio?: boolean;
+            /** @description Horas que tiene el cliente para recoger un pedido listo (entre 2 y 72). */
+            plazo_retiro_horas?: number;
+            /** @description Si está activo, el celular del vendedor se muestra a los compradores. */
             acepta_whatsapp?: boolean;
         };
         RecuperarContrasena: {
@@ -2305,9 +2353,11 @@ export interface components {
          *     * `anular` - Anular
          *     * `usar_cupon` - Usar cupón
          *     * `responder` - Responder
+         *     * `vencimiento` - Cancelado por plazo
+         *     * `extender_plazo` - Más tiempo para recoger
          * @enum {string}
          */
-        RegistroAuditoriaAccionEnum: "crear" | "actualizar" | "eliminar" | "transicion" | "aprobar" | "rechazar" | "reembolsar" | "anular" | "usar_cupon" | "responder";
+        RegistroAuditoriaAccionEnum: "crear" | "actualizar" | "eliminar" | "transicion" | "aprobar" | "rechazar" | "reembolsar" | "anular" | "usar_cupon" | "responder" | "vencimiento" | "extender_plazo";
         RegistroRequest: {
             nombre: string;
             /** Format: email */
@@ -2456,11 +2506,13 @@ export interface components {
          *     * `pedido_cancelado` - Pedido cancelado
          *     * `pago_aprobado` - Pago aprobado
          *     * `pago_rechazado` - Pago rechazado
+         *     * `pedido_por_vencer` - Pedido por vencer
+         *     * `pedido_vencido` - Pedido cancelado por plazo
          *     * `verificacion` - Verificación
          *     * `general` - General
          * @enum {string}
          */
-        TipoEnum: "pedido_creado" | "pedido_confirmado" | "pedido_en_preparacion" | "pedido_en_camino" | "pedido_listo_para_recoger" | "pedido_entregado" | "pedido_cancelado" | "pago_aprobado" | "pago_rechazado" | "verificacion" | "general";
+        TipoEnum: "pedido_creado" | "pedido_confirmado" | "pedido_en_preparacion" | "pedido_en_camino" | "pedido_listo_para_recoger" | "pedido_entregado" | "pedido_cancelado" | "pago_aprobado" | "pago_rechazado" | "pedido_por_vencer" | "pedido_vencido" | "verificacion" | "general";
         TokenRefresh: {
             readonly access: string;
             refresh: string;
@@ -4309,7 +4361,7 @@ export interface operations {
                 page_size?: number;
                 /** @description ID del pedido */
                 pedido?: number;
-                tipo?: "general" | "pago_aprobado" | "pago_rechazado" | "pedido_cancelado" | "pedido_confirmado" | "pedido_creado" | "pedido_en_camino" | "pedido_en_preparacion" | "pedido_entregado" | "pedido_listo_para_recoger" | "verificacion";
+                tipo?: "general" | "pago_aprobado" | "pago_rechazado" | "pedido_cancelado" | "pedido_confirmado" | "pedido_creado" | "pedido_en_camino" | "pedido_en_preparacion" | "pedido_entregado" | "pedido_listo_para_recoger" | "pedido_por_vencer" | "pedido_vencido" | "verificacion";
             };
             header?: never;
             path?: never;
@@ -4637,6 +4689,28 @@ export interface operations {
                 "multipart/form-data": components["schemas"]["PedidoRequest"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Pedido"];
+                };
+            };
+        };
+    };
+    orders_pedidos_extender_plazo_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Un valor de entero único que identifique este pedido. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

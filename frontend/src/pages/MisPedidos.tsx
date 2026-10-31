@@ -9,6 +9,7 @@ import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estad
 import { Paginacion } from '../components/ui/Paginacion';
 import { BotonVolverAPedir } from '../components/BotonVolverAPedir';
 import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../lib/format';
+import { estaPorVencer, textoCuentaRegresiva, useAhora } from '../lib/plazo';
 import { claves } from '../lib/queryKeys';
 import { puedeVolverAPedir } from '../lib/volverAPedir';
 
@@ -17,6 +18,7 @@ const TAMANO = 10;
 export function MisPedidos() {
   const [pagina, setPagina] = useState(1);
   const [estado, setEstado] = useState('');
+  const ahora = useAhora();
 
   useEffect(() => {
     document.title = 'Mis pedidos · RioMarket';
@@ -82,6 +84,17 @@ export function MisPedidos() {
                     {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length}{' '}
                     {pedido.items.length === 1 ? 'producto' : 'productos'} · {pedido.tipo_entrega === 'domicilio' ? 'Domicilio' : 'Retiro'}
                   </p>
+                  {pedido.vence_en && (
+                    <p
+                      className={`mt-0.5 text-xs ${
+                        estaPorVencer(pedido.vence_en, ahora)
+                          ? 'font-semibold text-[#A62F11] dark:text-orange-300'
+                          : 'text-slate-500 dark:text-slate-400'
+                      }`}
+                    >
+                      Vence el {formatearFechaHora(pedido.vence_en)} · {textoCuentaRegresiva(pedido.vence_en, ahora).toLowerCase()}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <p className="text-lg font-bold">{formatearMoneda(pedido.total)}</p>

@@ -33,6 +33,7 @@ const VACIO: DatosPuesto = {
   longitud: '',
   horario: '',
   ofrece_domicilio: false,
+  plazo_retiro_horas: 24,
 };
 
 export function Puestos() {
@@ -122,6 +123,7 @@ export function Puestos() {
       longitud: puesto.longitud ?? '',
       horario: puesto.horario ?? '',
       ofrece_domicilio: puesto.ofrece_domicilio ?? false,
+      plazo_retiro_horas: puesto.plazo_retiro_horas ?? 24,
     });
     setErrores({});
     setModal(true);
@@ -132,6 +134,10 @@ export function Puestos() {
     const nuevos: Record<string, string> = {};
     if (formulario.nombre.trim().length < 3) nuevos.nombre = 'Escribe un nombre de al menos 3 caracteres.';
     if (formulario.direccion.trim().length < 5) nuevos.direccion = 'Escribe la dirección del puesto.';
+    const plazo = Number(formulario.plazo_retiro_horas);
+    if (!Number.isInteger(plazo) || plazo < 2 || plazo > 72) {
+      nuevos.plazo_retiro_horas = 'El plazo debe estar entre 2 y 72 horas.';
+    }
     if (formulario.ofrece_domicilio) {
       if (!formulario.latitud) nuevos.latitud = 'La latitud es obligatoria si ofreces domicilio.';
       if (!formulario.longitud) nuevos.longitud = 'La longitud es obligatoria si ofreces domicilio.';
@@ -241,6 +247,27 @@ export function Puestos() {
           </Campo>
           <Campo etiqueta="Horario" htmlFor="horario-puesto" error={errores.horario} ayuda="Ej. Lunes a sábado, 7:00 a 18:00.">
             <input id="horario-puesto" className="input" value={formulario.horario ?? ''} onChange={(evento) => setFormulario((valor) => ({ ...valor, horario: evento.target.value }))} />
+          </Campo>
+          <Campo
+            etiqueta="Tiempo para recoger un pedido"
+            htmlFor="plazo-retiro-puesto"
+            error={errores.plazo_retiro_horas}
+            ayuda="Si el cliente no pasa en ese tiempo, el pedido se cancela solo y el producto vuelve a la venta. Puedes dar más tiempo desde el pedido. El cambio vale para los pedidos que pasen a «listo para recoger» desde ahora."
+          >
+            <div className="flex items-center gap-2">
+              <input
+                id="plazo-retiro-puesto"
+                type="number"
+                inputMode="numeric"
+                min={2}
+                max={72}
+                step={1}
+                className="input w-28"
+                value={formulario.plazo_retiro_horas ?? 24}
+                onChange={(evento) => setFormulario((valor) => ({ ...valor, plazo_retiro_horas: Number(evento.target.value) }))}
+              />
+              <span className="text-sm text-slate-600 dark:text-slate-300">horas</span>
+            </div>
           </Campo>
           <label className="flex items-center gap-2 text-sm">
             <input

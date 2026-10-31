@@ -71,6 +71,13 @@ describe('Checkout con retiro', () => {
     expect(await screen.findByText('Detalle del pedido')).toBeInTheDocument();
   });
 
+  it('avisa que el retiro se aparta y se cancela solo si no se recoge a tiempo', async () => {
+    renderizar();
+    expect(
+      await screen.findByText('Te apartamos el pedido. Si no lo recoges a tiempo, se cancela solo.'),
+    ).toBeInTheDocument();
+  });
+
   it('con domicilio el aviso de pago al recoger desaparece', async () => {
     renderizar();
     await screen.findByText('Pagas en el puesto al recoger (efectivo)');
