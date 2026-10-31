@@ -32,7 +32,7 @@ Lighthouse móvil (perfil por defecto de Lighthouse 12: Moto G Power emulado, 4G
 ### 4. Prioridad de las imágenes
 
 - `Imagen` acepta `prioridad`: `loading="eager"`, `fetchpriority="high"` y `decoding="async"`. `fetchpriority` va en minúsculas porque React 18 aún no conoce `fetchPriority` y avisa en consola (igual que ya hacía la landing).
-- Catálogo: las dos primeras tarjetas (una fila en celular) la usan; el resto sigue diferido. En la tienda ninguna tarjeta: el candidato a LCP es el carrusel.
+- Catálogo: las dos primeras tarjetas usan prioridad alta y las seis primeras (unas tres filas en celular, lo que se ve sin desplazarse) se piden de inmediato (`loading="eager"`, prioridad normal); el resto sigue diferido. Con solo dos, la medición mostró que el elemento LCP del catálogo seguía siendo una foto con `loading="lazy"` (auditoría `lcp-lazy-loaded`). En la tienda ninguna tarjeta: el candidato a LCP es el carrusel.
 - Carrusel `Destacados`: antes pintaba las cuatro portadas a la vez, sin prioridad ni medidas, y la visible competía con las tres ocultas. Ahora solo la visible tiene `<img>`; la siguiente espera a que la visible termine de cargar (o falle); las ya vistas lo conservan; las lejanas no se pintan. La primera diapositiva es la prioritaria. Se mantienen `aria-*`, pausa, `prefers-reduced-motion` y la transición de opacidad.
 
 ### 5. Los datos se piden mientras se descarga el código
@@ -55,7 +55,7 @@ Un plugin pequeño de Vite (`precargaDeFuente`) añade `<link rel="preload" as="
 ### 8. SEO: robots, sitemap y metaetiquetas
 
 - `GET /robots.txt` (`text/plain`, caché pública de 1 h): permite todo salvo `/api/`, `/admin/` y las pantallas con sesión o privadas (`/vendedor`, `/checkout`, `/carrito`, `/pedidos/`, `/mis-pedidos`, `/direcciones`, `/notificaciones`, `/perfil`), y apunta a `Sitemap:` con el origen real de la petición (detrás de Render ya existe `SECURE_PROXY_SSL_HEADER`).
-- `GET /sitemap.xml` con `django.contrib.sitemaps` (no requiere `django.contrib.sites`; no crea tablas ni migraciones): `/`, `/tienda`, `/catalogo`, `/mapa`, los puestos activos y los productos activos de puestos activos (tope de 5000). Sin `lastmod`: los modelos no tienen fecha de modificación y no se inventa. Cuatro consultas como máximo, con 1 o con 1000 productos.
+- `GET /sitemap.xml` con `django.contrib.sitemaps` (no requiere `django.contrib.sites`; no crea tablas ni migraciones): `/`, `/tienda`, `/catalogo`, `/mapa`, los puestos activos y los productos activos de puestos activos (tope de 5000). Sin `lastmod`: los modelos no tienen fecha de modificación y no se inventa. Cuatro consultas, las mismas con 1 que con 20 productos (prueba `test_sitemap_hace_consultas_constantes`).
 - `index.html` lleva Open Graph, `twitter:card` y `canonical`. Django lo lee una vez por proceso (se relee si cambia su fecha de modificación) y sustituye los marcadores `__…__` en **una sola pasada** (un nombre de producto que contenga «`__ORIGEN__`» no se vuelve a sustituir), con todo escapado. En `/productos/<id>` y `/puestos/<id>` usa nombre, descripción (150 caracteres) y foto del objeto, con **una** consulta y **solo si es público** (producto activo de puesto activo; puesto activo). Si no existe o no es público devuelve las metaetiquetas genéricas: desde aquí nunca hay 404 (la decide la SPA) y no se filtra un producto bloqueado.
 - **Por qué no SSR:** el beneficio buscado (vistas previas al compartir por WhatsApp y rastreo básico) solo necesita el HTML inicial con unas pocas metaetiquetas; un servidor de renderizado en Render gratis añadiría un proceso, memoria y arranque en frío para un contenido que Google ya ejecuta. Las metaetiquetas por ruta desde Django cuestan una consulta.
 - Con `npm run dev` Vite no pasa por Django: los marcadores se ven literales en las vistas previas. Solo afecta a desarrollo.
@@ -67,4 +67,5 @@ Un plugin pequeño de Vite (`precargaDeFuente`) añade `<link rel="preload" as="
 - Compresión y caché cambian el despliegue: el build de Docker ejecuta un paso más (segundos) y el arranque, `generar_miniaturas` (idempotente, acotado).
 - Las sesiones anteriores al cambio se cierran una vez (ver decisión 6).
 - Lo medido en local con WhiteNoise es una aproximación: en producción las fotos vienen de Supabase (otro origen, otra latencia) y Render gratis tiene arranque en frío. Los números reales de producción deben medirse tras el despliegue (ver [rendimiento.md](rendimiento.md)).
+- Limitación conocida: WhiteNoise entrega también `/index.html` tal cual está en el build (con los marcadores `__…__` sin completar). Ningún enlace ni el sitemap apuntan ahí; las rutas de la aplicación siempre pasan por Django.
 - No hay JSON-LD en este paquete.
