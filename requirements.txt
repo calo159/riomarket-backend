@@ -12,3 +12,4 @@ django-storages[s3]==1.14.4
 boto3==1.35.99
 gunicorn==23.0.0
 whitenoise==6.8.2
+Brotli==1.2.1

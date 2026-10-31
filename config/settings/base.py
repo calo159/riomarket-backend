@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     # Terceros
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
@@ -154,6 +155,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise no conoce .webmanifest y lo serviría como application/octet-stream.
 WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
+# Vite pone un hash de 8 caracteres (base64url) en lo que vive en assets/: se puede cachear un año.
+# Solo assets/: sw.js, manifest, theme-init.js e index.html conservan la caché corta por defecto.
+WHITENOISE_IMMUTABLE_FILE_TEST = r"^/assets/.+-[A-Za-z0-9_-]{8}\.[A-Za-z0-9]+$"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"

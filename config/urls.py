@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path, re_path
 from django.views.static import serve as servir_archivo
 from drf_spectacular.views import (
@@ -11,9 +12,12 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from apps.common.seo import SITEMAPS, RobotsView
 from apps.common.views import ArchivoFrontendView, FrontendCatchAllView, HealthCheckView
 
 urlpatterns = [
+    path("robots.txt", RobotsView.as_view(), name="robots"),
+    path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap"),
     path("admin/", admin.site.urls),
     path("api/health/", HealthCheckView.as_view(), name="health"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
@@ -54,7 +58,7 @@ if frontend_dist.exists():
         # el catch-all los sustituya por index.html.
         re_path(
             r"^(?P<path>sw\.js|offline\.html|offline\.js|manifest\.webmanifest|favicon\.svg"
-            r"|theme-init\.js|icons/[\w.-]+)$",
+            r"|theme-init\.js|og-riomarket\.png|icons/[\w.-]+)$",
             ArchivoFrontendView.as_view(),
         ),
         re_path(
