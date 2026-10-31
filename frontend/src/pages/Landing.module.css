@@ -612,6 +612,15 @@
 }
 .franja p.big span {
   color: var(--tq-cl);
+  /* Subrayado amarillo que se dibuja al llegar a la frase; sin animación queda dibujado entero. */
+  background: linear-gradient(var(--am), var(--am)) 0 100% / 100% 3px no-repeat;
+  padding-bottom: 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 1s var(--e) 0.45s;
+}
+.franja[data-revela='oculto'] p.big span {
+  background-size: 0 3px;
 }
 .franja p.nf {
   margin: 0;

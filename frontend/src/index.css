@@ -180,6 +180,37 @@
   transform-origin: left;
 }
 
+/* Aparición por scroll (lib/revelar.ts). Sin el atributo, todo es visible: es el estado por defecto.
+   --i es el lugar del elemento dentro de su grupo (0, 1, 2…) y da un retraso corto, nunca mayor a 0,32 s. */
+[data-revela='oculto'] .rv {
+  opacity: 0;
+  transform: translateY(18px);
+}
+[data-revela='visto'] .rv {
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(min(var(--i, 0), 4) * 80ms);
+}
+
+/* Las tarjetas de una cuadrícula suben unos píxeles al aparecer, de una en una (las primeras ocho).
+   Solo se mueven: sin cambiar la opacidad, la foto principal se pinta igual de rápido. */
+.entra-lista > * {
+  animation: sube-tarjeta 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.entra-lista > :nth-child(2) { animation-delay: 40ms; }
+.entra-lista > :nth-child(3) { animation-delay: 80ms; }
+.entra-lista > :nth-child(4) { animation-delay: 120ms; }
+.entra-lista > :nth-child(5) { animation-delay: 160ms; }
+.entra-lista > :nth-child(6) { animation-delay: 200ms; }
+.entra-lista > :nth-child(7) { animation-delay: 240ms; }
+.entra-lista > :nth-child(n + 8) { animation-delay: 280ms; }
+@keyframes sube-tarjeta {
+  from {
+    transform: translateY(10px);
+  }
+}
+
 /* Con "reducir movimiento" no se anima nada. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -188,5 +219,9 @@
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+  [data-revela] .rv {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

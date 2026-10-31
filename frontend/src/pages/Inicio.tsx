@@ -274,7 +274,7 @@ export function Inicio() {
             <div className="card px-6 py-10 text-center text-slate-500 dark:text-slate-400">Todavía no hay puestos publicados.</div>
           )}
           {puestos.data && puestos.data.results.length > 0 && (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="entra-lista grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {puestos.data.results.slice(0, 8).map((puesto) => (
                 <PuestoCard key={puesto.id} puesto={puesto} />
               ))}
