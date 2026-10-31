@@ -9,6 +9,21 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Observabilidad mínima ([ADR-015](docs/ADR-015-observabilidad.md)).** Cada respuesta lleva
+  `X-Request-ID` (se reutiliza el del cliente solo si son 8 a 64 letras, números o guiones; si no, se
+  genera uno); en producción los registros salen en JSON de una línea con `request_id`, y cada petición
+  deja un registro de acceso con método, ruta sin query string, estado, duración y número de usuario,
+  sin cuerpos, cabeceras, cookies ni datos personales. `/api/health/` suma `version` (commit corto),
+  `migraciones`, `almacenamiento_externo` y `hora_servidor` sin quitar `status` ni `database`.
+- **Umbral de cobertura en el CI.** El backend falla bajo el 91 % (medido 94 % con ramas); el
+  workflow ya revisa también el formato de `scripts/`.
+
+### Cambiado
+
+- `LOG_FORMAT` (opcional): `json` por defecto en producción, `texto` en desarrollo y pruebas.
+
 ## [1.0.0] - AAAA-MM-DD
 
 La fecha se fija al etiquetar la versión (ver «Publicar una versión» en [CONTRIBUTING.md](CONTRIBUTING.md)).

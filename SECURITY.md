@@ -65,6 +65,13 @@ requisitos `RNF-01` y `RNF-02`).
   activadas y revisión manual con `pip-audit` y `npm audit`. En la última revisión, `pip-audit` no
   reportó vulnerabilidades y `npm audit` reportó 17 avisos **moderados** de herramientas de desarrollo y
   ninguno en las dependencias de producción.
+- **Observabilidad sin datos personales:** cada petición lleva un `X-Request-ID` validado (8 a 64
+  letras, números o guiones; cualquier otro valor se descarta) y el registro de acceso solo guarda
+  método, ruta sin query string, estado, duración y el número de usuario; no guarda cuerpos,
+  cabeceras, cookies, correos ni celulares, y se ocultan los JWT y `password=...` que se cuelen en un
+  mensaje. `/api/health/` es público y solo muestra estado, versión corta del commit, migraciones,
+  si hay almacenamiento externo y la hora; nunca claves, rutas, versiones de librerías ni errores de
+  la base (ADR-015).
 - **Pruebas:** la suite del backend corre en el CI contra PostgreSQL 16 e incluye pruebas de permisos,
   CSRF por origen, cabeceras y concurrencia.
 

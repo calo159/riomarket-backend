@@ -391,7 +391,7 @@ esta matriz combinada con el estado actual.
 Backend:
 
 ```bash
-pytest -q
+pytest -q --cov=apps   # falla bajo el 91 % de cobertura (pyproject.toml)
 ruff check apps config tests scripts --no-cache
 ruff format --check apps config tests scripts
 python manage.py makemigrations --check --dry-run
@@ -399,7 +399,7 @@ python manage.py spectacular --file schema.yaml --validate
 python scripts/trazabilidad.py --check   # matriz de trazabilidad al día
 ```
 
-Resultado medido el 31/10/2026 (SQLite local): **1337 pruebas** recolectadas, 1336 en verde y 1 omitida (la de `SKIP LOCKED`, que solo corre en PostgreSQL, es decir en el CI); **cobertura de `apps/` del 94 %** con ramas (`pytest --cov=apps --cov-branch`); lint y formato correctos, sin migraciones pendientes y OpenAPI sin errores (4 avisos: nombres de `enum` y un parámetro de ruta sin tipo). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`. La matriz [`docs/trazabilidad.md`](docs/trazabilidad.md) enlaza cada requisito con sus pruebas.
+Resultado medido el 31/10/2026 (SQLite local): **1385 pruebas** recolectadas, 1384 en verde y 1 omitida (la de `SKIP LOCKED`, que solo corre en PostgreSQL, es decir en el CI); **cobertura de `apps/` del 94 %** con ramas (`pytest --cov=apps`; el CI exige al menos 91 %). La cobertura del frontend aún no se mide: falta `@vitest/coverage-v8` y no se añadió ninguna dependencia nueva en esta entrega ([ADR-015](docs/ADR-015-observabilidad.md)); lint y formato correctos, sin migraciones pendientes y OpenAPI sin errores (4 avisos: nombres de `enum` y un parámetro de ruta sin tipo). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`. La matriz [`docs/trazabilidad.md`](docs/trazabilidad.md) enlaza cada requisito con sus pruebas.
 
 Frontend (`cd frontend`):
 

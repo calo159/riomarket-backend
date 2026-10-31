@@ -553,12 +553,27 @@
     - "tests/test_migracion_whatsapp.py::test_la_migracion_apaga_el_whatsapp_de_los_puestos_existentes_y_es_reversible"
 
 - id: RNF-07
-  titulo: Observabilidad (salud del servicio hecha; id de petición y registro estructurado pendientes)
-  origen: Plan de mejoras (paquete E2, aún sin unir)
-  pendiente: true
+  titulo: Observabilidad (id de petición, registro estructurado sin datos personales y salud ampliada)
+  origen: ADR-015
   endpoints: []
   pruebas:
     - "tests/test_smoke.py::test_health_ok"
+    - "apps/common/tests/test_health.py::test_health_ok_con_campos_esperados"
+    - "apps/common/tests/test_health.py::test_health_503_si_la_base_cae"
+    - "apps/common/tests/test_health.py::test_si_falla_el_calculo_de_migraciones_degrada_a_desconocido"
+    - "apps/common/tests/test_health.py::test_migraciones_pendientes_se_cachea"
+    - "apps/common/tests/test_health.py::test_health_no_filtra_secretos"
+    - "apps/common/tests/test_observabilidad.py::test_respeta_request_id_valido"
+    - "apps/common/tests/test_observabilidad.py::test_rechaza_request_id_invalido"
+    - "apps/common/tests/test_observabilidad.py::test_rechaza_request_id_con_saltos_de_linea"
+    - "apps/common/tests/test_observabilidad.py::test_el_middleware_no_agrega_consultas"
+    - "apps/common/tests/test_observabilidad.py::test_registro_de_acceso_sin_query_string"
+    - "apps/common/tests/test_observabilidad.py::test_el_registro_no_contiene_datos_personales_ni_secretos"
+    - "apps/common/tests/test_observabilidad.py::test_formatter_json_es_una_linea_valida"
+    - "apps/common/tests/test_observabilidad.py::test_formatter_no_vuelca_campos_no_permitidos"
+    - "apps/common/tests/test_observabilidad.py::test_redacta_jwt_en_el_mensaje"
+    - "apps/common/tests/test_observabilidad.py::test_construir_logging_json_y_registros_existentes_siguen_funcionando"
+  evidencia: ["docs/ADR-015-observabilidad.md"]
 
 - id: RNF-08
   titulo: Accesibilidad (nombres accesibles, teclado y roles ARIA)
