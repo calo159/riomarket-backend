@@ -5,11 +5,13 @@ una foto subida por un vendedor nunca se reemplaza.
 """
 
 import hashlib
+import io
 from pathlib import Path
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from PIL import Image
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
 from apps.catalog.services import miniatura_y_medidas
@@ -17,6 +19,9 @@ from apps.catalog.services import miniatura_y_medidas
 SEED_DIR = Path(settings.BASE_DIR) / "seed_images"
 FOTOS_DIR = SEED_DIR / "fotos"
 PREFIJO_FOTO = "foto-demo-"
+# Lado mayor de la foto de cada campo del puesto: el logo se muestra pequeño; la portada, ancha.
+DIMENSION_PUESTO = {"portada": 640, "logo": 192}
+WEBP_QUALITY = 80
 
 # Del nombre más específico al más general: gana la primera clave contenida en el producto.
 FOTOS_PRODUCTO = (
@@ -155,6 +160,28 @@ def _archivo(ruta: Path, prefijo: str = "") -> ContentFile:
     return contenido
 
 
+def _reducida(ruta: Path, maximo: int, prefijo: str) -> ContentFile:
+    """La foto reducida a ``maximo`` px por lado: el logo se muestra de ~54 px y no pide 130 kB."""
+    with Image.open(ruta) as imagen:
+        imagen.thumbnail((maximo, maximo), Image.Resampling.LANCZOS)
+        salida = io.BytesIO()
+        imagen.save(salida, format="WEBP", quality=WEBP_QUALITY, method=6)
+    contenido = ContentFile(salida.getvalue())
+    contenido.name = f"{PREFIJO_FOTO}{prefijo}{ruta.name}"
+    return contenido
+
+
+def _demo_demasiado_grande(archivo, maximo: int) -> bool:
+    """True si es una foto demo de puesto mayor que ``maximo`` (la dejó así un despliegue viejo)."""
+    if not Path(archivo.name).name.startswith(PREFIJO_FOTO):
+        return False
+    try:
+        with archivo.open("rb") as abierto, Image.open(abierto) as imagen:
+            return max(imagen.size) > maximo
+    except (FileNotFoundError, OSError):
+        return False
+
+
 def _con_miniatura(ruta: Path, producto: Producto, **extra) -> dict:
     """Campos de una ``ImagenProducto`` demo: la foto original, su miniatura y sus medidas."""
     archivo = _archivo(ruta)
@@ -223,14 +250,18 @@ class Command(BaseCommand):
         if not foto:
             return 0
         cambios = 0
-        for campo in ("portada", "logo"):
+        for campo, maximo in DIMENSION_PUESTO.items():
             actual = getattr(puesto, campo)
             try:
-                if actual and not _es_de_prueba(actual, de_prueba):
+                if (
+                    actual
+                    and not _es_de_prueba(actual, de_prueba)
+                    and not _demo_demasiado_grande(actual, maximo)
+                ):
                     continue
                 if actual:
                     actual.delete(save=False)
-                setattr(puesto, campo, _archivo(foto, f"{campo}-"))
+                setattr(puesto, campo, _reducida(foto, maximo, f"{campo}-"))
                 puesto.save(update_fields=[campo])
                 cambios += 1
             except Exception as e:

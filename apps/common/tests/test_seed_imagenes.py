@@ -148,3 +148,45 @@ def test_la_foto_demo_reemplazada_trae_miniatura_y_medidas():
     imagen.refresh_from_db()
     assert imagen.miniatura
     assert (imagen.ancho, imagen.alto) == (640, 640)
+
+
+def _lado_mayor(campo) -> int:
+    with campo.open("rb") as abierto, Image.open(abierto) as imagen:
+        return max(imagen.size)
+
+
+def test_el_logo_demo_del_puesto_es_pequeno_y_la_portada_conserva_su_tamano():
+    puesto = PuestoFactory(nombre="Frutas del Caribe")
+
+    call_command("seed_imagenes_demo")
+
+    puesto.refresh_from_db()
+    assert _lado_mayor(puesto.logo) == 192
+    assert _lado_mayor(puesto.portada) == 640
+    assert puesto.logo.size < puesto.portada.size / 4
+
+
+def test_reduce_el_logo_demo_que_un_despliegue_viejo_dejo_grande():
+    puesto = PuestoFactory(nombre="Frutas del Caribe")
+    grande = (SEED_DIR / "fotos" / "puesto-frutas.webp").read_bytes()
+    puesto.logo.save("foto-demo-logo-puesto-frutas.webp", ContentFile(grande), save=True)
+    assert _lado_mayor(puesto.logo) == 640
+
+    call_command("seed_imagenes_demo")
+
+    puesto.refresh_from_db()
+    assert _lado_mayor(puesto.logo) == 192
+
+
+def test_no_reduce_el_logo_que_subio_un_vendedor():
+    puesto = PuestoFactory(nombre="Frutas del Caribe")
+    propio = BytesIO()
+    Image.new("RGB", (640, 640), "blue").save(propio, "PNG")
+    puesto.logo.save("mi-logo.png", ContentFile(propio.getvalue()), save=True)
+    nombre = puesto.logo.name
+
+    call_command("seed_imagenes_demo")
+
+    puesto.refresh_from_db()
+    assert puesto.logo.name == nombre
+    assert _lado_mayor(puesto.logo) == 640

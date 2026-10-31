@@ -85,6 +85,19 @@ def test_lo_que_no_lleva_hash_nunca_es_inmutable(dist, ruta):
     assert respuesta["Cache-Control"] == "max-age=60, public"
 
 
+@pytest.mark.parametrize("ruta", ["/categorias/arepas.webp", "/landing/aguacate.webp"])
+def test_las_fotos_fijas_se_guardan_una_semana_sin_ser_inmutables(dist, ruta):
+    destino = dist / ruta.lstrip("/")
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_bytes(b"webp" * 100)
+
+    respuesta = _servir(dist, ruta)
+
+    assert respuesta.status_code == 200
+    assert respuesta["Cache-Control"] == "max-age=604800, public"
+    assert "immutable" not in respuesta["Cache-Control"]
+
+
 @pytest.mark.parametrize(
     "ruta,debe_ser_inmutable",
     [
