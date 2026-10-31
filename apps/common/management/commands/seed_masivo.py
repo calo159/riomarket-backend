@@ -319,6 +319,23 @@ PRODUCTOS = {
     ],
 }
 
+# Productos por encargo (ADR-013): se agregan DESPUÉS de los de stock, así los índices de
+# ``PEDIDOS`` no cambian. puesto -> [(nombre, categoría, precio, unidad, descripción,
+# horas de preparación, etiqueta de detalles)]. Sin stock; su foto sale de seed_imagenes_demo.
+PRODUCTOS_ENCARGO = {
+    "dulces": [
+        (
+            "Bandeja de dulce de papaya con queso",
+            "Dulces típicos",
+            "45000",
+            "unidad",
+            "Dulce de papaya en panela con queso costeño, para compartir. Se prepara por encargo.",
+            48,
+            "Para cuántas personas y qué nota quieres",
+        ),
+    ],
+}
+
 # --- Cupones: (codigo, puesto o None, tipo, valor, minimo, tope, usos_total, usos_usuario) ---
 CUPONES = [
     ("BIENVENIDA2026", None, Cupon.TipoDescuento.PORCENTAJE, "10", "0", "10000", None, 1),
@@ -370,7 +387,14 @@ PEDIDOS = [
     ("SM-23", 2, "tejidos", [(0, 1)], "pendiente", "retiro", False, "simulado", False, None),
     ("SM-24", 3, "frutas", [(4, 1)], "pendiente", "retiro", True, "simulado", False, None),
     ("SM-25", 4, "pescaderia", [(0, 1)], "pendiente", "retiro", False, "simulado", False, None),
+    # 1 encargo pendiente (retiro, paga al recoger): el puesto aún no lo acepta (ADR-013).
+    # El índice 6 de «dulces» es el producto por encargo; el tercer valor son sus detalles.
+    ("SM-32", 0, "dulces", [(6, 1, "Para 12 personas. Que diga: Feliz día, mamá")], "pendiente", "retiro", True, "efectivo", False, None),
 ]
+
+# Pedidos demo por encargo: cuántos días después de cada ejecución del seed es la fecha pedida.
+# 8 días (más que el plazo largo de los pedidos abiertos, 7): el puesto debe aceptar antes.
+DIAS_FECHA_ENCARGO_DEMO = {"SM-32": 8}
 
 # Pedidos demo cuyo plazo nace vencido (no se renuevan: son la muestra de «cancelado por plazo»).
 PEDIDOS_VENCIDOS_A_PROPOSITO = ("SM-31",)
@@ -561,6 +585,27 @@ class Command(BaseCommand):
                     },
                 )
                 productos_puesto.append(producto)
+            for nombre, cat, precio, unidad, descripcion, horas, etiqueta in PRODUCTOS_ENCARGO.get(
+                clave_puesto, []
+            ):
+                categoria = self.categorias[cat]
+                asignar_categoria(puesto=puesto, categoria=categoria)
+                producto, _ = Producto.objects.get_or_create(
+                    id_puesto=puesto,
+                    nombre=nombre,
+                    defaults={
+                        "id_categoria": categoria,
+                        "descripcion": descripcion,
+                        "precio": Decimal(precio),
+                        "stock": 0,
+                        "unidad_medida": unidad,
+                        "modalidad": Producto.Modalidad.ENCARGO,
+                        "preparacion_horas": horas,
+                        "pide_detalles": True,
+                        "etiqueta_detalles": etiqueta,
+                    },
+                )
+                productos_puesto.append(producto)
             self.productos[clave_puesto] = productos_puesto
 
     # ------------------------------------------------------------------
@@ -669,9 +714,18 @@ class Command(BaseCommand):
             "tipo_entrega": tipo_entrega,
             "notas": f"{marcador} Pedido de demostración del mercado de Riohacha.",
             "items": [
-                {"id_producto": productos[idx], "cantidad": cantidad} for idx, cantidad in items
+                {
+                    "id_producto": productos[idx],
+                    "cantidad": cantidad,
+                    "detalles": (resto or [""])[0],
+                }
+                for idx, cantidad, *resto in items
             ],
         }
+        if clave in DIAS_FECHA_ENCARGO_DEMO:
+            datos["fecha_solicitada"] = timezone.now() + timedelta(
+                days=DIAS_FECHA_ENCARGO_DEMO[clave]
+            )
         if tipo_entrega == Pedido.TipoEntrega.DOMICILIO:
             datos["id_direccion"] = self.direcciones[comprador.pk]
         if cupon_codigo:
@@ -749,6 +803,11 @@ class Command(BaseCommand):
         abiertos.update(
             vence_en=timezone.now() + timedelta(days=DIAS_PLAZO_DEMO), aviso_vencimiento_en=None
         )
+        # Los encargos demo todavía pendientes conservan su fecha pedida a futuro.
+        for clave, dias in DIAS_FECHA_ENCARGO_DEMO.items():
+            Pedido.objects.filter(
+                notas__startswith=f"[{clave}]", estado=Pedido.Estado.PENDIENTE
+            ).update(fecha_solicitada=timezone.now() + timedelta(days=dias))
 
     # ------------------------------------------------------------------
     # Reseñas

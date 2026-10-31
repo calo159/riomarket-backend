@@ -32,8 +32,8 @@ class ImagenProductoInline(admin.TabularInline):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "id_puesto", "id_categoria", "precio", "stock", "estado")
-    list_filter = ("estado", "unidad_medida")
+    list_display = ("nombre", "id_puesto", "id_categoria", "precio", "stock", "modalidad", "estado")
+    list_filter = ("estado", "modalidad", "unidad_medida")
     search_fields = ("nombre", "descripcion")
     inlines = (ImagenProductoInline,)
 
