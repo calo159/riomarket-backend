@@ -11,6 +11,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Movimiento en la landing y en las cuadrículas.** Las secciones de la landing aparecen al llegar a
+  ellas (solo las que están debajo de la pantalla inicial), el subrayado amarillo de la franja se dibuja
+  bajo la frase clave y las tarjetas de productos y puestos suben unos píxeles al cargarse. Todo es
+  visible por defecto; con «reducir movimiento» no se oculta ni se anima nada.
 - **Menos peso en la tienda.** El logo de demostración de cada puesto se reduce a 192 px (de 40–134 kB a
   5–16 kB) y las fotos fijas de `categorias/` y `landing/` se guardan una semana en el navegador, en
   vez de 60 s. Los despliegues con logos grandes los reducen solos al arrancar; los que subió un

@@ -9,6 +9,7 @@ import { CargandoPantalla } from '../components/ui/Estado';
 import { claves } from '../lib/queryKeys';
 import { cn, urlAbsoluta } from '../lib/utils';
 import s from './Landing.module.css';
+import { lugar, Revela } from '../components/Revela';
 
 const TITULO = 'RioMarket · Haz el mercado desde el celular';
 const DESCRIPCION =
@@ -303,10 +304,10 @@ function Pasillo() {
 
   return (
     <div className={cn(s.pasillo, puestos.length < 4 && s[`n${puestos.length}`])}>
-      {puestos.map((puesto) => {
+      {puestos.map((puesto, indice) => {
         const categorias = ((puesto.categorias ?? []) as unknown as { nombre: string }[]).map((c) => c.nombre);
         return (
-          <Link key={puesto.id} className={s.pu} to={`/puestos/${puesto.id}`}>
+          <Link key={puesto.id} className={cn(s.pu, 'rv')} style={lugar(indice)} to={`/puestos/${puesto.id}`}>
             <figure className={s.ph}>
               <Imagen
                 src={urlAbsoluta(puesto.portada)}
@@ -423,18 +424,18 @@ export function Landing() {
           </div>
         </section>
 
-        <section className={s.franja} aria-label="Un pedido, un puesto">
+        <Revela as="section" className={s.franja} aria-label="Un pedido, un puesto">
           <div className={s.w}>
-            <p className={s.big}>
+            <p className={cn(s.big, 'rv')}>
               Cada pedido es de un solo puesto. <span>Sabes quién te lo prepara y a quién preguntarle.</span>
             </p>
-            <p className={s.nf}>Por eso el carrito no mezcla puestos: lo que pides, lo alista ese vendedor.</p>
+            <p className={cn(s.nf, 'rv')} style={lugar(1)}>Por eso el carrito no mezcla puestos: lo que pides, lo alista ese vendedor.</p>
           </div>
-        </section>
+        </Revela>
 
-        <section className={cn(s.w, s.sec)} id="pedido" aria-labelledby="t-pedido">
-          <h2 id="t-pedido">De pendiente a entregado, sin adivinar.</h2>
-          <p className={s.sub}>El puesto avanza tu pedido y tú lo ves en cada paso. La entrega la confirmas tú.</p>
+        <Revela as="section" className={cn(s.w, s.sec)} id="pedido" aria-labelledby="t-pedido">
+          <h2 id="t-pedido" className="rv">De pendiente a entregado, sin adivinar.</h2>
+          <p className={cn(s.sub, 'rv')} style={lugar(1)}>El puesto avanza tu pedido y tú lo ves en cada paso. La entrega la confirmas tú.</p>
           <div className={s.ruta}>
             <span className={s.linea} aria-hidden="true">
               <i />
@@ -457,43 +458,43 @@ export function Landing() {
               confirma la entrega.
             </p>
           </div>
-        </section>
+        </Revela>
 
-        <section className={cn(s.w, s.sec)} id="como" aria-labelledby="t-como">
-          <h2 id="t-como">¿Vienes a comprar o tienes un puesto?</h2>
+        <Revela as="section" className={cn(s.w, s.sec)} id="como" aria-labelledby="t-como">
+          <h2 id="t-como" className="rv">¿Vienes a comprar o tienes un puesto?</h2>
           <ComoFunciona modo={modo} setModo={setModo} />
-        </section>
+        </Revela>
 
-        <section className={cn(s.w, s.sec)} id="puestos" aria-labelledby="t-puestos">
-          <h2 id="t-puestos">Date una vuelta por los puestos.</h2>
-          <p className={s.sub}>Cada puesto tiene su página con productos, horario y reseñas de pedidos entregados.</p>
+        <Revela as="section" className={cn(s.w, s.sec)} id="puestos" aria-labelledby="t-puestos">
+          <h2 id="t-puestos" className="rv">Date una vuelta por los puestos.</h2>
+          <p className={cn(s.sub, 'rv')} style={lugar(1)}>Cada puesto tiene su página con productos, horario y reseñas de pedidos entregados.</p>
           <Pasillo />
           <Link className={s.todos} to="/tienda">
             Ver todos los puestos
             <Flecha />
           </Link>
-        </section>
+        </Revela>
 
-        <section className={s.reglas} aria-labelledby="t-reglas">
+        <Revela as="section" className={s.reglas} aria-labelledby="t-reglas">
           <div className={s.w}>
             <div>
-              <h2 id="t-reglas">Reglas claras para los dos lados del mostrador.</h2>
-              <p className={s.sub}>Lo que la app hace hoy, sin letra menuda.</p>
+              <h2 id="t-reglas" className="rv">Reglas claras para los dos lados del mostrador.</h2>
+              <p className={cn(s.sub, 'rv')} style={lugar(1)}>Lo que la app hace hoy, sin letra menuda.</p>
             </div>
             <dl>
-              <div className={s.regla}>
+              <div className={cn(s.regla, 'rv')} style={lugar(1)}>
                 <dt>Vendedores verificados</dt>
                 <dd>Antes de publicar, un administrador revisa la identidad de cada vendedor.</dd>
               </div>
-              <div className={s.regla}>
+              <div className={cn(s.regla, 'rv')} style={lugar(2)}>
                 <dt>Reseñas de quien recibió</dt>
                 <dd>Solo puede reseñar un puesto quien recibió su pedido.</dd>
               </div>
-              <div className={s.regla}>
+              <div className={cn(s.regla, 'rv')} style={lugar(3)}>
                 <dt>Cupones de cada puesto</dt>
                 <dd>Cada vendedor crea sus propios descuentos y tú los aplicas al pagar.</dd>
               </div>
-              <div className={s.regla}>
+              <div className={cn(s.regla, 'rv')} style={lugar(4)}>
                 <dt>Efectivo, confirmado por el puesto</dt>
                 <dd>
                   Si pagas en efectivo, el vendedor confirma que recibió el cobro. Los pagos en línea están en modo de
@@ -502,7 +503,7 @@ export function Landing() {
               </div>
             </dl>
           </div>
-        </section>
+        </Revela>
       </main>
 
       <footer className={s.osc}>
