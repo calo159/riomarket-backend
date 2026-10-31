@@ -137,7 +137,7 @@ export function PuestosAdmin() {
                   <th className="p-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="entra-lista">
                 {puestos.data.results.map((puesto) => {
                   const categorias = puesto.categorias as { id: number; nombre: string }[];
                   const suspendido = puesto.estado === 'suspendido';

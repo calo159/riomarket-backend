@@ -48,7 +48,7 @@ export function ResenasVendedor() {
       <EncabezadoPagina titulo="Reseñas" descripcion="Calificaciones y comentarios de tus clientes." />
       {resenas.isLoading && <CargandoBloque mensaje="Cargando reseñas…" />}
       {resenas.isError && <EstadoError mensaje="No pudimos cargar reseñas." onReintentar={() => void resenas.refetch()} />}
-      <div className="space-y-3">
+      <div className="entra-lista space-y-3">
         {(resenas.data?.results ?? []).map((resena) => (
           <article key={resena.id} className="card p-4">
             <div className="flex items-center justify-between">

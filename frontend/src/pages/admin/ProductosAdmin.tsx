@@ -131,7 +131,7 @@ export function ProductosAdmin() {
                   <th className="p-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="entra-lista">
                 {productos.data.results.map((producto) => (
                   <tr key={producto.id} className="border-b last:border-0">
                     <td className="p-3">

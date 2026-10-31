@@ -183,7 +183,7 @@ export function Direcciones() {
         onCerrar={() => setModalAbierto(false)}
         titulo={editando ? 'Editar dirección' : 'Nueva dirección'}
       >
-        <div className="space-y-3">
+        <div className="entra-lista space-y-3">
           <Campo etiqueta="Nombre corto" htmlFor="alias" error={errores.alias} ayuda="Ej. Casa, Trabajo, Casa de mamá.">
             <input
               id="alias"

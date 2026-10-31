@@ -1,3 +1,4 @@
+import { Revela } from '../components/Revela';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -50,7 +51,7 @@ function Estante({
     if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
   };
   return (
-    <section className="mt-6 md:mt-[30px]" aria-label={titulo}>
+    <Revela as="section" bloque className="mt-6 md:mt-[30px]" aria-label={titulo}>
       <div className="mb-2.5 flex items-baseline gap-3.5 md:mb-3">
         <h2 className="text-xl font-bold tracking-tight md:text-[23px]">{titulo}</h2>
         <Link to={to} className="link text-sm">
@@ -88,7 +89,7 @@ function Estante({
           )}
         </div>
       )}
-    </section>
+    </Revela>
   );
 }
 
@@ -232,7 +233,7 @@ export function Inicio() {
         />
 
         {promos.length > 0 && (
-          <section className="mt-6 grid gap-3.5 md:mt-[30px] md:grid-cols-2" aria-label="Puestos destacados">
+          <Revela as="section" bloque className="mt-6 grid gap-3.5 md:mt-[30px] md:grid-cols-2" aria-label="Puestos destacados">
             {promos.map((p, i) => {
               const claro = i === 0;
               const foto = urlAbsoluta(p.portada);
@@ -261,10 +262,10 @@ export function Inicio() {
                 </Link>
               );
             })}
-          </section>
+          </Revela>
         )}
 
-        <section id="puestos" className="mt-6 scroll-mt-4 md:mt-[30px]" aria-label="Puestos de Riohacha">
+        <Revela as="section" bloque id="puestos" className="mt-6 scroll-mt-4 md:mt-[30px]" aria-label="Puestos de Riohacha">
           <div className="mb-2.5 flex items-baseline gap-3.5 md:mb-3">
             <h2 className="text-xl font-bold tracking-tight md:text-[23px]">Puestos de Riohacha</h2>
           </div>
@@ -280,7 +281,7 @@ export function Inicio() {
               ))}
             </div>
           )}
-        </section>
+        </Revela>
 
         {destacada && (
           <Estante
@@ -296,7 +297,7 @@ export function Inicio() {
         )}
       </div>
 
-      <section className="mt-9 bg-white dark:bg-slate-900" aria-label="Cómo funciona">
+      <Revela as="section" bloque className="mt-9 bg-white dark:bg-slate-900" aria-label="Cómo funciona">
         <div className="mx-auto grid max-w-[1240px] gap-5 px-5 py-6 md:grid-cols-3 md:gap-6">
           {[
             { icono: Store, titulo: 'Un pedido por puesto', texto: 'Compras directo a cada vendedor.' },
@@ -312,7 +313,7 @@ export function Inicio() {
             </div>
           ))}
         </div>
-      </section>
+      </Revela>
     </div>
   );
 }

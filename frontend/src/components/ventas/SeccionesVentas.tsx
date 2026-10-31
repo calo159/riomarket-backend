@@ -18,7 +18,7 @@ function Cifra({ etiqueta, valor, ayuda, destacada }: { etiqueta: string; valor:
 export function TarjetasVentas({ datos }: { datos: VentasPanel }) {
   const { totales } = datos;
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+    <div className="entra-lista grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
       <Cifra etiqueta="Ingreso neto" valor={formatearMoneda(totales.ingresos_netos)} ayuda="Después de la comisión y los cupones" destacada />
       <Cifra etiqueta="Ventas" valor={formatearMoneda(totales.ventas_brutas)} ayuda="Sin domicilio" />
       <Cifra etiqueta="Pedidos pagados" valor={totales.pedidos_pagados} />

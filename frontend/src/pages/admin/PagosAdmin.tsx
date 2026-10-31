@@ -131,7 +131,7 @@ export function PagosAdmin() {
               <th className="p-3 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="entra-lista">
             {(pagos.data?.results ?? []).map((pago) => (
               <tr key={pago.id} className="border-b last:border-0">
                 <td className="p-3">#{pago.id}</td>

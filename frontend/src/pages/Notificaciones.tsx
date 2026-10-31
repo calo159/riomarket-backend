@@ -101,7 +101,7 @@ export function Notificaciones() {
       )}
       {notificaciones.data && notificaciones.data.results.length > 0 && (
         <>
-          <div className="space-y-2">
+          <div className="entra-lista space-y-2">
             {notificaciones.data.results.map((notificacion) => {
               const contenido = (
                 <>

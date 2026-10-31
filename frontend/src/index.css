@@ -193,6 +193,16 @@
   transition-delay: calc(min(var(--i, 0), 4) * 80ms);
 }
 
+[data-revela='oculto'].rv-self {
+  opacity: 0;
+  transform: translateY(18px);
+}
+[data-revela='visto'].rv-self {
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Las tarjetas de una cuadrícula suben unos píxeles al aparecer, de una en una (las primeras ocho).
    Solo se mueven: sin cambiar la opacidad, la foto principal se pinta igual de rápido. */
 .entra-lista > * {
@@ -220,7 +230,8 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
-  [data-revela] .rv {
+  [data-revela] .rv,
+  [data-revela].rv-self {
     opacity: 1 !important;
     transform: none !important;
   }

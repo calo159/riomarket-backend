@@ -50,6 +50,18 @@ describe('Revela', () => {
     expect(desconectar).toHaveBeenCalled();
   });
 
+  it('en modo bloque se marca a sí misma y conserva su clase', () => {
+    posicion(1600);
+    const { container } = render(
+      <Revela bloque className="mt-6">
+        contenido
+      </Revela>,
+    );
+    const seccion = container.firstElementChild as HTMLElement;
+    expect(seccion.className).toBe('mt-6 rv-self');
+    expect(seccion.dataset.revela).toBe('oculto');
+  });
+
   it('no oculta lo que ya está a la vista', () => {
     posicion(100);
     const { container } = render(<Revela>contenido</Revela>);
