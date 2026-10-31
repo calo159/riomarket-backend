@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.accounts.auth_cookies import (
     clear_refresh_cookie,
+    clear_session_hint_cookie,
     get_refresh_from_request,
     set_refresh_cookie,
 )
@@ -71,18 +72,23 @@ class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = get_refresh_from_request(request)
         if not refresh_token:
-            return Response(
+            resp = Response(
                 {"detail": "No se proporcionó token de refresco."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+            # Sin sesión real: la pista no debe seguir diciendo que la hay.
+            clear_session_hint_cookie(resp)
+            return resp
         serializer = self.get_serializer(data={"refresh": refresh_token})
         try:
             serializer.is_valid(raise_exception=True)
         except Exception:
-            return Response(
+            resp = Response(
                 {"detail": "Token inválido o expirado."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+            clear_session_hint_cookie(resp)
+            return resp
         data = serializer.validated_data
         resp = Response({"access": data.get("access")}, status=status.HTTP_200_OK)
         if data.get("refresh"):

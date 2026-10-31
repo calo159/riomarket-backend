@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
+from apps.catalog.services import miniatura_y_medidas
 
 SEED_DIR = Path(settings.BASE_DIR) / "seed_images"
 FOTOS_DIR = SEED_DIR / "fotos"
@@ -154,6 +155,20 @@ def _archivo(ruta: Path, prefijo: str = "") -> ContentFile:
     return contenido
 
 
+def _con_miniatura(ruta: Path, producto: Producto, **extra) -> dict:
+    """Campos de una ``ImagenProducto`` demo: la foto original, su miniatura y sus medidas."""
+    archivo = _archivo(ruta)
+    thumb, meta = miniatura_y_medidas(ruta.read_bytes(), archivo.name)
+    return {
+        "archivo": archivo,
+        "miniatura": thumb,
+        "ancho": meta["ancho"],
+        "alto": meta["alto"],
+        "alt": producto.nombre,
+        **extra,
+    }
+
+
 class Command(BaseCommand):
     help = "Asigna fotos demo a productos/puestos y reemplaza las de prueba (idempotente)."
 
@@ -179,10 +194,7 @@ class Command(BaseCommand):
                 if ruta:
                     ImagenProducto.objects.create(
                         id_producto=producto,
-                        archivo=_archivo(ruta),
-                        orden=1,
-                        alt=producto.nombre,
-                        es_principal=True,
+                        **_con_miniatura(ruta, producto, orden=1, es_principal=True),
                     )
                     cambios = 1
             for imagen in imagenes:
@@ -192,9 +204,11 @@ class Command(BaseCommand):
                     imagen.archivo.delete(save=False)
                     if imagen.miniatura:
                         imagen.miniatura.delete(save=False)
-                    imagen.archivo = _archivo(foto)
-                    imagen.miniatura = None
-                    imagen.ancho = imagen.alto = None
+                    campos = _con_miniatura(foto, producto)
+                    imagen.archivo = campos["archivo"]
+                    imagen.miniatura = campos["miniatura"]
+                    imagen.ancho = campos["ancho"]
+                    imagen.alto = campos["alto"]
                     imagen.save()
                 else:
                     # Sin foto que corresponda: mejor el fondo neutro de la tarjeta.

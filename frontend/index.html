@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="RioMarket: el mercado de Riohacha en línea." />
     <meta name="theme-color" content="#00626D" />
+    <!-- Los marcadores __…__ los completa Django (apps/common/seo.py) al servir la página. Con
+         `npm run dev` Vite no pasa por Django y se ven tal cual: solo afecta a vistas previas. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RioMarket" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:title" content="__OG_TITULO__" />
+    <meta property="og:description" content="__OG_DESCRIPCION__" />
+    <meta property="og:image" content="__OG_IMAGEN__" />
+    <meta property="og:url" content="__ORIGEN____RUTA__" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="__ORIGEN____RUTA__" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />

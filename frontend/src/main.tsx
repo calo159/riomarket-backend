@@ -9,6 +9,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { App } from './App';
 import './index.css';
 import { registrarServiceWorker } from './lib/registrarServiceWorker';
+import { precargarRuta } from './lib/precarga';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +26,8 @@ const queryClient = new QueryClient({
 });
 
 registrarServiceWorker();
+// Los datos de la pantalla pública se piden mientras se descarga el código de la pantalla.
+precargarRuta(queryClient, window.location.pathname, window.location.search);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

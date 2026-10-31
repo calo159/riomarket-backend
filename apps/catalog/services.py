@@ -12,6 +12,7 @@ aisladamente desde tests y reutilizables por otras capas (admin, comandos):
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.base import ContentFile
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Q, QuerySet
 from django.http import Http404
@@ -331,16 +332,44 @@ def moderar_producto(*, producto: Producto, actor, estado: str, motivo: str = ""
 # ---------------------------------------------------------------------------
 # Imágenes de producto
 # ---------------------------------------------------------------------------
+def preparar_archivos_imagen(archivo):
+    """Imagen procesada (sin EXIF, WebP, 1600 px máx.), su miniatura de 400 px y sus medidas.
+
+    Único punto donde se decide cómo se guarda una foto de producto: lo usan las subidas de los
+    vendedores (``agregar_imagen``) y los datos de demostración.
+    """
+    proc, meta = process_product_image(archivo)
+    thumb = make_thumbnail(proc)
+    proc.seek(0)
+    thumb.seek(0)
+    return proc, thumb, meta
+
+
+def miniatura_y_medidas(contenido: bytes, nombre: str):
+    """Miniatura de 400 px y medidas de una imagen ya optimizada, sin volver a codificarla.
+
+    Para las fotos de demostración: el archivo original se conserva byte a byte y solo se añade
+    lo que falta. ``nombre`` es el del archivo, sin carpetas: de él sale el nombre de la miniatura.
+    """
+    import io
+
+    from PIL import Image
+
+    with Image.open(io.BytesIO(contenido)) as imagen:
+        ancho, alto = imagen.size
+    origen = ContentFile(contenido, name=nombre)
+    thumb = make_thumbnail(origen)
+    thumb.seek(0)
+    return thumb, {"ancho": ancho, "alto": alto}
+
+
 def agregar_imagen(*, producto, archivo, alt: str = "") -> ImagenProducto:
     """Guarda la imagen procesada (EXIF eliminado, WebP, miniatura)."""
     from django.db import transaction
 
     orden = producto.imagenes.aggregate(Max("orden"))["orden__max"] or 0
     with transaction.atomic():
-        proc, meta = process_product_image(archivo)
-        thumb = make_thumbnail(proc)
-        proc.seek(0)
-        thumb.seek(0)
+        proc, thumb, meta = preparar_archivos_imagen(archivo)
         if not alt:
             alt = producto.nombre or ""
         imagen = ImagenProducto(

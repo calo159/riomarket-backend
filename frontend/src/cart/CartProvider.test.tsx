@@ -111,4 +111,25 @@ describe('CartProvider', () => {
     expect(result.current.carrito?.puestoId).toBe(2);
     expect(result.current.totalItems).toBe(2);
   });
+
+  it('el carrito guarda la miniatura de la foto (si no hay, la grande)', () => {
+    const conFoto = (id: number, imagen: Record<string, string | null>) =>
+      ({ ...producto(id), imagenes: [{ id, ...imagen }] }) as unknown as Producto;
+    const { result } = montar();
+    act(() => {
+      result.current.agregar(conFoto(1, { url: '/media/grande-1.webp', miniatura: '/media/mini-1.webp' }), puesto(1));
+    });
+    act(() => {
+      result.current.agregar(conFoto(2, { url: '/media/grande-2.webp', miniatura: null }), puesto(1));
+    });
+    act(() => {
+      result.current.agregar(producto(3), puesto(1));
+    });
+
+    expect(result.current.carrito?.items.map((item) => item.imagen)).toEqual([
+      expect.stringMatching(/\/media\/mini-1\.webp$/),
+      expect.stringMatching(/\/media\/grande-2\.webp$/),
+      null,
+    ]);
+  });
 });

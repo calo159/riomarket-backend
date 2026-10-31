@@ -6,6 +6,11 @@ Todo está automatizado en `render.yaml`:
 - Genera `SECRET_KEY` y `FERNET_KEY` solo.
 - Ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo` en
   cada arranque: actualiza las contraseñas demo y completa los datos faltantes.
+  Después corre `generar_miniaturas` (idempotente, máx. 200 imágenes por arranque
+  y con `|| true`): crea la miniatura y las medidas de las fotos que no las tienen.
+- Durante el build de Docker, `python -m whitenoise.compress frontend/dist`
+  deja los `.br` y `.gz` junto a cada archivo del build; sin ese paso WhiteNoise
+  entrega el JS y el CSS sin comprimir. Ver [ADR-011](ADR-011-rendimiento-y-seo.md).
 - Configura HTTPS, `ALLOWED_HOSTS` y CSRF para `*.onrender.com`.
 
 ## Lo único que debes hacer tú
@@ -23,6 +28,17 @@ Verificación rápida:
 
 - `https://TU-SERVICIO.onrender.com/api/health/` → `{"status":"ok","database":"up"}`
 - `/` → app; `/admin/` → Django; `/api/docs/` → Swagger.
+- `/robots.txt` → texto plano con `Sitemap:`; `/sitemap.xml` → XML con la tienda,
+  el catálogo, el mapa y los puestos y productos activos.
+- `curl -sI -H 'Accept-Encoding: br,gzip' https://TU-SERVICIO.onrender.com/assets/<archivo>.js`
+  → `Content-Encoding: br` y `Cache-Control: max-age=315360000, public, immutable`;
+  `curl -sI https://TU-SERVICIO.onrender.com/tienda` → `Cache-Control: no-cache`.
+
+### Aviso del primer despliegue con este cambio
+
+Las sesiones iniciadas **antes** de esta versión no tienen la cookie de pista
+`rm_hay_sesion` y aparecerán cerradas una sola vez: hay que volver a iniciar
+sesión (ver [ADR-011](ADR-011-rendimiento-y-seo.md), decisión 6).
 
 ## Si quieres cambiar la contraseña demo
 

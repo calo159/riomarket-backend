@@ -65,7 +65,7 @@ La tarifa mostrada es solo un estimado: el backend calcula el total definitivo.
 
 | Comando | Descripción |
 | --- | --- |
-| `npm run dev` | Servidor de desarrollo en el puerto 3000 |
+| `npm run dev` | Servidor de desarrollo en el puerto 3000 (las metaetiquetas `__OG_…__` de `index.html` las completa Django; con Vite se ven literales, solo afecta a las vistas previas al compartir) |
 | `npm run build` | Typecheck y build de producción |
 | `npm run preview` | Sirve el build de producción |
 | `npm run lint` | ESLint sin warnings permitidos |

@@ -178,6 +178,63 @@ class TestRefreshYLogout:
         reuso = self._usar_refresh(api_client, refresh)
         assert reuso.status_code == status.HTTP_401_UNAUTHORIZED
 
+    def test_login_pone_la_pista_de_sesion_sin_httponly(self, api_client):
+        usuario = UsuarioFactory(password=PASSWORD)
+        login = api_client.post(
+            "/api/auth/login/",
+            {"correo": usuario.correo, "password": PASSWORD},
+            format="json",
+        )
+        pista = login.cookies["rm_hay_sesion"]
+        refresh = login.cookies["rm_refresh"]
+        assert pista.value == "1"
+        # El JavaScript debe poder leerla (no HttpOnly) y la lee en cualquier ruta.
+        assert not pista["httponly"]
+        assert pista["path"] == "/"
+        assert pista["max-age"] == refresh["max-age"]
+        assert pista["samesite"] == refresh["samesite"]
+        # El refresh sigue siendo HttpOnly y limitado a /api/auth/.
+        assert refresh["httponly"]
+        assert refresh["path"] == "/api/auth/"
+
+    def test_logout_borra_la_pista_de_sesion(self, api_client):
+        usuario = UsuarioFactory(password=PASSWORD)
+        login = api_client.post(
+            "/api/auth/login/",
+            {"correo": usuario.correo, "password": PASSWORD},
+            format="json",
+        )
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+        salida = api_client.post(
+            "/api/auth/logout/", {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        assert salida.cookies["rm_hay_sesion"].value == ""
+        assert salida.cookies["rm_hay_sesion"]["max-age"] == 0
+
+    def test_refresh_invalido_borra_la_pista_de_sesion(self, api_client):
+        respuesta = self._usar_refresh(api_client, "no-es-un-token")
+        assert respuesta.status_code == status.HTTP_401_UNAUTHORIZED
+        assert respuesta.cookies["rm_hay_sesion"].value == ""
+
+    def test_refresh_sin_cookie_borra_la_pista_de_sesion(self, api_client):
+        respuesta = api_client.post(
+            self.REFRESH, {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        assert respuesta.status_code == status.HTTP_401_UNAUTHORIZED
+        assert respuesta.cookies["rm_hay_sesion"].value == ""
+
+    def test_refresh_valido_renueva_la_pista(self, api_client):
+        usuario = UsuarioFactory(password=PASSWORD)
+        api_client.post(
+            "/api/auth/login/",
+            {"correo": usuario.correo, "password": PASSWORD},
+            format="json",
+        )
+        uso = api_client.post(
+            self.REFRESH, {}, format="json", HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        assert uso.cookies["rm_hay_sesion"].value == "1"
+
 
 @pytest.mark.django_db
 class TestPerfil:

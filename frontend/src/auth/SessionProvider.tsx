@@ -10,7 +10,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { api, refreshAccessToken, setAccessToken, setSessionLostHandler } from '../lib/http';
 import { invalidarMenu } from '../navigation/useMenu';
-import { guardarAvisoSesion } from './tokens';
+import { borrarPistaDeSesion, guardarAvisoSesion, hayPistaDeSesion } from './tokens';
 import type { Perfil, RespuestaLogin, Rol, UsuarioSesion } from '../lib/types';
 
 type EstadoSesion = 'cargando' | 'anonimo' | 'autenticado';
@@ -49,16 +49,21 @@ function aUsuarioSesion(perfil: Perfil): UsuarioSesion {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
-  const [estado, setEstado] = useState<EstadoSesion>('cargando');
+  // Sin pista de sesión (cookie legible) no hay nada que restaurar: el visitante anónimo ve la
+  // página de inmediato, sin esperar un refresh que terminaría en 401.
+  const [hayPista] = useState(hayPistaDeSesion);
+  const [estado, setEstado] = useState<EstadoSesion>(hayPista ? 'cargando' : 'anonimo');
 
   const limpiarSesionLocal = useCallback(() => {
     setAccessToken(null);
     setUsuario(null);
     setEstado('anonimo');
+    borrarPistaDeSesion();
     queryClient.clear();
   }, [queryClient]);
 
   useEffect(() => {
+    if (!hayPista) return undefined;
     let activo = true;
 
     async function restaurar() {
@@ -71,7 +76,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } catch {
         if (!activo) return;
         setAccessToken(null);
-            setUsuario(null);
+        setUsuario(null);
         setEstado('anonimo');
       }
     }
@@ -80,13 +85,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => {
       activo = false;
     };
-  }, []);
+  }, [hayPista]);
 
   useEffect(() => {
     setSessionLostHandler(() => {
       setAccessToken(null);
       setUsuario(null);
       setEstado('anonimo');
+      borrarPistaDeSesion();
       queryClient.clear();
       guardarAvisoSesion('Tu sesión expiró. Inicia sesión de nuevo.');
       if (window.location.pathname !== '/login') {

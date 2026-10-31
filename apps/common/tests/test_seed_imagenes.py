@@ -121,3 +121,30 @@ def test_recrea_la_portada_de_un_puesto_cuando_el_archivo_desaparecio():
 
     puesto.refresh_from_db()
     assert puesto.portada.storage.exists(puesto.portada.name)
+
+
+def test_la_foto_demo_nueva_lleva_miniatura_y_medidas():
+    producto = ProductoFactory(nombre="Aguacate (kg)")
+
+    call_command("seed_imagenes_demo")
+
+    imagen = producto.imagenes.get()
+    assert imagen.miniatura
+    assert imagen.miniatura.name != imagen.archivo.name
+    assert (imagen.ancho, imagen.alto) == (640, 640)
+    with Image.open(imagen.miniatura) as mini:
+        assert max(mini.size) == 400
+    # El original no se vuelve a codificar: queda byte a byte como el de seed_images/.
+    assert imagen.archivo.read() == (SEED_DIR / "fotos" / "aguacate.webp").read_bytes()
+
+
+def test_la_foto_demo_reemplazada_trae_miniatura_y_medidas():
+    producto = ProductoFactory(nombre="Aguacate (kg)")
+    imagen = _imagen(producto, (SEED_DIR / "agua-botella.webp").read_bytes())
+    assert not imagen.miniatura
+
+    call_command("seed_imagenes_demo")
+
+    imagen.refresh_from_db()
+    assert imagen.miniatura
+    assert (imagen.ancho, imagen.alto) == (640, 640)
