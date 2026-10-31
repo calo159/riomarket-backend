@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Bike, MapPin, Package, Store } from 'lucide-react';
+import { Bike, CalendarClock, MapPin, Package, Store } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
-import { formatearMoneda } from '../../lib/format';
+import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 
 export function ProductosPedido({ datos }: { datos: Pedido }) {
   return (
@@ -14,7 +14,13 @@ export function ProductosPedido({ datos }: { datos: Pedido }) {
               <p className="font-medium">{item.nombre_producto}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {formatearMoneda(item.precio_unitario)} / {item.unidad_medida} × {item.cantidad}
+                {item.modalidad === 'encargo' && ' · Por encargo'}
               </p>
+              {item.modalidad === 'encargo' && item.detalles && (
+                <p className="mt-1 whitespace-pre-line break-words text-sm text-slate-600 dark:text-slate-300">
+                  Detalles: {item.detalles}
+                </p>
+              )}
             </div>
             <p className="font-semibold">{formatearMoneda(item.subtotal)}</p>
           </div>
@@ -32,6 +38,16 @@ export function EntregaPedido({ datos }: { datos: Pedido }) {
         Entrega
       </h2>
       <dl className="mt-3 space-y-2 text-sm">
+        {datos.fecha_solicitada && (
+          <div className="flex gap-2">
+            <dt className="flex w-28 shrink-0 items-start gap-1 text-slate-500 dark:text-slate-400">
+              <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> Encargo
+            </dt>
+            <dd className="font-medium">
+              Encargo para el {formatearFechaHora(datos.fecha_solicitada)}
+            </dd>
+          </div>
+        )}
         <div className="flex gap-2">
           <dt className="w-28 shrink-0 text-slate-500 dark:text-slate-400">Modalidad</dt>
           <dd className="font-medium">{datos.tipo_entrega === 'domicilio' ? 'Domicilio' : 'Retiro en el puesto'}</dd>

@@ -33,7 +33,7 @@ export function BotonVolverAPedir(props: PropsBoton) {
 
 type PropsBoton = {
   pedido: Pick<Pedido, 'id' | 'id_puesto' | 'estado'> & {
-    items: Pick<ItemPedido, 'id_producto' | 'nombre_producto' | 'cantidad'>[];
+    items: Pick<ItemPedido, 'id_producto' | 'nombre_producto' | 'cantidad' | 'detalles'>[];
   };
   className?: string;
 };
@@ -48,7 +48,7 @@ function BotonActivo({ pedido, className }: PropsBoton) {
   const terminar = (plan: PlanVolverAPedir, puesto: Puesto, reemplazar: boolean) => {
     agregarLineas(
       puesto,
-      plan.lineas.map(({ producto, cantidad }) => ({ producto, cantidad })),
+      plan.lineas.map(({ producto, cantidad, detalles }) => ({ producto, cantidad, detalles })),
       { reemplazar },
     );
     const resumen = resumenVolverAPedir(plan);

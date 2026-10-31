@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, Loader2, Plus, Truck } from 'lucide-react';
 import type { Producto, Puesto } from '../lib/types';
 import { formatearMoneda } from '../lib/format';
+import { esEncargo, formatearPreparacion } from '../lib/encargos';
 import { urlAbsoluta } from '../lib/utils';
 import { useCart } from '../cart/CartProvider';
 import { useToast } from './ui/Toast';
@@ -85,14 +86,19 @@ export function ProductoCard({
   cargaInmediata?: boolean;
 }) {
   const { agregar } = useCart();
+  const navigate = useNavigate();
   const toast = useToast();
   const [agregando, setAgregando] = useState(false);
   const [agregado, setAgregado] = useState(false);
   const foto = useRef<HTMLAnchorElement>(null);
   const temporizador = useRef<number>();
   const stock = producto.stock ?? 0;
-  const agotado = stock <= 0;
-  const quedan = stock > 0 && stock <= 5;
+  // Un encargo no tiene stock: nunca está «agotado» ni «quedan N» (ADR-013).
+  const encargo = esEncargo(producto);
+  // Si el vendedor pide detalles, hay que escribirlos en el detalle del producto.
+  const pideDetalles = encargo && Boolean(producto.pide_detalles);
+  const agotado = !encargo && stock <= 0;
+  const quedan = !encargo && stock > 0 && stock <= 5;
   const nombrePuesto = puesto?.nombre ?? producto.puesto_nombre;
   const domicilio = puesto ? Boolean(puesto.ofrece_domicilio) : producto.puesto_ofrece_domicilio;
   const calificacion = puesto?.calificacion_promedio ?? producto.puesto_calificacion;
@@ -101,6 +107,10 @@ export function ProductoCard({
   useEffect(() => () => window.clearTimeout(temporizador.current), []);
 
   const alAgregar = async () => {
+    if (pideDetalles) {
+      navigate(`/productos/${producto.id}`);
+      return;
+    }
     let destino = puesto;
     if (!destino) {
       setAgregando(true);
@@ -151,7 +161,11 @@ export function ProductoCard({
           cargaInmediata={cargaInmediata}
           className="h-full w-full"
         />
-        {agotado ? (
+        {encargo ? (
+          <span className="absolute left-2 top-2 rounded-[5px] bg-white px-[7px] py-[3px] text-xs font-bold text-brand-600 shadow-sm dark:bg-slate-900 dark:text-brand-200">
+            Por encargo · {formatearPreparacion(producto.preparacion_horas ?? 0)}
+          </span>
+        ) : agotado ? (
           <span className="absolute left-2 top-2 rounded-[5px] bg-tinta px-[7px] py-[3px] text-xs font-bold text-white">
             Agotado
           </span>
@@ -169,7 +183,7 @@ export function ProductoCard({
         type="button"
         onClick={() => void alAgregar()}
         disabled={agotado || agregando}
-        aria-label={`Agregar ${producto.nombre} al carrito`}
+        aria-label={pideDetalles ? `Encargar ${producto.nombre}` : `Agregar ${producto.nombre} al carrito`}
         className={`absolute bottom-2 right-2 z-10 grid h-11 w-11 place-items-center rounded-full text-white shadow-[0_2px_7px_rgba(0,0,0,.28)] transition active:scale-90 disabled:opacity-50 md:hidden ${
           agregado ? 'bg-exito' : 'bg-accion'
         }`}
@@ -218,7 +232,7 @@ export function ProductoCard({
           type="button"
           onClick={() => void alAgregar()}
           disabled={agotado || agregando}
-          aria-label={`Agregar ${producto.nombre} al carrito`}
+          aria-label={pideDetalles ? `Encargar ${producto.nombre}` : `Agregar ${producto.nombre} al carrito`}
           className={`mt-2 hidden min-h-[44px] items-center justify-center gap-2 rounded-[7px] border-[1.5px] text-sm font-bold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 md:flex ${
             agregado
               ? 'border-exito bg-exito text-white'
@@ -226,7 +240,7 @@ export function ProductoCard({
           }`}
         >
           {agregando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-          {agotado ? 'Agotado' : agregado ? 'Agregado' : 'Agregar al carrito'}
+          {agotado ? 'Agotado' : agregado ? 'Agregado' : pideDetalles ? 'Encargar' : 'Agregar al carrito'}
         </button>
       </div>
     </article>

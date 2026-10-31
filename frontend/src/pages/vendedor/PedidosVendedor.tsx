@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, ClipboardList, XCircle } from 'lucide-react';
+import { ArrowRight, CalendarClock, ClipboardList, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
 import { useSession } from '../../auth/SessionProvider';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -27,6 +27,7 @@ export function PedidosVendedor() {
   const [pagina, setPagina] = useState(1);
   const [estado, setEstado] = useState('');
   const [cancelar, setCancelar] = useState<number | null>(null);
+  const [cancelaEncargo, setCancelaEncargo] = useState(false);
   const ahora = useAhora();
 
   useEffect(() => {
@@ -109,6 +110,23 @@ export function PedidosVendedor() {
                     <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                       {formatearFechaHora(pedido.fecha_creacion)} · {pedido.items.length} {pedido.items.length === 1 ? 'producto' : 'productos'}
                     </p>
+                    {pedido.tiene_encargo && pedido.fecha_solicitada && (
+                      <>
+                        <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950 dark:text-brand-200">
+                          <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" /> Encargo · {formatearFechaHora(pedido.fecha_solicitada)}
+                        </p>
+                        <ul className="mt-1 space-y-0.5 text-sm text-slate-600 dark:text-slate-300">
+                          {pedido.items
+                            .filter((item) => item.modalidad === 'encargo')
+                            .map((item) => (
+                              <li key={item.id} className="whitespace-pre-line break-words">
+                                <span className="font-medium">{item.cantidad}× {item.nombre_producto}</span>
+                                {item.detalles ? `: ${item.detalles}` : ''}
+                              </li>
+                            ))}
+                        </ul>
+                      </>
+                    )}
                     {pedido.vence_en && (
                       <p
                         className={`mt-1 text-xs ${
@@ -160,9 +178,12 @@ export function PedidosVendedor() {
                       <button
                         type="button"
                         className="btn-ghost py-1.5 text-xs text-rose-600 dark:text-rose-400"
-                        onClick={() => setCancelar(pedido.id)}
+                        onClick={() => {
+                          setCancelar(pedido.id);
+                          setCancelaEncargo(Boolean(pedido.tiene_encargo) && pedido.estado === 'pendiente');
+                        }}
                       >
-                        <XCircle className="h-3.5 w-3.5" /> Cancelar
+                        <XCircle className="h-3.5 w-3.5" /> {pedido.tiene_encargo && pedido.estado === 'pendiente' ? 'No puedo hacerlo' : 'Cancelar'}
                       </button>
                     )}
                   </div>
@@ -176,9 +197,13 @@ export function PedidosVendedor() {
 
       <ConfirmarModal
         abierto={Boolean(cancelar)}
-        titulo="¿Cancelar este pedido?"
-        descripcion="Se repondrá el stock. Si hay un pago aprobado, quedará pendiente de reembolso."
-        textoConfirmar="Cancelar pedido"
+        titulo={cancelaEncargo ? '¿No puedes hacer este encargo?' : '¿Cancelar este pedido?'}
+        descripcion={
+          cancelaEncargo
+            ? 'Se cancelará el encargo y, si el cliente ya pagó, se le devolverá el pago.'
+            : 'Se repondrá el stock. Si hay un pago aprobado, quedará pendiente de reembolso.'
+        }
+        textoConfirmar={cancelaEncargo ? 'Cancelar encargo' : 'Cancelar pedido'}
         cargando={accion.isPending}
         onConfirmar={() => cancelar && accion.mutate({ id: cancelar, tipo: 'cancelar' })}
         onCerrar={() => setCancelar(null)}

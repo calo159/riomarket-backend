@@ -41,6 +41,11 @@ PARAMETROS_BUSQUEDA_PRODUCTO = [
     OpenApiParameter(name="puesto", type=OpenApiTypes.INT, description="ID de puesto"),
     OpenApiParameter(name="precio_min", type=OpenApiTypes.DECIMAL),
     OpenApiParameter(name="precio_max", type=OpenApiTypes.DECIMAL),
+    OpenApiParameter(
+        name="modalidad",
+        enum=["stock", "encargo"],
+        description="Con existencias (stock) o por encargo",
+    ),
     OpenApiParameter(name="estado", enum=["activo", "inactivo", "bloqueado"]),
     OpenApiParameter(
         name="ordering",

@@ -1550,6 +1550,15 @@ export interface components {
             readonly precio_unitario: string;
             /** Format: int64 */
             cantidad: number;
+            /**
+             * @description Copia de la modalidad del producto al pedir. Decide si cancelar repone stock: solo los ítems «stock» lo descontaron.
+             *
+             *     * `stock` - Con stock
+             *     * `encargo` - Por encargo
+             */
+            readonly modalidad: components["schemas"]["ModalidadEnum"];
+            /** @description Solo para productos por encargo: sabor, mensaje, etc. (máximo 300). */
+            detalles?: string;
             /** Format: decimal */
             readonly subtotal: string;
         };
@@ -1563,6 +1572,8 @@ export interface components {
             id_producto: number;
             /** Format: int64 */
             cantidad: number;
+            /** @description Solo para productos por encargo: sabor, mensaje, etc. (máximo 300). */
+            detalles?: string;
         };
         /** @description Igual que el login JWT estándar, agregando los datos del usuario. */
         LoginRequest: {
@@ -1615,6 +1626,12 @@ export interface components {
             /** Format: date-time */
             readonly fecha_revision: string | null;
         };
+        /**
+         * @description * `stock` - Con stock
+         *     * `encargo` - Por encargo
+         * @enum {string}
+         */
+        ModalidadEnum: "stock" | "encargo";
         /**
          * @description * `activo` - activo
          *     * `inactivo` - inactivo
@@ -1998,6 +2015,11 @@ export interface components {
             id_direccion?: number | null;
             /** @description Notas del comprador para el vendedor. */
             notas?: string;
+            /**
+             * Format: date-time
+             * @description Para cuándo quiere el comprador un encargo (retiro o entrega). Obligatoria si hay un producto por encargo; vacía si no.
+             */
+            fecha_solicitada?: string | null;
             items?: components["schemas"]["ItemPedidoRequest"][];
             codigo_cupon?: string;
         };
@@ -2018,6 +2040,16 @@ export interface components {
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
+            modalidad?: components["schemas"]["ModalidadEnum"];
+            /**
+             * Format: int64
+             * @description Solo por encargo: horas que necesita el puesto para prepararlo (1 a 336).
+             */
+            preparacion_horas?: number | null;
+            /** @description Solo por encargo: el comprador escribe sabor, mensaje, etc. */
+            pide_detalles?: boolean;
+            /** @description Qué se le pregunta al comprador, por ejemplo «Sabor y mensaje». */
+            etiqueta_detalles?: string;
         };
         /**
          * @description Puesto público/vendedor.
@@ -2088,6 +2120,13 @@ export interface components {
             readonly longitud_entrega: string | null;
             /** @description Notas del comprador para el vendedor. */
             notas?: string;
+            /**
+             * Format: date-time
+             * @description Para cuándo quiere el comprador un encargo (retiro o entrega). Obligatoria si hay un producto por encargo; vacía si no.
+             */
+            fecha_solicitada?: string | null;
+            /** @description Algún ítem es por encargo (``items`` ya viene en el ``prefetch_related``). */
+            readonly tiene_encargo: boolean;
             /** Format: decimal */
             readonly subtotal: string;
             /**
@@ -2160,6 +2199,11 @@ export interface components {
             id_direccion?: number | null;
             /** @description Notas del comprador para el vendedor. */
             notas?: string;
+            /**
+             * Format: date-time
+             * @description Para cuándo quiere el comprador un encargo (retiro o entrega). Obligatoria si hay un producto por encargo; vacía si no.
+             */
+            fecha_solicitada?: string | null;
             items: components["schemas"]["ItemPedidoRequest"][];
             codigo_cupon?: string;
         };
@@ -2193,6 +2237,16 @@ export interface components {
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
+            modalidad?: components["schemas"]["ModalidadEnum"];
+            /**
+             * Format: int64
+             * @description Solo por encargo: horas que necesita el puesto para prepararlo (1 a 336).
+             */
+            preparacion_horas?: number | null;
+            /** @description Solo por encargo: el comprador escribe sabor, mensaje, etc. */
+            pide_detalles?: boolean;
+            /** @description Qué se le pregunta al comprador, por ejemplo «Sabor y mensaje». */
+            etiqueta_detalles?: string;
             readonly imagenes: components["schemas"]["ImagenProducto"][];
             readonly puesto_nombre: string;
             readonly puesto_ofrece_domicilio: boolean;
@@ -2217,6 +2271,16 @@ export interface components {
             stock?: number;
             unidad_medida?: components["schemas"]["UnidadMedidaEnum"];
             estado?: components["schemas"]["ProductoEstadoEnum"];
+            modalidad?: components["schemas"]["ModalidadEnum"];
+            /**
+             * Format: int64
+             * @description Solo por encargo: horas que necesita el puesto para prepararlo (1 a 336).
+             */
+            preparacion_horas?: number | null;
+            /** @description Solo por encargo: el comprador escribe sabor, mensaje, etc. */
+            pide_detalles?: boolean;
+            /** @description Qué se le pregunta al comprador, por ejemplo «Sabor y mensaje». */
+            etiqueta_detalles?: string;
         };
         /**
          * @description Puesto público/vendedor.
@@ -3849,6 +3913,8 @@ export interface operations {
                 /** @description ID de categoría */
                 categoria?: number;
                 estado?: "activo" | "bloqueado" | "inactivo";
+                /** @description Con existencias (stock) o por encargo */
+                modalidad?: "encargo" | "stock";
                 ordering?: "-id" | "-nombre" | "-precio" | "id" | "nombre" | "precio";
                 /** @description Un número de página dentro del conjunto de resultados paginado. */
                 page?: number;

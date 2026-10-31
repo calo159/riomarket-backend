@@ -55,9 +55,9 @@ class TestSeedMasivo:
         assert Vendedor.objects.filter(estado_verificacion="aprobado").count() == 4
         assert Categoria.objects.count() == 8
         assert Puesto.objects.count() == 6
-        assert Producto.objects.count() == 40
+        assert Producto.objects.count() == 41
         assert Direccion.objects.count() == 10
-        assert Pedido.objects.count() == 31
+        assert Pedido.objects.count() == 32
         assert Pago.objects.count() >= 25
         assert Resena.objects.count() == 15
         assert Cupon.objects.count() == 5
@@ -68,8 +68,8 @@ class TestSeedMasivo:
 
         assert _conteo_total() == primera_total
         assert Usuario.objects.count() == 15
-        assert Producto.objects.count() == 40
-        assert Pedido.objects.count() == 31
+        assert Producto.objects.count() == 41
+        assert Pedido.objects.count() == 32
 
     def test_if_empty_omite_base_ya_sembrada(self):
         call_command("seed_masivo", "--password", "ClaveSegura1!")
@@ -242,7 +242,7 @@ class TestSeedApartarConPlazo:
         abiertos = Pedido.objects.filter(
             notas__startswith="[SM-", estado__in=("pendiente", "listo_para_recoger")
         ).exclude(pk=sm31.pk)
-        assert abiertos.count() == 5  # SM-22..25 y SM-28
+        assert abiertos.count() == 6  # SM-22..25, SM-28 y el encargo SM-32
         for pedido in abiertos:
             assert pedido.vence_en is not None
             assert pedido.vence_en > ahora + timedelta(days=6)
@@ -274,7 +274,7 @@ class TestSeedApartarConPlazo:
         sm31 = Pedido.objects.get(notas__startswith="[SM-31]")
         assert sm31.estado == "cancelado"
         assert sm31.vence_en is None
-        assert Pedido.objects.count() == 31
+        assert Pedido.objects.count() == 32
         assert dict(Producto.objects.values_list("pk", "stock")) == stock  # sin reponer de más
 
     def test_el_seed_renueva_el_plazo_de_los_demo_abiertos_que_ya_vencieron(self):
@@ -298,3 +298,51 @@ class TestSeedApartarConPlazo:
         sin_plazo = Pedido.objects.exclude(estado__in=("pendiente", "listo_para_recoger"))
         assert not sin_plazo.filter(vence_en__isnull=False).exists()
         assert not Pedido.objects.filter(tipo_entrega="domicilio", vence_en__isnull=False).exists()
+
+
+@pytest.mark.django_db
+class TestSeedEncargos:
+    """ADR-013: un producto por encargo y un pedido demo pendiente."""
+
+    def test_hay_un_producto_por_encargo_sin_stock_y_con_foto(self, tmp_path):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        encargos = Producto.objects.filter(modalidad="encargo")
+        assert encargos.count() == 1
+        producto = encargos.get()
+        assert producto.stock == 0
+        assert producto.preparacion_horas == 48
+        assert producto.pide_detalles is True
+        assert producto.id_puesto.nombre == "Dulces de Carmen"
+        with override_settings(MEDIA_ROOT=tmp_path):
+            call_command("seed_imagenes_demo")
+        assert producto.imagenes.count() == 1
+
+    def test_sm32_es_un_encargo_pendiente_con_detalles_y_fecha(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        ahora = timezone.now()
+        pedido = Pedido.objects.get(notas__startswith="[SM-32]")
+        assert pedido.estado == "pendiente"
+        assert pedido.tipo_entrega == "retiro"
+        assert pedido.pago.metodo_pago == "efectivo"
+        assert pedido.fecha_solicitada > ahora + timedelta(days=7)
+        item = pedido.items.get()
+        assert item.modalidad == "encargo"
+        assert item.detalles == "Para 12 personas. Que diga: Feliz día, mamá"
+        # El plazo para aceptarlo no pasa de la fecha pedida.
+        assert ahora < pedido.vence_en <= pedido.fecha_solicitada
+
+    def test_arranques_repetidos_no_duplican_ni_cancelan_el_encargo(self):
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")  # cancela SM-31 (vencido a propósito)
+        stock = dict(Producto.objects.values_list("pk", "stock"))
+        Pedido.objects.filter(notas__startswith="[SM-32]").update(
+            fecha_solicitada=timezone.now() - timedelta(days=1)
+        )
+        call_command("seed_masivo", "--password", "ClaveSegura1!")
+        call_command("cancelar_pedidos_vencidos")
+        pedido = Pedido.objects.get(notas__startswith="[SM-32]")
+        assert pedido.estado == "pendiente"
+        assert pedido.fecha_solicitada > timezone.now() + timedelta(days=7)
+        assert Pedido.objects.filter(notas__startswith="[SM-32]").count() == 1
+        assert Producto.objects.filter(modalidad="encargo").count() == 1
+        assert dict(Producto.objects.values_list("pk", "stock")) == stock

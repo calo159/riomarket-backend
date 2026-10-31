@@ -26,6 +26,7 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Catálogo y compra | Listo | Puestos, categorías, productos, imágenes, filtros, carrito y checkout |
 | Pedidos | Listo | Un puesto por pedido, estados, stock transaccional y cancelación |
 | Apartar con plazo | Listo | Un retiro que nadie confirma o recoge a tiempo se cancela solo (24 h, configurable por puesto de 2 a 72 h) y el stock vuelve; el vendedor puede dar más tiempo hasta 2 veces. Domicilios y pedidos pagados no vencen. Sin cron: barrido perezoso al leer y comando al arrancar ([ADR-012](docs/ADR-012-apartar-con-plazo.md)) |
+| Productos por encargo | Listo | Tortas, pudines y similares: el vendedor publica un producto sin stock con tiempo de preparación; el comprador escribe sus detalles y elige para cuándo lo quiere; el puesto «acepta» con el Confirmar de siempre. Se pueden mezclar con productos con stock; cancelar repone solo el stock de los ítems con stock ([ADR-013](docs/ADR-013-productos-por-encargo.md)) |
 | Pagos | Listo (sandbox) | Efectivo confirmado por el vendedor y simulación; sin pasarela real |
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
@@ -143,7 +144,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **515 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 40 productos, 31 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`, y otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»), 29 pagos, 128 notificaciones y 176 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
+`seed_masivo` es idempotente y, en una base limpia, crea **522 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 41 productos (uno por encargo: la bandeja de dulce de papaya con queso), 32 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`; otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»; y un encargo pendiente, `SM-32`), 30 pagos, 129 notificaciones y 178 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 

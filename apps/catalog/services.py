@@ -168,6 +168,7 @@ def crear_producto(*, puesto: Puesto, categoria: Categoria, usuario, datos: dict
                 )
             }
         )
+    datos = _normalizar_modalidad(datos)
     producto = Producto(id_puesto=puesto, id_categoria=categoria, **datos)
     producto.full_clean()
     producto.save()
@@ -206,6 +207,7 @@ def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
         )
     if "precio" in datos:
         _validar_precio(datos["precio"])
+    datos = _normalizar_modalidad(datos, actual=producto)
 
     from django.db import transaction
 
@@ -231,6 +233,69 @@ def actualizar_producto(*, producto, usuario, datos: dict) -> Producto:
         # Solo se escriben los campos editados: no pisa stock ni estado de otros procesos.
         producto.save(update_fields=list(datos) or None)
     return producto
+
+
+CAMPOS_DE_ENCARGO = ("preparacion_horas", "pide_detalles", "etiqueta_detalles")
+ETIQUETA_DETALLES_POR_DEFECTO = "Detalles del encargo"
+PREPARACION_MINIMA_HORAS = 1
+PREPARACION_MAXIMA_HORAS = 336  # 14 días
+
+
+def _normalizar_modalidad(datos: dict, actual: Producto | None = None) -> dict:
+    """Deja coherentes la modalidad del producto y sus campos de encargo (ADR-013).
+
+    - ``encargo``: la preparación es obligatoria (1 a 336 horas), la etiqueta se recorta y, si
+      pide detalles sin etiqueta, usa «Detalles del encargo». No maneja existencias: ``stock=0``.
+    - ``stock``: los tres campos de encargo se anulan.
+
+    Con ``actual`` (edición parcial) solo se toca algo si la petición menciona la modalidad, los
+    campos de encargo o el stock; editar, por ejemplo, el precio no reescribe nada más.
+    """
+    relevantes = ("modalidad", "stock", *CAMPOS_DE_ENCARGO)
+    if actual is not None and not any(campo in datos for campo in relevantes):
+        return datos
+    datos = dict(datos)
+
+    def valor(campo):
+        if campo in datos:
+            return datos[campo]
+        return (
+            getattr(actual, campo)
+            if actual is not None
+            else Producto._meta.get_field(campo).get_default()
+        )
+
+    modalidad = valor("modalidad")
+    if modalidad not in Producto.Modalidad.values:
+        raise ValidationError({"modalidad": f"Modalidad inválida: {modalidad!r}."})
+    datos["modalidad"] = modalidad
+    if modalidad == Producto.Modalidad.STOCK:
+        datos["preparacion_horas"] = None
+        datos["pide_detalles"] = False
+        datos["etiqueta_detalles"] = ""
+        return datos
+
+    horas = valor("preparacion_horas")
+    if (
+        isinstance(horas, bool)
+        or not isinstance(horas, int)
+        or not PREPARACION_MINIMA_HORAS <= horas <= PREPARACION_MAXIMA_HORAS
+    ):
+        raise ValidationError(
+            {
+                "preparacion_horas": (
+                    "Indica cuántas horas necesitas para prepararlo "
+                    f"(de {PREPARACION_MINIMA_HORAS} a {PREPARACION_MAXIMA_HORAS})."
+                )
+            }
+        )
+    datos["preparacion_horas"] = horas
+    pide = bool(valor("pide_detalles"))
+    datos["pide_detalles"] = pide
+    etiqueta = (valor("etiqueta_detalles") or "").strip()
+    datos["etiqueta_detalles"] = (etiqueta or ETIQUETA_DETALLES_POR_DEFECTO) if pide else ""
+    datos["stock"] = 0
+    return datos
 
 
 def _validar_precio(precio) -> None:
@@ -537,7 +602,7 @@ def filtrar_puestos(queryset: QuerySet, params) -> QuerySet:
 
 
 def filtrar_productos(queryset: QuerySet, params) -> QuerySet:
-    """``?q= &categoria= &puesto= &precio_min= &precio_max=``."""
+    """``?q= &categoria= &puesto= &modalidad= &precio_min= &precio_max=``."""
     consulta = params.get("q")
     if consulta:
         queryset = queryset.filter(
@@ -549,6 +614,17 @@ def filtrar_productos(queryset: QuerySet, params) -> QuerySet:
     puesto = parametro_entero(params, "puesto")
     if puesto:
         queryset = queryset.filter(id_puesto=puesto)
+    modalidad = params.get("modalidad")
+    if modalidad:
+        if modalidad not in Producto.Modalidad.values:
+            raise ValidationError(
+                {
+                    "modalidad": (
+                        f"Valor inválido. Use uno de: {', '.join(Producto.Modalidad.values)}."
+                    )
+                }
+            )
+        queryset = queryset.filter(modalidad=modalidad)
     if params.get("precio_min"):
         queryset = queryset.filter(precio__gte=_decimal(params["precio_min"], "precio_min"))
     if params.get("precio_max"):

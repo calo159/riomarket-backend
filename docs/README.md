@@ -42,6 +42,7 @@ stack, pruebas y despliegue.
 - [ADR-010: contacto por WhatsApp, mapa y app instalable](ADR-010-contacto-mapa-y-pwa.md)
 - [ADR-011: rendimiento de la entrega y SEO](ADR-011-rendimiento-y-seo.md)
 - [ADR-012: apartar con plazo y liberación perezosa del stock](ADR-012-apartar-con-plazo.md)
+- [ADR-013: productos por encargo](ADR-013-productos-por-encargo.md)
 
 ## Entrega
 

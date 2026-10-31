@@ -3,6 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../cart/CartProvider';
 import { formatearMoneda } from '../lib/format';
+import {
+  MAX_DETALLES,
+  esEncargo,
+  etiquetaDeDetalles,
+  formatearPreparacion,
+  lineasSinDetalles,
+} from '../lib/encargos';
 import { Imagen } from '../components/Imagen';
 import { LogoPuesto } from '../components/PuestoCard';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
@@ -12,7 +19,7 @@ import { useState } from 'react';
 import { useToast } from '../components/ui/Toast';
 
 export function Carrito() {
-  const { carrito, totalItems, subtotal, cambiarCantidad, quitar, vaciar } = useCart();
+  const { carrito, totalItems, subtotal, cambiarCantidad, cambiarDetalles, quitar, vaciar } = useCart();
   const navigate = useNavigate();
   const toast = useToast();
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
@@ -34,6 +41,9 @@ export function Carrito() {
       </div>
     );
   }
+
+  const faltanDetalles = lineasSinDetalles(carrito.items).length > 0;
+  const hayEncargos = carrito.items.some((item) => esEncargo(item));
 
   const vaciarCarrito = () => {
     vaciar();
@@ -80,6 +90,11 @@ export function Carrito() {
                     <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                       {formatearMoneda(item.precio)} / {item.unidadMedida}
                     </p>
+                    {esEncargo(item) && (
+                      <p className="mt-1 text-xs font-bold text-brand-600 dark:text-brand-200">
+                        Por encargo · {formatearPreparacion(item.preparacionHoras ?? 0)}
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -90,6 +105,25 @@ export function Carrito() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
+                {esEncargo(item) && item.pideDetalles && (
+                  <div className="mt-2">
+                    <label className="label" htmlFor={`detalles-${item.productoId}`}>
+                      {etiquetaDeDetalles(item.etiquetaDetalles)}
+                    </label>
+                    <textarea
+                      id={`detalles-${item.productoId}`}
+                      rows={2}
+                      maxLength={MAX_DETALLES}
+                      className="input resize-y text-sm"
+                      value={item.detalles ?? ''}
+                      onChange={(evento) => cambiarDetalles(item.productoId, evento.target.value)}
+                      aria-invalid={!(item.detalles ?? '').trim() ? true : undefined}
+                    />
+                    <p className="mt-0.5 text-right text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                      {(item.detalles ?? '').length}/{MAX_DETALLES}
+                    </p>
+                  </div>
+                )}
                 <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
                   <div className="inline-flex items-center overflow-hidden rounded-[7px] border border-slate-300 dark:border-slate-600">
                     <button
@@ -143,8 +177,19 @@ export function Carrito() {
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             El domicilio y los cupones se calculan en el siguiente paso.
+            {hayEncargos && ' Allí eliges para cuándo quieres tus encargos.'}
           </p>
-          <button type="button" className="btn-primary mt-4 min-h-[48px] w-full text-base" onClick={() => navigate('/checkout')}>
+          {faltanDetalles && (
+            <p className="mt-2 text-sm font-medium text-amber-800 dark:text-amber-300" role="status">
+              Completa los detalles de tus encargos.
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn-primary mt-4 min-h-[48px] w-full text-base"
+            onClick={() => navigate('/checkout')}
+            disabled={faltanDetalles}
+          >
             Continuar con la compra
           </button>
           <Link to="/catalogo" className="btn-ghost mt-2 w-full">Seguir comprando</Link>
@@ -156,10 +201,20 @@ export function Carrito() {
           <p className="text-xs text-slate-500 dark:text-slate-400">Total estimado</p>
           <p className="precio text-xl">{formatearMoneda(subtotal)}</p>
         </div>
-        <button type="button" className="btn-primary min-h-[48px] px-6 text-base" onClick={() => navigate('/checkout')}>
+        <button
+          type="button"
+          className="btn-primary min-h-[48px] px-6 text-base"
+          onClick={() => navigate('/checkout')}
+          disabled={faltanDetalles}
+        >
           Continuar con la compra
         </button>
       </div>
+      {faltanDetalles && (
+        <p className="mt-3 text-sm font-medium text-amber-800 lg:hidden dark:text-amber-300" role="status">
+          Completa los detalles de tus encargos.
+        </p>
+      )}
 
       <ConfirmarModal
         abierto={confirmarVaciar}

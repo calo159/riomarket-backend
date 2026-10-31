@@ -145,6 +145,10 @@ erDiagram
         int stock
         string unidad_medida
         string estado
+        string modalidad "stock | encargo"
+        int preparacion_horas "solo encargo, 1 a 336"
+        bool pide_detalles
+        string etiqueta_detalles
     }
     IMAGEN_PRODUCTO {
         bigint id PK
@@ -165,6 +169,7 @@ erDiagram
         bigint id_cupon FK
         decimal descuento_cupon
         decimal total
+        datetime fecha_solicitada "solo con encargos"
     }
     ITEM_PEDIDO {
         bigint id PK
@@ -174,6 +179,8 @@ erDiagram
         string unidad_medida
         decimal precio_unitario
         int cantidad
+        string modalidad "copia: decide si cancelar repone stock"
+        string detalles "lo que escribió el comprador"
     }
     PAGO {
         bigint id PK

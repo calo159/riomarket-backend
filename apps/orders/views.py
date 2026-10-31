@@ -26,6 +26,16 @@ PARAMETROS_PEDIDO = [
     OpenApiParameter(name="tipo_entrega", enum=Pedido.TipoEntrega.values),
     OpenApiParameter(name="puesto", type=OpenApiTypes.INT, description="ID del puesto"),
     OpenApiParameter(
+        name="producto",
+        type=OpenApiTypes.INT,
+        description="Solo pedidos que incluyan este producto",
+    ),
+    OpenApiParameter(
+        name="abiertos",
+        type=OpenApiTypes.BOOL,
+        description="Solo pedidos sin terminar (true) o ya entregados o cancelados (false)",
+    ),
+    OpenApiParameter(
         name="con_no_recibido",
         type=OpenApiTypes.BOOL,
         description="Solo pedidos con reporte de no recibido (true) o sin reporte (false)",

@@ -115,6 +115,9 @@ def test_no_cancela_a_nadie_el_dia_del_despliegue():
     try:
         _migrar(ANTES)
         _migrar(DATOS)
+        # Los modelos de hoy tienen columnas posteriores (orders.0011): se avanza hasta el
+        # último estado antes de leerlos completos. El plazo no cambia al avanzar.
+        _dejar_en_el_ultimo_estado()
         assert Pedido.objects.get(pk=viejo).vence_en > timezone.now() + timedelta(hours=23)
 
         from apps.orders import vencimientos
@@ -141,7 +144,9 @@ def test_revertir_limpia_los_plazos():
         assert not Pedido.objects.filter(vence_en__isnull=False).exists()
         assert not Pedido.objects.filter(aviso_vencimiento_en__isnull=False).exists()
         # Los pedidos siguen ahí, sin tocar su estado.
-        assert Pedido.objects.get(pk=casos["entregado"]).estado == E.ENTREGADO
+        # (Se lee solo la columna «estado»: el esquema está en 0009, sin las columnas nuevas.)
+        estado = Pedido.objects.filter(pk=casos["entregado"]).values_list("estado", flat=True)
+        assert list(estado) == [E.ENTREGADO]
         assert Pedido.objects.count() == len(casos)
     finally:
         _dejar_en_el_ultimo_estado()

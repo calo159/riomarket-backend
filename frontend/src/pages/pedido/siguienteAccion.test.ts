@@ -44,4 +44,21 @@ describe('siguienteAccion', () => {
     expect(siguienteAccion(pedido('entregado', 'retiro', []), 'admin')).toBeNull();
     expect(siguienteAccion(pedido('cancelado', 'retiro', []), 'admin')).toBeNull();
   });
+
+  it('aceptar_encargo_en_pendiente', () => {
+    const encargo = { ...pedido('pendiente', 'retiro', ['confirmar', 'cancelar']), tiene_encargo: true };
+    expect(siguienteAccion(encargo, 'vendedor')).toMatchObject({ accion: 'confirmar', etiqueta: 'Aceptar encargo' });
+    expect(siguienteAccion(encargo, 'admin')?.etiqueta).toBe('Aceptar encargo');
+  });
+
+  it('un pedido pendiente sin encargo conserva «Confirmar pedido»', () => {
+    const normal = pedido('pendiente', 'retiro', ['confirmar']);
+    expect(siguienteAccion(normal, 'vendedor')?.etiqueta).toBe('Confirmar pedido');
+    expect(siguienteAccion({ ...normal, tiene_encargo: false }, 'vendedor')?.etiqueta).toBe('Confirmar pedido');
+  });
+
+  it('el encargo ya aceptado sigue los pasos de siempre', () => {
+    const encargo = { ...pedido('confirmado', 'retiro', ['en-preparacion']), tiene_encargo: true };
+    expect(siguienteAccion(encargo, 'vendedor')?.etiqueta).toBe('Pasar a preparación');
+  });
 });

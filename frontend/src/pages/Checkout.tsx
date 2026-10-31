@@ -15,7 +15,15 @@ import { useToast } from '../components/ui/Toast';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoPantalla, EstadoVacio } from '../components/ui/Estado';
 import { Campo } from '../components/ui/Campos';
-import { formatearMoneda } from '../lib/format';
+import { formatearFechaHora, formatearMoneda } from '../lib/format';
+import {
+  PASO_MINUTOS,
+  aValorLocal,
+  esEncargo,
+  fechaMaxima,
+  fechaMinima,
+  valorLocalAIso,
+} from '../lib/encargos';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { crearPedidoConPagoAlRecoger, type DatosPedido } from '../api/orders';
 import { validarCupon } from '../api/coupons';
@@ -23,6 +31,11 @@ import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
 import { claves } from '../lib/queryKeys';
+
+/** Termina una frase con la fecha sin duplicar el punto de «p. m.». */
+function finDeFrase(fecha: string): string {
+  return fecha.endsWith('.') ? fecha : `${fecha}.`;
+}
 
 const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
 
@@ -45,6 +58,7 @@ export function Checkout() {
   const [cupon, setCupon] = useState<RespuestaValidarCupon | null>(null);
   const [errorCupon, setErrorCupon] = useState('');
   const [errores, setErrores] = useState<Record<string, string>>({});
+  const [fechaLocal, setFechaLocal] = useState('');
 
   useEffect(() => {
     document.title = 'Finalizar compra · RioMarket';
@@ -112,11 +126,20 @@ export function Checkout() {
     onSuccess: (pedido) => {
       vaciar();
       if (guardarEnLibreta) void queryClient.invalidateQueries({ queryKey: claves.direcciones });
-      toast.exito(
-        pedido.tipo_entrega === 'retiro'
-          ? '¡Pedido creado! Pagas en el puesto al recoger.'
-          : '¡Pedido creado! Ahora puedes registrar el pago.',
-      );
+      const conEncargo = Boolean(pedido.tiene_encargo);
+      if (conEncargo) {
+        toast.exito(
+          pedido.tipo_entrega === 'retiro'
+            ? `¡Encargo enviado! Te avisamos cuando ${carrito?.puestoNombre ?? 'el puesto'} lo acepte. Pagas al recoger.`
+            : '¡Encargo enviado! Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.',
+        );
+      } else {
+        toast.exito(
+          pedido.tipo_entrega === 'retiro'
+            ? '¡Pedido creado! Pagas en el puesto al recoger.'
+            : '¡Pedido creado! Ahora puedes registrar el pago.',
+        );
+      }
       navigate(`/pedidos/${pedido.id}?nuevo=1`);
     },
     onError: (error) => {
@@ -135,9 +158,23 @@ export function Checkout() {
   const total = Math.max(0, subtotal + tarifa - descuento);
 
   const items = useMemo(
-    () => carrito?.items.map((item) => ({ id_producto: item.productoId, cantidad: item.cantidad })) ?? [],
+    () =>
+      carrito?.items.map((item) => ({
+        id_producto: item.productoId,
+        cantidad: item.cantidad,
+        // Los detalles solo viajan en los encargos que los piden.
+        ...(esEncargo(item) && item.detalles?.trim() ? { detalles: item.detalles.trim() } : {}),
+      })) ?? [],
     [carrito],
   );
+
+  // Productos por encargo (ADR-013): hay que elegir para cuándo se quieren.
+  const hayEncargos = Boolean(carrito?.items.some((item) => esEncargo(item)));
+  const minima = useMemo(() => (carrito ? fechaMinima(carrito.items) : null), [carrito]);
+  const maxima = useMemo(() => fechaMaxima(), []);
+  const hayStock = Boolean(carrito?.items.some((item) => !esEncargo(item)));
+  const numeroFecha = tipoEntrega === 'domicilio' ? 3 : 2;
+  const numeroNotas = numeroFecha + (hayEncargos ? 1 : 0);
 
   if (!carrito || carrito.items.length === 0) {
     return (
@@ -162,6 +199,19 @@ export function Checkout() {
       if (modoDireccion === 'manual' && guardarEnLibreta && !alias.trim()) nuevos.alias = 'Ponle un nombre a la dirección guardada.';
       if (modoDireccion === 'guardada' && !direccionId) nuevos.direccion_entrega = 'Selecciona una dirección.';
     }
+    let fechaIso: string | undefined;
+    if (hayEncargos) {
+      const elegida = valorLocalAIso(fechaLocal);
+      if (!elegida) {
+        nuevos.fecha_solicitada = 'Elige para cuándo lo necesitas.';
+      } else if (minima && new Date(elegida).getTime() < minima.getTime() - 5 * 60_000) {
+        nuevos.fecha_solicitada = `${carrito.puestoNombre} necesita más tiempo para prepararlo. Elige desde el ${finDeFrase(formatearFechaHora(minima.toISOString()))}`;
+      } else if (new Date(elegida).getTime() > maxima.getTime()) {
+        nuevos.fecha_solicitada = 'Solo se aceptan encargos para los próximos 60 días.';
+      } else {
+        fechaIso = elegida;
+      }
+    }
     if (Object.keys(nuevos).length) {
       setErrores(nuevos);
       return;
@@ -174,6 +224,7 @@ export function Checkout() {
       referencia_entrega: tipoEntrega === 'domicilio' && modoDireccion === 'manual' ? referencia.trim() || undefined : undefined,
       id_direccion: tipoEntrega === 'domicilio' && modoDireccion === 'guardada' ? direccionId : null,
       notas: notas.trim() || undefined,
+      fecha_solicitada: fechaIso,
       items,
       codigo_cupon: cupon?.codigo,
     });
@@ -346,8 +397,47 @@ export function Checkout() {
             </section>
           )}
 
+          {hayEncargos && (
+            <section className="card p-5">
+              <h2 className="text-lg font-bold">{numeroFecha}. ¿Para cuándo lo necesitas?</h2>
+              <Campo
+                etiqueta={tipoEntrega === 'domicilio' ? 'Fecha y hora de entrega' : 'Fecha y hora para recogerlo'}
+                htmlFor="fecha_solicitada"
+                error={errores.fecha_solicitada}
+                className="mt-3"
+                ayuda={
+                  minima
+                    ? `Lo más pronto: ${finDeFrase(formatearFechaHora(minima.toISOString()))} El encargo queda confirmado cuando ${carrito.puestoNombre} lo acepte.`
+                    : undefined
+                }
+              >
+                <input
+                  id="fecha_solicitada"
+                  type="datetime-local"
+                  className="input"
+                  min={minima ? aValorLocal(minima) : undefined}
+                  max={aValorLocal(maxima)}
+                  step={PASO_MINUTOS * 60}
+                  value={fechaLocal}
+                  onChange={(evento) => setFechaLocal(evento.target.value)}
+                />
+              </Campo>
+              {hayStock && (
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  Tu pedido tiene productos con stock y por encargo: todo se{' '}
+                  {tipoEntrega === 'domicilio' ? 'entrega' : 'recoge'} en esta fecha.
+                </p>
+              )}
+              {tipoEntrega === 'domicilio' && (
+                <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  A domicilio se paga antes de que el puesto acepte. Si no puede hacerlo, te devolvemos el dinero.
+                </p>
+              )}
+            </section>
+          )}
+
           <section className="card p-5">
-            <h2 className="text-lg font-bold">{tipoEntrega === 'domicilio' ? '3' : '2'}. Notas y cupón</h2>
+            <h2 className="text-lg font-bold">{numeroNotas}. Notas y cupón</h2>
             <Campo etiqueta="Notas para el vendedor (opcional)" htmlFor="notas" className="mt-3">
               <textarea
                 id="notas"
@@ -402,11 +492,21 @@ export function Checkout() {
               <div key={item.productoId} className="flex justify-between gap-2 text-sm">
                 <span className="min-w-0 text-slate-600 dark:text-slate-300">
                   <span className="font-medium text-slate-900 dark:text-slate-100">{item.cantidad}×</span> {item.nombre}
+                  {esEncargo(item) && item.detalles?.trim() && (
+                    <span className="block whitespace-pre-line break-words text-sm text-slate-500 dark:text-slate-400">
+                      {item.detalles.trim()}
+                    </span>
+                  )}
                 </span>
                 <span className="shrink-0 font-medium">{formatearMoneda(Number(item.precio) * item.cantidad)}</span>
               </div>
             ))}
           </div>
+          {hayEncargos && fechaLocal && valorLocalAIso(fechaLocal) && (
+            <p className="mt-3 text-sm font-medium">
+              Para el {formatearFechaHora(valorLocalAIso(fechaLocal))}
+            </p>
+          )}
           <div className="my-4 border-t" />
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">Subtotal</span><span>{formatearMoneda(subtotal)}</span></div>

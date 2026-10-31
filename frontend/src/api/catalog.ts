@@ -11,6 +11,7 @@ export interface FiltrosProducto {
   precio_min?: number | string;
   precio_max?: number | string;
   estado?: string;
+  modalidad?: 'stock' | 'encargo';
 }
 
 interface FiltrosPuesto {
@@ -114,6 +115,12 @@ export interface DatosProducto {
   stock: number;
   unidad_medida: string;
   estado?: string;
+  /** Con existencias (por defecto) o por encargo (ADR-013). */
+  modalidad?: 'stock' | 'encargo';
+  /** Solo por encargo: horas para prepararlo (1 a 336). */
+  preparacion_horas?: number | null;
+  pide_detalles?: boolean;
+  etiqueta_detalles?: string;
 }
 
 export async function crearProducto(datos: DatosProducto): Promise<Producto> {

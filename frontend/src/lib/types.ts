@@ -63,8 +63,16 @@ export interface ItemCarrito {
   precio: string;
   unidadMedida: string;
   cantidad: number;
+  /** Unidades que se pueden pedir: el stock, o 20 en un encargo. */
   stock: number;
   imagen?: string | null;
+  // Productos por encargo (ADR-013). Ausentes en carritos guardados antes: se leen como «stock».
+  modalidad?: 'stock' | 'encargo';
+  preparacionHoras?: number | null;
+  pideDetalles?: boolean;
+  etiquetaDetalles?: string;
+  /** Lo que escribió el comprador (sabor, mensaje...). */
+  detalles?: string;
 }
 
 export interface Carrito {

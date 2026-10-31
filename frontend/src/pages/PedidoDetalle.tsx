@@ -77,7 +77,9 @@ export function PedidoDetalle() {
       setConfirmarEntregar(false);
       toast.exito(
         tipo === 'cancelar'
-          ? 'Pedido cancelado y stock repuesto.'
+          ? pedido.data?.tiene_encargo
+            ? 'Pedido cancelado.'
+            : 'Pedido cancelado y stock repuesto.'
           : tipo === 'entregar'
             ? 'Pedido marcado como entregado.'
             : tipo === 'extender-plazo'
@@ -129,6 +131,8 @@ export function PedidoDetalle() {
   const resenaPropia = resenas.data?.results.find((resena) => resena.id_pedido === datos.id && resena.id_usuario === usuario?.id);
 
   const puedeCancelar = permitidas.includes('cancelar');
+  // Un vendedor que no puede hacer un encargo pendiente lo cancela con «No puedo hacerlo».
+  const rechazaEncargo = Boolean(datos.tiene_encargo) && !esComprador && datos.estado === 'pendiente';
   const puedeEntregar = permitidas.includes('entregar');
   const puedeReportar = permitidas.includes('no-recibido') && !datos.no_recibido_en;
   const puedeConfirmarEfectivo = permitidas.includes('confirmar-pago');
@@ -191,7 +195,7 @@ export function PedidoDetalle() {
           )}
           {puedeCancelar && (
             <button type="button" className="btn-secondary text-rose-600 dark:text-rose-400" onClick={() => setConfirmarCancelar(true)}>
-              <XCircle className="h-4 w-4" /> Cancelar
+              <XCircle className="h-4 w-4" /> {rechazaEncargo ? 'No puedo hacerlo' : 'Cancelar'}
             </button>
           )}
         </div>
@@ -225,9 +229,15 @@ export function PedidoDetalle() {
 
       <ConfirmarModal
         abierto={confirmarCancelar}
-        titulo="¿Cancelar este pedido?"
-        descripcion="Se repondrá el stock de los productos. Si el pago estaba aprobado, se marcará para reembolso."
-        textoConfirmar="Cancelar pedido"
+        titulo={rechazaEncargo ? '¿No puedes hacer este encargo?' : '¿Cancelar este pedido?'}
+        descripcion={
+          rechazaEncargo
+            ? 'Se cancelará el encargo y, si el cliente ya pagó, se le devolverá el pago.'
+            : datos.tiene_encargo
+              ? 'Se repondrá el stock de los productos con existencias; los encargos no usan stock. Si el pago estaba aprobado, se marcará para reembolso.'
+              : 'Se repondrá el stock de los productos. Si el pago estaba aprobado, se marcará para reembolso.'
+        }
+        textoConfirmar={rechazaEncargo ? 'Cancelar encargo' : 'Cancelar pedido'}
         cargando={accion.isPending}
         onConfirmar={() => accion.mutate('cancelar')}
         onCerrar={() => setConfirmarCancelar(false)}
