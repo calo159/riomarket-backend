@@ -78,7 +78,10 @@ class Pago(models.Model):
         verbose_name = "pago"
         verbose_name_plural = "pagos"
         ordering = ["-fecha_creacion"]
-        indexes = [models.Index(fields=["estado"], name="pago_estado_idx")]
+        indexes = [
+            models.Index(fields=["estado"], name="pago_estado_idx"),
+            models.Index(fields=["estado", "fecha_aprobacion"], name="pago_estado_aprobacion_idx"),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(

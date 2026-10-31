@@ -1,6 +1,9 @@
 """Menú dinámico: sale de los recursos de los roles del usuario."""
 
+import importlib
+
 import pytest
+from django.apps import apps as django_apps
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -151,3 +154,53 @@ class TestBadges:
         c = cliente(u)
         with django_assert_max_num_queries(12):
             assert c.get(MENU).status_code == 200
+
+
+class TestRecursoVentas:
+    def test_vendedor_tiene_el_recurso_ventas(self):
+        r = cliente(UsuarioFactory(rol="vendedor")).get(MENU)
+        item = next(i for i in r.data["items"] if i["codigo"] == "vendedor.ventas")
+        assert item["ruta"] == "/vendedor/ventas"
+        assert item["icono"] == "BarChart3"
+        assert item["ambito"] == "panel_vendedor"
+        # Va justo después del resumen y antes de la verificación.
+        panel = [i["codigo"] for i in r.data["items"] if i["ambito"] == "panel_vendedor"]
+        assert panel[:3] == ["vendedor.resumen", "vendedor.ventas", "vendedor.verificacion"]
+
+    def test_comprador_y_administrador_no_lo_reciben(self):
+        assert "vendedor.ventas" not in codigos(cliente(UsuarioFactory(rol="comprador")).get(MENU))
+        assert "vendedor.ventas" not in codigos(
+            cliente(UsuarioFactory(rol="administrador")).get(MENU)
+        )
+
+    def test_migracion_recurso_ventas_es_idempotente(self):
+        migracion = importlib.import_module("apps.rbac.migrations.0003_recurso_vendedor_ventas")
+        # Estado de una base anterior al paquete: sin el recurso y con los órdenes viejos.
+        Recurso.objects.filter(codigo="vendedor.ventas").delete()
+        for codigo, (antes, _despues) in migracion.CORRIMIENTO.items():
+            Recurso.objects.filter(codigo=codigo).update(orden=antes)
+        # El administrador ya había movido a mano un recurso: se respeta.
+        Recurso.objects.filter(codigo="vendedor.cupones").update(orden=40)
+        total = Recurso.objects.count()
+
+        migracion.agregar_ventas(django_apps, None)
+        migracion.agregar_ventas(django_apps, None)
+
+        assert Recurso.objects.count() == total + 1
+        ventas = Recurso.objects.get(codigo="vendedor.ventas")
+        assert ventas.orden == 2 and ventas.ruta == "/vendedor/ventas"
+        assert set(ventas.roles.values_list("nombre", flat=True)) == {"vendedor"}
+        ordenes = dict(
+            Recurso.objects.filter(codigo__startswith="vendedor.").values_list("codigo", "orden")
+        )
+        assert ordenes["vendedor.verificacion"] == 3
+        assert ordenes["vendedor.resenas"] == 8
+        assert ordenes["vendedor.cupones"] == 40
+        # Sin el vínculo con el rol que el administrador quitó, no se vuelve a crear.
+        RolRecurso.objects.filter(id_recurso=ventas).delete()
+        migracion.agregar_ventas(django_apps, None)
+        assert not ventas.roles.exists()
+
+        migracion.quitar_ventas(django_apps, None)
+        assert not Recurso.objects.filter(codigo="vendedor.ventas").exists()
+        assert Recurso.objects.get(codigo="vendedor.verificacion").orden == 2

@@ -9,12 +9,16 @@ const mocks = vi.hoisted(() => ({
   listarProductos: vi.fn(),
   listarPedidos: vi.fn(),
   obtenerResumenIngresos: vi.fn(),
+  obtenerVentas: vi.fn(),
   miVerificacion: vi.fn(),
 }));
 
 vi.mock('../../api/catalog', () => ({ listarPuestos: mocks.listarPuestos, listarProductos: mocks.listarProductos }));
 vi.mock('../../api/orders', () => ({ listarPedidos: mocks.listarPedidos }));
-vi.mock('../../api/payments', () => ({ obtenerResumenIngresos: mocks.obtenerResumenIngresos }));
+vi.mock('../../api/payments', () => ({
+  obtenerResumenIngresos: mocks.obtenerResumenIngresos,
+  obtenerVentas: mocks.obtenerVentas,
+}));
 vi.mock('../../api/verification', () => ({ miVerificacion: mocks.miVerificacion }));
 vi.mock('../../auth/SessionProvider', () => ({ useSession: () => ({ usuario: { id: 7, nombre: 'Carmen Gómez' } }) }));
 
@@ -27,6 +31,7 @@ describe('PanelVendedor: ingresos aprobados', () => {
     mocks.listarProductos.mockResolvedValue(vacio);
     mocks.listarPedidos.mockResolvedValue(vacio);
     mocks.miVerificacion.mockResolvedValue({ estado_verificacion: 'aprobado' });
+    mocks.obtenerVentas.mockResolvedValue({ totales: { pedidos_pagados: 0 }, por_dia: [] });
   });
 
   it('muestra el total que calcula el servidor, sin sumar en el cliente', async () => {

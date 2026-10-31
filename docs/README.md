@@ -43,6 +43,7 @@ stack, pruebas y despliegue.
 - [ADR-011: rendimiento de la entrega y SEO](ADR-011-rendimiento-y-seo.md)
 - [ADR-012: apartar con plazo y liberación perezosa del stock](ADR-012-apartar-con-plazo.md)
 - [ADR-013: productos por encargo](ADR-013-productos-por-encargo.md)
+- [ADR-014: panel de ventas](ADR-014-panel-de-ventas.md)
 
 ## Entrega
 

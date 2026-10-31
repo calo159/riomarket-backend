@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import { listarPuestos, listarProductos } from '../../api/catalog';
 import { listarPedidos } from '../../api/orders';
-import { obtenerResumenIngresos } from '../../api/payments';
+import { obtenerResumenIngresos, obtenerVentas } from '../../api/payments';
 import { miVerificacion } from '../../api/verification';
 import { useSession } from '../../auth/SessionProvider';
+import { BarrasPorDia } from '../../components/graficos/BarrasPorDia';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CargandoBloque } from '../../components/ui/Estado';
@@ -50,13 +51,18 @@ export function PanelVendedor() {
     queryFn: obtenerResumenIngresos,
   });
 
+  const semana = useQuery({
+    queryKey: claves.pagos.ventas(7, null),
+    queryFn: () => obtenerVentas({ dias: 7 }),
+  });
+
   const verificado = verificacion.data?.estado_verificacion === 'aprobado';
 
   const tarjetas = [
     { etiqueta: 'Puestos', valor: puestos.data?.count ?? 0, icono: Store, to: '/vendedor/puestos', color: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300' },
     { etiqueta: 'Productos', valor: productos.data?.count ?? 0, icono: Package, to: '/vendedor/productos', color: 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300' },
     { etiqueta: 'Pedidos pendientes', valor: pendientes.data?.count ?? 0, icono: ClipboardList, to: '/vendedor/pedidos', color: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' },
-    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/pedidos', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+    { etiqueta: 'Ingresos aprobados', valor: formatearMoneda(ingresos.data?.ingresos_aprobados), icono: CreditCard, to: '/vendedor/ventas', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
   ];
 
   return (
@@ -111,6 +117,30 @@ export function PanelVendedor() {
           </Link>
         ))}
       </div>
+
+      {semana.data && (
+        <section className="card mt-5 p-4 sm:p-5" aria-labelledby="panel-semana">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="panel-semana" className="text-base font-bold">Últimos 7 días</h2>
+            <Link to="/vendedor/ventas" className="link inline-flex items-center gap-1 text-sm">
+              Ver ventas <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          {semana.data.totales.pedidos_pagados === 0 ? (
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Aún no cobras pedidos esta semana. Cuando lo hagas, verás aquí cuánto vendiste cada día.
+            </p>
+          ) : (
+            <div className="mt-2">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                <span className="font-bold text-tinta tabular-nums dark:text-slate-100">{formatearMoneda(semana.data.totales.ventas_brutas)}</span>
+                {' '}en {semana.data.totales.pedidos_pagados} {semana.data.totales.pedidos_pagados === 1 ? 'pedido pagado' : 'pedidos pagados'}.
+              </p>
+              <BarrasPorDia datos={semana.data.por_dia} compacto className="mt-2" />
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_320px]">
         <section className="card p-5">

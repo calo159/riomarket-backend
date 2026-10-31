@@ -123,3 +123,12 @@ export function colorEstado(estado: string | null | undefined): string {
       return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
   }
 }
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** «18 oct» a partir de una fecha AAAA-MM-DD (la del servidor, ya en hora de Colombia). */
+export function formatearDiaMes(fechaIso: string): string {
+  const [anio, mes, dia] = fechaIso.split('-').map(Number);
+  if (!anio || !mes || !dia || mes > 12) return fechaIso;
+  return `${dia} ${MESES_CORTOS[mes - 1]}`;
+}

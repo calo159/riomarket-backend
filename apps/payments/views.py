@@ -22,8 +22,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
-from apps.common.query import aplicar_ordenamiento
-from apps.payments import services
+from apps.common.query import aplicar_ordenamiento, parametro_entero
+from apps.payments import estadisticas, services
 from apps.payments.models import Pago
 from apps.payments.serializers import (
     AnularPagoSerializer,
@@ -198,3 +198,98 @@ class PagoWebhookView(APIView):
             firma=firma,
         )
         return Response({"success": True, "estado": pago.estado})
+
+
+def _monto():
+    return drf_serializers.CharField(help_text="Decimal con 2 cifras")
+
+
+class VentasView(APIView):
+    """``GET /api/payments/ventas/`` — panel de ventas (solo lectura, ADR-014)."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "pagos"
+
+    @extend_schema(
+        description=(
+            "Ventas (pagos aprobados) de los últimos 7, 30 o 90 días en hora de Colombia: "
+            "totales, serie diaria, productos más vendidos y pedidos por estado. El vendedor "
+            "ve solo sus puestos; el administrador, todo el mercado."
+        ),
+        parameters=[
+            OpenApiParameter(name="dias", enum=[7, 30, 90], type=OpenApiTypes.INT),
+            OpenApiParameter(name="puesto", type=OpenApiTypes.INT, description="ID del puesto"),
+        ],
+        responses=inline_serializer(
+            "VentasPanel",
+            {
+                "dias": drf_serializers.IntegerField(),
+                "desde": drf_serializers.DateField(),
+                "hasta": drf_serializers.DateField(),
+                "zona_horaria": drf_serializers.CharField(),
+                "puesto": inline_serializer(
+                    "VentasPuesto",
+                    {
+                        "id": drf_serializers.IntegerField(),
+                        "nombre": drf_serializers.CharField(),
+                    },
+                    allow_null=True,
+                ),
+                "totales": inline_serializer(
+                    "VentasTotales",
+                    {
+                        "pedidos_pagados": drf_serializers.IntegerField(),
+                        "unidades": drf_serializers.IntegerField(),
+                        "ventas_brutas": _monto(),
+                        "ingresos_netos": _monto(),
+                        "ticket_promedio": _monto(),
+                    },
+                ),
+                "por_dia": inline_serializer(
+                    "VentasDia",
+                    {
+                        "fecha": drf_serializers.DateField(),
+                        "pedidos": drf_serializers.IntegerField(),
+                        "ventas_brutas": _monto(),
+                        "ingresos_netos": _monto(),
+                    },
+                    many=True,
+                ),
+                "top_productos": inline_serializer(
+                    "VentasProducto",
+                    {
+                        "id_producto": drf_serializers.IntegerField(),
+                        "nombre": drf_serializers.CharField(),
+                        "unidades": drf_serializers.IntegerField(),
+                        "ventas_brutas": _monto(),
+                        "puesto_nombre": drf_serializers.CharField(allow_null=True),
+                    },
+                    many=True,
+                ),
+                "pedidos_por_estado": inline_serializer(
+                    "VentasPedidosPorEstado",
+                    {
+                        estado: drf_serializers.IntegerField()
+                        for estado in (
+                            "pendiente",
+                            "confirmado",
+                            "en_preparacion",
+                            "en_camino",
+                            "listo_para_recoger",
+                            "entregado",
+                            "cancelado",
+                        )
+                    },
+                ),
+                "cancelados_por_plazo": drf_serializers.IntegerField(),
+                "generado_en": drf_serializers.DateTimeField(),
+            },
+        ),
+    )
+    def get(self, request):
+        estadisticas.autorizar(request.user)
+        params = request.query_params
+        dias = estadisticas.validar_dias(params.get("dias"))
+        puesto_id = parametro_entero(params, "puesto")
+        return Response(estadisticas.ventas(request.user, dias=dias, puesto_id=puesto_id))
