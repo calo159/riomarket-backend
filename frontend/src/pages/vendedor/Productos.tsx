@@ -355,7 +355,7 @@ export function ProductosVendedor() {
                   />
                   <select
                     className="input w-28 shrink-0"
-                    aria-label="Unidad del tiempo de preparación"
+                    aria-label="Horas o días"
                     value={prepUnidad}
                     onChange={(evento) => setPrepUnidad(evento.target.value as UnidadPreparacion)}
                   >

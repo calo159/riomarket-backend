@@ -32,6 +32,11 @@ import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
 import { claves } from '../lib/queryKeys';
 
+/** Termina una frase con la fecha sin duplicar el punto de «p. m.». */
+function finDeFrase(fecha: string): string {
+  return fecha.endsWith('.') ? fecha : `${fecha}.`;
+}
+
 const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
 
 export function Checkout() {
@@ -200,7 +205,7 @@ export function Checkout() {
       if (!elegida) {
         nuevos.fecha_solicitada = 'Elige para cuándo lo necesitas.';
       } else if (minima && new Date(elegida).getTime() < minima.getTime() - 5 * 60_000) {
-        nuevos.fecha_solicitada = `${carrito.puestoNombre} necesita más tiempo para prepararlo. Elige desde el ${formatearFechaHora(minima.toISOString())}.`;
+        nuevos.fecha_solicitada = `${carrito.puestoNombre} necesita más tiempo para prepararlo. Elige desde el ${finDeFrase(formatearFechaHora(minima.toISOString()))}`;
       } else if (new Date(elegida).getTime() > maxima.getTime()) {
         nuevos.fecha_solicitada = 'Solo se aceptan encargos para los próximos 60 días.';
       } else {
@@ -402,7 +407,7 @@ export function Checkout() {
                 className="mt-3"
                 ayuda={
                   minima
-                    ? `Lo más pronto: ${formatearFechaHora(minima.toISOString())}. El encargo queda confirmado cuando ${carrito.puestoNombre} lo acepte.`
+                    ? `Lo más pronto: ${finDeFrase(formatearFechaHora(minima.toISOString()))} El encargo queda confirmado cuando ${carrito.puestoNombre} lo acepte.`
                     : undefined
                 }
               >
