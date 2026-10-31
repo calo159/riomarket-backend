@@ -54,13 +54,14 @@ jobs:
       - name: Lint (ruff)
         run: |
           ruff check apps config tests scripts --no-cache
-          ruff format --check apps config tests
+          ruff format --check apps config tests scripts
 
       - name: Migraciones sin cambios pendientes
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Suite de pruebas
-        run: pytest -q
+      - name: Suite de pruebas con umbral de cobertura
+        # El umbral (fail_under) vive en pyproject.toml; la cobertura incluye ramas.
+        run: pytest -q --cov=apps --cov-report=term-missing:skip-covered
 
       - name: Validar esquema OpenAPI
         run: python manage.py spectacular --file schema.yaml --validate

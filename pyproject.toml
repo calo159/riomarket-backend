@@ -46,5 +46,7 @@ branch = true
 omit = ["*/migrations/*", "*/tests/*", "*/admin.py"]
 
 [tool.coverage.report]
+# Umbral del CI (ADR-015): medido 94 % con ramas el 31/10/2026; 91 deja margen por ruido.
+fail_under = 91
 show_missing = true
 skip_empty = true
