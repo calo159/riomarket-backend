@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Movimiento en el resto de la aplicación.** Los listados (mis pedidos, carrito, notificaciones,
+  direcciones, pedidos y reseñas de vendedor y administrador), las tarjetas de resumen de los paneles y
+  las filas de las tablas suben unos píxeles al cargarse, y los bloques de la página de inicio aparecen
+  al llegar a ellos. Mismas reglas que en la landing: visible por defecto y sin movimiento si la persona
+  lo pidió.
 - **Movimiento en la landing y en las cuadrículas.** Las secciones de la landing aparecen al llegar a
   ellas (solo las que están debajo de la pantalla inicial), el subrayado amarillo de la franja se dibuja
   bajo la frase clave y las tarjetas de productos y puestos suben unos píxeles al cargarse. Todo es

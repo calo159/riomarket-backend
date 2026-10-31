@@ -64,7 +64,7 @@ export function Carrito() {
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-3">
+        <div className="entra-lista space-y-3">
           <Link to={`/puestos/${carrito.puestoId}`} className="card flex items-center gap-3 p-3.5 font-bold text-tinta hover:text-brand-600 dark:text-slate-100">
             <LogoPuesto nombre={carrito.puestoNombre} className="h-10 w-10 text-sm" />
             <span className="min-w-0"><span className="block truncate">{carrito.puestoNombre}</span><span className="text-[13px] font-normal text-slate-500 dark:text-slate-400">{carrito.ofreceDomicilio ? 'Domicilio o retiro' : 'Retiro en el puesto'}</span></span>

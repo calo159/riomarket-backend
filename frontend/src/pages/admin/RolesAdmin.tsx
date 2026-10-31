@@ -181,7 +181,7 @@ export function RolesAdmin() {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="entra-lista">
               {agruparRecursos(recursos.data).map((grupo) => (
                 <FilasGrupo key={grupo.clave} titulo={grupo.titulo} columnas={roles.data.length + 1}>
                   {grupo.items.map((recurso) => (

@@ -137,7 +137,7 @@ export function CategoriasAdmin() {
                 <th className="p-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="entra-lista">
               {lista.map((categoria) => (
                 <tr key={categoria.id} className="border-b last:border-0">
                   <td className="p-3 font-medium">{categoria.nombre}</td>

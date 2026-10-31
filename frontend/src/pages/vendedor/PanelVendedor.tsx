@@ -102,7 +102,7 @@ export function PanelVendedor() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="entra-lista grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {tarjetas.map(({ etiqueta, valor, icono: Icono, to, color }) => (
           <Link key={etiqueta} to={to} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-start justify-between gap-3">

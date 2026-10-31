@@ -157,7 +157,7 @@ export function Usuarios() {
                   <th className="p-3 text-right">Acceso</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="entra-lista">
                 {usuarios.data.results.map((usuario) => (
                   <tr key={usuario.id} className="border-b last:border-0">
                     <td className="p-3">

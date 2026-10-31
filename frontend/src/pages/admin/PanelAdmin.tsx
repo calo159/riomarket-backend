@@ -86,7 +86,7 @@ export function PanelAdmin() {
         <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
           <AlertTriangle className="h-5 w-5 text-amber-500" /> Requiere atención
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="entra-lista grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {atencion.map(({ etiqueta, valor, icono: Icono, to }) => (
             <Link key={etiqueta} to={to} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-start justify-between">
@@ -107,7 +107,7 @@ export function PanelAdmin() {
         <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
           <Users className="h-5 w-5" /> Resumen general
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="entra-lista grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {metricas.map(({ etiqueta, valor }) => (
             <div key={etiqueta} className="card p-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>

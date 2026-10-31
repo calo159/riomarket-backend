@@ -97,7 +97,7 @@ export function PedidosVendedor() {
       )}
       {pedidos.data && pedidos.data.results.length > 0 && (
         <>
-          <div className="space-y-3">
+          <div className="entra-lista space-y-3">
             {pedidos.data.results.map((pedido) => {
               const siguientePermitido = siguienteAccion(pedido, 'vendedor');
               const puedeCancelar = pedido.acciones_permitidas?.includes('cancelar');

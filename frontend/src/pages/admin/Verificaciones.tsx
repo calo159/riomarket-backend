@@ -103,7 +103,7 @@ export function Verificaciones() {
                 <th className="p-3 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="entra-lista">
               {filas.map((sol) => (
                 <tr key={sol.id} className="border-b last:border-0">
                   <td className="p-3 font-medium">{sol.nombre_usuario}</td>

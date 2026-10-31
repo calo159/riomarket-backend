@@ -24,7 +24,7 @@ export function Auditoria() {
               <th className="p-3">IP</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="entra-lista">
             {(logs.data?.results ?? []).map((log) => (
               <tr key={log.id} className="border-b last:border-0">
                 <td className="p-3 text-xs text-slate-500">{formatearFechaHora(log.fecha_creacion)}</td>

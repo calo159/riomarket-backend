@@ -82,7 +82,7 @@ export function ResenasAdmin() {
       )}
       {resenas.data && resenas.data.results.length > 0 && (
         <>
-          <div className="space-y-3">
+          <div className="entra-lista space-y-3">
             {resenas.data.results.map((resena) => (
               <article key={resena.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
                 <div className="min-w-0 flex-1">

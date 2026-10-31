@@ -65,7 +65,7 @@ export function MisPedidos() {
       )}
       {pedidos.data && pedidos.data.results.length > 0 && (
         <>
-          <div className="space-y-3">
+          <div className="entra-lista space-y-3">
             {pedidos.data.results.map((pedido) => (
               <div key={pedido.id} className="card transition hover:border-brand-300 hover:shadow-md">
               <Link
