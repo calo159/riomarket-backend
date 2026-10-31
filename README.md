@@ -169,7 +169,7 @@ Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corres
 | `ALLOWED_HOSTS` | Hosts permitidos | `localhost,127.0.0.1,web` |
 | `DATABASE_URL` / `CONN_MAX_AGE` | PostgreSQL y persistencia de conexiones | Supabase / `60` |
 | `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` | Orígenes de la SPA y HTTPS | Local / `https://*.onrender.com` |
-| `DOMICILIO_TARIFA_BASE` / `PLATFORM_COMMISSION_PERCENTAGE` | Tarifa de domicilio y comisión | `3000.00` / `5.00` |
+| `DOMICILIO_TARIFA_BASE` / `PLATFORM_COMMISSION_PERCENTAGE` | Tarifa de domicilio y comisión | `3000.00` / `8.00` |
 | `PAYMENTS_SANDBOX_ENABLED` / `SEED_DEMO` | Sandbox de pagos y seed en Render | `True` / `true` |
 | `PEDIDOS_PLAZO_CONFIRMACION_HORAS` / `PEDIDOS_AVISO_ANTES_HORAS` / `PEDIDOS_LIBERAR_EN_LECTURA` | Plazo para confirmar un retiro (24), aviso previo (2 h) y barrido al leer (`True`); opcionales | valores por defecto |
 

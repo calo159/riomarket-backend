@@ -17,7 +17,7 @@ Contraseña por defecto de todos: `RioMarket2026!` (cámbiala con
 > Los IDs siguientes corresponden a una base limpia sembrada con `seed_masivo`.
 > Si tu base ya tenía datos, consulta los IDs reales antes de ejecutar el flujo.
 > Domicilio: `DOMICILIO_TARIFA_BASE` (3000.00); comisión:
-> `PLATFORM_COMMISSION_PERCENTAGE` (5.00). Para retiro la tarifa es 0.00.
+> `PLATFORM_COMMISSION_PERCENTAGE` (8.00). Para retiro la tarifa es 0.00.
 
 ## 1. Login
 
@@ -243,8 +243,8 @@ La respuesta del vendedor incluye `comision_plataforma` y `neto_vendedor`:
   "descuento_aplicado": "0.00",
   "total_cobrado": "18000.00",
   "referencia_gateway": "efectivo-cobrado",
-  "comision_plataforma": "750.00",
-  "neto_vendedor": "14250.00"
+  "comision_plataforma": "1200.00",
+  "neto_vendedor": "13800.00"
 }
 ```
 

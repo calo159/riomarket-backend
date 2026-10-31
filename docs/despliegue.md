@@ -104,7 +104,7 @@ compartida; sin ella se usa memoria local.
 
 ## Montos de la demo
 
-- Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`) y comisión: 5 %
+- Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`) y comisión: 8 %
   (`PLATFORM_COMMISSION_PERCENTAGE`). Se pueden cambiar en Environment.
 - Si cambias la tarifa, actualiza también `VITE_TARIFA_DOMICILIO` en
   `Dockerfile.render` (vista previa del checkout) y redeploy: el monto final
