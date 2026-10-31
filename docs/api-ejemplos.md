@@ -292,6 +292,32 @@ Errores `400`: `vence_en` («Este pedido no tiene plazo.»), `extensiones_plazo`
 tiempo dos veces a este pedido.») y `estado`. Domicilios y pedidos pagados no tienen plazo.
 Ver [ADR-012](ADR-012-apartar-con-plazo.md).
 
+### Productos por encargo
+
+Un producto `modalidad: "encargo"` no tiene stock: trae `preparacion_horas`, `pide_detalles` y
+`etiqueta_detalles`. Al pedirlo hay que enviar `fecha_solicitada` (entre ahora + la preparación y
+60 días) y, si el producto lo pide, los `detalles` de la línea (máximo 300 caracteres, hasta 20
+unidades). Se puede mezclar con productos de stock en el mismo pedido:
+
+```bash
+curl -s -X POST "$BASE/api/orders/pedidos/" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{
+  "id_puesto": 5, "tipo_entrega": "retiro",
+  "fecha_solicitada": "2026-11-07T16:00:00-05:00",
+  "items": [
+    {"id_producto": 41, "cantidad": 1, "detalles": "Maracuyá. Que diga: Feliz cumpleaños, Ana"},
+    {"id_producto": 12, "cantidad": 2}
+  ]
+}'
+```
+
+La respuesta trae `tiene_encargo`, `fecha_solicitada` y, en cada ítem, `modalidad` y `detalles`.
+Errores `400` (claves `fecha_solicitada` e `items`): «Elige para cuándo lo necesitas.»,
+«{puesto} necesita al menos 24 horas para prepararlo. Elige desde el …», «Solo se aceptan encargos
+para los próximos 60 días.», «Puedes encargar hasta 20 unidades de '…'.» y «Escribe … para '…'.».
+El vendedor acepta con `POST /api/orders/pedidos/{id}/confirmar/`; en retiro con efectivo no
+necesita pago aprobado. Filtros útiles: `GET /api/catalog/productos/?modalidad=encargo` y
+`GET /api/orders/pedidos/?producto=41&abiertos=true`. Ver [ADR-013](ADR-013-productos-por-encargo.md).
+
 ### Pedido de retiro: «listo para recoger» y pagar al recoger
 
 En un **retiro** nadie lleva el pedido, así que no pasa por `en_camino` ni admite

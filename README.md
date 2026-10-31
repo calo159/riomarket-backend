@@ -26,6 +26,7 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Catálogo y compra | Listo | Puestos, categorías, productos, imágenes, filtros, carrito y checkout |
 | Pedidos | Listo | Un puesto por pedido, estados, stock transaccional y cancelación |
 | Apartar con plazo | Listo | Un retiro que nadie confirma o recoge a tiempo se cancela solo (24 h, configurable por puesto de 2 a 72 h) y el stock vuelve; el vendedor puede dar más tiempo hasta 2 veces. Domicilios y pedidos pagados no vencen. Sin cron: barrido perezoso al leer y comando al arrancar ([ADR-012](docs/ADR-012-apartar-con-plazo.md)) |
+| Productos por encargo | Listo | Tortas, pudines y similares: el vendedor publica un producto sin stock con tiempo de preparación; el comprador escribe sus detalles y elige para cuándo lo quiere; el puesto «acepta» con el Confirmar de siempre. Se pueden mezclar con productos con stock; cancelar repone solo el stock de los ítems con stock ([ADR-013](docs/ADR-013-productos-por-encargo.md)) |
 | Pagos | Listo (sandbox) | Efectivo confirmado por el vendedor y simulación; sin pasarela real |
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
