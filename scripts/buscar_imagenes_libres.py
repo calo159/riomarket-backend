@@ -81,9 +81,7 @@ def credito(slug: str, resultado: dict) -> str:
     titulo = (resultado.get("title") or slug).replace("\n", " ")
     autor = resultado.get("creator") or "autor desconocido"
     licencia = " ".join(
-        parte
-        for parte in (resultado.get("license"), resultado.get("license_version"))
-        if parte
+        parte for parte in (resultado.get("license"), resultado.get("license_version")) if parte
     )
     enlace = (
         resultado.get("foreign_landing_url")
@@ -92,7 +90,7 @@ def credito(slug: str, resultado: dict) -> str:
         or ""
     )
     detalle = f"[origen]({enlace})" if enlace else "origen no informado"
-    return f"- `candidatas/{slug}.webp`: \"{titulo}\" por {autor} - {detalle} ({licencia})"
+    return f'- `candidatas/{slug}.webp`: "{titulo}" por {autor} - {detalle} ({licencia})'
 
 
 def main() -> None:

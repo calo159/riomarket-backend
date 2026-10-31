@@ -108,9 +108,7 @@ def degradado(inicio: tuple[int, int, int], fin: tuple[int, int, int]) -> Image.
     dibujo = ImageDraw.Draw(imagen)
     for y in range(ALTO):
         proporcion = y / (ALTO - 1)
-        color = tuple(
-            int(a + (b - a) * proporcion) for a, b in zip(inicio, fin, strict=True)
-        )
+        color = tuple(int(a + (b - a) * proporcion) for a, b in zip(inicio, fin, strict=True))
         dibujo.line([(0, y), (ANCHO, y)], fill=color)
     return imagen
 
@@ -232,10 +230,7 @@ def main() -> None:
         imagen = crear_placeholder(etiqueta, categoria)
         guardar_webp(imagen, archivo)
         creados += 1
-    print(
-        f"Placeholders en {destino}: {creados} creados, "
-        f"{omitidos} ya existentes."
-    )
+    print(f"Placeholders en {destino}: {creados} creados, {omitidos} ya existentes.")
 
 
 if __name__ == "__main__":
