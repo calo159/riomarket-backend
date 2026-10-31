@@ -10,6 +10,8 @@ from pathlib import Path
 
 import environ
 
+from config.logs import construir_logging
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
@@ -82,6 +84,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Primero: asigna X-Request-ID a toda petición y registra el acceso (ADR-015).
+    "apps.common.observabilidad.RequestIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     # Las cabeceras de seguridad van ANTES de WhiteNoise: si no, index.html y los
@@ -279,21 +283,9 @@ ALLOWED_IMAGE_CONTENT_TYPES = env.list(
 # ---------------------------------------------------------------------------
 # Logging: nunca imprimir contraseñas ni tokens
 # ---------------------------------------------------------------------------
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {"format": "{levelname} {asctime} {module} {message}", "style": "{"},
-    },
-    "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
-    },
-    "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
-    "loggers": {
-        "django": {"level": "INFO", "propagate": True},
-        "apps": {"level": "DEBUG" if DEBUG else "INFO", "propagate": True},
-    },
-}
+# Texto legible en desarrollo y pruebas; producción lo cambia a JSON (config/settings/prod.py).
+LOG_FORMAT = env("LOG_FORMAT", default="texto")
+LOGGING = construir_logging(LOG_FORMAT, debug=DEBUG, nivel=env("LOG_LEVEL", default="INFO"))
 
 # ---------------------------------------------------------------------------
 # Pagos (Fase 4)
