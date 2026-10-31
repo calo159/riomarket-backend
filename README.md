@@ -37,7 +37,8 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Mapa de puestos | Listo | `/mapa` con Leaflet y OpenStreetMap (chunk diferido), mini-mapa y «Cómo llegar» en cada puesto |
 | Volver a pedir | Listo | Repite un pedido entregado o cancelado con el stock y los productos actuales |
 | App instalable (PWA) | Listo | Manifest, íconos y service worker mínimo que solo muestra una página sin conexión; no guarda en caché la app ni la API |
-| Pasarela y contraseñas | No incluido | Sin pago real ni cambio de contraseña |
+| Recuperar y cambiar la contraseña | Solo API | `POST /api/auth/recuperar-contrasena/`, `restablecer-contrasena/` y `perfil/cambiar-contrasena/` existen y tienen pruebas; la SPA no tiene pantalla para ellos y el correo depende de un SMTP que la demo no configura |
+| Pasarela de pago real | No incluido | Solo sandbox y efectivo al recoger |
 
 ## Arquitectura
 
@@ -85,13 +86,13 @@ El vendedor confirma y prepara el pedido. En **domicilio** lo marca en camino y 
 | --- | --- |
 | Backend | Python 3.12, Django 5.2, DRF 3.18, SimpleJWT, drf-spectacular |
 | Datos | PostgreSQL 16 (Render o Supabase); SQLite en memoria para las pruebas |
-| Frontend | React 18, TypeScript estricto, Vite 5, React Router 6, TanStack Query, Tailwind |
+| Frontend | React 18, TypeScript estricto, Vite 7, React Router 7, TanStack Query, Tailwind |
 | Calidad | pytest, ruff, Vitest, Testing Library, Playwright, ESLint, GitHub Actions |
 | Entrega | Docker Compose para desarrollo; Render para la demo |
 
 ## Inicio rápido
 
-Requisitos: Python 3.12, Node.js 20+ y PostgreSQL 16 (o Docker). El `.env` **no** se versiona: cópialo desde `.env.example` y completa `SECRET_KEY`, `FERNET_KEY` y `DATABASE_URL`.
+Requisitos: Python 3.12, Node.js 22.12+ y PostgreSQL 16 (o Docker). El `.env` **no** se versiona: cópialo desde `.env.example` y completa `SECRET_KEY`, `FERNET_KEY` y `DATABASE_URL`.
 
 ### 1. Backend
 
@@ -145,7 +146,7 @@ Contraseña para todos: `RioMarket2026!` (se cambia con `--password` o con `SEED
 | Vendedor aprobado | `diego@riomarket.test` |
 | Comprador | `luis@riomarket.test` |
 
-`seed_masivo` es idempotente y, en una base limpia, crea **522 registros** según el reporte final del comando (15 usuarios incluidos): 8 categorías, 6 puestos, 41 productos (uno por encargo: la bandeja de dulce de papaya con queso), 32 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`; otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»; y un encargo pendiente, `SM-32`), 30 pagos, 129 notificaciones y 178 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
+`seed_masivo` es idempotente y, en una base limpia, la primera ejecución crea **522 registros** según el reporte final del comando (15 usuarios incluidos; desde la segunda ejecución el reporte dice 525, porque `cancelar_pedidos_vencidos`, que corre al arrancar, cancela `SM-31` y suma su aviso y su registro de auditoría): 8 categorías, 6 puestos, 41 productos (uno por encargo: la bandeja de dulce de papaya con queso), 32 pedidos (uno de retiro «listo para recoger» con el efectivo por cobrar, `SM-28`; otro, `SM-31`, con el plazo vencido a propósito para mostrar «Se canceló solo»; y un encargo pendiente, `SM-32`), 30 pagos, 129 notificaciones y 178 registros de auditoría. En cada ejecución renueva el plazo de los pedidos demo abiertos (7 días) para que el sistema no los cancele; solo `SM-31` queda vencido y lo cancela `cancelar_pedidos_vencidos` en el arranque. `seed_demo` crea solo 28 registros. En Render se ejecuta `seed_masivo` en cada arranque: actualiza las contraseñas demo y siembra lo que falte.
 
 Los IDs de los ejemplos de [`docs/api-ejemplos.md`](docs/api-ejemplos.md) corresponden a una base recién sembrada.
 
@@ -210,7 +211,7 @@ La API está documentada con OpenAPI (Swagger en `/api/docs/`). Módulos princip
 
 | Módulo | Prefijo | Recursos |
 | --- | --- | --- |
-| Autenticación | `/api/auth/` | Registro, login, refresh, logout y perfil |
+| Autenticación | `/api/auth/` | Registro, login, refresh, logout, perfil, menú, recuperación y cambio de contraseña |
 | Catálogo | `/api/catalog/` | Categorías, puestos, productos e imágenes |
 | Pedidos y pagos | `/api/orders/` · `/api/payments/` | Estados, ítems, efectivo, sandbox y webhook |
 | Direcciones y verificación | `/api/addresses/` · `/api/verificacion/` | Libreta de direcciones y revisión de vendedores |
@@ -361,8 +362,8 @@ La SPA está en [`frontend/`](frontend/README.md); su estado y sus limitaciones 
 - **Landing** (`/`): presentación para compradores y vendedores; con sesión iniciada redirige al inicio del rol.
 - **Comprador** (`/tienda`): catálogo, carrito, checkout, pedidos (con «Volver a pedir»), direcciones y perfil.
 - **Mapa público** (`/mapa`): los puestos con ubicación sobre OpenStreetMap, con lista accesible; en cada puesto, mini-mapa, «Cómo llegar» y WhatsApp si el vendedor lo activó.
-- **Vendedor** (`/vendedor`): puestos, productos, pedidos, cupones, reseñas y verificación.
-- **Administrador** (`/admin`): resumen con alertas, usuarios, verificaciones, pedidos, puestos, productos, categorías, reseñas, pagos, cupones y auditoría. El menú y los accesos se generan desde el backend.
+- **Vendedor** (`/vendedor`): ventas, puestos, productos, pedidos, cupones, reseñas y verificación.
+- **Administrador** (`/admin`): resumen con alertas y ventas del mercado, usuarios, verificaciones, pedidos, puestos, productos, categorías, reseñas, pagos, cupones y auditoría. El menú y los accesos se generan desde el backend.
 
 Vite corre en `127.0.0.1:3000` y hace proxy de `/api` y `/media`. Si defines `VITE_API_URL`, usa el mismo host de la SPA para que la cookie `SameSite=Strict` siga siendo del mismo sitio. El acceso rápido con las cuentas demo del login se activa con `VITE_DEMO_MODE=true`.
 
@@ -391,13 +392,14 @@ Backend:
 
 ```bash
 pytest -q
-ruff check apps config tests --no-cache
-ruff format --check apps config tests
+ruff check apps config tests scripts --no-cache
+ruff format --check apps config tests scripts
 python manage.py makemigrations --check --dry-run
 python manage.py spectacular --file schema.yaml --validate
+python scripts/trazabilidad.py --check   # matriz de trazabilidad al día
 ```
 
-Resultado actual: **más de 740 pruebas en verde** (`pytest -q`), lint y formato correctos, sin migraciones pendientes y sin errores de OpenAPI (queda un aviso por nombres de `enum`). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`.
+Resultado medido el 31/10/2026 (SQLite local): **1337 pruebas** recolectadas, 1336 en verde y 1 omitida (la de `SKIP LOCKED`, que solo corre en PostgreSQL, es decir en el CI); **cobertura de `apps/` del 94 %** con ramas (`pytest --cov=apps --cov-branch`); lint y formato correctos, sin migraciones pendientes y OpenAPI sin errores (4 avisos: nombres de `enum` y un parámetro de ruta sin tipo). La suite usa SQLite en memoria; para probar contra PostgreSQL real, exporta `TEST_DATABASE_URL`. La matriz [`docs/trazabilidad.md`](docs/trazabilidad.md) enlaza cada requisito con sus pruebas.
 
 Frontend (`cd frontend`):
 
@@ -408,9 +410,9 @@ npm test
 npm run build
 ```
 
-Resultado: **54 pruebas en 10 archivos** (`npx vitest run`), con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
+Resultado: **260 pruebas en 41 archivos** (`npx vitest run`), con lint, typecheck y build en verde. El smoke test E2E se ejecuta con `npm run test:e2e` después de `npx playwright install chromium`.
 
-Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` mantiene **12 avisos** (2 críticos, 2 altos y 8 moderados), principalmente en herramientas de desarrollo; el detalle está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
+Dependencias (31/10/2026): `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas. `npm audit` reporta **17 avisos moderados**, todos en herramientas de desarrollo (ESLint), y **ninguno** en las dependencias de producción (`npm audit --omit=dev`). La línea base anterior está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md); los límites aceptados, en [`SECURITY.md`](SECURITY.md).
 
 ## Despliegue en Render
 
@@ -425,29 +427,30 @@ La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.o
 
 ## Seguridad y limitaciones
 
-- No hay pasarela de pago real: solo existe `PasarelaSandbox`. En producción real hay que desactivar `PAYMENTS_SANDBOX_ENABLED` e integrar un proveedor.
+- No hay pasarela de pago real: solo existe `PasarelaSandbox` (ver [`SECURITY.md`](SECURITY.md)). En producción real hay que desactivar `PAYMENTS_SANDBOX_ENABLED` e integrar un proveedor.
 - El correo es opcional y depende de SMTP; la demo usa solo avisos dentro de la aplicación.
-- No se crean ni eliminan usuarios desde el panel (solo cambian de rol o se suspenden) y no hay cambio de contraseña.
+- No se crean ni eliminan usuarios desde el panel (solo cambian de rol o se suspenden). La recuperación y el cambio de contraseña existen solo en la API: la SPA no tiene pantalla para ellos.
 - `media/` y `media_privado/` usan disco local, que es efímero en Render. La foto de la cédula se cifra y se sirve solo por una vista autorizada.
 - Las imágenes y la cédula se validan por tipo y tamaño; los tokens y secretos no se registran en los logs.
-- **`.env` ya no se versiona**, pero estuvo en el historial de git: rota la contraseña de la base, `SECRET_KEY` y `FERNET_KEY` (si hay cédulas cifradas con la clave anterior, re-cífralas). Ver [`docs/AUDITORIA.md`](docs/AUDITORIA.md).
+- **`.env` ya no se versiona**, pero estuvo en el historial público de git. El dueño decidió conscientemente no rotar esas claves por ahora; queda documentado como límite en [`SECURITY.md`](SECURITY.md) (hallazgo S-01 de [`docs/AUDITORIA.md`](docs/AUDITORIA.md)). Antes de usar datos reales hay que rotar la contraseña de la base, `SECRET_KEY` y `FERNET_KEY` (y re-cifrar las cédulas).
 - No hay archivo `LICENSE`; el responsable debe elegir uno antes de reutilizar el código fuera del contexto académico.
 
-El detalle de los controles (JWT, cookies, CSP, cifrado con Fernet, límites de peticiones y permisos) está en [`SEGURIDAD.md`](SEGURIDAD.md).
+Cómo reportar una vulnerabilidad está en [`SECURITY.md`](SECURITY.md); el detalle de los controles (JWT, cookies, CSP, cifrado con Fernet, límites de peticiones y permisos), en [`SEGURIDAD.md`](SEGURIDAD.md).
 
 ## Estructura
 
 ```text
 riomarket-backend/
-├── apps/                  # accounts, catalog, orders, payments, addresses,
-│                          # notifications, reviews, promotions, audit, common
+├── apps/                  # accounts, catalog, orders, payments, addresses, notifications,
+│                          # reviews, promotions, audit, rbac, administration, common
 ├── config/                # settings dev/test/prod, URLs, WSGI y ASGI
-├── docs/                  # arquitectura, API, despliegue, ADRs y presentación
+├── docs/                  # arquitectura, diagramas, trazabilidad, API, despliegue, ADRs y guion
 ├── entrega/               # guía, flujo curl, respaldos de datos y Postman
 ├── frontend/              # SPA React/Vite, pruebas y configuración
-├── scripts/               # arranque en Render
+├── scripts/               # arranque en Render y verificación de la trazabilidad
 ├── tests/                 # pruebas transversales y factories
 ├── .github/workflows/     # CI de backend y frontend
+├── CHANGELOG.md · SECURITY.md · CONTRIBUTING.md
 ├── Dockerfile             # desarrollo (docker-compose)
 ├── Dockerfile.render      # producción (compila la SPA y arranca gunicorn)
 ├── docker-compose.yml     # PostgreSQL, Redis y backend
@@ -458,10 +461,11 @@ riomarket-backend/
 
 ## Documentación
 
-- **Guías:** [Índice](docs/README.md) · [Arquitectura y permisos](docs/arquitectura.md) · [Ejemplos de la API](docs/api-ejemplos.md) · [Despliegue](docs/despliegue.md) · [Alcance del frontend](docs/alcance-frontend.md)
-- **Proyecto:** [Mantenimiento](docs/MANTENIMIENTO.md) · [Presentación](docs/PRESENTACION.md) · [Seguridad](SEGURIDAD.md)
+- **Guías:** [Índice](docs/README.md) · [Arquitectura y permisos](docs/arquitectura.md) · [Diagramas de secuencia y despliegue](docs/diagramas.md) · [Ejemplos de la API](docs/api-ejemplos.md) · [Despliegue](docs/despliegue.md) · [Alcance del frontend](docs/alcance-frontend.md)
+- **Ingeniería:** [Matriz de trazabilidad](docs/trazabilidad.md) (generada desde [`requisitos.yml`](docs/requisitos.yml)) · [Guion de demostración de 5 minutos](docs/PRESENTACION.md) · [Rendimiento](docs/rendimiento.md) · [Registro de cambios](CHANGELOG.md)
+- **Proyecto:** [Mantenimiento](docs/MANTENIMIENTO.md) · [Auditoría](docs/AUDITORIA.md) · [Seguridad (controles)](SEGURIDAD.md) · [Política de seguridad](SECURITY.md) · [Cómo contribuir](CONTRIBUTING.md)
 - **Entrega:** [Guía de entrega](entrega/LEEME_ENTREGA.md) · [Flujo curl](entrega/flujo_prueba.curl.md) · [Colección Postman](entrega/riomarket_postman.json)
-- **Decisiones (ADR):** [enums](docs/ADR-001-enums.md) · [media](docs/ADR-002-media-publica-y-privada.md) · [pagos](docs/ADR-003-pagos.md) · [direcciones](docs/ADR-004-direcciones-y-notificaciones.md) · [reseñas](docs/ADR-005-reputacion-resenas.md) · [cupones](docs/ADR-006-promociones-cupones.md) · [auditoría](docs/ADR-007-auditoria.md)
+- **Decisiones (ADR):** [enums](docs/ADR-001-enums.md) · [media](docs/ADR-002-media-publica-y-privada.md) · [pagos](docs/ADR-003-pagos.md) · [direcciones](docs/ADR-004-direcciones-y-notificaciones.md) · [reseñas](docs/ADR-005-reputacion-resenas.md) · [cupones](docs/ADR-006-promociones-cupones.md) · [auditoría](docs/ADR-007-auditoria.md) · [imágenes](docs/ADR-008-almacenamiento-imagenes.md) · [retiro y pago al recoger](docs/ADR-009-retiro-y-pago-al-recoger.md) · [contacto, mapa y PWA](docs/ADR-010-contacto-mapa-y-pwa.md) · [rendimiento y SEO](docs/ADR-011-rendimiento-y-seo.md) · [apartar con plazo](docs/ADR-012-apartar-con-plazo.md) · [encargos](docs/ADR-013-productos-por-encargo.md) · [panel de ventas](docs/ADR-014-panel-de-ventas.md)
 
 ## Solución de problemas
 
@@ -476,13 +480,13 @@ riomarket-backend/
 ## Roadmap
 
 - Integrar una pasarela de pago real con webhooks firmados y conciliación.
-- Añadir alta de usuarios y cambio de contraseña desde el panel.
+- Añadir alta de usuarios desde el panel y pantallas de recuperación y cambio de contraseña en la SPA (la API ya existe).
 - Enviar correos transaccionales y notificaciones en tiempo real.
 - Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol.
 
 ## Contribuir, licencia y autores
 
-Crea una rama desde `main`, mantén los cambios pequeños, añade pruebas, ejecuta los comandos de la sección de pruebas y abre un pull request. No incluyas secretos reales en commits nuevos.
+Lee [`CONTRIBUTING.md`](CONTRIBUTING.md): crea una rama desde `main`, mantén los cambios pequeños, añade pruebas, ejecuta los comandos de la sección de pruebas (incluida la matriz de trazabilidad) y abre un pull request. No incluyas secretos reales en commits nuevos.
 
 **Licencia:** no hay `LICENSE`;
 

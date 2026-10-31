@@ -2,7 +2,9 @@
 
 Documento de apoyo del [README](../README.md). Contiene el detalle que haría
 ruido en la portada: dependencias entre apps, modelo entidad-relación completo
-y matriz de permisos por rol.
+y matriz de permisos por rol. Los diagramas de secuencia (checkout, retiro con
+cobro, apartar con plazo, encargo), el de despliegue y los de estados están en
+[diagramas.md](diagramas.md).
 
 ## Dependencias entre apps
 

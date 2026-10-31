@@ -1,7 +1,9 @@
 # Seguridad de RioMarket
 
 Resumen de los controles implementados y de los riesgos que siguen abiertos en
-la entrega académica. No sustituye una revisión de seguridad profesional.
+la entrega académica. No sustituye una revisión de seguridad profesional. Para
+reportar una vulnerabilidad y ver los límites aceptados, lea
+[SECURITY.md](SECURITY.md).
 
 ## Autenticación y sesión
 
@@ -80,17 +82,20 @@ En producción (`config/settings/prod.py` y `SecurityHeadersMiddleware`):
 
 - Backend: `pip-audit -r requirements.txt` no reporta vulnerabilidades conocidas
   tras actualizar Django 5.2.17, DRF 3.18.2 y Pillow 13.0.0.
-- Frontend: quedan avisos de herramientas de desarrollo (`vitest`, `vite`,
-  `tinypool`) y de `react-router`/`zod` que exigen saltos mayores. Se actualizaron
-  los parches compatibles (`react-router-dom` 6.30.6 y `postcss` 8.5.31); el
-  detalle y la decisión están en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
+- Frontend (revisado el 31/10/2026): `npm audit` reporta 17 avisos moderados,
+  todos en herramientas de desarrollo (ESLint, cuya corrección exige un salto de
+  versión mayor) y ninguno en las dependencias de producción. Las alertas altas y
+  las de `vite`, `vitest` y `react-router` se cerraron en los PR #6 y #19; la
+  línea base anterior está en [`docs/MANTENIMIENTO.md`](docs/MANTENIMIENTO.md).
 - `npm audit` debe revisarse de nuevo antes de una entrega o despliegue real.
 
 ## Riesgos abiertos
 
-- **`.env` versionado**: contiene credenciales reales de Supabase y el repositorio
-  es público. Rotar la contraseña o hacer el repositorio privado después de la
-  entrega. No reutilizar esas credenciales en otro entorno.
+- **Credenciales en el historial de git**: el archivo `.env` ya no se versiona,
+  pero estuvo en el historial del repositorio público con credenciales reales
+  (`SECRET_KEY`, `FERNET_KEY` y el acceso a la base). El dueño decidió
+  conscientemente no rotarlas por ahora (ver [SECURITY.md](SECURITY.md)); hacerlo
+  antes de usar datos reales. No reutilizar esas credenciales en otro entorno.
 - **Plan free de Render**: la base caduca a los 30 días, el servicio se duerme y
   el disco es efímero; las imágenes pueden perderse.
 - **Sin MFA** para administradores y sin política de rotación de contraseñas.

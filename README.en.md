@@ -44,7 +44,8 @@ cd frontend && npx tsc --noEmit && npx eslint src && npx vitest run && npm run b
 ```
 
 CI (GitHub Actions) runs lint, migrations check, the backend suite against PostgreSQL, the
-OpenAPI validation and the frontend lint, typecheck, tests and build.
+OpenAPI validation, the traceability check (`python scripts/trazabilidad.py --check`) and the
+frontend lint, typecheck, tests and build.
 
 ## Deployment (Render + Supabase)
 
@@ -55,4 +56,7 @@ See `docs/despliegue.md` and `docs/AUDITORIA.md` (security notes and pending pro
 
 ## Documentation
 
-`docs/README.md` is the index: architecture, ADRs, API examples, deployment and the audit report.
+`docs/README.md` is the index: architecture, sequence and deployment diagrams, the requirements
+traceability matrix, ADRs, API examples, deployment, the 5-minute demo script and the audit report.
+See also [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md) (all in Spanish).

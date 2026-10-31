@@ -46,7 +46,7 @@ Lighthouse móvil (perfil por defecto de Lighthouse 12: Moto G Power emulado, 4G
 - Ahora el servidor pone, junto a `rm_refresh` (HttpOnly, `path=/api/auth/`), la cookie **`rm_hay_sesion=1`**: no HttpOnly, `path=/`, mismo `max_age`, `secure` y `samesite`. Se borra donde se borra `rm_refresh` (cierre de sesión) y cuando el refresh responde 401 (inválido, vencido o ausente). El frontend arranca como `anonimo` si no la ve, y con la sesión por restaurar (`cargando`) si la ve.
 - **Por qué no expone nada:** vale `1`, no identifica a nadie ni sirve para autenticar; solo dice «hay una cookie de refresco». Un script malicioso que la lea no gana nada que ya no supiera (si hay sesión). La autenticación sigue siendo el refresh HttpOnly y el JWT en memoria; la CSP estricta se mantiene.
 - Si la API estuviera en otro dominio (`VITE_API_URL` con otro host) la cookie no sería legible desde la página y el frontend ignora la pista (siempre intenta restaurar), como antes.
-- **Consecuencia aceptada (decisión 14 del plan):** las sesiones iniciadas antes de este cambio no tienen la pista. Esos usuarios aparecen como anónimos **una sola vez** y deben volver a iniciar sesión (su cookie de refresco sigue válida hasta vencer, pero la página no la intenta). No hay CHANGELOG en el repositorio; el aviso queda aquí y en `docs/despliegue.md`.
+- **Consecuencia aceptada (decisión 14 del plan):** las sesiones iniciadas antes de este cambio no tienen la pista. Esos usuarios aparecen como anónimos **una sola vez** y deben volver a iniciar sesión (su cookie de refresco sigue válida hasta vencer, pero la página no la intenta). El aviso queda aquí, en el [CHANGELOG](../CHANGELOG.md) y en `docs/despliegue.md`.
 
 ### 7. Fuente precargada
 

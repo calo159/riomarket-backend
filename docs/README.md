@@ -7,6 +7,12 @@ stack, pruebas y despliegue.
 
 - [Arquitectura](arquitectura.md): dependencias entre apps, ERD, flujo de
   estados y matriz de permisos por rol.
+- [Diagramas](diagramas.md): secuencia del checkout y el pago, del retiro con
+  «Entregar y cobrar», de apartar con plazo y del encargo; despliegue y estados
+  del pedido (Mermaid).
+- [Matriz de trazabilidad](trazabilidad.md): cada requisito con su pantalla, su
+  endpoint y sus pruebas, generada desde [`requisitos.yml`](requisitos.yml) y
+  verificada en el CI con `python scripts/trazabilidad.py --check`.
 - [Despliegue](despliegue.md): Render, Supabase, límites del plan free y
   variables de producción.
 - [Auditoría general (seguridad, rendimiento y calidad)](AUDITORIA.md): hallazgos, estado de
@@ -17,9 +23,13 @@ stack, pruebas y despliegue.
   cifras y lo que no se pudo medir.
 - [Alcance del frontend](alcance-frontend.md): encargo original y estado actual
   de la SPA.
-- [Guion de presentación](PRESENTACION.md): demo de 5 minutos y preguntas
-  frecuentes.
+- [Guion de presentación](PRESENTACION.md): demo de 5 minutos con las cuentas
+  del seed, plan B y preguntas frecuentes.
 - [Seguridad](../SEGURIDAD.md): controles, riesgos abiertos y checklist.
+- [Política de seguridad](../SECURITY.md): cómo reportar una vulnerabilidad,
+  controles y límites conocidos.
+- [Registro de cambios](../CHANGELOG.md) y [cómo contribuir](../CONTRIBUTING.md)
+  (incluye cómo publicar una versión).
 
 ## API
 
