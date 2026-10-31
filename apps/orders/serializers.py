@@ -40,6 +40,12 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
 
     subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     id_producto = ProductoPorId(queryset=Producto.objects.all())
+    detalles = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=300,
+        help_text="Solo para productos por encargo: sabor, mensaje, etc. (máximo 300).",
+    )
 
     class Meta:
         model = ItemPedido
@@ -50,9 +56,17 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
             "unidad_medida",
             "precio_unitario",
             "cantidad",
+            "modalidad",
+            "detalles",
             "subtotal",
         )
-        read_only_fields = ("id", "nombre_producto", "unidad_medida", "precio_unitario")
+        read_only_fields = (
+            "id",
+            "nombre_producto",
+            "unidad_medida",
+            "precio_unitario",
+            "modalidad",
+        )
 
 
 class ReportarNoRecibidoSerializer(serializers.Serializer):
@@ -71,6 +85,7 @@ class PedidoSerializer(serializers.ModelSerializer):
     codigo_cupon = serializers.CharField(write_only=True, required=False, allow_blank=True)
     acciones_permitidas = serializers.SerializerMethodField()
     horas_extension = serializers.SerializerMethodField()
+    tiene_encargo = serializers.SerializerMethodField()
 
     class Meta:
         model = Pedido
@@ -86,6 +101,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             "latitud_entrega",
             "longitud_entrega",
             "notas",
+            "fecha_solicitada",
+            "tiene_encargo",
             "subtotal",
             "tarifa_domicilio",
             "id_cupon",
@@ -122,6 +139,10 @@ class PedidoSerializer(serializers.ModelSerializer):
             "fecha_creacion",
             "fecha_actualizacion",
         )
+
+    def get_tiene_encargo(self, obj) -> bool:
+        """Algún ítem es por encargo (``items`` ya viene en el ``prefetch_related``)."""
+        return any(item.modalidad == Producto.Modalidad.ENCARGO for item in obj.items.all())
 
     def get_horas_extension(self, obj) -> int | None:
         """Horas que suma «Dar más tiempo» (null si el pedido no admite más tiempo)."""

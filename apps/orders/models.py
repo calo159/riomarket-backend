@@ -152,6 +152,14 @@ class Pedido(models.Model):
         choices=MotivoCancelacion.choices,
         help_text="Por qué lo canceló el sistema. Vacío si se canceló a mano.",
     )
+    fecha_solicitada = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Para cuándo quiere el comprador un encargo (retiro o entrega). "
+            "Obligatoria si hay un producto por encargo; vacía si no."
+        ),
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -268,6 +276,21 @@ class ItemPedido(models.Model):
         validators=[MinValueValidator(Decimal("0"))],
     )
     cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    modalidad = models.CharField(
+        max_length=10,
+        choices=Producto.Modalidad.choices,
+        default=Producto.Modalidad.STOCK,
+        help_text=(
+            "Copia de la modalidad del producto al pedir. Decide si cancelar repone stock: "
+            "solo los ítems «stock» lo descontaron."
+        ),
+    )
+    detalles = models.CharField(
+        max_length=300,
+        blank=True,
+        default="",
+        help_text="Lo que el comprador escribió para el encargo (sabor, mensaje...).",
+    )
 
     class Meta:
         verbose_name = "ítem de pedido"
@@ -285,6 +308,10 @@ class ItemPedido(models.Model):
             models.CheckConstraint(
                 condition=models.Q(precio_unitario__gte=0),
                 name="itempedido_precio_no_negativo",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(modalidad__in=["stock", "encargo"]),
+                name="itempedido_modalidad_valida",
             ),
         ]
 

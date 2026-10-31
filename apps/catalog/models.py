@@ -155,6 +155,12 @@ class Producto(models.Model):
         INACTIVO = "inactivo", "Inactivo"
         BLOQUEADO = "bloqueado", "Bloqueado"
 
+    class Modalidad(models.TextChoices):
+        """Cómo se vende: con existencias o se hace por pedido (ADR-013)."""
+
+        STOCK = "stock", "Con stock"
+        ENCARGO = "encargo", "Por encargo"
+
     id_puesto = models.ForeignKey(Puesto, on_delete=models.CASCADE, related_name="productos")
     id_categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name="productos")
     nombre = models.CharField(max_length=120)
@@ -169,6 +175,21 @@ class Producto(models.Model):
         max_length=15, choices=UnidadMedida.choices, default=UnidadMedida.UNIDAD
     )
     estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.ACTIVO)
+    modalidad = models.CharField(max_length=10, choices=Modalidad.choices, default=Modalidad.STOCK)
+    preparacion_horas = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="Solo por encargo: horas que necesita el puesto para prepararlo (1 a 336).",
+    )
+    pide_detalles = models.BooleanField(
+        default=False, help_text="Solo por encargo: el comprador escribe sabor, mensaje, etc."
+    )
+    etiqueta_detalles = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+        help_text="Qué se le pregunta al comprador, por ejemplo «Sabor y mensaje».",
+    )
 
     class Meta:
         verbose_name = "producto"
@@ -201,6 +222,21 @@ class Producto(models.Model):
                 ),
                 name="producto_unidad_valida",
             ),
+            models.CheckConstraint(
+                condition=models.Q(modalidad__in=["stock", "encargo"]),
+                name="producto_modalidad_valida",
+            ),
+            models.CheckConstraint(
+                # ``isnull=False`` es necesario: en SQL un CHECK con NULL no falla (queda
+                # «desconocido»), y sin eso un encargo sin preparación pasaría.
+                condition=models.Q(modalidad="stock")
+                | models.Q(
+                    preparacion_horas__isnull=False,
+                    preparacion_horas__gte=1,
+                    preparacion_horas__lte=336,
+                ),
+                name="producto_encargo_requiere_preparacion",
+            ),
         ]
 
     def clean(self):
@@ -210,6 +246,16 @@ class Producto(models.Model):
         es una defensa extra, no sustituye a ``services.py``.
         """
         super().clean()
+        if self.modalidad == self.Modalidad.ENCARGO and not (
+            self.preparacion_horas and 1 <= self.preparacion_horas <= 336
+        ):
+            raise ValidationError(
+                {
+                    "preparacion_horas": (
+                        "Indica cuántas horas necesitas para prepararlo (de 1 a 336)."
+                    )
+                }
+            )
         if self.id_puesto_id and self.id_categoria_id:
             existe = PuestoCategoria.objects.filter(
                 id_puesto_id=self.id_puesto_id, id_categoria_id=self.id_categoria_id

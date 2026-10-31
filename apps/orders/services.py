@@ -31,6 +31,14 @@ from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
 
+# Productos por encargo (ADR-013).
+MAX_CANTIDAD_ENCARGO = 20
+MAX_LONGITUD_DETALLES = 300
+DIAS_MAXIMOS_ANTICIPACION = 60
+# El reloj del celular y el tiempo de llenar el formulario no deben tumbar una fecha pedida
+# «justo» en el mínimo.
+TOLERANCIA_FECHA_MINUTOS = 5
+
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección).
 ORDENAMIENTO_PEDIDO = ("fecha_creacion", "-fecha_creacion", "total", "-total", "id", "-id")
 
@@ -71,8 +79,12 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     """Crea un pedido descontando stock atómicamente y congelando precios.
 
     ``datos``: ``id_puesto`` (instancia), ``tipo_entrega``,
-    ``direccion_entrega``, ``referencia_entrega``, ``notas`` e ``items``
-    (lista de ``{"id_producto": Producto, "cantidad": int}``).
+    ``direccion_entrega``, ``referencia_entrega``, ``notas``, ``fecha_solicitada`` (solo
+    cuenta si hay productos por encargo) e ``items`` (lista de ``{"id_producto": Producto,
+    "cantidad": int, "detalles": str}``; ``detalles`` solo se guarda en los encargos).
+
+    Un producto con stock se valida y se descuenta como siempre. Un producto por encargo no
+    usa stock: se valida su cantidad máxima, sus detalles y la fecha pedida.
     """
     permissions.exigir(
         usuario,
@@ -121,26 +133,39 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
             tarifa_domicilio=tarifa,
         )
         items_a_crear = []
-        for producto, cantidad in _iterar_lineas(lineas, productos, puesto):
-            if cantidad > producto.stock:
-                raise ValidationError(
-                    {
-                        "items": (
-                            f"Stock insuficiente para '{producto.nombre}': "
-                            f"quedan {producto.stock} unidades."
-                        )
-                    }
-                )
-            producto.stock -= cantidad
-            producto.save(update_fields=["stock"])
+        encargos = []
+        for producto, cantidad, detalles in _iterar_lineas(lineas, productos, puesto):
+            if producto.modalidad == Producto.Modalidad.ENCARGO:
+                # Sin stock: no se valida ni se descuenta (ADR-013).
+                _validar_linea_de_encargo(producto, cantidad, detalles)
+                encargos.append(producto)
+                detalles_del_item = detalles
+            else:
+                if cantidad > producto.stock:
+                    raise ValidationError(
+                        {
+                            "items": (
+                                f"Stock insuficiente para '{producto.nombre}': "
+                                f"quedan {producto.stock} unidades."
+                            )
+                        }
+                    )
+                producto.stock -= cantidad
+                producto.save(update_fields=["stock"])
+                detalles_del_item = ""
             subtotal += producto.precio * cantidad
-            items_a_crear.append((producto, cantidad))
+            items_a_crear.append((producto, cantidad, producto.modalidad, detalles_del_item))
 
+        ahora = timezone.now()
+        pedido.fecha_solicitada = _resolver_fecha_solicitada(
+            datos.get("fecha_solicitada"), encargos, puesto, ahora
+        )
         if tipo_entrega == Pedido.TipoEntrega.RETIRO:
             # Apartar con plazo (ADR-012): si el puesto no lo confirma a tiempo, se cancela solo.
-            pedido.vence_en = timezone.now() + timedelta(
-                hours=settings.PEDIDOS_PLAZO_CONFIRMACION_HORAS
-            )
+            # Un encargo debe aceptarse antes de la fecha pedida, no después.
+            pedido.vence_en = ahora + timedelta(hours=settings.PEDIDOS_PLAZO_CONFIRMACION_HORAS)
+            if pedido.fecha_solicitada is not None:
+                pedido.vence_en = min(pedido.vence_en, pedido.fecha_solicitada)
         pedido.subtotal = subtotal
         cupon, descuento = _resolver_cupon(usuario, puesto, datos.get("codigo_cupon"), subtotal)
         pedido.id_cupon = cupon
@@ -157,8 +182,10 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
                     unidad_medida=producto.unidad_medida,
                     precio_unitario=producto.precio,
                     cantidad=cantidad,
+                    modalidad=modalidad,
+                    detalles=detalles,
                 )
-                for producto, cantidad in items_a_crear
+                for producto, cantidad, modalidad, detalles in items_a_crear
             ]
         )
         if cupon is not None:
@@ -204,10 +231,15 @@ def actualizar_pedido(*, pedido: Pedido, usuario, datos: dict) -> Pedido:
 
 
 def _normalizar_items(items) -> list[tuple]:
-    """Consolida cantidades repetidas y valida la forma de cada línea."""
+    """Consolida cantidades repetidas y valida la forma de cada línea.
+
+    Devuelve ``(producto, cantidad, detalles)``. Una línea repetida suma sus cantidades; los
+    detalles se escriben una sola vez por producto (una línea por producto, ADR-013).
+    """
     if not items:
         raise ValidationError({"items": "El pedido debe incluir al menos un producto."})
     acumulados: dict[int, int] = {}
+    detalles_por_producto: dict[int, str] = {}
     orden: list[int] = []
     for linea in items:
         producto = linea.get("id_producto")
@@ -220,16 +252,31 @@ def _normalizar_items(items) -> list[tuple]:
             raise ValidationError({"items": "La cantidad debe ser un número entero."}) from exc
         if cantidad < 1:
             raise ValidationError({"items": "La cantidad debe ser al menos 1."})
+        detalles = linea.get("detalles")
+        if detalles is None:
+            detalles = ""
+        if not isinstance(detalles, str):
+            raise ValidationError({"items": "Los detalles deben ser texto."})
+        detalles = detalles.strip()
+        if len(detalles) > MAX_LONGITUD_DETALLES:
+            raise ValidationError(
+                {"items": f"Los detalles pueden tener hasta {MAX_LONGITUD_DETALLES} caracteres."}
+            )
         if clave not in acumulados:
             orden.append(clave)
             acumulados[clave] = 0
+            detalles_por_producto[clave] = ""
         acumulados[clave] += cantidad
-    return [(clave, acumulados[clave]) for clave in orden]
+        anteriores = detalles_por_producto[clave]
+        if detalles and anteriores and detalles != anteriores:
+            raise ValidationError({"items": "Escribe los detalles una sola vez por producto."})
+        detalles_por_producto[clave] = detalles or anteriores
+    return [(clave, acumulados[clave], detalles_por_producto[clave]) for clave in orden]
 
 
 def _bloquear_productos(lineas) -> dict[int, Producto]:
     """Bloquea las filas de producto en orden de PK (evita interbloqueos)."""
-    claves = sorted(clave for clave, _ in lineas)
+    claves = sorted(linea[0] for linea in lineas)
     filas = list(Producto.objects.select_for_update().filter(pk__in=claves).order_by("pk"))
     if len(filas) != len(claves):
         raise ValidationError({"items": "Hay productos que ya no existen."})
@@ -237,21 +284,82 @@ def _bloquear_productos(lineas) -> dict[int, Producto]:
 
 
 def _iterar_lineas(lineas, productos: dict[int, Producto], puesto: Puesto):
-    for clave, cantidad in lineas:
+    for clave, cantidad, detalles in lineas:
         producto = productos[clave]
         if producto.estado != Producto.Estado.ACTIVO:
             raise ValidationError({"items": f"'{producto.nombre}' no está disponible."})
         if producto.id_puesto_id != puesto.pk:
             raise ValidationError({"items": f"'{producto.nombre}' no pertenece a ese puesto."})
-        yield producto, cantidad
+        yield producto, cantidad, detalles
+
+
+def _validar_linea_de_encargo(producto: Producto, cantidad: int, detalles: str) -> None:
+    """Un encargo no tiene stock, pero sí tope de unidades y detalles si el puesto los pide."""
+    if cantidad > MAX_CANTIDAD_ENCARGO:
+        raise ValidationError(
+            {
+                "items": (
+                    f"Puedes encargar hasta {MAX_CANTIDAD_ENCARGO} unidades de '{producto.nombre}'."
+                )
+            }
+        )
+    if producto.pide_detalles and not detalles:
+        etiqueta = (producto.etiqueta_detalles or "detalles del encargo").strip()
+        etiqueta = etiqueta[:1].lower() + etiqueta[1:]
+        raise ValidationError({"items": f"Escribe {etiqueta} para '{producto.nombre}'."})
+
+
+def _resolver_fecha_solicitada(fecha, encargos: list[Producto], puesto: Puesto, ahora):
+    """Fecha pedida del pedido: obligatoria con encargos, ignorada sin ellos (ADR-013).
+
+    Mínimo: ahora + la mayor preparación entre los encargos (con 5 minutos de tolerancia).
+    Máximo: 60 días. Un valor sin zona horaria se toma como hora de Colombia.
+    """
+    if not encargos:
+        return None
+    if fecha is None:
+        raise ValidationError({"fecha_solicitada": "Elige para cuándo lo necesitas."})
+    if timezone.is_naive(fecha):
+        fecha = timezone.make_aware(fecha)
+    horas = max(producto.preparacion_horas or 0 for producto in encargos)
+    minima = ahora + timedelta(hours=horas)
+    if fecha < minima - timedelta(minutes=TOLERANCIA_FECHA_MINUTOS):
+        from apps.notifications.services import formatear_cuando
+
+        desde = formatear_cuando(minima)
+        if not desde.endswith("."):
+            desde += "."
+        raise ValidationError(
+            {
+                "fecha_solicitada": (
+                    f"{puesto.nombre} necesita al menos {horas} horas para prepararlo. "
+                    f"Elige desde el {desde}"
+                )
+            }
+        )
+    if fecha > ahora + timedelta(days=DIAS_MAXIMOS_ANTICIPACION):
+        raise ValidationError(
+            {
+                "fecha_solicitada": (
+                    f"Solo se aceptan encargos para los próximos {DIAS_MAXIMOS_ANTICIPACION} días."
+                )
+            }
+        )
+    return fecha
 
 
 def _reponer_stock(pedido: Pedido) -> None:
     """Regla 4: cancelar repone el stock exactamente una vez (por transición).
 
+    Solo repone los ítems ``stock``: son los únicos que descontaron existencias al crear el
+    pedido. Un ítem por encargo nunca descontó nada, así que no se repone (ADR-013). Se usa la
+    modalidad guardada en el ítem, no la actual del producto: si el vendedor cambió el producto
+    después, el pedido sigue siendo lo que era cuando se hizo.
+
     Se suma en la base con ``F()``: una copia vieja del producto no pisa una venta concurrente.
     """
-    for producto_id, cantidad in pedido.items.values_list("id_producto_id", "cantidad"):
+    items = pedido.items.filter(modalidad=Producto.Modalidad.STOCK)
+    for producto_id, cantidad in items.values_list("id_producto_id", "cantidad"):
         Producto.objects.filter(pk=producto_id).update(stock=F("stock") + cantidad)
 
 
@@ -403,15 +511,18 @@ def _plazo_al_pasar_a(pedido: Pedido, destino: str):
 
     Solo «listo para recoger» con el efectivo aún sin cobrar tiene plazo (el del puesto);
     cualquier otro destino lo quita: el puesto ya aceptó, se cobró, se entregó o se canceló.
+    En un encargo el plazo cuenta desde la fecha pedida si todavía no llegó (ADR-013).
     """
     if destino != Pedido.Estado.LISTO_PARA_RECOGER or not _cobro_en_mano_pendiente_en_bd(pedido):
         return None
+    ahora = timezone.now()
+    inicio = max(ahora, pedido.fecha_solicitada) if pedido.fecha_solicitada else ahora
     horas = (
         Puesto.objects.filter(pk=pedido.id_puesto_id)
         .values_list("plazo_retiro_horas", flat=True)
         .first()
     )
-    return timezone.now() + timedelta(hours=horas or 24)
+    return inicio + timedelta(hours=horas or 24)
 
 
 def _cobro_en_mano_pendiente_en_bd(pedido: Pedido) -> bool:
@@ -688,6 +799,21 @@ def visibles_pedidos(usuario, queryset: QuerySet, params) -> QuerySet:
     puesto = parametro_entero(params, "puesto")
     if puesto:
         queryset = queryset.filter(id_puesto=puesto)
+
+    producto = parametro_entero(params, "producto")
+    if producto:
+        # Para avisar al vendedor cuántos pedidos tocan un producto antes de editarlo.
+        queryset = queryset.filter(
+            pk__in=ItemPedido.objects.filter(id_producto=producto).values("id_pedido")
+        )
+
+    abiertos = parametro_booleano(params, "abiertos")
+    if abiertos is not None:
+        finales = Pedido.ESTADOS_FINALES
+        if abiertos:
+            queryset = queryset.exclude(estado__in=finales)
+        else:
+            queryset = queryset.filter(estado__in=finales)
 
     con_no_recibido = parametro_booleano(params, "con_no_recibido")
     if con_no_recibido is not None:

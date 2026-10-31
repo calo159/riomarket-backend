@@ -80,13 +80,24 @@ def _destinatarios(pedido):
 
 
 def notificar_pedido_creado(*, pedido):
-    """Avisa al vendedor que entró un pedido nuevo."""
+    """Avisa al vendedor que entró un pedido nuevo (o un encargo, con su fecha)."""
+    if pedido.fecha_solicitada is not None:
+        # Solo los pedidos con productos por encargo llevan fecha pedida (ADR-013).
+        cuando = _cierre(formatear_cuando(pedido.fecha_solicitada))
+        titulo = "Nuevo encargo"
+        mensaje = (
+            f"Recibiste el encargo #{pedido.pk} para el {cuando} "
+            "Revísalo y confírmalo si puedes hacerlo."
+        )
+    else:
+        titulo = "Nuevo pedido"
+        mensaje = f"Recibiste el pedido #{pedido.pk}."
     return [
         crear_notificacion(
             usuario=pedido.id_puesto.id_vendedor,
             tipo=Notificacion.Tipo.PEDIDO_CREADO,
-            titulo="Nuevo pedido",
-            mensaje=f"Recibiste el pedido #{pedido.pk}.",
+            titulo=titulo,
+            mensaje=mensaje,
             id_pedido=pedido,
         )
     ]
@@ -102,6 +113,12 @@ def notificar_cambio_estado_pedido(*, pedido, estado_anterior):
     if plantilla is None:
         return []
     tipo, titulo, cuerpo = plantilla
+    if pedido.estado == "confirmado" and pedido.fecha_solicitada is not None:
+        # Aceptar un encargo es confirmar el pedido (ADR-013).
+        titulo = "Encargo aceptado"
+        cuerpo = "{puesto} aceptó tu encargo #{pedido} para el " + _cierre(
+            formatear_cuando(pedido.fecha_solicitada)
+        )
     notificaciones = [
         crear_notificacion(
             usuario=usuario,
