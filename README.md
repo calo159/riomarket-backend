@@ -407,12 +407,12 @@ Dependencias: `pip-audit -r requirements.txt` no reporta vulnerabilidades conoci
 
 ## Despliegue en Render
 
-`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo`, y luego inicia gunicorn. `Dockerfile.render` compila la SPA y WhiteNoise sirve los archivos estáticos.
+`render.yaml` crea un servicio Docker y una base PostgreSQL 16 gratuita. `scripts/render-start.sh` ejecuta `collectstatic`, `migrate`, `seed_masivo` y `seed_imagenes_demo`, completa las miniaturas pendientes (`generar_miniaturas`) y luego inicia gunicorn. `Dockerfile.render` compila la SPA, la comprime (Brotli y gzip) y WhiteNoise sirve los archivos estáticos con caché inmutable para los que llevan hash. Django también responde `/robots.txt` y `/sitemap.xml` y completa las metaetiquetas Open Graph de cada ruta ([ADR-011](docs/ADR-011-rendimiento-y-seo.md)).
 
 1. Sube el repositorio a GitHub (rama `main`).
 2. En Render, elige **New → Blueprint** y conecta el repositorio.
 3. Confirma los recursos y espera a que termine el deploy.
-4. Verifica `/api/health/`, `/api/docs/`, `/` (landing) y `/tienda`.
+4. Verifica `/api/health/`, `/api/docs/`, `/` (landing), `/tienda`, `/robots.txt` y `/sitemap.xml`.
 
 La URL depende del nombre del servicio; la del Blueprint es `https://riomarket.onrender.com`. Límites del plan gratuito: el servicio se duerme, la base **caduca a los 30 días** y el disco es efímero. Para una base duradera usa Supabase y reemplaza `DATABASE_URL`. Más detalles en [`docs/despliegue.md`](docs/despliegue.md).
 

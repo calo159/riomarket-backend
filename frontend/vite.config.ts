@@ -1,9 +1,37 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
+/**
+ * Precarga la fuente principal (Figtree, latín) con el nombre que le pone Vite, que lleva hash.
+ * Sin esto el navegador la descubre al leer el CSS y repinta el texto cuando llega. Va desde el
+ * propio sitio (la CSP solo permite `font-src 'self' data:`) y no hace falta ningún script.
+ */
+function precargaDeFuente(): Plugin {
+  return {
+    name: "precarga-de-fuente",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, contexto) {
+        const archivo = Object.keys(contexto.bundle ?? {}).find((nombre) =>
+          /^assets\/figtree-latin-wght-normal-[\w-]+\.woff2$/.test(nombre),
+        );
+        if (!archivo) return [];
+        return [
+          {
+            tag: "link",
+            attrs: { rel: "preload", href: `/${archivo}`, as: "font", type: "font/woff2", crossorigin: "" },
+            injectTo: "head",
+          },
+        ];
+      },
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), precargaDeFuente()],
   build: {
     // Evita el polyfill inline para poder usar una CSP estricta (script-src 'self').
     modulePreload: { polyfill: false },

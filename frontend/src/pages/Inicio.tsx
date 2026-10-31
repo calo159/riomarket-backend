@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
-import { listarCategorias, listarProductos, listarPuestos } from '../api/catalog';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
 import { Destacados } from '../components/Destacados';
@@ -11,7 +10,13 @@ import { Imagen } from '../components/Imagen';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
-import { claves } from '../lib/queryKeys';
+import {
+  categoriaDestacada,
+  consultaCategorias,
+  consultaProductosDeCategoria,
+  consultaProductosInicio,
+  consultaPuestosInicio,
+} from './inicio/consultas';
 import { cn, urlAbsoluta } from '../lib/utils';
 import type { Categoria, Producto } from '../lib/types';
 
@@ -90,22 +95,16 @@ function Estante({
 export function Inicio() {
   const { autenticado, rol } = useSession();
 
-  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
-  const productos = useQuery({
-    queryKey: claves.productos.inicio,
-    queryFn: () => listarProductos({ page_size: 10, ordering: '-id' }),
-  });
-  const puestos = useQuery({
-    queryKey: claves.puestos.inicio,
-    queryFn: () => listarPuestos({ page_size: 6, ordering: 'nombre' }),
-  });
+  // Las definiciones viven en ./inicio/consultas para que lib/precarga use las mismas claves.
+  const categorias = useQuery(consultaCategorias);
+  const productos = useQuery(consultaProductosInicio);
+  const puestos = useQuery(consultaPuestosInicio);
 
   // Segundo estante: los productos de la primera categoría que lo permita (frutas si existe).
   const lista = categorias.data ?? [];
-  const destacada = lista.find((c) => /^fruta/i.test(c.nombre)) ?? lista[0];
+  const destacada = categoriaDestacada(categorias.data);
   const deCategoria = useQuery({
-    queryKey: claves.productos.catalogo({ categoria: destacada?.id, page_size: 10 }),
-    queryFn: () => listarProductos({ categoria: destacada!.id, page_size: 10 }),
+    ...consultaProductosDeCategoria(destacada?.id ?? 0),
     enabled: Boolean(destacada),
   });
 

@@ -84,7 +84,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const crearItem = useCallback((producto: Producto, cantidad: number): ItemCarrito => {
-    const imagen = producto.imagenes?.[0]?.url ? absoluta(producto.imagenes[0].url) : null;
+    // El carrito muestra fotos de 64 px: basta la miniatura (cae a la grande si no existe).
+    const primera = producto.imagenes?.[0];
+    const origen = primera?.miniatura || primera?.url;
+    const imagen = origen ? absoluta(origen) : null;
     return {
       productoId: producto.id,
       nombre: producto.nombre,

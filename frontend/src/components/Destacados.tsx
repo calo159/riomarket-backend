@@ -70,6 +70,21 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
   const [pausado, setPausado] = useState(false);
   const total = slides.length;
   const indice = actual % total;
+  // Solo se descarga la foto de la diapositiva visible; la siguiente espera a que la visible
+  // termine (compiten por la misma red y la visible es la que cuenta como LCP). Las ya vistas
+  // conservan su <img> para no volver a pedirlas; las lejanas ni se pintan.
+  const [vistas, setVistas] = useState<ReadonlySet<string>>(() => new Set());
+  const [terminadas, setTerminadas] = useState<ReadonlySet<string>>(() => new Set());
+  const claveActiva = slides[indice].clave;
+  const siguiente = (indice + 1) % total;
+  const activaTerminada = !slides[indice].foto || terminadas.has(claveActiva);
+
+  useEffect(() => {
+    setVistas((previas) => (previas.has(claveActiva) ? previas : new Set(previas).add(claveActiva)));
+  }, [claveActiva]);
+
+  const marcarTerminada = (clave: string) =>
+    setTerminadas((previas) => (previas.has(clave) ? previas : new Set(previas).add(clave)));
 
   useEffect(() => {
     if (actual >= total) setActual(0);
@@ -90,6 +105,8 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
     >
       {slides.map((s, i) => {
         const activa = i === indice;
+        const conFoto = Boolean(s.foto) && (activa || vistas.has(s.clave) || (i === siguiente && activaTerminada));
+        const esPrimera = i === 0;
         return (
           <div
             key={s.clave}
@@ -105,14 +122,24 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
           >
             {s.foto ? (
               <div className="absolute inset-y-0 right-0 w-[42%] overflow-hidden md:w-[58%]">
-                <img
-                  src={s.foto}
-                  alt=""
-                  className={cn(
-                    'h-full w-full object-cover transition-transform duration-[6000ms] ease-out',
-                    activa ? 'scale-100' : 'scale-[1.06]',
-                  )}
-                />
+                {conFoto && (
+                  <img
+                    src={s.foto}
+                    alt=""
+                    width={640}
+                    height={640}
+                    loading={esPrimera ? 'eager' : 'lazy'}
+                    decoding="async"
+                    // Solo la primera es la candidata a LCP (en minúsculas: React 18 no conoce fetchPriority).
+                    {...(esPrimera ? { fetchpriority: 'high' } : {})}
+                    onLoad={() => marcarTerminada(s.clave)}
+                    onError={() => marcarTerminada(s.clave)}
+                    className={cn(
+                      'h-full w-full object-cover transition-transform duration-[6000ms] ease-out',
+                      activa ? 'scale-100' : 'scale-[1.06]',
+                    )}
+                  />
+                )}
               </div>
             ) : (
               s.puesto && (

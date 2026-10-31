@@ -183,7 +183,13 @@ export function ProductoDetalle() {
             alt={imagen?.alt || datos.nombre}
             width={imagen?.ancho ?? undefined}
             height={imagen?.alto ?? undefined}
-            loading="eager" // es la imagen principal, visible al abrir la página
+            {...(imagen?.miniatura && imagen.miniatura !== imagen.url
+              ? {
+                  srcSet: `${urlAbsoluta(imagen.miniatura)} 400w, ${urlAbsoluta(imagen.url)} ${imagen.ancho ?? 640}w`,
+                  sizes: '(min-width: 768px) 560px, 100vw',
+                }
+              : {})}
+            prioridad // es la imagen principal, visible al abrir la página
           />
         </div>
 

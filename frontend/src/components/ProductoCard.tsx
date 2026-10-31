@@ -11,28 +11,59 @@ import { mensajeDeError } from '../lib/errors';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
 import { Imagen } from './Imagen';
 
+/** Ancho de la tarjeta según la rejilla: ½ en celular, ⅓ en tableta y ≈230 px en escritorio. */
+export const SIZES_TARJETA = '(min-width: 1280px) 230px, (min-width: 768px) 33vw, 50vw';
+/** Lado de la miniatura que genera el servidor (apps/common/image_processing.py: THUMB_DIM). */
+const LADO_MINIATURA = 400;
+
+/**
+ * Atributos de la foto de una tarjeta. Usa la miniatura (≈400 px) y deja la grande como segunda
+ * opción del `srcset` para pantallas de alta densidad; si no hay miniatura distinta, solo la grande.
+ */
+export function atributosFotoTarjeta(producto: Producto) {
+  const img0 = producto.imagenes?.[0];
+  const grande = urlAbsoluta(img0?.url || img0?.miniatura);
+  const mini = urlAbsoluta(img0?.miniatura);
+  if (mini && grande && mini !== grande) {
+    return {
+      src: mini,
+      srcSet: `${mini} ${LADO_MINIATURA}w, ${grande} ${img0?.ancho ?? 640}w`,
+      sizes: SIZES_TARJETA,
+      // Las tarjetas son cuadradas: reservar el espacio evita saltos de diseño.
+      width: LADO_MINIATURA,
+      height: LADO_MINIATURA,
+    };
+  }
+  return { src: grande, width: img0?.ancho ?? undefined, height: img0?.alto ?? undefined };
+}
+
 export function ImagenProducto({
   producto,
   className,
   categoria,
+  prioridad,
+  cargaInmediata,
 }: {
   producto: Producto;
   className?: string;
   /** Nombre de la categoría, para el icono de la reserva sin foto. */
   categoria?: string | null;
+  /** Foto candidata a LCP: se pide ya y con prioridad alta. */
+  prioridad?: boolean;
+  /** Foto visible sin desplazarse: se pide ya (sin esperar a la carga diferida), con prioridad normal. */
+  cargaInmediata?: boolean;
 }) {
   const img0 = producto.imagenes?.[0];
-  const url = urlAbsoluta(img0?.url || img0?.miniatura);
   return (
     <Imagen
-      src={url}
+      {...atributosFotoTarjeta(producto)}
+      {...(cargaInmediata && !prioridad ? { loading: 'eager' as const } : {})}
       fallbackNombre={producto.nombre}
       categoria={categoria}
       contenedorClassName={className}
       className="transition duration-[400ms] ease-out group-hover:scale-105"
       alt={img0?.alt || producto.nombre}
-      width={img0?.ancho ?? undefined}
-      height={img0?.alto ?? undefined}
+      prioridad={prioridad}
     />
   );
 }
@@ -41,11 +72,17 @@ export function ProductoCard({
   producto,
   puesto,
   categoria,
+  prioridad,
+  cargaInmediata,
 }: {
   producto: Producto;
   puesto?: Puesto;
   /** Nombre de la categoría del producto (lo conoce la pantalla que ya cargó las categorías). */
   categoria?: string | null;
+  /** Las primeras tarjetas (candidatas a LCP) cargan su foto con prioridad alta. */
+  prioridad?: boolean;
+  /** Las tarjetas visibles sin desplazarse piden su foto de inmediato en vez de esperar a la carga diferida. */
+  cargaInmediata?: boolean;
 }) {
   const { agregar } = useCart();
   const toast = useToast();
@@ -107,7 +144,13 @@ export function ProductoCard({
         className="relative block aspect-square overflow-hidden bg-slate-50 dark:bg-slate-800"
         aria-label={producto.nombre}
       >
-        <ImagenProducto producto={producto} categoria={categoria} className="h-full w-full" />
+        <ImagenProducto
+          producto={producto}
+          categoria={categoria}
+          prioridad={prioridad}
+          cargaInmediata={cargaInmediata}
+          className="h-full w-full"
+        />
         {agotado ? (
           <span className="absolute left-2 top-2 rounded-[5px] bg-tinta px-[7px] py-[3px] text-xs font-bold text-white">
             Agotado

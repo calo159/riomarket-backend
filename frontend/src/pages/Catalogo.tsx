@@ -2,15 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react';
-import { listarCategorias, listarProductos, type FiltrosProducto } from '../api/catalog';
+import type { FiltrosProducto } from '../api/catalog';
 import { ProductoCard } from '../components/ProductoCard';
 import { EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
 import { Modal } from '../components/ui/Modal';
 import { GRID_PRODUCTOS } from '../lib/estilos';
-import { claves } from '../lib/queryKeys';
-
-const TAMANO = 15;
+import { consultaCatalogo, consultaCategorias, filtrosCatalogoDe, TAMANO_CATALOGO as TAMANO } from './inicio/consultas';
 
 export function Catalogo() {
   const [params, setParams] = useSearchParams();
@@ -33,25 +31,11 @@ export function Catalogo() {
     setPrecioMax(params.get('precio_max') ?? '');
   }, [params]);
 
-  const filtros = useMemo<FiltrosProducto>(
-    () => ({
-      page: pagina,
-      page_size: TAMANO,
-      q: params.get('q') || undefined,
-      categoria: params.get('categoria') || undefined,
-      ordering: params.get('ordering') || undefined,
-      precio_min: params.get('precio_min') || undefined,
-      precio_max: params.get('precio_max') || undefined,
-    }),
-    [params, pagina],
-  );
+  const filtros = useMemo<FiltrosProducto>(() => filtrosCatalogoDe(params), [params]);
 
-  const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
-  const productos = useQuery({
-    queryKey: claves.productos.catalogo(filtros),
-    queryFn: () => listarProductos(filtros),
-    placeholderData: (anterior) => anterior,
-  });
+  // Las definiciones viven en ./inicio/consultas para que lib/precarga use las mismas claves.
+  const categorias = useQuery(consultaCategorias);
+  const productos = useQuery({ ...consultaCatalogo(filtros), placeholderData: (anterior) => anterior });
 
   const actualizar = (cambios: Record<string, string | null>, reiniciarPagina = true) => {
     const siguientes = new URLSearchParams(params);
@@ -254,8 +238,15 @@ export function Catalogo() {
           {productos.data && productos.data.results.length > 0 && (
             <>
               <div className={GRID_PRODUCTOS}>
-                {productos.data.results.map((producto) => (
-                  <ProductoCard key={producto.id} producto={producto} categoria={nombreDe(producto.id_categoria)} />
+                {productos.data.results.map((producto, posicion) => (
+                  <ProductoCard
+                    key={producto.id}
+                    producto={producto}
+                    categoria={nombreDe(producto.id_categoria)}
+                    prioridad={posicion < 2}
+                    // 2 columnas en celular: unas 3 filas se ven sin desplazarse.
+                    cargaInmediata={posicion < 6}
+                  />
                 ))}
               </div>
               <Paginacion
