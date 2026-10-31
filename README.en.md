@@ -8,7 +8,7 @@ notifications, audit logs and a full **role/resource administration** (RBAC).
 
 [![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/) [![Django](https://img.shields.io/badge/django-5.2-092E20)](https://www.djangoproject.com/) [![React](https://img.shields.io/badge/react-18-61DAFB)](https://react.dev/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192)](https://www.postgresql.org/)
 
-Demo (Render): <https://riomarket.onrender.com>. The free service sleeps and the URL may change.
+Demo (Render): <https://riomarket-y67g.onrender.com>. The free service sleeps and the URL may change.
 
 ## What it does
 
