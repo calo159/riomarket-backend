@@ -13,7 +13,7 @@ export function Auditoria() {
       <EncabezadoPagina titulo="Auditoría" descripcion="Registro de acciones críticas." />
       {logs.isLoading && <CargandoBloque mensaje="Cargando registros…" />}
       {logs.isError && <EstadoError mensaje="No pudimos cargar auditoría." onReintentar={() => void logs.refetch()} />}
-      <div className="overflow-x-auto card">
+      <div className="overflow-x-auto card" role="region" aria-label="Registros de auditoría" tabIndex={0}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-slate-500">

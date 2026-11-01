@@ -102,9 +102,9 @@ export function Login() {
       <div className="relative hidden overflow-hidden rounded-l-xl bg-brand-600 p-12 text-white dark:bg-brand-900 lg:flex lg:flex-col lg:justify-between">
         <div className="relative">
           <Logo sobreMarca />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
+          <p className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
             Tu mercado local, a un clic de distancia.
-          </h1>
+          </p>
           <p className="mt-4 max-w-md text-lg text-brand-50">
             Compra frutas, comidas y artesanías directo a los vendedores de Riohacha.
           </p>
@@ -128,7 +128,7 @@ export function Login() {
           <div className="mb-6 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight">Bienvenido de nuevo</h2>
+          <h1 className="text-3xl font-extrabold tracking-tight">Bienvenido de nuevo</h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Ingresa para comprar o administrar tu puesto.
           </p>

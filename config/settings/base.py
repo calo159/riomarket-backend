@@ -250,6 +250,13 @@ SPECTACULAR_SETTINGS = {
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "SWAGGER_UI_SETTINGS": {"deepLinking": True, "persistAuthorization": True},
     "COMPONENT_SPLIT_REQUEST": True,
+    # Nombres fijos para enumeraciones con el mismo nombre de campo («estado», «rol»): sin esto
+    # llevan un sufijo que cambia al tocar las opciones (EstadoB1eEnum) y rompe los tipos.
+    "ENUM_NAME_OVERRIDES": {
+        "EstadoUsuarioEnum": "apps.accounts.models.Usuario.Estado",
+        "RolUsuarioEnum": "apps.accounts.models.Usuario.Rol",
+        "DecisionAprobadoRechazadoEnum": ["aprobado", "rechazado"],
+    },
 }
 
 # ---------------------------------------------------------------------------

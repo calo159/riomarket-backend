@@ -175,7 +175,7 @@ export function PanelVendedor() {
           </div>
         </section>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4" aria-label="Accesos rápidos">
           <section className="card p-5">
             <h2 className="text-base font-bold">Accesos rápidos</h2>
             <div className="mt-3 space-y-2">

@@ -56,6 +56,16 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Corregido
 
+- **Accesibilidad, según un recorrido automático de todas las pantallas con los cuatro roles.** Las
+  calificaciones con estrellas ahora son imágenes con nombre (antes llevaban un `aria-label` sin rol, que los
+  lectores de pantalla ignoran o leen mal); la tabla de auditoría se puede recorrer con el teclado en el
+  celular; el login y el registro tienen un único título principal también en el celular (el del panel
+  decorativo no se ve ahí); la página 404 tiene su región principal; y los menús laterales y resúmenes tienen
+  nombre propio. El recorrido final no encuentra ningún problema.
+- **El esquema de la API tenía avisos y un error de documentación.** Tres enumeraciones llevaban un sufijo
+  generado (`EstadoB1eEnum`) que cambia al tocar las opciones y rompe los tipos del frontend; ahora tienen
+  nombre fijo. «Marcar imagen principal» se documentaba como si recibiera y devolviera un producto, cuando no
+  recibe nada y devuelve una imagen. Una prueba nueva falla si vuelven los avisos.
 - **Los elementos fijos dentro de una página se colocaban mal.** La transición de entrada de página
   conservaba su último cuadro (`animation-fill-mode: both`), y el navegador tomaba la página como contenedor
   de todo lo `position: fixed` de dentro: la barra de compra de la ficha quedaba sobre el pie de página en

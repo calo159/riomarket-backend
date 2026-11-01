@@ -91,7 +91,7 @@ export function PanelLayout() {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-14 z-30 hidden w-60 border-r bg-white dark:bg-slate-900 lg:block">
+      <aside aria-label="Menú del panel" className="fixed bottom-0 left-0 top-14 z-30 hidden w-60 border-r bg-white dark:bg-slate-900 lg:block">
         {barraLateral}
       </aside>
 

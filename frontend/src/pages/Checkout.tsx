@@ -484,7 +484,7 @@ export function Checkout() {
           </section>
         </div>
 
-        <aside className="card h-fit p-5 lg:sticky lg:top-4">
+        <aside className="card h-fit p-5 lg:sticky lg:top-4" aria-label="Resumen del pedido">
           <h2 className="text-xl font-bold">Tu pedido</h2>
           <p className="text-sm font-semibold text-brand-600 dark:text-brand-300">{carrito.puestoNombre}</p>
           <div className="mt-3 space-y-2">
