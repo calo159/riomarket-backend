@@ -56,3 +56,9 @@ services:
         sync: false
       - key: STORAGE_PUBLIC_BASE_URL
         sync: false
+      # Correo (recuperar contraseña). Render gratis bloquea SMTP: se envía por la API HTTP de Brevo.
+      # Sin BREVO_API_KEY la recuperación funciona pero el correo no sale. Ver docs/despliegue.md.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false

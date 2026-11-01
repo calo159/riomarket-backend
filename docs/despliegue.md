@@ -102,6 +102,20 @@ Usa Supabase (free, no caduca):
 Redis es opcional: define `REDIS_URL` (Render Key Value) solo si quieres caché
 compartida; sin ella se usa memoria local.
 
+## Correo para «Olvidé mi contraseña»
+
+El plan gratis de Render bloquea los puertos SMTP, así que el correo sale por la API HTTP de
+[Brevo](https://www.brevo.com) (plan gratis: 300 correos al día, sin dominio propio).
+
+1. Crea la cuenta en Brevo y verifica un remitente (Senders → Add a sender): será el «de» de los correos.
+2. En Brevo → SMTP & API → API Keys crea una clave.
+3. En Render → Environment añade `BREVO_API_KEY` (la clave) y `DEFAULT_FROM_EMAIL` (el remitente verificado). La dirección
+   del enlace sale sola de `RENDER_EXTERNAL_URL`; si usas otro dominio, define `FRONTEND_URL`.
+4. Redeploy. Con la clave puesta el envío queda activo; también el de avisos de pedidos por correo
+   (`NOTIFICATIONS_EMAIL_ENABLED`, que pasa a `true` si no lo fijas).
+
+Sin esas variables la pantalla funciona, pero ningún correo sale. Las respuestas no revelan si un correo está registrado.
+
 ## Montos de la demo
 
 - Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`) y comisión: 8 %

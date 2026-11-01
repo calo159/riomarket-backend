@@ -305,5 +305,12 @@ PAYMENTS_WEBHOOK_SECRET = env("PAYMENTS_WEBHOOK_SECRET", default="")
 # Notificaciones (Fase 5)
 # ---------------------------------------------------------------------------
 # El email es opcional: por defecto solo se crean notificaciones in-app.
-NOTIFICATIONS_EMAIL_ENABLED = env.bool("NOTIFICATIONS_EMAIL_ENABLED", default=False)
+# Correo por la API HTTP de Brevo (Render gratis bloquea SMTP). Con la clave puesta, se activa solo.
+BREVO_API_KEY = env("BREVO_API_KEY", default="")
+if BREVO_API_KEY:
+    EMAIL_BACKEND = "apps.common.correo_brevo.BrevoEmailBackend"
+NOTIFICATIONS_EMAIL_ENABLED = env.bool("NOTIFICATIONS_EMAIL_ENABLED", default=bool(BREVO_API_KEY))
+# Debe ser un remitente verificado en Brevo.
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-responder@riomarket.local")
+# Dirección pública de la web: arma el enlace de «restablecer contraseña» (Render la entrega sola).
+FRONTEND_URL = env("FRONTEND_URL", default=env("RENDER_EXTERNAL_URL", default="")).rstrip("/")

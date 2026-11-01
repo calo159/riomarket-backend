@@ -6,6 +6,7 @@ import * as z from 'zod/mini';
 import {
   AlertCircle,
   ArrowRight,
+  CheckCircle2,
   Eye,
   EyeOff,
   LockKeyhole,
@@ -139,6 +140,13 @@ export function Login() {
             </div>
           )}
 
+          {params.get('restablecida') === '1' && (
+            <div className="mt-5 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200" role="status">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p>Cambiaste tu contraseña. Ingresa con la nueva.</p>
+            </div>
+          )}
+
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>
             {errors.root?.message && (
               <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200" role="alert">
@@ -176,6 +184,12 @@ export function Login() {
                 </button>
               </div>
             </Campo>
+
+            <p className="-mt-1 text-right text-sm">
+              <Link to="/olvide-contrasena" className="link">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
 
             <button type="submit" className="btn-primary w-full py-3" disabled={isSubmitting}>
               {isSubmitting ? 'Ingresando…' : 'Ingresar'}

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, LogOut, Mail, Phone, ShieldCheck, UserRound } from 'lucide-react';
 import { actualizarPerfil, obtenerPerfil } from '../api/auth';
 import { useSession } from '../auth/SessionProvider';
+import { CambiarContrasena } from '../components/CambiarContrasena';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoBloque, EstadoError } from '../components/ui/Estado';
 import { Campo, ErrorCampo } from '../components/ui/Campos';
@@ -152,6 +153,8 @@ export function Perfil() {
           </button>
         </div>
       </form>
+
+      <CambiarContrasena />
 
       {esVendedor && (
         <section className="card mt-5 p-5">

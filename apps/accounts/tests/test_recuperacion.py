@@ -34,6 +34,24 @@ class TestSolicitar:
         assert len(mail.outbox) == 1
         assert token in mail.outbox[0].body
 
+    def test_el_correo_trae_un_enlace_que_abre_la_pantalla_de_restablecer(self, settings):
+        settings.NOTIFICATIONS_EMAIL_ENABLED = True
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        settings.FRONTEND_URL = "https://riomarket.example"
+        usuario = UsuarioFactory()
+        services.solicitar_recuperacion(correo=usuario.correo)
+        token = TokenRecuperacion.objects.get(usuario=usuario).token
+        enlace = f"https://riomarket.example/restablecer-contrasena?token={token}"
+        assert enlace in mail.outbox[0].body
+
+    def test_sin_direccion_publica_el_correo_trae_solo_el_codigo(self, settings):
+        settings.NOTIFICATIONS_EMAIL_ENABLED = True
+        settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+        settings.FRONTEND_URL = ""
+        usuario = UsuarioFactory()
+        services.solicitar_recuperacion(correo=usuario.correo)
+        assert "http" not in mail.outbox[0].body
+
     def test_un_token_nuevo_invalida_los_anteriores(self):
         usuario = UsuarioFactory()
         services.solicitar_recuperacion(correo=usuario.correo)
