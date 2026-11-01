@@ -10,8 +10,10 @@ import {
 } from 'lucide-react';
 import { listarResenas } from '../api/reviews';
 import { listarCategorias, listarProductos, obtenerProducto, obtenerPuesto } from '../api/catalog';
+import { ImagenAmpliable } from '../components/ImagenAmpliable';
 import { LogoPuesto } from '../components/PuestoCard';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
+import { esErrorTemporal, mensajeDeCarga } from '../lib/errors';
 import { formatearMoneda } from '../lib/format';
 import { MAX_DETALLES, esEncargo, etiquetaDeDetalles, formatearPreparacion, topeDe } from '../lib/encargos';
 import { urlAbsoluta } from '../lib/utils';
@@ -81,7 +83,10 @@ export function ProductoDetalle() {
   if (producto.isError || !producto.data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <EstadoError mensaje="No encontramos este producto o ya no está disponible." />
+        <EstadoError
+          mensaje={mensajeDeCarga(producto.error, "No encontramos este producto o ya no está disponible.")}
+          onReintentar={esErrorTemporal(producto.error) ? () => void producto.refetch() : undefined}
+        />
         <Link to="/catalogo" className="btn-secondary mt-4">Volver al catálogo</Link>
       </div>
     );
@@ -195,14 +200,17 @@ export function ProductoDetalle() {
         </div>
         )}
 
-        <div className="group aspect-square max-h-[520px] w-full cursor-zoom-in overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-800">
+        <ImagenAmpliable
+          key={imagenActiva}
+          nombre={datos.nombre}
+          className="aspect-square max-h-[520px] w-full rounded-lg bg-slate-50 dark:bg-slate-800"
+        >
           <Imagen
-            key={imagenActiva}
             src={urlAbsoluta(imagen?.url || imagen?.miniatura)}
             fallbackNombre={datos.nombre}
             categoria={categoriaNombre}
             contenedorClassName="h-full w-full"
-            className="animate-fadein transition-transform duration-[350ms] ease-out group-hover:scale-150"
+            className="animate-fadein"
             alt={imagen?.alt || datos.nombre}
             width={imagen?.ancho ?? undefined}
             height={imagen?.alto ?? undefined}
@@ -214,7 +222,7 @@ export function ProductoDetalle() {
               : {})}
             prioridad // es la imagen principal, visible al abrir la página
           />
-        </div>
+        </ImagenAmpliable>
 
         <aside className="flex flex-col gap-2.5 self-start rounded-xl border border-slate-200 p-4 dark:border-slate-700 md:p-[18px]" aria-label="Comprar">
           <p className="text-[13px] text-slate-500 dark:text-slate-400">

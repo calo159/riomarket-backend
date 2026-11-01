@@ -9,6 +9,7 @@ import { Imagen } from '../components/Imagen';
 import { LogoPuesto } from '../components/PuestoCard';
 import { urlAbsoluta } from '../lib/utils';
 import { GRID_PRODUCTOS } from '../lib/estilos';
+import { esErrorTemporal, mensajeDeCarga } from '../lib/errors';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
@@ -59,7 +60,10 @@ export function PuestoDetalle() {
   if (puesto.isError || !puesto.data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <EstadoError mensaje="No encontramos este puesto." />
+        <EstadoError
+          mensaje={mensajeDeCarga(puesto.error, "No encontramos este puesto.")}
+          onReintentar={esErrorTemporal(puesto.error) ? () => void puesto.refetch() : undefined}
+        />
         <Link to="/catalogo" className="btn-secondary mt-4">Volver al catálogo</Link>
       </div>
     );

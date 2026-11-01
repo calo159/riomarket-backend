@@ -29,6 +29,20 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   registrados conservan la comisión con que se calcularon. En un servicio ya creado hay que cambiar la
   variable en Environment de Render.
 
+### Corregido
+
+- **El zoom de la foto del producto se quedaba atascado.** Dependía solo de `:hover`, y en el celular la
+  foto quedaba ampliada sin forma de alejarla. Ahora se amplía con un clic o un toque y se aleja con otro
+  (o con Escape); sigue al cursor o al dedo para ver los bordes y, con mouse, se aleja al salir del marco.
+- **«No encontramos este producto» cuando en realidad se había pasado el límite de solicitudes.** Las
+  fichas de producto, puesto y pedido distinguen ahora «no existe» de «demasiadas consultas», «sin
+  conexión» y «error del servidor», y ofrecen reintentar cuando tiene sentido.
+- **Límite de solicitudes demasiado bajo para navegar.** Una ficha de producto hace unas 7 llamadas, así
+  que 60/min anónimo se agotaba en segundos, sobre todo en redes compartidas (un salón, un celular con
+  datos). Pasa a 240/min anónimo y 600/min autenticado (`THROTTLE_ANON` y `THROTTLE_USER`); inicio de
+  sesión, registro, verificación y pagos conservan los suyos. El aviso de la API ahora está en español
+  claro e indica cuántos segundos esperar.
+
 ## [1.0.0] - 2026-10-31
 
 ### Añadido

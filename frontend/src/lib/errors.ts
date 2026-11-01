@@ -52,3 +52,21 @@ export function mensajeDeError(error: unknown, porDefecto = 'Ocurrió un error. 
   if (error.response.status === 404) return 'No encontramos ese recurso.';
   return porDefecto;
 }
+
+/** Fallos que pasan solos: sin conexión, demasiadas consultas seguidas (429) o un error del servidor. */
+export function esErrorTemporal(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  if (!error.response) return true;
+  return error.response.status === 429 || error.response.status >= 500;
+}
+
+/** Texto de una página que no pudo cargar: separa «no existe» de «vas muy rápido» y «sin conexión». */
+export function mensajeDeCarga(error: unknown, noEncontrado: string): string {
+  if (!axios.isAxiosError(error)) return noEncontrado;
+  if (!error.response) return 'No pudimos conectar con RioMarket. Revisa tu conexión e inténtalo de nuevo.';
+  if (error.response.status === 429) {
+    return 'Hiciste muchas consultas seguidas. Espera unos segundos e inténtalo de nuevo.';
+  }
+  if (error.response.status >= 500) return 'RioMarket tuvo un problema al cargar esto. Inténtalo de nuevo en un momento.';
+  return noEncontrado;
+}
