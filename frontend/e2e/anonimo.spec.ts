@@ -74,6 +74,8 @@ test('olvidé mi contraseña: desde el login se pide el enlace y la respuesta no
   await page.goto('/login');
   await page.getByRole('link', { name: '¿Olvidaste tu contraseña?' }).click();
   await expect(page).toHaveURL(/\/olvide-contrasena$/);
+  // La pantalla se carga aparte: hasta que aparece, el campo «Correo electrónico» es todavía el del login.
+  await expect(page.getByRole('heading', { name: '¿Olvidaste tu contraseña?' })).toBeVisible();
 
   await page.getByLabel('Correo electrónico').fill('nadie-registrado@riomarket.test');
   await page.getByRole('button', { name: 'Enviarme el enlace' }).click();
