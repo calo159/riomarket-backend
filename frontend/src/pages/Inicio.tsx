@@ -17,7 +17,7 @@ import {
   consultaProductosDeCategoria,
   consultaProductosInicio,
   consultaPuestosInicio,
-} from './inicio/consultas';
+} from '../api/consultas';
 import { cn, urlAbsoluta } from '../lib/utils';
 import type { Categoria, Producto } from '../lib/types';
 
@@ -96,7 +96,7 @@ function Estante({
 export function Inicio() {
   const { autenticado, rol } = useSession();
 
-  // Las definiciones viven en ./inicio/consultas para que lib/precarga use las mismas claves.
+  // Las definiciones viven en api/consultas para que api/precarga use las mismas claves.
   const categorias = useQuery(consultaCategorias);
   const productos = useQuery(consultaProductosInicio);
   const puestos = useQuery(consultaPuestosInicio);

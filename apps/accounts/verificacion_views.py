@@ -21,13 +21,13 @@ from rest_framework.views import APIView
 
 from apps.accounts import services
 from apps.accounts.models import Vendedor
+from apps.accounts.permissions import EsVendedor
 from apps.accounts.verificacion_serializers import (
     DecidirVerificacionSerializer,
     MiVerificacionSerializer,
     SolicitudVerificacionSerializer,
     VerificacionAdminListSerializer,
 )
-from apps.common.permissions import EsVendedor
 from apps.rbac.permissions import TieneRecurso
 
 SIN_SOLICITUD = {

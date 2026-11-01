@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from apps.common.permissions import EsComprador
+from apps.accounts.permissions import EsComprador
 from apps.common.query import aplicar_ordenamiento
 from apps.reviews import services
 from apps.reviews.models import Resena

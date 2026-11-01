@@ -7,3 +7,8 @@ class PaymentsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.payments"
     verbose_name = "Pagos"
+
+    def ready(self):
+        from apps.payments import insignias
+
+        insignias.registrar()

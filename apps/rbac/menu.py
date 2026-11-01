@@ -1,49 +1,29 @@
 """Menú dinámico: sale de los recursos que los roles del usuario le otorgan.
 
 Si el administrador cambia un rol, un recurso o la asignación, el menú cambia
-en la siguiente petición. Los badges son conteos baratos y solo se calculan
-para lo que el usuario ve.
+en la siguiente petición. Las insignias (badges) son conteos baratos y solo se
+calculan para lo que el usuario ve.
+
+``rbac`` no conoce el dominio: cada app dueña del dato registra el conteo de su
+insignia con :func:`registrar_insignia` al arrancar (``AppConfig.ready``). Así la
+dependencia va de las apps de negocio hacia ``rbac`` y nunca al revés.
 """
 
-from apps.accounts.models import Vendedor
-from apps.notifications.models import Notificacion
-from apps.orders.models import Pedido
-from apps.payments.models import Pago
+from collections.abc import Callable
+
 from apps.rbac.acceso import nombres_de_roles, recursos_activos_de_usuario
+
+_INSIGNIAS: dict[str, Callable[..., int]] = {}
+
+
+def registrar_insignia(codigo: str, calculo: Callable[..., int]) -> None:
+    """Asocia el recurso ``codigo`` con ``calculo(usuario) -> int`` (idempotente)."""
+    _INSIGNIAS[codigo] = calculo
 
 
 def _badges(usuario, codigos: set[str]) -> dict[str, int]:
     """Conteo por código de recurso; solo de los que el usuario puede ver."""
-    badges: dict[str, int] = {}
-    if "mis_pedidos" in codigos:
-        badges["mis_pedidos"] = Pedido.objects.filter(
-            id_comprador=usuario,
-            estado__in=(Pedido.Estado.EN_CAMINO, Pedido.Estado.LISTO_PARA_RECOGER),
-        ).count()
-    if "notificaciones" in codigos:
-        badges["notificaciones"] = Notificacion.objects.filter(
-            id_usuario=usuario, leida=False
-        ).count()
-    if "vendedor.pedidos" in codigos:
-        badges["vendedor.pedidos"] = Pedido.objects.filter(
-            id_puesto__id_vendedor=usuario, estado=Pedido.Estado.PENDIENTE
-        ).count()
-    if "admin.verificaciones" in codigos:
-        badges["admin.verificaciones"] = Vendedor.objects.filter(
-            estado_verificacion=Vendedor.EstadoVerificacion.PENDIENTE
-        ).count()
-    if "admin.pedidos" in codigos:
-        # Reportados como "no recibido" y todavía sin resolver (no finales).
-        badges["admin.pedidos"] = (
-            Pedido.objects.filter(no_recibido_en__isnull=False)
-            .exclude(estado__in=Pedido.ESTADOS_FINALES)
-            .count()
-        )
-    if "admin.pagos" in codigos:
-        badges["admin.pagos"] = Pago.objects.filter(
-            estado__in=(Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
-        ).count()
-    return badges
+    return {codigo: calculo(usuario) for codigo, calculo in _INSIGNIAS.items() if codigo in codigos}
 
 
 def menu_para(usuario) -> dict:

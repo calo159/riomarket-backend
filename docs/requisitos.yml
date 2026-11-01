@@ -300,7 +300,7 @@
     - "apps/rbac/tests/test_menu.py::TestMenuDinamico"
     - "frontend/src/pages/admin/RolesAdmin.test.tsx::bloquea las casillas obligatorias del rol administrador"
     - "frontend/src/pages/admin/Usuarios.test.tsx::exige motivo antes de banear"
-    - "frontend/src/auth/RutaProtegida.test.tsx::con recurso: redirige a /403 si no lo tiene, aunque el rol base sea administrador"
+    - "frontend/src/components/RutaProtegida.test.tsx::con recurso: redirige a /403 si no lo tiene, aunque el rol base sea administrador"
     - "frontend/e2e/admin.spec.ts::consulta los usuarios y los roles"
 
 - id: RF-17

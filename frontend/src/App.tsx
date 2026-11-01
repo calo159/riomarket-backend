@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PublicLayout } from './components/layout/PublicLayout';
 import { PanelLayout } from './components/layout/PanelLayout';
-import { RutaProtegida } from './auth/RutaProtegida';
+import { RutaProtegida } from './components/RutaProtegida';
 import { CargandoPantalla } from './components/ui/Estado';
 
 const Landing = lazy(() => import('./pages/Landing').then((modulo) => ({ default: modulo.Landing })));

@@ -441,8 +441,8 @@ Cómo reportar una vulnerabilidad está en [`SECURITY.md`](SECURITY.md); el deta
 
 ```text
 riomarket-backend/
-├── apps/                  # accounts, catalog, orders, payments, addresses, notifications,
-│                          # reviews, promotions, audit, rbac, administration, common
+├── apps/                  # en capas (ADR-017): common, rbac, accounts, audit, notifications, addresses,
+│                          # catalog, promotions, sitio, orders, payments, reviews, administration, demo
 ├── config/                # settings dev/test/prod, URLs, WSGI y ASGI
 ├── docs/                  # arquitectura, diagramas, trazabilidad, API, despliegue, ADRs y guion
 ├── entrega/               # guía, flujo curl, respaldos de datos y Postman
@@ -465,7 +465,7 @@ riomarket-backend/
 - **Ingeniería:** [Matriz de trazabilidad](docs/trazabilidad.md) (generada desde [`requisitos.yml`](docs/requisitos.yml)) · [Guion de demostración de 5 minutos](docs/PRESENTACION.md) · [Rendimiento](docs/rendimiento.md) · [Registro de cambios](CHANGELOG.md)
 - **Proyecto:** [Mantenimiento](docs/MANTENIMIENTO.md) · [Auditoría](docs/AUDITORIA.md) · [Seguridad (controles)](SEGURIDAD.md) · [Política de seguridad](SECURITY.md) · [Cómo contribuir](CONTRIBUTING.md)
 - **Entrega:** [Guía de entrega](entrega/LEEME_ENTREGA.md) · [Flujo curl](entrega/flujo_prueba.curl.md) · [Colección Postman](entrega/riomarket_postman.json)
-- **Decisiones (ADR):** [enums](docs/ADR-001-enums.md) · [media](docs/ADR-002-media-publica-y-privada.md) · [pagos](docs/ADR-003-pagos.md) · [direcciones](docs/ADR-004-direcciones-y-notificaciones.md) · [reseñas](docs/ADR-005-reputacion-resenas.md) · [cupones](docs/ADR-006-promociones-cupones.md) · [auditoría](docs/ADR-007-auditoria.md) · [imágenes](docs/ADR-008-almacenamiento-imagenes.md) · [retiro y pago al recoger](docs/ADR-009-retiro-y-pago-al-recoger.md) · [contacto, mapa y PWA](docs/ADR-010-contacto-mapa-y-pwa.md) · [rendimiento y SEO](docs/ADR-011-rendimiento-y-seo.md) · [apartar con plazo](docs/ADR-012-apartar-con-plazo.md) · [encargos](docs/ADR-013-productos-por-encargo.md) · [panel de ventas](docs/ADR-014-panel-de-ventas.md)
+- **Decisiones (ADR):** [enums](docs/ADR-001-enums.md) · [media](docs/ADR-002-media-publica-y-privada.md) · [pagos](docs/ADR-003-pagos.md) · [direcciones](docs/ADR-004-direcciones-y-notificaciones.md) · [reseñas](docs/ADR-005-reputacion-resenas.md) · [cupones](docs/ADR-006-promociones-cupones.md) · [auditoría](docs/ADR-007-auditoria.md) · [imágenes](docs/ADR-008-almacenamiento-imagenes.md) · [retiro y pago al recoger](docs/ADR-009-retiro-y-pago-al-recoger.md) · [contacto, mapa y PWA](docs/ADR-010-contacto-mapa-y-pwa.md) · [rendimiento y SEO](docs/ADR-011-rendimiento-y-seo.md) · [apartar con plazo](docs/ADR-012-apartar-con-plazo.md) · [encargos](docs/ADR-013-productos-por-encargo.md) · [panel de ventas](docs/ADR-014-panel-de-ventas.md) · [observabilidad](docs/ADR-015-observabilidad.md) · [pruebas end-to-end](docs/ADR-016-pruebas-end-to-end.md) · [arquitectura en capas](docs/ADR-017-arquitectura-en-capas.md)
 
 ## Solución de problemas
 

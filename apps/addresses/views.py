@@ -10,10 +10,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.permissions import EsComprador
 from apps.addresses import services
 from apps.addresses.models import Direccion
 from apps.addresses.serializers import DireccionEscrituraSerializer, DireccionSerializer
-from apps.common.permissions import EsComprador
 from apps.common.query import aplicar_ordenamiento
 
 PARAMETROS_DIRECCION = [

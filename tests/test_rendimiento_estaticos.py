@@ -13,7 +13,7 @@ from django.test import RequestFactory, override_settings
 from whitenoise.compress import main as comprimir
 from whitenoise.middleware import WhiteNoiseMiddleware
 
-from apps.common.views import FrontendCatchAllView
+from apps.sitio.views import FrontendCatchAllView
 
 # WhiteNoise usa «para siempre» = 10 años (315360000 s) en lo inmutable.
 JS_CON_HASH = "assets/index-AbCd_123.js"

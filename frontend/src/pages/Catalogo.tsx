@@ -8,7 +8,7 @@ import { EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado
 import { Paginacion } from '../components/ui/Paginacion';
 import { Modal } from '../components/ui/Modal';
 import { GRID_PRODUCTOS } from '../lib/estilos';
-import { consultaCatalogo, consultaCategorias, filtrosCatalogoDe, TAMANO_CATALOGO as TAMANO } from './inicio/consultas';
+import { consultaCatalogo, consultaCategorias, filtrosCatalogoDe, TAMANO_CATALOGO as TAMANO } from '../api/consultas';
 
 export function Catalogo() {
   const [params, setParams] = useSearchParams();
@@ -33,7 +33,7 @@ export function Catalogo() {
 
   const filtros = useMemo<FiltrosProducto>(() => filtrosCatalogoDe(params), [params]);
 
-  // Las definiciones viven en ./inicio/consultas para que lib/precarga use las mismas claves.
+  // Las definiciones viven en api/consultas para que api/precarga use las mismas claves.
   const categorias = useQuery(consultaCategorias);
   const productos = useQuery({ ...consultaCatalogo(filtros), placeholderData: (anterior) => anterior });
 

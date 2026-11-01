@@ -15,7 +15,7 @@ const acceso = vi.hoisted(() => ({
   recargar: vi.fn(),
 }));
 
-vi.mock('./SessionProvider', () => ({
+vi.mock('../auth/SessionProvider', () => ({
   useSession: () => sesion,
 }));
 

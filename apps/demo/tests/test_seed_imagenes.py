@@ -8,7 +8,7 @@ from django.core.management import call_command
 from PIL import Image
 
 from apps.catalog.models import ImagenProducto, Producto
-from apps.common.management.commands.seed_imagenes_demo import (
+from apps.demo.management.commands.seed_imagenes_demo import (
     SEED_DIR,
     foto_de_producto,
     respaldo_de_producto,

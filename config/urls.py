@@ -12,8 +12,9 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from apps.common.seo import SITEMAPS, RobotsView
-from apps.common.views import ArchivoFrontendView, FrontendCatchAllView, HealthCheckView
+from apps.common.views import HealthCheckView
+from apps.sitio.seo import SITEMAPS, RobotsView
+from apps.sitio.views import ArchivoFrontendView, FrontendCatchAllView
 
 urlpatterns = [
     path("robots.txt", RobotsView.as_view(), name="robots"),

@@ -19,8 +19,8 @@ from rest_framework.test import APIRequestFactory
 
 from apps.accounts import services
 from apps.accounts.models import Usuario, Vendedor
+from apps.accounts.permissions import EsVendedorAprobado
 from apps.common import crypto
-from apps.common.permissions import EsVendedorAprobado
 from tests.factories import (
     UsuarioFactory,
     VendedorFactory,

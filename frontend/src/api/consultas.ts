@@ -1,13 +1,13 @@
 /**
  * Consultas de la tienda y del catálogo en un solo lugar.
  *
- * Las usan las pantallas (`Inicio`, `Catalogo`) y la precarga de `lib/precarga.ts`. Compartir las
+ * Las usan las pantallas (`Inicio`, `Catalogo`) y la precarga de `api/precarga.ts`. Compartir las
  * definiciones garantiza que la precarga y la pantalla usen la MISMA clave y la misma función:
  * si se desalinearan, la precarga sería una petición de más en vez de un dato ya listo.
  */
-import { listarCategorias, listarProductos, listarPuestos, type FiltrosProducto } from '../../api/catalog';
-import { claves } from '../../lib/queryKeys';
-import type { Categoria } from '../../lib/types';
+import { listarCategorias, listarProductos, listarPuestos, type FiltrosProducto } from './catalog';
+import { claves } from '../lib/queryKeys';
+import type { Categoria } from '../lib/types';
 
 export const TAMANO_CATALOGO = 15;
 

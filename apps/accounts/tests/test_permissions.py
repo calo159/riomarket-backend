@@ -6,7 +6,7 @@ import pytest
 from rest_framework.test import APIRequestFactory
 
 from apps.accounts.models import Usuario
-from apps.common.permissions import (
+from apps.accounts.permissions import (
     EsAdministrador,
     EsComprador,
     EsDuenoOAdmin,

@@ -9,7 +9,7 @@ from django.core.exceptions import SuspiciousFileOperation
 from django.http import Http404
 from django.test import RequestFactory, override_settings
 
-from apps.common.views import ArchivoFrontendView
+from apps.sitio.views import ArchivoFrontendView
 
 CONTENIDO = {
     "sw.js": ("self.addEventListener('fetch', () => {});", "text/javascript"),
