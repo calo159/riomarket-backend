@@ -9,8 +9,8 @@ test('compra en retiro con pago al recoger y ve cuándo vence', async ({ page, a
   const sesion = await api(COMPRADOR.retiro);
   await iniciarSesion(page, COMPRADOR.retiro, /\/tienda$/);
 
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).fill('jugo de corozo');
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).press('Enter');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).fill('jugo de corozo');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).press('Enter');
   await expect(page).toHaveURL(/\/catalogo\?q=jugo/);
   await page.getByRole('button', { name: 'Agregar Jugo de corozo al carrito' }).click();
 
@@ -41,8 +41,8 @@ test('encarga una bandeja con detalles y fecha', async ({ page, api, limpiarPedi
   const sesion = await api(COMPRADOR.encargo);
   await iniciarSesion(page, COMPRADOR.encargo, /\/tienda$/);
 
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).fill('papaya con queso');
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).press('Enter');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).fill('papaya con queso');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).press('Enter');
   await page.getByRole('link', { name: 'Bandeja de dulce de papaya con queso' }).first().click();
 
   await expect(page.getByText(/Por encargo/).first()).toBeVisible();

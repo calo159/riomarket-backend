@@ -127,7 +127,7 @@
 @layer utilities {
   /* Transición suave entre rutas. */
   .ruta-entra {
-    animation: entraruta 0.22s ease both;
+    animation: entraruta 0.22s ease backwards;
   }
   .barra-progreso {
     transform-origin: left;

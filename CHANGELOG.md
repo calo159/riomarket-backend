@@ -38,8 +38,21 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   registrados conservan la comisión con que se calcularon. En un servicio ya creado hay que cambiar la
   variable en Environment de Render.
 
+### Añadido
+
+- **Sugerencias al escribir en el buscador.** Desde dos letras muestra productos (con foto y precio) y
+  puestos, resalta lo escrito y se maneja con teclado (flechas, Enter, Escape) como un combobox accesible.
+  Sin nada marcado, Enter busca en el catálogo como antes.
+- **Barra de compra fija en la ficha del celular.** Mantiene a mano el precio, «Agregar» y «Comprar ahora»
+  mientras el botón de la página no se ve.
+
 ### Corregido
 
+- **Los elementos fijos dentro de una página se colocaban mal.** La transición de entrada de página
+  conservaba su último cuadro (`animation-fill-mode: both`), y el navegador tomaba la página como contenedor
+  de todo lo `position: fixed` de dentro: la barra de compra de la ficha quedaba sobre el pie de página en
+  vez de sobre la navegación inferior. Ahora la animación no conserva el último cuadro, con una prueba que
+  lo impide.
 - **El zoom de la foto del producto se quedaba atascado.** Dependía solo de `:hover`, y en el celular la
   foto quedaba ampliada sin forma de alejarla. Ahora se amplía con un clic o un toque y se aleja con otro
   (o con Escape); sigue al cursor o al dedo para ver los bordes y, con mouse, se aleja al salir del marco.

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -8,13 +8,13 @@ import {
   LogOut,
   MapPin,
   Package,
-  Search,
   ShoppingCart,
   Truck,
   User,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
+import { BuscadorEncabezado } from './BuscadorEncabezado';
 import { NotificationBell } from './NotificationBell';
 import { MenuItems } from './MenuItems';
 import { ContadorCarrito } from './ContadorCarrito';
@@ -36,23 +36,11 @@ export function PublicLayout() {
   const publicos = itemsDe(menu, 'publico');
   const tiene = (codigo: string) => menu.recursos.includes(codigo);
   const { totalItems } = useCart();
-  const [busqueda, setBusqueda] = useState('');
-  const [categoria, setCategoria] = useState('');
   const [cuentaAbierta, setCuentaAbierta] = useState(false);
   const navigate = useNavigate();
   const ubicacion = useLocation();
 
   const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
-
-  const buscar = (evento: FormEvent) => {
-    evento.preventDefault();
-    const texto = busqueda.trim();
-    const params = new URLSearchParams();
-    if (texto) params.set('q', texto);
-    if (categoria) params.set('categoria', categoria);
-    const consulta = params.toString();
-    navigate(consulta ? `/catalogo?${consulta}` : '/catalogo');
-  };
 
   const salir = async () => {
     setCuentaAbierta(false);
@@ -69,44 +57,7 @@ export function PublicLayout() {
           <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 pb-2 pt-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-7 md:pb-2.5 md:pt-3.5">
             <Logo sobreMarca className="text-2xl md:text-[27px]" />
 
-            <form
-              onSubmit={buscar}
-              role="search"
-              className="order-3 col-span-2 flex overflow-hidden rounded-lg bg-white shadow-[0_2px_6px_rgba(0,40,46,.28)] transition-shadow focus-within:shadow-[0_0_0_3px_#FFD166] md:order-none md:col-span-1"
-            >
-              <label className="flex-1">
-                <span className="sr-only">Buscar productos</span>
-                <input
-                  type="search"
-                  value={busqueda}
-                  onChange={(evento) => setBusqueda(evento.target.value)}
-                  placeholder="Buscar productos y puestos"
-                  className="h-[46px] w-full min-w-0 border-0 bg-transparent px-4 text-base text-tinta outline-none placeholder:text-slate-500 md:h-[48px]"
-                />
-              </label>
-              <label className="hidden md:block">
-                <span className="sr-only">Categoría de búsqueda</span>
-                <select
-                  value={categoria}
-                  onChange={(evento) => setCategoria(evento.target.value)}
-                  className="h-full max-w-[190px] cursor-pointer border-0 border-l border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none"
-                >
-                  <option value="">Todo</option>
-                  {(categorias.data ?? []).map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="submit"
-                aria-label="Buscar"
-                className="grid w-14 place-items-center bg-accion text-white transition-colors hover:bg-accion-hover"
-              >
-                <Search className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden="true" />
-              </button>
-            </form>
+            <BuscadorEncabezado categorias={categorias.data} />
 
             <div className="flex items-center justify-end gap-1.5 md:gap-1.5">
               <div className="hidden items-center gap-0.5 text-white md:flex">
