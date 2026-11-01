@@ -530,14 +530,14 @@ export function Landing() {
           </div>
         </div>
       </footer>
-      <div className={s.barra}>
+      <nav className={s.barra} aria-label="Acceso rápido">
         <Link className={cn(s.btn, s.borde, s.sm)} to="/login">
           Ingresar
         </Link>
         <Link className={cn(s.btn, s.coral, s.sm)} to="/tienda">
           Ir a la tienda
         </Link>
-      </div>
+      </nav>
     </div>
   );
 }

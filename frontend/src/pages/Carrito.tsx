@@ -171,7 +171,7 @@ export function Carrito() {
           ))}
         </div>
 
-        <aside className="card hidden h-fit p-5 lg:sticky lg:top-4 lg:block">
+        <aside className="card hidden h-fit p-5 lg:sticky lg:top-4 lg:block" aria-label="Resumen del carrito">
           <h2 className="text-xl font-bold">Resumen de compra</h2>
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">

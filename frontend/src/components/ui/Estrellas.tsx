@@ -17,7 +17,7 @@ export function Estrellas({
   etiqueta?: string;
 }) {
   return (
-    <div className="inline-flex items-center gap-0.5" role={interactivo ? 'radiogroup' : undefined} aria-label={etiqueta}>
+    <div className="inline-flex items-center gap-0.5" role={interactivo ? 'radiogroup' : 'img'} aria-label={etiqueta}>
       {Array.from({ length: maximo }).map((_, indice) => {
         const numero = indice + 1;
         const llena = numero <= Math.round(valor);

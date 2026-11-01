@@ -6,7 +6,7 @@ import { inicioPorRol } from '../auth/permisos';
 export function NoEncontrado() {
   const { rol } = useSession();
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
+    <main className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
         <Compass className="h-8 w-8" />
       </span>
@@ -19,6 +19,6 @@ export function NoEncontrado() {
         <Link to={inicioPorRol(rol)} className="btn-primary">Ir al inicio</Link>
         <Link to="/catalogo" className="btn-secondary">Explorar catálogo</Link>
       </div>
-    </div>
+    </main>
   );
 }

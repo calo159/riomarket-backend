@@ -1440,16 +1440,22 @@ export interface components {
         };
         /** @description Decisión del revisor: ``aprobado`` o ``rechazado`` (con motivo). */
         DecidirVerificacion: {
-            estado: components["schemas"]["EstadoB7aEnum"];
+            estado: components["schemas"]["DecisionAprobadoRechazadoEnum"];
             /** @description Obligatorio cuando el estado es 'rechazado'. */
             motivo_rechazo?: string;
         };
         /** @description Decisión del revisor: ``aprobado`` o ``rechazado`` (con motivo). */
         DecidirVerificacionRequest: {
-            estado: components["schemas"]["EstadoB7aEnum"];
+            estado: components["schemas"]["DecisionAprobadoRechazadoEnum"];
             /** @description Obligatorio cuando el estado es 'rechazado'. */
             motivo_rechazo?: string;
         };
+        /**
+         * @description * `aprobado` - aprobado
+         *     * `rechazado` - rechazado
+         * @enum {string}
+         */
+        DecisionAprobadoRechazadoEnum: "aprobado" | "rechazado";
         Direccion: {
             readonly id: number;
             /** Usuario */
@@ -1517,13 +1523,7 @@ export interface components {
          *     * `suspendido` - Suspendido
          * @enum {string}
          */
-        EstadoB1eEnum: "activo" | "suspendido";
-        /**
-         * @description * `aprobado` - aprobado
-         *     * `rechazado` - rechazado
-         * @enum {string}
-         */
-        EstadoB7aEnum: "aprobado" | "rechazado";
+        EstadoUsuarioEnum: "activo" | "suspendido";
         /**
          * @description * `pendiente` - Pendiente
          *     * `aprobado` - Aprobado
@@ -1999,7 +1999,7 @@ export interface components {
         };
         /** @description Decisión del revisor: ``aprobado`` o ``rechazado`` (con motivo). */
         PatchedDecidirVerificacionRequest: {
-            estado?: components["schemas"]["EstadoB7aEnum"];
+            estado?: components["schemas"]["DecisionAprobadoRechazadoEnum"];
             /** @description Obligatorio cuando el estado es 'rechazado'. */
             motivo_rechazo?: string;
         };
@@ -2230,8 +2230,8 @@ export interface components {
             /** Format: email */
             correo: string;
             celular: string;
-            readonly rol: components["schemas"]["Rol9f8Enum"];
-            readonly estado: components["schemas"]["EstadoB1eEnum"];
+            readonly rol: components["schemas"]["RolUsuarioEnum"];
+            readonly estado: components["schemas"]["EstadoUsuarioEnum"];
             readonly estado_verificacion: string;
             /** Format: date-time */
             readonly fecha_registro: string;
@@ -2523,13 +2523,6 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /**
-         * @description * `comprador` - Comprador
-         *     * `vendedor` - Vendedor
-         *     * `administrador` - Administrador
-         * @enum {string}
-         */
-        Rol9f8Enum: "comprador" | "vendedor" | "administrador";
         RolRecursosRequest: {
             recursos: number[];
             motivo: string;
@@ -2539,6 +2532,13 @@ export interface components {
             descripcion?: string;
             activo?: boolean;
         };
+        /**
+         * @description * `comprador` - Comprador
+         *     * `vendedor` - Vendedor
+         *     * `administrador` - Administrador
+         * @enum {string}
+         */
+        RolUsuarioEnum: "comprador" | "vendedor" | "administrador";
         RolesUsuarioRequest: {
             roles: number[];
             motivo: string;
@@ -2620,8 +2620,8 @@ export interface components {
             /** Format: email */
             correo: string;
             celular: string;
-            rol?: components["schemas"]["Rol9f8Enum"];
-            estado?: components["schemas"]["EstadoB1eEnum"];
+            rol?: components["schemas"]["RolUsuarioEnum"];
+            estado?: components["schemas"]["EstadoUsuarioEnum"];
             /** Format: date-time */
             readonly fecha_registro: string;
             readonly estado_verificacion: string;
@@ -2713,7 +2713,7 @@ export interface components {
         };
         WebhookPagoRequestRequest: {
             referencia: string;
-            estado: components["schemas"]["EstadoB7aEnum"];
+            estado: components["schemas"]["DecisionAprobadoRechazadoEnum"];
         };
         WebhookPagoResponse: {
             success: boolean;
@@ -4175,24 +4175,18 @@ export interface operations {
             path: {
                 /** @description Un valor de entero único que identifique este producto. */
                 id: number;
-                imagen_id: string;
+                imagen_id: number;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductoRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["ProductoRequest"];
-                "multipart/form-data": components["schemas"]["ProductoRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Producto"];
+                    "application/json": components["schemas"]["ImagenProducto"];
                 };
             };
         };

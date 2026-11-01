@@ -11,7 +11,7 @@ interface Props {
 
 export function ResumenPedido({ datos, estadoPagoVigente, pagoAprobado }: Props) {
   return (
-    <aside className="card h-fit p-5 lg:sticky lg:top-24">
+    <aside className="card h-fit p-5 lg:sticky lg:top-24" aria-label="Resumen del pedido">
       <h2 className="text-lg font-bold">Resumen</h2>
       <dl className="mt-3 space-y-2 text-sm">
         <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">Subtotal</dt><dd>{formatearMoneda(datos.subtotal)}</dd></div>

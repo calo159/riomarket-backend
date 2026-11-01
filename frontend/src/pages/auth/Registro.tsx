@@ -126,9 +126,9 @@ export function Registro() {
       <div className="relative hidden overflow-hidden rounded-l-xl bg-brand-600 p-12 text-white dark:bg-brand-900 lg:flex lg:flex-col lg:justify-between">
         <div className="relative">
           <Logo sobreMarca />
-          <h1 className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
+          <p className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
             Únete a la comunidad que mueve a Riohacha.
-          </h1>
+          </p>
           <p className="mt-4 max-w-md text-lg text-brand-50">
             Compra a tus vecinos o abre tu propio puesto y llega a más clientes.
           </p>
@@ -148,7 +148,7 @@ export function Registro() {
           <div className="mb-6 lg:hidden">
             <Logo />
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight">Crea tu cuenta</h2>
+          <h1 className="text-3xl font-extrabold tracking-tight">Crea tu cuenta</h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Toma menos de un minuto.</p>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit(enviar)} noValidate>

@@ -227,6 +227,11 @@ class ProductoViewSet(viewsets.ModelViewSet):
         imagenes = services.reordenar_imagenes(producto=producto, orden_ids=orden_ids)
         return Response(ImagenProductoSerializer(imagenes, many=True).data)
 
+    @extend_schema(
+        request=None,
+        parameters=[OpenApiParameter("imagen_id", OpenApiTypes.INT, OpenApiParameter.PATH)],
+        responses=ImagenProductoSerializer,
+    )
     @action(detail=True, methods=["post"], url_path="imagenes/(?P<imagen_id>[^/.]+)/principal")
     def marcar_principal(self, request, pk=None, imagen_id=None):
         producto = self.get_object()
