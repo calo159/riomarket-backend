@@ -68,3 +68,28 @@ test('la página de créditos de fotos lista los autores', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   expect(errores()).toEqual([]);
 });
+
+test('olvidé mi contraseña: desde el login se pide el enlace y la respuesta no revela si la cuenta existe', async ({ page }) => {
+  const errores = vigilarErrores(page);
+  await page.goto('/login');
+  await page.getByRole('link', { name: '¿Olvidaste tu contraseña?' }).click();
+  await expect(page).toHaveURL(/\/olvide-contrasena$/);
+  // La pantalla se carga aparte: hasta que aparece, el campo «Correo electrónico» es todavía el del login.
+  await expect(page.getByRole('heading', { name: '¿Olvidaste tu contraseña?' })).toBeVisible();
+
+  await page.getByLabel('Correo electrónico').fill('nadie-registrado@riomarket.test');
+  await page.getByRole('button', { name: 'Enviarme el enlace' }).click();
+  await expect(page.getByRole('heading', { name: 'Revisa tu correo' })).toBeVisible();
+  await expect(page.getByText('tiene una cuenta, te enviamos un enlace')).toBeVisible();
+  expect(errores()).toEqual([]);
+});
+
+test('restablecer contraseña: un enlace inválido se explica y ofrece pedir otro', async ({ page }) => {
+  await page.goto('/restablecer-contrasena?token=enlace-que-no-existe');
+  await page.getByLabel('Contraseña nueva', { exact: true }).fill('ClaveNueva2026');
+  await page.getByLabel('Repite la contraseña', { exact: true }).fill('ClaveNueva2026');
+  await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('venció o ya se usó');
+  await expect(page.getByRole('link', { name: 'Pedir un enlace nuevo' })).toHaveAttribute('href', '/olvide-contrasena');
+});

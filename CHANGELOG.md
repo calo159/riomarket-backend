@@ -45,6 +45,14 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   Sin nada marcado, Enter busca en el catálogo como antes.
 - **Barra de compra fija en la ficha del celular.** Mantiene a mano el precio, «Agregar» y «Comprar ahora»
   mientras el botón de la página no se ve.
+- **Recuperar y cambiar la contraseña desde la web.** El servidor ya lo permitía, pero no había pantallas:
+  «¿Olvidaste tu contraseña?» en el login, la pantalla para elegir una nueva (con el enlace del correo o
+  pegando el código) y una sección «Cambiar contraseña» en el perfil. Un enlace vencido o ya usado se
+  explica y ofrece pedir otro; la respuesta nunca revela si un correo está registrado; al cambiarla se
+  cierran todas las sesiones, incluida la actual.
+- **El correo de recuperación trae un enlace** (antes solo un código) y sale por la API HTTP de Brevo, porque
+  Render gratis bloquea SMTP. Se activa con `BREVO_API_KEY` y `DEFAULT_FROM_EMAIL`; sin ellas la recuperación
+  funciona pero ningún correo sale. Ver `docs/despliegue.md`.
 
 ### Corregido
 

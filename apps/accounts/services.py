@@ -188,6 +188,20 @@ def cambiar_contrasena(*, usuario: Usuario, actual: str, nueva: str) -> Usuario:
     return usuario
 
 
+def _mensaje_de_recuperacion(token: str) -> str:
+    from django.conf import settings
+
+    if settings.FRONTEND_URL:
+        paso = (
+            "Entra a este enlace para elegir una contraseña nueva (vale 1 hora):\n\n"
+            f"{settings.FRONTEND_URL}/restablecer-contrasena?token={token}\n\n"
+            f"Si el enlace no abre, usa este código en la misma pantalla:\n{token}"
+        )
+    else:
+        paso = f"Usa este código para restablecer tu contraseña (vale 1 hora):\n\n{token}"
+    return f"{paso}\n\nSi no lo pediste, ignora este mensaje: tu contraseña no cambia."
+
+
 def solicitar_recuperacion(*, correo: str):
     import logging
     import secrets
@@ -211,10 +225,7 @@ def solicitar_recuperacion(*, correo: str):
     if settings.NOTIFICATIONS_EMAIL_ENABLED:
         send_mail(
             subject="Recupera tu contraseña de RioMarket",
-            message=(
-                "Usa este código para restablecer tu contraseña (vale 1 hora):\n\n"
-                f"{token}\n\nSi no lo pediste, ignora este mensaje."
-            ),
+            message=_mensaje_de_recuperacion(token),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[usuario.correo],
             fail_silently=True,

@@ -12,6 +12,10 @@ const ProductoDetalle = lazy(() => import('./pages/ProductoDetalle').then((modul
 const PuestoDetalle = lazy(() => import('./pages/PuestoDetalle').then((modulo) => ({ default: modulo.PuestoDetalle })));
 const Login = lazy(() => import('./pages/auth/Login').then((modulo) => ({ default: modulo.Login })));
 const Registro = lazy(() => import('./pages/auth/Registro').then((modulo) => ({ default: modulo.Registro })));
+const OlvideContrasena = lazy(() => import('./pages/auth/OlvideContrasena').then((modulo) => ({ default: modulo.OlvideContrasena })));
+const RestablecerContrasena = lazy(() =>
+  import('./pages/auth/RestablecerContrasena').then((modulo) => ({ default: modulo.RestablecerContrasena })),
+);
 const Carrito = lazy(() => import('./pages/Carrito').then((modulo) => ({ default: modulo.Carrito })));
 const Checkout = lazy(() => import('./pages/Checkout').then((modulo) => ({ default: modulo.Checkout })));
 const MisPedidos = lazy(() => import('./pages/MisPedidos').then((modulo) => ({ default: modulo.MisPedidos })));
@@ -70,6 +74,8 @@ export function App() {
             <Route path="puestos/:id" element={<PuestoDetalle />} />
             <Route path="login" element={<Login />} />
             <Route path="registro" element={<Registro />} />
+            <Route path="olvide-contrasena" element={<OlvideContrasena />} />
+            <Route path="restablecer-contrasena" element={<RestablecerContrasena />} />
             <Route path="carrito" element={<Carrito />} />
             <Route element={<RutaProtegida />}>
               <Route path="checkout" element={<Checkout />} />

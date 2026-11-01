@@ -23,3 +23,15 @@ export async function actualizarPerfil(datos: { nombre?: string; correo?: string
   const { data } = await api.patch<Perfil>('/auth/perfil/', datos);
   return data;
 }
+
+export async function solicitarRecuperacion(correo: string): Promise<void> {
+  await api.post('/auth/recuperar-contrasena/', { correo });
+}
+
+export async function restablecerContrasena(datos: { token: string; nueva: string }): Promise<void> {
+  await api.post('/auth/restablecer-contrasena/', datos);
+}
+
+export async function cambiarContrasena(datos: { actual: string; nueva: string }): Promise<void> {
+  await api.post('/auth/perfil/cambiar-contrasena/', datos);
+}
