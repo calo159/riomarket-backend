@@ -60,18 +60,10 @@ export function PublicLayout() {
 
             <BuscadorEncabezado categorias={categorias.data} />
 
-            <div className="flex items-center justify-end gap-1.5 md:gap-1.5">
+            <div className="flex items-center justify-end gap-0.5">
               <div className="hidden items-center gap-0.5 text-white md:flex">
                 <ThemeToggle variante="encabezado" />
                 <NotificationBell variante="encabezado" />
-                {autenticado ? (
-                  <AccountMenu variante="encabezado" />
-                ) : (
-                  <Link to="/login" className="acto-encabezado">
-                    <User className="h-[22px] w-[22px]" aria-hidden="true" />
-                    Ingresar
-                  </Link>
-                )}
                 {hayPedidos && (
                   <Link to="/mis-pedidos" className="acto-encabezado">
                     <Truck className="h-[22px] w-[22px]" aria-hidden="true" />
@@ -83,6 +75,17 @@ export function PublicLayout() {
                 <ThemeToggle variante="encabezado" />
                 <NotificationBell variante="encabezado" />
               </div>
+              {/* Cuenta e inicio de sesión van pegados al carrito, a la derecha; en el celular el menú de cuenta está en la barra de abajo. */}
+              {autenticado ? (
+                <div className="hidden md:block">
+                  <AccountMenu variante="encabezado" />
+                </div>
+              ) : (
+                <Link to="/login" className="acto-encabezado" aria-label="Ingresar">
+                  <User className="h-[22px] w-[22px]" aria-hidden="true" />
+                  <span className="hidden min-[400px]:inline">Ingresar</span>
+                </Link>
+              )}
               <Link
                 to="/carrito"
                 {...{ [DESTINO_CARRITO]: '' }}

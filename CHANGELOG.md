@@ -84,6 +84,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Corregido
 
+- **«Ingresar» no estaba junto al carrito.** En escritorio quedaba antes de «Mis pedidos», con esa opción en medio;
+  ahora el orden es «Mis pedidos · Ingresar (o tu cuenta) · Carrito». En el celular no había ningún «Ingresar» en
+  el encabezado (solo dentro de «Cuenta», en la barra de abajo): ahora aparece al lado del carrito, con el texto en
+  pantallas de 400 px o más y como ícono en las más angostas.
 - **El carrusel de destacados tapaba el texto en tabletas y pantallas medianas.** Entre 768 y 1280 px la flecha
   izquierda cubría la primera letra del texto y, bajo ~1100 px, el título y la descripción se metían sobre la
   foto (con la foto en blanco y texto blanco, ilegible). El texto ahora se limita al espacio libre a la
