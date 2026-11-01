@@ -42,6 +42,8 @@ export function ProductoDetalle() {
   const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
   const [agregado, setAgregado] = useState(false);
   const botonAgregar = useRef<HTMLButtonElement>(null);
+  const botonComprar = useRef<HTMLButtonElement>(null);
+  const [comprarVisible, setComprarVisible] = useState(true);
   const [accionPendiente, setAccionPendiente] = useState<'agregar' | 'comprar'>('agregar');
 
   const producto = useQuery({
@@ -55,6 +57,17 @@ export function ProductoDetalle() {
     queryFn: () => obtenerPuesto(producto.data!.id_puesto),
     enabled: Boolean(producto.data?.id_puesto),
   });
+
+  // En el celular, «Comprar» queda fuera de pantalla bajo la foto: una barra fija lo mantiene a mano
+  // mientras el botón de la página no se ve.
+  const hayProducto = Boolean(producto.data);
+  useEffect(() => {
+    const boton = botonComprar.current;
+    if (!hayProducto || !boton || typeof IntersectionObserver === 'undefined') return;
+    const observador = new IntersectionObserver(([entrada]) => setComprarVisible(entrada?.isIntersecting ?? true));
+    observador.observe(boton);
+    return () => observador.disconnect();
+  }, [hayProducto]);
 
   const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias, staleTime: 5 * 60_000 });
   const masDelPuesto = useQuery({
@@ -163,7 +176,7 @@ export function ProductoDetalle() {
   const quedan = !encargo && !agotado && stockMax <= 5;
 
   return (
-    <div className="mx-auto max-w-[1240px] px-3 pb-8 sm:px-5">
+    <div className="mx-auto max-w-[1240px] px-3 pb-28 sm:px-5 md:pb-8">
       <nav className="flex flex-wrap items-center gap-1 py-3 text-[13px] text-slate-500 dark:text-slate-400" aria-label="Ruta de navegación">
         <Link to="/tienda" className="link">Inicio</Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -316,7 +329,7 @@ export function ProductoDetalle() {
             {datos.unidad_medida ?? 'unidad'}
           </div>
 
-          <button type="button" className="btn-primary min-h-[48px] text-base" onClick={comprarAhora} disabled={agotado || !tienda}>
+          <button ref={botonComprar} type="button" className="btn-primary min-h-[48px] text-base" onClick={comprarAhora} disabled={agotado || !tienda}>
             Comprar ahora
           </button>
           <button
@@ -349,6 +362,32 @@ export function ProductoDetalle() {
           />
         </aside>
       </div>
+
+      {!comprarVisible && !agotado && tienda && (
+        <div className="fixed inset-x-0 bottom-16 z-30 flex animate-rise items-center gap-2.5 border-t border-slate-200 bg-white px-3 py-2.5 shadow-[0_-4px_14px_rgba(16,44,54,0.12)] md:hidden dark:border-slate-800 dark:bg-slate-900">
+          <div className="min-w-0">
+            <p className="precio text-xl leading-none">{formatearMoneda(Number(datos.precio) * cantidad)}</p>
+            <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
+              {cantidad > 1 ? `${cantidad} ${datos.unidad_medida ?? 'unidad'}` : `por ${datos.unidad_medida ?? 'unidad'}`}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn-marca ml-auto !min-w-[48px] shrink-0 !px-3"
+            onClick={() => (detallesCompletos() ? agregarAlCarrito() : document.getElementById('detalles-encargo')?.focus())}
+            aria-label={encargo ? 'Agregar encargo al carrito' : 'Agregar al carrito'}
+          >
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="btn-primary min-w-[132px] shrink-0"
+            onClick={() => (detallesCompletos() ? comprarAhora() : document.getElementById('detalles-encargo')?.focus())}
+          >
+            {encargo ? 'Encargar' : 'Comprar ahora'}
+          </button>
+        </div>
+      )}
 
       {datos.descripcion && (
         <section className="card mt-3.5 p-5">

@@ -40,8 +40,8 @@ test('la tienda muestra los puestos y el catálogo busca productos', async ({ pa
   await page.goto('/tienda');
   await expect(page.getByRole('link', { name: /Palenque de Carmen/ }).first()).toBeVisible();
 
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).fill('arepa de huevo');
-  await page.getByRole('searchbox', { name: 'Buscar productos' }).press('Enter');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).fill('arepa de huevo');
+  await page.getByRole('combobox', { name: 'Buscar productos' }).press('Enter');
   await expect(page).toHaveURL(/\/catalogo\?q=arepa/);
   await expect(page.getByRole('link', { name: 'Arepa de huevo' }).first()).toBeVisible();
   await page.waitForLoadState('networkidle');
