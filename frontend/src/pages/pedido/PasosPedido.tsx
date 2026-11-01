@@ -59,6 +59,7 @@ export function PasosPedido({ estado, tipoEntrega }: { estado: string; tipoEntre
       {PASOS.map(({ clave, icono: Icono }, indice) => {
         const alcanzado = indice <= actual;
         const esActual = indice === actual;
+        const entregado = clave === 'entregado' && esActual;
         return (
           <li
             key={clave}
@@ -71,8 +72,12 @@ export function PasosPedido({ estado, tipoEntrega }: { estado: string; tipoEntre
                 alcanzado
                   ? 'border-brand-600 bg-brand-600 text-white dark:border-brand-300 dark:bg-brand-300 dark:text-slate-950'
                   : 'border-slate-300 bg-white text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400',
-                esActual && 'animate-pulsepaso',
+                // Cada paso alcanzado «aparece» en orden, al ritmo de la barra; el actual late hasta que se entrega.
+                alcanzado && 'animate-pop [animation-fill-mode:backwards]',
+                esActual && !entregado && 'animate-pulsepaso',
+                entregado && '!border-exito !bg-exito dark:!border-[#6FD596] dark:!bg-[#6FD596] animate-anillo',
               )}
+              style={alcanzado ? { animationDelay: `${indice * 130}ms` } : undefined}
             >
               <Icono className="h-5 w-5" aria-hidden="true" />
             </span>

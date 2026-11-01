@@ -1,3 +1,4 @@
+import { NumeroAnimado } from '../ui/NumeroAnimado';
 import type { ReactNode } from 'react';
 import type { VentasPanel } from '../../api/payments';
 import { formatearMoneda } from '../../lib/format';
@@ -8,7 +9,9 @@ function Cifra({ etiqueta, valor, ayuda, destacada }: { etiqueta: string; valor:
   return (
     <div className="card p-4">
       <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
-      <p className={`mt-1 text-xl font-extrabold tabular-nums sm:text-2xl ${destacada ? 'text-brand-600 dark:text-brand-300' : ''}`}>{valor}</p>
+      <p className={`mt-1 text-xl font-extrabold tabular-nums sm:text-2xl ${destacada ? 'text-brand-600 dark:text-brand-300' : ''}`}>
+        {typeof valor === 'string' || typeof valor === 'number' ? <NumeroAnimado texto={valor} /> : valor}
+      </p>
       {ayuda && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{ayuda}</p>}
     </div>
   );

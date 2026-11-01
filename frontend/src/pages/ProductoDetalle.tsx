@@ -14,6 +14,7 @@ import { ImagenAmpliable } from '../components/ImagenAmpliable';
 import { LogoPuesto } from '../components/PuestoCard';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
 import { esErrorTemporal, mensajeDeCarga } from '../lib/errors';
+import { FOTO_COMPARTIDA } from '../lib/fotoCompartida';
 import { formatearMoneda } from '../lib/format';
 import { MAX_DETALLES, esEncargo, etiquetaDeDetalles, formatearPreparacion, topeDe } from '../lib/encargos';
 import { urlAbsoluta } from '../lib/utils';
@@ -203,6 +204,7 @@ export function ProductoDetalle() {
         <ImagenAmpliable
           key={imagenActiva}
           nombre={datos.nombre}
+          transicion={FOTO_COMPARTIDA}
           className="aspect-square max-h-[520px] w-full rounded-lg bg-slate-50 dark:bg-slate-800"
         >
           <Imagen

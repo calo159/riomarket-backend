@@ -11,6 +11,15 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Pulido visual y de movimiento en toda la aplicación.**
+  - La foto de un producto «viaja» de la tarjeta a la ficha (transición de vista; la ficha abre al
+    instante con los datos de la tarjeta y, si el navegador no la soporta, navega como siempre).
+  - Al cambiar de tema, el modo nuevo se revela en círculo desde el botón.
+  - Las cifras de los paneles cuentan hasta su valor; los productos se deslizan y se pliegan al salir del
+    carrito; los pasos del pedido aparecen en orden y el de «Entregado» cierra en verde con un anillo; la
+    campana se mueve cuando llegan avisos nuevos y los campos de formulario con error se sacuden una vez.
+  - Profundidad: degradado sutil en el encabezado y en el botón principal, con relieve al pasar el cursor.
+  - Todo respeta «reducir movimiento»: sin animación, el valor final se muestra de una vez.
 - **Movimiento en el resto de la aplicación.** Los listados (mis pedidos, carrito, notificaciones,
   direcciones, pedidos y reseñas de vendedor y administrador), las tarjetas de resumen de los paneles y
   las filas de las tablas suben unos píxeles al cargarse, y los bloques de la página de inicio aparecen

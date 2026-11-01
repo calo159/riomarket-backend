@@ -1,5 +1,5 @@
 import { ZoomIn, ZoomOut } from 'lucide-react';
-import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { cn } from '../lib/utils';
 
 const ESCALA = 2;
@@ -9,7 +9,20 @@ const ESCALA = 2;
  * Al estar ampliada, sigue al cursor o al dedo para ver los bordes. Con mouse también se aleja al salir
  * del marco: el zoom no puede quedar atascado, como pasaba cuando dependía solo de `:hover`.
  */
-export function ImagenAmpliable({ children, nombre, className }: { children: ReactNode; nombre: string; className?: string }) {
+export function ImagenAmpliable({
+  children,
+  nombre,
+  className,
+  style,
+  transicion,
+}: {
+  children: ReactNode;
+  nombre: string;
+  className?: string;
+  style?: CSSProperties;
+  /** Nombre de la transición de vista que comparte con otra foto (ver lib/fotoCompartida.ts). */
+  transicion?: string;
+}) {
   const marco = useRef<HTMLDivElement>(null);
   const [ampliada, setAmpliada] = useState(false);
   const [origen, setOrigen] = useState('50% 50%');
@@ -55,6 +68,8 @@ export function ImagenAmpliable({ children, nombre, className }: { children: Rea
       onPointerMove={alMover}
       onPointerLeave={alSalir}
       onKeyDown={alTeclear}
+      style={transicion ? { ...style, viewTransitionName: transicion } : style}
+      data-vt={transicion}
       className={cn(
         'relative select-none overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
         ampliada ? 'cursor-zoom-out touch-none' : 'cursor-zoom-in',

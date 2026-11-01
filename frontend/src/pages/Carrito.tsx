@@ -23,6 +23,18 @@ export function Carrito() {
   const navigate = useNavigate();
   const toast = useToast();
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
+  const [saliendo, setSaliendo] = useState<number[]>([]);
+
+  // El producto se desliza y se pliega antes de salir del carrito; con menos movimiento sale de una vez.
+  const retirar = (productoId: number) => {
+    const reducir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reducir) return quitar(productoId);
+    setSaliendo((ids) => [...ids, productoId]);
+    window.setTimeout(() => {
+      quitar(productoId);
+      setSaliendo((ids) => ids.filter((id) => id !== productoId));
+    }, 300);
+  };
 
   useEffect(() => {
     document.title = 'Carrito · RioMarket';
@@ -70,7 +82,13 @@ export function Carrito() {
             <span className="min-w-0"><span className="block truncate">{carrito.puestoNombre}</span><span className="text-[13px] font-normal text-slate-500 dark:text-slate-400">{carrito.ofreceDomicilio ? 'Domicilio o retiro' : 'Retiro en el puesto'}</span></span>
           </Link>
           {carrito.items.map((item) => (
-            <article key={item.productoId} className="card flex gap-3 p-3 sm:gap-4 sm:p-4">
+            <div
+              key={item.productoId}
+              className={`grid transition-[grid-template-rows,opacity,transform,margin] duration-300 ease-out ${
+                saliendo.includes(item.productoId) ? '!mt-0 grid-rows-[0fr] -translate-x-3 opacity-0' : 'grid-rows-[1fr]'
+              }`}
+            >
+            <article className="card flex gap-3 p-3 sm:gap-4 sm:p-4 min-h-0 overflow-hidden">
               <Link to={`/productos/${item.productoId}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-lg sm:h-28 sm:w-28">
                 <Imagen
                   src={item.imagen}
@@ -98,7 +116,7 @@ export function Carrito() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => quitar(item.productoId)}
+                    onClick={() => retirar(item.productoId)}
                     className="btn-ghost shrink-0 !min-h-[44px] !min-w-[44px] p-2 text-slate-500 hover:text-rose-700"
                     aria-label={`Quitar ${item.nombre}`}
                   >
@@ -149,6 +167,7 @@ export function Carrito() {
                 </div>
               </div>
             </article>
+            </div>
           ))}
         </div>
 
