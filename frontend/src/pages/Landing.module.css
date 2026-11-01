@@ -95,8 +95,14 @@
   letter-spacing: -0.035em;
   color: var(--tq);
   line-height: 1;
+  gap: 0.3em;
 }
-.logo span {
+.logoMarca {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+}
+.logo .mk {
   color: var(--co);
 }
 .links {
@@ -1136,7 +1142,7 @@
   font-size: 22px;
   color: #fff;
 }
-.pie .logo span {
+.pie .logo .mk {
   color: var(--am);
 }
 .pie nav {

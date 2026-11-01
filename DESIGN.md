@@ -18,6 +18,27 @@ La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio c
 `estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` porque el original daba 4,2:1 sobre blanco; ahora 5,4:1.
 `sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin degradados, vidrio ni manchas; sombras solo al pasar el cursor (`shadow-hover`) o en elementos flotantes (`shadow-flota`, `shadow-menu`).
 
+## Marca
+
+El símbolo es un **toldo de puesto de mercado** (franjas coral y crema con el borde festoneado) sobre **dos olas de río**,
+el Ranchería de Riohacha. Se lee de 96 px a 16 px. La palabra sigue siendo «Rio» + «Market» en Figtree 800 con seguimiento −0,03 em.
+
+| Pieza | Archivo | Uso |
+| --- | --- | --- |
+| Símbolo con cuadro turquesa | `public/brand/marca.svg` | Superficies claras (tarjetas, landing, login) |
+| Símbolo sin cuadro | `public/brand/marca-sin-fondo.svg` | Sobre turquesa u oscuro (encabezados, pie) |
+| Logo horizontal | `public/brand/logo-horizontal.svg` | Documentos y presentaciones sobre fondo claro |
+| Logo horizontal sobre oscuro | `public/brand/logo-horizontal-sobre-oscuro.svg` | Sobre turquesa u oscuro |
+| Favicon | `public/favicon.svg` | Pestaña: toldo de tres paneles y una ola, más grueso para que aguante 16 px |
+| Íconos de la app y tarjeta para redes | `public/icons/*.png`, `public/og-riomarket.png` | PWA, iOS y vista previa al compartir |
+
+Colores del símbolo: coral `#E4502A` (el de acción aclarado para separarse del turquesa), crema `#FFF4DC`, amarillo `#FFD166`
+y agua `#BFE3E7` sobre `#00626D`. Las letras de los SVG están convertidas en trazos: no dependen de ninguna fuente.
+En la app se usa `components/layout/Logo.tsx` (con `MarcaSvg.tsx`, la misma geometría; una prueba comprueba que coinciden).
+
+Se regeneran con `python scripts/generar_logo.py` (necesita `pip install fonttools brotli`) y `node frontend/scripts/exportar-marca.mjs`.
+El ícono «maskable» respeta la zona segura de Android (el símbolo ocupa el 74 % central).
+
 ## Tipografía
 
 Figtree variable autoalojada (`@fontsource-variable/figtree`, solo el subconjunto latino, 20 kB, sin CDN). Base 15 px.

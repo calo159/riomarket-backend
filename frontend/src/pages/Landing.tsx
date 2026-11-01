@@ -5,6 +5,7 @@ import { listarPuestos } from '../api/catalog';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
 import { Imagen } from '../components/Imagen';
+import { MarcaSvg } from '../components/layout/MarcaSvg';
 import { CargandoPantalla } from '../components/ui/Estado';
 import { claves } from '../lib/queryKeys';
 import { cn, urlAbsoluta } from '../lib/utils';
@@ -35,10 +36,14 @@ function Flecha() {
   );
 }
 
-function Logo({ className }: { className?: string }) {
+/** `sobreOscuro`: en el pie (fondo oscuro) el símbolo va sin su cuadro turquesa. */
+function Logo({ className, sobreOscuro = false }: { className?: string; sobreOscuro?: boolean }) {
   return (
     <Link className={cn(s.logo, className)} to="/" aria-label="RioMarket, inicio">
-      Rio<span>Market</span>
+      <MarcaSvg conFondo={!sobreOscuro} className={s.logoMarca} />
+      <span>
+        Rio<span className={s.mk}>Market</span>
+      </span>
     </Link>
   );
 }
@@ -521,7 +526,7 @@ export function Landing() {
             </Link>
           </div>
           <div className={s.pie}>
-            <Logo />
+            <Logo sobreOscuro />
             <span>Riohacha, La Guajira · Proyecto académico · © 2026</span>
             <nav aria-label="Pie de página">
               <Link to="/login">Ingresar</Link>

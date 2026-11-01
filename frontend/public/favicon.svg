@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#00626D"/>
-  <path d="M22 47V17h13a9.5 9.5 0 0 1 0 19H22m13 0 10 11" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RioMarket"><rect width="64" height="64" rx="14" fill="#00626D"/><path d="M17.00 8L27.00 8L24.00 25A8.00 8.00 0 0 1 8.00 25Z" fill="#E4502A"/><path d="M27.00 8L37.00 8L40.00 25A8.00 8.00 0 0 1 24.00 25Z" fill="#FFF4DC"/><path d="M37.00 8L47.00 8L56.00 25A8.00 8.00 0 0 1 40.00 25Z" fill="#E4502A"/><path d="M8 47q8.0 -10.4 16 0t16 0t16 0" fill="none" stroke="#FFD166" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
