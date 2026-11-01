@@ -75,17 +75,6 @@ export function PublicLayout() {
                 <ThemeToggle variante="encabezado" />
                 <NotificationBell variante="encabezado" />
               </div>
-              {/* Cuenta e inicio de sesión van pegados al carrito, a la derecha; en el celular el menú de cuenta está en la barra de abajo. */}
-              {autenticado ? (
-                <div className="hidden md:block">
-                  <AccountMenu variante="encabezado" />
-                </div>
-              ) : (
-                <Link to="/login" className="acto-encabezado" aria-label="Ingresar">
-                  <User className="h-[22px] w-[22px]" aria-hidden="true" />
-                  <span className="hidden min-[400px]:inline">Ingresar</span>
-                </Link>
-              )}
               <Link
                 to="/carrito"
                 {...{ [DESTINO_CARRITO]: '' }}
@@ -96,6 +85,17 @@ export function PublicLayout() {
                 <ContadorCarrito total={totalItems} className="absolute left-[22px] top-0 md:left-[22px]" />
                 <span className="hidden md:inline md:ml-1.5">Carrito</span>
               </Link>
+              {/* La cuenta (o «Ingresar») va al borde derecho, después del carrito; en el celular el menú de cuenta está en la barra de abajo. */}
+              {autenticado ? (
+                <div className="hidden md:block">
+                  <AccountMenu variante="encabezado" />
+                </div>
+              ) : (
+                <Link to="/login" className="acto-encabezado" aria-label="Ingresar">
+                  <User className="h-[22px] w-[22px]" aria-hidden="true" />
+                  <span className="hidden min-[400px]:inline">Ingresar</span>
+                </Link>
+              )}
             </div>
           </div>
 
