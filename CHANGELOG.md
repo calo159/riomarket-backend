@@ -40,6 +40,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Logo nuevo.** Un toldo de puesto de mercado sobre dos olas de río (el Ranchería de Riohacha), junto a la
+  palabra «RioMarket». Aparece en el encabezado, el pie, el panel, el login y la landing; hay versiones
+  horizontales y sin cuadro para fondos oscuros, favicon propio para pestañas pequeñas, íconos de la app
+  (incluido el «maskable» de Android y el de iOS) y una tarjeta nueva al compartir enlaces. Los archivos están
+  en `frontend/public/brand/` y se regeneran con `scripts/generar_logo.py` y `frontend/scripts/exportar-marca.mjs`
+  (este reemplaza a `scripts/generar_og.py`).
 - **Sugerencias al escribir en el buscador.** Desde dos letras muestra productos (con foto y precio) y
   puestos, resalta lo escrito y se maneja con teclado (flechas, Enter, Escape) como un combobox accesible.
   Sin nada marcado, Enter busca en el catálogo como antes.

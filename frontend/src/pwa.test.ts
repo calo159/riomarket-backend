@@ -36,7 +36,8 @@ describe('manifest.webmanifest', () => {
       expect(icono!.type).toBe('image/png');
       const ruta = path.join(publico, icono!.src);
       expect(existsSync(ruta), icono!.src).toBe(true);
-      expect(statSync(ruta).size).toBeLessThan(20 * 1024);
+      // Un ícono con bordes suavizados de 512 px ronda los 22 KB; el tope atrapa fotos o exportaciones sin optimizar.
+      expect(statSync(ruta).size).toBeLessThan(32 * 1024);
     }
   });
 
