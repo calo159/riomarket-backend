@@ -4,6 +4,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Puesto } from '../lib/types';
 import { cn, urlAbsoluta } from '../lib/utils';
 import { LogoPuesto } from './PuestoCard';
+import { desvanecer, OlasInferiores, PatronOlas } from './ui/Decoracion';
 
 interface Diapositiva {
   clave: string;
@@ -24,6 +25,26 @@ const FONDOS = [
   { fondo: '#00626D', color: '#FFFFFF' },
   { fondo: '#CF3F1B', color: '#FFFFFF' },
 ];
+
+/**
+ * Fondo en capas: un brillo arriba a la derecha (detrás de la foto) y un degradado en diagonal. Con texto
+ * blanco el lado del texto va algo más oscuro que el color base (el contraste no baja) y oscurece hacia la foto; con
+ * texto oscuro aclara hacia el texto. El color sólido queda de respaldo si el navegador no entiende `color-mix`.
+ */
+function capasDeFondo(fondo: string, textoClaro: boolean) {
+  // Con texto blanco el lado del texto va un 8 % más oscuro: deja margen de contraste para la textura de olas.
+  const oscuro = `color-mix(in srgb, ${fondo} 92%, #000)`;
+  const degradado = textoClaro
+    ? `linear-gradient(112deg, ${oscuro} 0%, ${oscuro} 42%, color-mix(in srgb, ${fondo} 52%, #000) 100%)`
+    : `linear-gradient(112deg, color-mix(in srgb, ${fondo} 70%, #fff) 0%, ${fondo} 52%, color-mix(in srgb, ${fondo} 76%, #cf3f1b) 100%)`;
+  return {
+    backgroundColor: fondo,
+    backgroundImage: `radial-gradient(60% 140% at 92% -10%, rgba(255, 255, 255, 0.22), transparent 62%), ${degradado}`,
+  };
+}
+
+/** Las olas se ven sobre todo abajo a la izquierda y se desvanecen antes de llegar al título. */
+const MASCARA_OLAS = desvanecer('to top right', 62);
 
 function recortar(texto: string, max: number) {
   const limpio = texto.trim();
@@ -95,7 +116,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
   return (
     <section
       className="relative h-[176px] overflow-hidden md:h-[348px]"
-      style={{ background: slides[indice].fondo }}
+      style={{ backgroundColor: slides[indice].fondo }}
       aria-roledescription="carrusel"
       aria-label="Destacados"
       onMouseEnter={() => setPausado(true)}
@@ -118,38 +139,50 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
               'absolute inset-0 transition-opacity duration-[700ms] ease-out',
               activa ? 'opacity-100' : 'pointer-events-none opacity-0',
             )}
-            style={{ background: s.fondo, color: s.colorTexto }}
+            style={{ ...capasDeFondo(s.fondo, s.colorTexto === '#FFFFFF'), color: s.colorTexto }}
           >
+            <PatronOlas className="opacity-[.08]" style={MASCARA_OLAS} />
+            <OlasInferiores className="h-6 opacity-[.10] md:h-14" />
             {s.foto ? (
-              <div className="absolute inset-y-0 right-0 w-[42%] overflow-hidden md:w-[58%]">
-                {conFoto && (
-                  <img
-                    src={s.foto}
-                    alt=""
-                    width={640}
-                    height={640}
-                    loading={esPrimera ? 'eager' : 'lazy'}
-                    decoding="async"
-                    // Solo la primera es la candidata a LCP (en minúsculas: React 18 no conoce fetchPriority).
-                    {...(esPrimera ? { fetchpriority: 'high' } : {})}
-                    onLoad={() => marcarTerminada(s.clave)}
-                    onError={() => marcarTerminada(s.clave)}
-                    className={cn(
-                      'h-full w-full object-cover transition-transform duration-[6000ms] ease-out',
-                      activa ? 'scale-100' : 'scale-[1.06]',
-                    )}
-                  />
-                )}
-              </div>
+              <>
+                {/* Banda translúcida detrás de la foto: da un segundo borde inclinado en vez de un corte recto. */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 right-0 w-[47%] bg-white/20 [clip-path:polygon(16%_0,100%_0,100%_100%,0_100%)] md:w-[52%] lg:w-[62%]"
+                />
+                <div className="absolute inset-y-0 right-0 w-[42%] overflow-hidden [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] md:w-[48%] lg:w-[58%]">
+                  {conFoto && (
+                    <img
+                      src={s.foto}
+                      alt=""
+                      width={640}
+                      height={640}
+                      loading={esPrimera ? 'eager' : 'lazy'}
+                      decoding="async"
+                      // Solo la primera es la candidata a LCP (en minúsculas: React 18 no conoce fetchPriority).
+                      {...(esPrimera ? { fetchpriority: 'high' } : {})}
+                      onLoad={() => marcarTerminada(s.clave)}
+                      onError={() => marcarTerminada(s.clave)}
+                      className={cn(
+                        'h-full w-full object-cover transition-transform duration-[6000ms] ease-out',
+                        activa ? 'scale-100' : 'scale-[1.06]',
+                      )}
+                    />
+                  )}
+                </div>
+              </>
             ) : (
               s.puesto && (
                 <div className="absolute right-[8%] top-1/2 hidden -translate-y-1/2 md:block">
-                  <LogoPuesto nombre={s.puesto.nombre} logo={s.puesto.logo} className="h-48 w-48 text-6xl" />
+                  {/* Anillos detrás del logo, como ondas en el agua. */}
+                  <span aria-hidden="true" className="absolute -inset-8 rounded-full border border-current opacity-20" />
+                  <span aria-hidden="true" className="absolute -inset-16 rounded-full border border-current opacity-10" />
+                  <LogoPuesto nombre={s.puesto.nombre} logo={s.puesto.logo} className="relative h-48 w-48 text-6xl" />
                 </div>
               )
             )}
             <div className="mx-auto h-full max-w-[1240px] px-4 md:px-5">
-              <div className="relative flex h-full max-w-[58%] flex-col items-start justify-center gap-1.5 pb-6 md:max-w-[520px] md:gap-2.5 md:pb-10">
+              <div className="relative flex h-full max-w-[58%] flex-col items-start justify-center gap-1.5 pb-6 md:max-w-[min(520px,calc(52vw-4.5rem))] md:gap-2.5 md:pb-10 md:pl-7 lg:max-w-[min(520px,calc(42vw-4.5rem))] xl:pl-0">
                 <h2
                   className={cn(
                     'line-clamp-2 text-2xl font-extrabold md:line-clamp-3 leading-[1.08] tracking-[-0.02em] md:text-[43px] md:leading-[1.05] md:tracking-[-0.025em]',
@@ -193,7 +226,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
             type="button"
             aria-label="Anterior"
             onClick={() => ir(indice - 1)}
-            className="absolute left-0 top-1/2 z-[3] -mt-8 hidden h-16 w-11 place-items-center rounded-r-lg bg-white/90 text-brand-600 transition-[width] hover:w-[52px] md:grid"
+            className="absolute left-0 top-1/2 z-[3] -mt-8 hidden h-16 w-9 place-items-center rounded-r-lg bg-white/90 text-brand-600 transition-[width] hover:w-10 md:grid"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -201,7 +234,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
             type="button"
             aria-label="Siguiente"
             onClick={() => ir(indice + 1)}
-            className="absolute right-0 top-1/2 z-[3] -mt-8 hidden h-16 w-11 place-items-center rounded-l-lg bg-white/90 text-brand-600 transition-[width] hover:w-[52px] md:grid"
+            className="absolute right-0 top-1/2 z-[3] -mt-8 hidden h-16 w-9 place-items-center rounded-l-lg bg-white/90 text-brand-600 transition-[width] hover:w-10 md:grid"
           >
             <ChevronRight className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
           </button>

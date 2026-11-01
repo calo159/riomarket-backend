@@ -12,6 +12,7 @@ import {
   Truck,
   User,
 } from 'lucide-react';
+import { BordeFestoneado } from '../ui/Decoracion';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { BuscadorEncabezado } from './BuscadorEncabezado';
@@ -156,7 +157,8 @@ export function PublicLayout() {
         <Outlet />
       </main>
 
-      <footer className="mt-10 bg-pie py-8 text-sm text-[#CFDCE1] max-md:mb-16">
+      <footer className="relative mt-10 bg-pie py-8 text-sm text-[#CFDCE1] max-md:mb-16">
+        <BordeFestoneado />
         <div className="mx-auto grid max-w-[1240px] gap-6 px-5 md:grid-cols-[1.5fr_repeat(3,minmax(0,1fr))]">
           <div>
             <Logo sobreMarca className="!text-[23px]" />

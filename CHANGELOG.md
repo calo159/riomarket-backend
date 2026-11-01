@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Más carácter visual en toda la app.** El carrusel de destacados deja el color plano: degradado en diagonal,
+  brillo detrás de la foto, textura de olas, olas inferiores que se mecen y la foto con el borde inclinado sobre
+  una banda translúcida. Los motivos del logo (las olas y el toldo festoneado) aparecen como detalle en el panel
+  de login y registro, los encabezados de página, los estados vacíos, la portada del puesto (con un borde ondulado
+  que la funde con la tarjeta) y el pie de página, que ahora tiene el borde en medias lunas. El fondo de la página
+  lleva un velo turquesa y otro amarillo muy suaves, y las tarjetas un reflejo sutil en el borde. Todo se detiene
+  con «menos movimiento» y es invisible para los lectores de pantalla.
 - **Pulido visual y de movimiento en toda la aplicación.**
   - La foto de un producto «viaja» de la tarjeta a la ficha (transición de vista; la ficha abre al
     instante con los datos de la tarjeta y, si el navegador no la soporta, navega como siempre).
@@ -62,6 +69,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Corregido
 
+- **El carrusel de destacados tapaba el texto en tabletas y pantallas medianas.** Entre 768 y 1280 px la flecha
+  izquierda cubría la primera letra del texto y, bajo ~1100 px, el título y la descripción se metían sobre la
+  foto (con la foto en blanco y texto blanco, ilegible). El texto ahora se limita al espacio libre a la
+  izquierda de la foto y la flecha es más angosta. Se midió el contraste real sobre los píxeles de cada
+  diapositiva en cinco anchos (mínimo 5,1:1).
 - **Accesibilidad, según un recorrido automático de todas las pantallas con los cuatro roles.** Las
   calificaciones con estrellas ahora son imágenes con nombre (antes llevaban un `aria-label` sin rol, que los
   lectores de pantalla ignoran o leen mal); la tabla de auditoría se puede recorrer con el teclado en el

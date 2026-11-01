@@ -12,6 +12,8 @@ import { useToast } from '../../components/ui/Toast';
 import { Campo } from '../../components/ui/Campos';
 import { CargandoPantalla } from '../../components/ui/Estado';
 import { Logo } from '../../components/layout/Logo';
+import { MarcaSvg } from '../../components/layout/MarcaSvg';
+import { desvanecer, PatronOlas } from '../../components/ui/Decoracion';
 import { cn } from '../../lib/utils';
 
 const esquema = z
@@ -123,7 +125,9 @@ export function Registro() {
 
   return (
     <div className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-[1240px] gap-0 px-3 py-5 sm:px-5 lg:grid-cols-[1fr_1.1fr] lg:py-8">
-      <div className="relative hidden overflow-hidden rounded-l-xl bg-brand-600 p-12 text-white dark:bg-brand-900 lg:flex lg:flex-col lg:justify-between">
+      <div className="relative hidden overflow-hidden rounded-l-xl bg-gradient-to-br from-brand-600 via-brand-600 to-brand-800 p-12 text-white dark:from-brand-900 dark:via-brand-900 dark:to-brand-950 lg:flex lg:flex-col lg:justify-between">
+        <PatronOlas className="text-white opacity-[.07]" style={desvanecer('to bottom left', 85)} />
+        <MarcaSvg conFondo={false} className="pointer-events-none absolute -right-12 -top-10 h-80 w-80 opacity-[.13]" />
         <div className="relative">
           <Logo sobreMarca />
           <p className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">

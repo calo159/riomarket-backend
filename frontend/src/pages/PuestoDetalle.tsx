@@ -10,6 +10,7 @@ import { LogoPuesto } from '../components/PuestoCard';
 import { urlAbsoluta } from '../lib/utils';
 import { GRID_PRODUCTOS } from '../lib/estilos';
 import { esErrorTemporal, mensajeDeCarga } from '../lib/errors';
+import { OlasInferiores, PatronOlas } from '../components/ui/Decoracion';
 import { Estrellas } from '../components/ui/Estrellas';
 import { CargandoPantalla, EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { Paginacion } from '../components/ui/Paginacion';
@@ -83,7 +84,8 @@ export function PuestoDetalle() {
     <div>
       <div className="mx-auto max-w-[1240px] px-3 pt-4 sm:px-5">
         <section className="card overflow-hidden">
-          <div className="h-32 w-full overflow-hidden bg-brand-600 sm:h-48 dark:bg-brand-800">
+          <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800 sm:h-48 dark:from-brand-800 dark:to-brand-950">
+            {!portada && <PatronOlas className="text-white opacity-[.12]" />}
             {portada && (
               <Imagen
                 src={portada}
@@ -95,6 +97,7 @@ export function PuestoDetalle() {
                 loading="eager" // portada del puesto: visible al abrir la página
               />
             )}
+            <OlasInferiores className="h-4 text-white sm:h-6 dark:text-slate-900" />
           </div>
           <div className="flex flex-col gap-4 px-4 pb-5 sm:flex-row sm:items-start sm:px-6">
             <LogoPuesto
