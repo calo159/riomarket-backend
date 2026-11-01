@@ -68,6 +68,8 @@ export default {
         grow: { from: { transform: 'scaleX(0)' }, to: { transform: 'scaleX(1)' } },
         crece: { from: { transform: 'scaleY(0)' }, to: { transform: 'scaleY(1)' } },
         shimmer: { '100%': { transform: 'translateX(100%)' } },
+        deriva: { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } },
+        'deriva-inversa': { from: { transform: 'translateX(-50%)' }, to: { transform: 'translateX(0)' } },
         timbre: {
           '0%, 100%': { transform: 'rotate(0)' },
           '15%': { transform: 'rotate(16deg)' },
@@ -91,6 +93,8 @@ export default {
         pulsepaso: 'pulsepaso 1.6s ease-out infinite',
         timbre: 'timbre .9s ease-in-out',
         anillo: 'anillo 1.1s ease-out .6s 1 backwards',
+        deriva: 'deriva 26s linear infinite',
+        'deriva-inversa': 'deriva-inversa 38s linear infinite',
       },
     },
   },

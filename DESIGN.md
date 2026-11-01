@@ -16,7 +16,7 @@ La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio c
 | `exito`, `azul`, `estrella`, `pie` | `#0B7A3E`, `#0D5C8A`, `#9A5B00`, `#17313B` | Domicilio/éxito, bloque azul, calificación, pie |
 
 `estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` porque el original daba 4,2:1 sobre blanco; ahora 5,4:1.
-`sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin degradados, vidrio ni manchas; sombras solo al pasar el cursor (`shadow-hover`) o en elementos flotantes (`shadow-flota`, `shadow-menu`).
+`sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin vidrio ni manchas decorativas; sombras solo al pasar el cursor (`shadow-hover`) o en elementos flotantes (`shadow-flota`, `shadow-menu`). Los degradados y las texturas existen, pero salen de la marca (ver «Detalles de marca»).
 
 ## Marca
 
@@ -38,6 +38,26 @@ En la app se usa `components/layout/Logo.tsx` (con `MarcaSvg.tsx`, la misma geom
 
 Se regeneran con `python scripts/generar_logo.py` (necesita `pip install fonttools brotli`) y `node frontend/scripts/exportar-marca.mjs`.
 El ícono «maskable» respeta la zona segura de Android (el símbolo ocupa el 74 % central).
+
+## Detalles de marca
+
+Los dos motivos del logo (las olas y el toldo festoneado) se usan como textura y como borde, siempre en SVG o CSS en línea
+(la CSP no permite imágenes externas) y siempre `aria-hidden`. Viven en `components/ui/Decoracion.tsx`:
+
+| Pieza | Dónde |
+| --- | --- |
+| `PatronOlas` (filas de olas con `currentColor`, se atenúa con `opacity-*` y se difumina con `desvanecer` o `desvanecerEnMancha`) | Carrusel de destacados, panel izquierdo de login y registro, cabecera de página (`EncabezadoPagina`), estados vacíos, portada del puesto sin foto |
+| `OlasInferiores` (dos siluetas que se mecen; `animate-deriva`) | Borde inferior del carrusel y de la portada del puesto (en el color de la tarjeta, funde la foto con el contenido) |
+| `BordeFestoneado` (medias lunas del toldo) | Borde superior del pie de página |
+
+Además: fondo de página con un velo turquesa (arriba a la izquierda) y otro amarillo (arriba a la derecha) solo en claro; tarjetas
+con un reflejo en el borde superior; símbolo del logo como marca de agua en el panel de login.
+
+**Carrusel de destacados.** Cada diapositiva lleva el color del diseño con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
+borde izquierdo inclinado con una banda translúcida detrás. Con texto blanco el lado del texto se oscurece un 8 % para dejar margen al contraste;
+`color-mix` queda de respaldo en el color sólido. El texto se limita al espacio libre a la izquierda de la foto
+(`calc(52vw - 4.5rem)` en tablet, `calc(42vw - 4.5rem)` desde `lg`) y la flecha izquierda mide 36 px para no tapar la primera letra.
+El contraste real (píxeles detrás del texto) se midió en cinco anchos y las cuatro diapositivas: mínimo 5,1:1.
 
 ## Tipografía
 
