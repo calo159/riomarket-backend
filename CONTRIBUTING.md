@@ -26,6 +26,15 @@ Siga la sección «Inicio rápido» del [README](README.md#inicio-rápido): back
   commits ni en la descripción del pull request: es una preferencia expresa del dueño.
 - Mantenga los cambios pequeños, con sus pruebas, y no incluya secretos en commits nuevos.
 
+## Reglas de dependencia
+
+Las apps del backend y las carpetas del frontend forman **capas** y solo dependen hacia abajo
+([ADR-017](docs/ADR-017-arquitectura-en-capas.md)). Si tu cambio necesita importar de una capa superior, no lo
+hagas: invierte la dependencia con un punto de extensión (mira `apps/rbac/menu.py` y
+`apps/catalog/anotaciones.py`) o mueve el código a la capa correcta. Una app o carpeta nueva debe declarar su
+nivel en `tests/test_arquitectura.py` o en `frontend/src/arquitectura.test.ts`; esas pruebas fallan con un
+mensaje que indica qué importación sobra.
+
 ## Antes de abrir un pull request
 
 Todo esto debe pasar (es lo que ejecuta el CI):

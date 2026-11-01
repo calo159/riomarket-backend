@@ -21,6 +21,7 @@ from django.db.models.functions import Greatest
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
+from apps.audit import services as audit
 from apps.common import pricing
 from apps.common.query import parametro_booleano, parametro_entero
 from apps.orders.models import Pedido
@@ -121,7 +122,6 @@ def _auditar_pago(usuario, pago: Pago, accion: str) -> None:
     """Registra la acción en la auditoría (best-effort)."""
     if usuario is None:
         return
-    from apps.audit import services as audit
 
     audit.registrar(
         usuario=usuario,

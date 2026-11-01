@@ -8,43 +8,62 @@ cobro, apartar con plazo, encargo), el de despliegue y los de estados están en
 
 ## Dependencias entre apps
 
-`accounts` es la base (usuarios y verificación); `catalog` depende de ella;
-`orders` y `payments` de ambas; `common` es transversal (permisos, errores,
-pricing, validación). `addresses`, `notifications`, `reviews`, `promotions` y
-`audit` cuelgan de las anteriores.
+Las apps forman **capas** y cada una importa solo de las de nivel menor; el detalle y las razones están en
+[ADR-017](ADR-017-arquitectura-en-capas.md) y una prueba (`tests/test_arquitectura.py`) lo hace cumplir.
 
 ```mermaid
-flowchart TD
-    common[(common)]
-    accounts --> catalog
-    catalog --> orders
-    orders --> payments
-    accounts --> addresses
-    accounts --> notifications
-    orders --> notifications
-    catalog --> reviews
-    orders --> reviews
-    catalog --> promotions
-    orders --> promotions
-    orders --> audit
-    payments --> audit
-    promotions --> audit
-    reviews --> audit
-
-    common -. permisos / pricing / errores .-> accounts
-    common -. permisos / pricing / errores .-> catalog
-    common -. permisos / pricing / errores .-> orders
-    common -. permisos / pricing / errores .-> payments
-    common -. permisos / pricing / errores .-> addresses
-    common -. permisos / pricing / errores .-> notifications
-    common -. permisos / pricing / errores .-> reviews
-    common -. permisos / pricing / errores .-> promotions
-    common -. permisos / pricing / errores .-> audit
+flowchart BT
+    subgraph N0["Nivel 0 · núcleo (no conoce el dominio)"]
+        common
+    end
+    subgraph N1["Nivel 1 · autorización"]
+        rbac
+    end
+    subgraph N2["Nivel 2"]
+        accounts
+        audit
+        notifications
+    end
+    subgraph N3["Nivel 3"]
+        addresses
+        catalog
+    end
+    subgraph N4["Nivel 4"]
+        promotions
+        sitio
+    end
+    subgraph N5["Nivel 5 · proceso de compra"]
+        orders <--> payments
+    end
+    subgraph N6["Nivel 6"]
+        reviews
+    end
+    subgraph N7["Nivel 7"]
+        administration
+    end
+    subgraph N8["Nivel 8 · solo demostración"]
+        demo
+    end
+    N1 --> N0
+    N2 --> N1
+    N3 --> N2
+    N4 --> N3
+    N5 --> N4
+    N6 --> N5
+    N7 --> N6
+    N8 --> N7
 ```
 
-Las dependencias se rompen con **imports diferidos** cuando hace falta evitar
-ciclos (por ejemplo, `orders.services` importa `notifications` y `audit` dentro
-de la función).
+Si una app de nivel bajo necesita algo de una de nivel alto, **no importa hacia arriba**: define un punto de
+extensión y la app alta se registra al arrancar (`AppConfig.ready`). Hay dos:
+
+- **Insignias del menú** (`rbac.menu.registrar_insignia`): `orders`, `payments`, `notifications` y `accounts`
+  aportan los contadores de sus recursos.
+- **Anotaciones del catálogo** (`catalog.anotaciones.registrar_anotador`): `reviews` aporta la reputación de los
+  puestos y la calificación del puesto de cada producto.
+
+`orders` ↔ `payments` es la única dependencia mutua aceptada (un pedido y su cobro son el mismo proceso). Ya no
+hay imports diferidos para esquivar ciclos: todos los imports entre apps van al inicio del archivo.
 
 ## Modelo entidad-relación
 

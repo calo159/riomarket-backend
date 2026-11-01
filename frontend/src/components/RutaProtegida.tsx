@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useSession } from './SessionProvider';
-import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
+import { useSession } from '../auth/SessionProvider';
+import { CargandoPantalla, EstadoError } from './ui/Estado';
 import { useAcceso } from '../navigation/useMenu';
 import type { Rol } from '../lib/types';
 

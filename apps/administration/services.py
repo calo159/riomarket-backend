@@ -31,6 +31,7 @@ from apps.notifications.models import Notificacion
 from apps.notifications.services import crear_notificacion
 from apps.orders.models import Pedido
 from apps.payments.models import Pago
+from apps.promotions.models import Cupon
 from apps.rbac.acceso import recursos_de_usuario
 from apps.rbac.models import Rol, UsuarioRol
 from apps.reviews.models import Resena
@@ -447,6 +448,5 @@ def resumen() -> dict:
 
 
 def _contar_cupones() -> dict:
-    from apps.promotions.models import Cupon
 
     return Cupon.objects.aggregate(total=Count("id"), activos=Count("id", filter=Q(activo=True)))

@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { api, refreshAccessToken, setAccessToken, setSessionLostHandler } from '../lib/http';
-import { invalidarMenu } from '../navigation/useMenu';
+import { invalidarMenu } from '../lib/invalidarMenu';
 import { borrarPistaDeSesion, guardarAvisoSesion, hayPistaDeSesion } from './tokens';
 import type { Perfil, RespuestaLogin, Rol, UsuarioSesion } from '../lib/types';
 

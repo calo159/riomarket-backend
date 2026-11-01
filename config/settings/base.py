@@ -82,6 +82,8 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.administration",
     "apps.rbac",
+    "apps.demo",
+    "apps.sitio",
 ]
 
 MIDDLEWARE = [

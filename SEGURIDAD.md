@@ -25,7 +25,7 @@ reportar una vulnerabilidad y ver los límites aceptados, lea
 ## Autorización
 
 - Roles en `Usuario.rol`: comprador, vendedor y administrador.
-- Permisos DRF reutilizables en `apps/common/permissions.py`:
+- Permisos DRF reutilizables en `apps/accounts/permissions.py`:
   `EsComprador`, `EsVendedor`, `EsVendedorAprobado`, `EsAdministrador` y
   `EsDuenoOAdmin` (este último valida la cadena de propiedad del objeto).
 - Un vendedor sin verificación aprobada no puede publicar. La foto de cédula solo

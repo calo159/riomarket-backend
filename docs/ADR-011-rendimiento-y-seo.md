@@ -38,7 +38,7 @@ Lighthouse móvil (perfil por defecto de Lighthouse 12: Moto G Power emulado, 4G
 ### 5. Los datos se piden mientras se descarga el código
 
 - Cascada original en `/tienda`: HTML → JS principal → chunk diferido de `Inicio` → recién ahí las consultas → fotos. `main.tsx` llama a `precargarRuta` antes de renderizar: en `/tienda` y en `/catalogo` sin filtros pide los datos con `prefetchQuery` en paralelo con el chunk.
-- Las definiciones de esas consultas viven en `pages/inicio/consultas.ts` y las usan tanto las pantallas como la precarga; así no pueden desalinearse (una prueba renderiza `Inicio` y `Catalogo` tras la precarga y comprueba que no vuelven a pedir nada). Solo rutas públicas: nunca se precarga algo que dependa de la sesión.
+- Las definiciones de esas consultas viven en `api/consultas.ts` (y la precarga en `api/precarga.ts`) y las usan tanto las pantallas como la precarga; así no pueden desalinearse (una prueba renderiza `Inicio` y `Catalogo` tras la precarga y comprueba que no vuelven a pedir nada). Solo rutas públicas: nunca se precarga algo que dependa de la sesión.
 
 ### 6. Pista de sesión: la landing no espera al servidor
 

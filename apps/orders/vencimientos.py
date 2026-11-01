@@ -27,8 +27,11 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from apps.audit import services as audit
+from apps.notifications import services as notif
 from apps.orders import permissions, services
 from apps.orders.models import Pedido
+from apps.payments.models import Pago
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +94,6 @@ def _bloquear_pedido(pk: int):
 
 def _motivo_de_vencimiento(pedido: Pedido, pago) -> str | None:
     """Regla de ADR-012: ¿hay que cancelar este pedido? Devuelve el motivo o ``None``."""
-    from apps.payments.models import Pago
 
     if pedido.tipo_entrega != Pedido.TipoEntrega.RETIRO:
         return None
@@ -116,7 +118,6 @@ _CANCELADO = "cancelado"
 
 def _procesar_vencido(pk: int, ahora):
     """Revalida y, si corresponde, cancela UN pedido en su propia transacción."""
-    from apps.payments.models import Pago
 
     with transaction.atomic():
         pedido = _bloquear_pedido(pk)
@@ -143,8 +144,6 @@ def _procesar_vencido(pk: int, ahora):
 
 def _despues_de_cancelar(pedido, estado_anterior, vencio_en, motivo, origen):
     """Avisos y auditoría, fuera de la transacción del pedido (nunca la deshacen)."""
-    from apps.audit import services as audit
-    from apps.notifications import services as notif
 
     try:
         notif.notificar_pedido_vencido(pedido=pedido, vencio_en=vencio_en, motivo=motivo)
@@ -195,7 +194,6 @@ def cancelar_vencidos(*, ahora=None, limite: int | None = None, origen="lectura"
 # Avisar
 # ---------------------------------------------------------------------------
 def _avisar_ids(ids, ahora) -> list[int]:
-    from apps.notifications import services as notif
 
     avisados: list[int] = []
     for pk in ids:
@@ -305,8 +303,6 @@ def extender_plazo(*, pedido: Pedido, usuario, ahora=None) -> Pedido:
 
 
 def _despues_de_extender(pedido: Pedido, usuario) -> None:
-    from apps.audit import services as audit
-    from apps.notifications import services as notif
 
     try:
         notif.notificar_plazo_extendido(pedido=pedido)

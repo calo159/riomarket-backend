@@ -18,10 +18,13 @@ from django.db.models import Max, Q, QuerySet
 from django.http import Http404
 
 from apps.accounts.models import Usuario
+from apps.audit.services import registrar
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto, PuestoCategoria
 from apps.common.image_processing import make_thumbnail, process_product_image
 from apps.common.motivo import validar_motivo
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
+from apps.notifications.models import Notificacion
+from apps.notifications.services import crear_notificacion
 from apps.rbac.acceso import tiene_recurso
 
 # Campos de consulta admitidos en el ordenamiento (whitelist anti-inyección
@@ -322,8 +325,6 @@ def _exigir_moderador(actor, recurso: str) -> None:
 
 
 def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
-    from apps.notifications.models import Notificacion
-    from apps.notifications.services import crear_notificacion
 
     try:
         crear_notificacion(
@@ -341,7 +342,6 @@ def _notificar_propietario(usuario, titulo: str, mensaje: str) -> None:
 def _auditar_moderacion(
     actor, entidad: str, id_entidad: int, anterior: str, nuevo: str, motivo: str = ""
 ):
-    from apps.audit.services import registrar
 
     registrar(
         usuario=actor,

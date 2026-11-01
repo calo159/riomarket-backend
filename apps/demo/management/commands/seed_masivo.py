@@ -30,6 +30,7 @@ from apps.addresses.models import Direccion
 from apps.audit.models import RegistroAuditoria
 from apps.catalog.models import Categoria, Producto, Puesto, PuestoCategoria
 from apps.catalog.services import asignar_categoria
+from apps.notifications import services as notif
 from apps.notifications.models import Notificacion
 from apps.orders import services as orders_services
 from apps.orders.models import ItemPedido, Pedido
@@ -846,7 +847,6 @@ class Command(BaseCommand):
     # Notificaciones de bienvenida (además de las generadas por el flujo)
     # ------------------------------------------------------------------
     def _crear_notificaciones_extra(self):
-        from apps.notifications import services as notif
 
         for comprador in self.compradores:
             if Notificacion.objects.filter(

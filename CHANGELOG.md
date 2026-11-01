@@ -11,6 +11,21 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Arquitectura en capas ([ADR-017](docs/ADR-017-arquitectura-en-capas.md)).** Las apps del backend y las
+  carpetas del frontend forman capas y solo dependen hacia abajo. Antes `common` (el núcleo) y `rbac` dependían de
+  casi todo el dominio, había ciclos entre apps y 35 imports escondidos dentro de funciones para esquivarlos; ahora
+  `common` y `rbac` no conocen el dominio, el grafo es acíclico (salvo `orders` ↔ `payments`, que son el mismo
+  proceso de compra) y los imports diferidos bajan a 1 (el gancho de arranque de `reviews`).
+  - Las insignias del menú las registra cada app dueña del dato (`rbac.menu.registrar_insignia`) y la reputación de
+    los puestos la registra `reviews` en el catálogo (`catalog.anotaciones.registrar_anotador`), en vez de que
+    `rbac` y `catalog` importen hacia arriba.
+  - Movimientos de código, sin cambios de comportamiento ni de rutas de la API: los permisos por rol pasan de
+    `common` a `accounts`; los comandos `seed_*` a la app `demo` (mismos nombres); `seo.py` y las vistas que
+    entregan la SPA a la app `sitio`. En el frontend, `consultas` y `precarga` pasan a `api/`, `invalidarMenu` a
+    `lib/` y `RutaProtegida` a `components/` (rompe el ciclo `auth` ↔ `navigation` y `lib` → `pages`).
+  - Dos pruebas de arquitectura (`tests/test_arquitectura.py` y `frontend/src/arquitectura.test.ts`) hacen
+    cumplir las reglas y dicen qué importación sobra; se comprobó que detectan cada tipo de violación.
+
 - **Más carácter visual en toda la app.** El carrusel de destacados deja el color plano: degradado en diagonal,
   brillo detrás de la foto, textura de olas, olas inferiores que se mecen y la foto con el borde inclinado sobre
   una banda translúcida. Los motivos del logo (las olas y el toldo festoneado) aparecen como detalle en el panel

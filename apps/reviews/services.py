@@ -12,6 +12,7 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
+from apps.audit import services as audit
 from apps.catalog.models import Puesto
 from apps.common.query import parametro_entero
 from apps.orders.models import Pedido
@@ -32,7 +33,6 @@ _CAMPOS_EDITABLES = ("calificacion", "comentario")
 
 def _auditar(usuario, accion: str, resena: Resena, detalle: dict | None = None) -> None:
     """Registra la acción en la auditoría (best-effort, nunca rompe la reseña)."""
-    from apps.audit import services as audit
 
     audit.registrar(
         usuario=usuario,

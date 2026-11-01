@@ -7,7 +7,7 @@ import {
   consultaProductosInicio,
   consultaPuestosInicio,
   filtrosCatalogoDe,
-} from '../pages/inicio/consultas';
+} from './consultas';
 
 /**
  * Pide los datos de la pantalla pública en cuanto arranca la aplicación, EN PARALELO con la

@@ -9,7 +9,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { App } from './App';
 import './index.css';
 import { registrarServiceWorker } from './lib/registrarServiceWorker';
-import { precargarRuta } from './lib/precarga';
+import { precargarRuta } from './api/precarga';
 
 const queryClient = new QueryClient({
   defaultOptions: {

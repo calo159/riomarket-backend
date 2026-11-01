@@ -56,6 +56,7 @@ stack, pruebas y despliegue.
 - [ADR-014: panel de ventas](ADR-014-panel-de-ventas.md)
 - [ADR-015: observabilidad mínima (id de petición, registro JSON y health)](ADR-015-observabilidad.md)
 - [ADR-016: pruebas end-to-end por rol en el CI](ADR-016-pruebas-end-to-end.md)
+- [ADR-017: arquitectura en capas y reglas de dependencia](ADR-017-arquitectura-en-capas.md)
 
 ## Entrega
 

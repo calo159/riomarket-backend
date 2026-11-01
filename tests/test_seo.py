@@ -11,7 +11,7 @@ from django.test.utils import CaptureQueriesContext
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
 from apps.common.security_headers import SecurityHeadersMiddleware
-from apps.common.views import FrontendCatchAllView
+from apps.sitio.views import FrontendCatchAllView
 from tests.factories import ProductoFactory, PuestoFactory
 
 pytestmark = pytest.mark.django_db

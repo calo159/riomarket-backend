@@ -2,13 +2,13 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CartProvider } from '../cart/CartProvider';
-import { ToastProvider } from '../components/ui/Toast';
-import { Catalogo } from '../pages/Catalogo';
-import { Inicio } from '../pages/Inicio';
-import { consultaCategorias, consultaProductosInicio, consultaPuestosInicio } from '../pages/inicio/consultas';
-import { claves } from './queryKeys';
-import { precargarRuta } from './precarga';
+import { CartProvider } from './cart/CartProvider';
+import { ToastProvider } from './components/ui/Toast';
+import { Catalogo } from './pages/Catalogo';
+import { Inicio } from './pages/Inicio';
+import { consultaCategorias, consultaProductosInicio, consultaPuestosInicio } from './api/consultas';
+import { claves } from './lib/queryKeys';
+import { precargarRuta } from './api/precarga';
 
 const catalogo = vi.hoisted(() => ({
   listarCategorias: vi.fn(),
@@ -16,8 +16,8 @@ const catalogo = vi.hoisted(() => ({
   listarPuestos: vi.fn(),
 }));
 
-vi.mock('../api/catalog', () => catalogo);
-vi.mock('../auth/SessionProvider', () => ({
+vi.mock('./api/catalog', () => catalogo);
+vi.mock('./auth/SessionProvider', () => ({
   useSession: () => ({ usuario: null, estado: 'anonimo', autenticado: false, rol: null }),
 }));
 

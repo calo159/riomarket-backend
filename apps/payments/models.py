@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from apps.common import pricing
 from apps.orders.models import Pedido
 
 
@@ -145,7 +146,6 @@ class Pago(models.Model):
     @property
     def neto_vendedor(self) -> Decimal:
         """Lo que recibe el vendedor: subtotal - comisión - descuento (ADR-003/6b)."""
-        from apps.common import pricing
 
         neto = pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma) - Decimal(
             self.descuento_aplicado

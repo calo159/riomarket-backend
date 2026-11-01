@@ -19,7 +19,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.permissions import EsDuenoOAdmin, EsVendedorAprobado
 from apps.catalog import services
+from apps.catalog.anotaciones import CALIFICACION_DEL_PUESTO, REPUTACION, anotar
 from apps.catalog.models import Categoria, ImagenProducto, Producto, Puesto
 from apps.catalog.serializers import (
     CategoriaSerializer,
@@ -29,11 +31,9 @@ from apps.catalog.serializers import (
     ProductoSerializer,
     PuestoSerializer,
 )
-from apps.common.permissions import EsDuenoOAdmin, EsVendedorAprobado
 from apps.common.query import aplicar_ordenamiento, parametro_entero
 from apps.rbac.acceso import tiene_recurso
 from apps.rbac.permissions import TieneRecurso
-from apps.reviews.services import anotar_calificacion_del_puesto, anotar_reputacion
 
 PARAMETROS_BUSQUEDA_PRODUCTO = [
     OpenApiParameter(name="q", type=OpenApiTypes.STR, description="Nombre o descripción"),
@@ -118,7 +118,7 @@ class PuestoViewSet(viewsets.ModelViewSet):
         )
         qs = services.visibles_puestos(self.request.user, qs, params)
         qs = services.filtrar_puestos(qs, params)
-        qs = anotar_reputacion(qs)
+        qs = anotar(REPUTACION, qs)
         if not params.get("ordering"):
             # El agregado (Count distinct) quita el orden por defecto del Meta.
             qs = qs.order_by("nombre")
@@ -198,7 +198,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
         qs = Producto.objects.select_related("id_puesto", "id_categoria").prefetch_related(
             "imagenes"
         )
-        qs = anotar_calificacion_del_puesto(qs)
+        qs = anotar(CALIFICACION_DEL_PUESTO, qs)
         qs = services.visibles_productos(self.request.user, qs, params)
         qs = services.filtrar_productos(qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PRODUCTO)

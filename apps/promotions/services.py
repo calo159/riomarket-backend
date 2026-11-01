@@ -16,6 +16,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from apps.accounts.models import Usuario
+from apps.audit import services as audit
 from apps.promotions.models import Cupon, UsoCupon
 
 ORDENAMIENTO_CUPON = ("fecha_creacion", "-fecha_creacion", "codigo", "-codigo", "id", "-id")
@@ -36,7 +37,6 @@ _CAMPOS_EDITABLES = (
 
 def _auditar(usuario, accion: str, cupon: Cupon, detalle: dict | None = None) -> None:
     """Registra la acción en la auditoría (best-effort)."""
-    from apps.audit import services as audit
 
     audit.registrar(
         usuario=usuario,

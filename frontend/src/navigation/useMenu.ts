@@ -1,4 +1,4 @@
-import { useQuery, type QueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/http';
 import { useSession } from '../auth/SessionProvider';
 import { claves } from '../lib/queryKeys';
@@ -41,6 +41,4 @@ export function useAcceso() {
   };
 }
 
-export function invalidarMenu(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: CLAVE_MENU });
-}
+export { invalidarMenu } from '../lib/invalidarMenu';

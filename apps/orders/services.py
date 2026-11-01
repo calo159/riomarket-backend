@@ -22,11 +22,18 @@ from django.db import transaction
 from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
+from apps.audit import services as audit
 from apps.catalog.models import Producto, Puesto
 from apps.common import pricing
 from apps.common.query import parametro_booleano, parametro_entero, validar_estado_parametro
+from apps.notifications import services as notif
+from apps.notifications.services import formatear_cuando
 from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
+from apps.payments import services as pagos_services
+from apps.payments.models import Pago
+from apps.promotions import services as promos_services
+from apps.promotions.models import UsoCupon
 from apps.rbac.acceso import tiene_recurso
 
 logger = logging.getLogger(__name__)
@@ -189,8 +196,6 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
             ]
         )
         if cupon is not None:
-            from apps.promotions import services as promos_services
-
             promos_services.registrar_uso(
                 cupon=cupon, usuario=usuario, pedido=pedido, descuento=descuento
             )
@@ -324,8 +329,6 @@ def _resolver_fecha_solicitada(fecha, encargos: list[Producto], puesto: Puesto, 
     horas = max(producto.preparacion_horas or 0 for producto in encargos)
     minima = ahora + timedelta(hours=horas)
     if fecha < minima - timedelta(minutes=TOLERANCIA_FECHA_MINUTOS):
-        from apps.notifications.services import formatear_cuando
-
         desde = formatear_cuando(minima)
         if not desde.endswith("."):
             desde += "."
@@ -365,7 +368,6 @@ def _reponer_stock(pedido: Pedido) -> None:
 
 def _liberar_cupon(pedido: Pedido) -> None:
     """Un pedido cancelado no consume usos del cupón (límites totales y por usuario)."""
-    from apps.promotions.models import UsoCupon
 
     UsoCupon.objects.filter(id_pedido=pedido).delete()
 
@@ -527,7 +529,6 @@ def _plazo_al_pasar_a(pedido: Pedido, destino: str):
 
 def _cobro_en_mano_pendiente_en_bd(pedido: Pedido) -> bool:
     """Como ``_cobro_en_mano_pendiente`` pero releyendo el pago (no el ``pedido.pago`` cacheado)."""
-    from apps.payments.models import Pago
 
     pago = Pago.objects.filter(id_pedido=pedido).first()
     return (
@@ -550,7 +551,6 @@ def _exigir_pago_para_confirmar(pedido: Pedido) -> None:
     vendedor cobra al entregar. Cualquier otro método, y todo domicilio, exige el
     pago aprobado.
     """
-    from apps.payments.models import Pago
 
     pago = Pago.objects.filter(id_pedido=pedido).first()
     if pago is None:
@@ -577,8 +577,6 @@ def _cerrar_cobro_en_mano(pedido: Pedido, usuario) -> None:
     queda entregado. El comprador no puede aprobar su propio efectivo: si el pago
     sigue pendiente, debe entregarlo el vendedor.
     """
-    from apps.payments import services as pagos_services
-    from apps.payments.models import Pago
 
     pago = Pago.objects.filter(id_pedido=pedido).first()
     if (
@@ -596,7 +594,6 @@ def _cerrar_cobro_en_mano(pedido: Pedido, usuario) -> None:
 
 def _reembolsar_o_anular_pago(pedido: Pedido) -> None:
     """Al cancelar: reembolsa el pago aprobado o anula el que sigue en curso."""
-    from apps.payments import services as pagos_services
 
     pagos_services.reembolsar_o_anular_por_cancelacion(pedido=pedido)
 
@@ -617,7 +614,6 @@ def _resolver_cupon(usuario, puesto, codigo, subtotal):
     codigo = (codigo or "").strip()
     if not codigo:
         return None, Decimal("0.00")
-    from apps.promotions import services as promos_services
 
     return promos_services.aplicar_cupon(
         usuario=usuario, codigo=codigo, puesto=puesto, subtotal=subtotal
@@ -626,7 +622,6 @@ def _resolver_cupon(usuario, puesto, codigo, subtotal):
 
 def _auditar(usuario, accion: str, pedido: Pedido, detalle: dict | None = None) -> None:
     """Registra la acción en la auditoría (best-effort, nunca rompe el pedido)."""
-    from apps.audit import services as audit
 
     audit.registrar(
         usuario=usuario,
@@ -638,7 +633,6 @@ def _auditar(usuario, accion: str, pedido: Pedido, detalle: dict | None = None) 
 
 
 def _notificar_pedido_creado(pedido: Pedido) -> None:
-    from apps.notifications import services as notif
 
     try:
         notif.notificar_pedido_creado(pedido=pedido)
@@ -647,7 +641,6 @@ def _notificar_pedido_creado(pedido: Pedido) -> None:
 
 
 def _notificar_cambio_estado(pedido: Pedido, estado_anterior: str) -> None:
-    from apps.notifications import services as notif
 
     try:
         notif.notificar_cambio_estado_pedido(pedido=pedido, estado_anterior=estado_anterior)
@@ -656,7 +649,6 @@ def _notificar_cambio_estado(pedido: Pedido, estado_anterior: str) -> None:
 
 
 def _notificar_no_recibido(pedido: Pedido) -> None:
-    from apps.notifications import services as notif
 
     try:
         notif.notificar_no_recibido(pedido=pedido)
