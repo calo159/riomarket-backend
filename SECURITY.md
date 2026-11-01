@@ -48,7 +48,7 @@ requisitos `RNF-01` y `RNF-02`).
   frontend solo oculta lo no permitido. Un vendedor no verificado no publica ni cobra.
 - **Auditoría:** las acciones sensibles (pedidos, pagos, cupones, decisiones del administrador y las del
   sistema, como los vencimientos) quedan en un registro de solo lectura para el administrador.
-- **Límite de intentos (throttling):** 60/min anónimo, 300/min autenticado, 10/min en inicio de sesión y
+- **Límite de intentos (throttling):** 240/min anónimo, 600/min autenticado, 10/min en inicio de sesión y
   registro, 20/min en verificación y 60/min en pagos (configurables por entorno). Sin `REDIS_URL` el
   contador es por proceso.
 - **Cabeceras:** `Content-Security-Policy` estricta (`default-src 'self'`, `frame-ancestors 'none'`, con

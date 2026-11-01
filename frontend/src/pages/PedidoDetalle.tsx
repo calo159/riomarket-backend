@@ -12,7 +12,7 @@ import { CargandoPantalla, EstadoError } from '../components/ui/Estado';
 import { ConfirmarModal } from '../components/ui/Modal';
 import { BotonVolverAPedir } from '../components/BotonVolverAPedir';
 import { formatearFechaHora } from '../lib/format';
-import { mensajeDeError } from '../lib/errors';
+import { esErrorTemporal, mensajeDeCarga, mensajeDeError } from '../lib/errors';
 import { invalidarMenu } from '../navigation/useMenu';
 import { claves } from '../lib/queryKeys';
 import { AvisosPedido } from './pedido/AvisosPedido';
@@ -113,7 +113,10 @@ export function PedidoDetalle() {
   if (pedido.isError || !pedido.data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <EstadoError mensaje="No encontramos el pedido o no tienes acceso a él." />
+        <EstadoError
+          mensaje={mensajeDeCarga(pedido.error, "No encontramos el pedido o no tienes acceso a él.")}
+          onReintentar={esErrorTemporal(pedido.error) ? () => void pedido.refetch() : undefined}
+        />
         <Link to="/mis-pedidos" className="btn-secondary mt-4">Volver a mis pedidos</Link>
       </div>
     );

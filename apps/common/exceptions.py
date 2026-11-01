@@ -46,6 +46,11 @@ def api_exception_handler(exc, context):
         exc = exceptions.ValidationError(detail=detail)
 
     response = exception_handler(exc, context)
+    if response is not None and isinstance(exc, exceptions.Throttled):
+        # El texto de DRF sale a medias en español ("Solicitud fue regulada (throttled)").
+        espera = f"Espera {exc.wait} segundos" if exc.wait else "Espera un momento"
+        texto = f"Hiciste demasiadas solicitudes seguidas. {espera} e inténtalo de nuevo."
+        response.data = {"detail": texto}
     if response is not None:
         response.data = {
             "success": False,

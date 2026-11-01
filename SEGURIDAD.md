@@ -62,7 +62,7 @@ En producción (`config/settings/prod.py` y `SecurityHeadersMiddleware`):
 
 ## Límites de uso y errores
 
-- Throttling de DRF: 60/min anónimo, 300/min autenticado, 10/min en login y
+- Throttling de DRF: 240/min anónimo, 600/min autenticado, 10/min en login y
   registro, 20/min en verificación y 60/min en pagos.
 - Los errores usan un envoltorio uniforme sin trazas internas en producción.
 - La auditoría registra acciones sensibles (usuario, acción, entidad e IP) y es
