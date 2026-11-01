@@ -46,7 +46,7 @@
   }
   /* Acción principal: coral, la misma de comprar y agregar. */
   .btn-primary {
-    @apply btn bg-accion text-white hover:bg-accion-hover;
+    @apply btn bg-gradient-to-b from-accion to-[#BB3515] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(120,30,10,0.28)] hover:-translate-y-px hover:from-accion-hover hover:to-[#A02D10] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_5px_14px_rgba(160,45,16,0.32)] active:translate-y-0;
   }
   .btn-secondary {
     @apply btn border border-slate-300 bg-white text-slate-800 hover:border-brand-600 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-brand-300 dark:hover:text-brand-300;
@@ -219,6 +219,38 @@
   from {
     transform: translateY(10px);
   }
+}
+
+/* Un campo de un formulario con error se sacude una vez al marcarse inválido: llama la atención sin gritar. */
+form .input[aria-invalid='true'] {
+  animation: sacude 0.38s ease-out;
+}
+@keyframes sacude {
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Cambio de tema: el modo nuevo se revela en círculo desde el botón (ThemeToggle). La clase solo
+   existe mientras dura, para no afectar a la transición de la foto entre la tarjeta y la ficha. */
+html.cambiando-tema::view-transition-old(root),
+html.cambiando-tema::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.cambiando-tema::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* La foto del producto viaja de la tarjeta a la ficha con una desaceleración suave. */
+::view-transition-group(foto-producto) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+::view-transition-old(foto-producto),
+::view-transition-new(foto-producto) {
+  object-fit: cover;
 }
 
 /* Con "reducir movimiento" no se anima nada. */

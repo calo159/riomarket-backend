@@ -63,7 +63,7 @@ export function PanelLayout() {
 
   return (
     <div className="min-h-screen bg-fondo dark:bg-slate-950">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-brand-600 px-3 text-white dark:bg-brand-900 sm:px-5">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-gradient-to-b from-brand-600 to-[#005560] px-3 text-white shadow-flota dark:from-brand-900 dark:to-brand-950 sm:px-5">
         <button
           type="button"
           className="acto-encabezado lg:hidden"

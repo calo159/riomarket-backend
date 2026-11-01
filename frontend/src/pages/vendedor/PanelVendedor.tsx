@@ -1,3 +1,4 @@
+import { NumeroAnimado } from '../../components/ui/NumeroAnimado';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -108,7 +109,7 @@ export function PanelVendedor() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
-                <p className="mt-1 text-2xl font-extrabold">{valor}</p>
+                <p className="mt-1 text-2xl font-extrabold tabular-nums"><NumeroAnimado texto={valor} /></p>
               </div>
               <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
                 <Icono className="h-5 w-5" />

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, Loader2, Plus, Truck } from 'lucide-react';
 import type { Producto, Puesto } from '../lib/types';
@@ -9,6 +10,8 @@ import { useCart } from '../cart/CartProvider';
 import { useToast } from './ui/Toast';
 import { obtenerPuesto } from '../api/catalog';
 import { mensajeDeError } from '../lib/errors';
+import { abrirConFotoCompartida } from '../lib/fotoCompartida';
+import { claves } from '../lib/queryKeys';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
 import { Imagen } from './Imagen';
 
@@ -87,6 +90,7 @@ export function ProductoCard({
 }) {
   const { agregar } = useCart();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const toast = useToast();
   const [agregando, setAgregando] = useState(false);
   const [agregado, setAgregado] = useState(false);
@@ -105,6 +109,14 @@ export function ProductoCard({
   const unidad = producto.unidad_medida ?? 'unidad';
 
   useEffect(() => () => window.clearTimeout(temporizador.current), []);
+
+  // La ficha arranca con los datos de la tarjeta (abre al instante y se actualiza sola) y la foto «viaja».
+  const alAbrirFoto = (evento: MouseEvent<HTMLAnchorElement>) => {
+    queryClient.setQueryData(claves.producto(producto.id), (previo) => previo ?? producto, { updatedAt: 0 });
+    const aparte = evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey;
+    if (aparte) return;
+    if (abrirConFotoCompartida(foto.current, () => navigate(`/productos/${producto.id}`))) evento.preventDefault();
+  };
 
   const alAgregar = async () => {
     if (pideDetalles) {
@@ -151,6 +163,7 @@ export function ProductoCard({
       <Link
         ref={foto}
         to={`/productos/${producto.id}`}
+        onClick={alAbrirFoto}
         className="relative block aspect-square overflow-hidden bg-slate-50 dark:bg-slate-800"
         aria-label={producto.nombre}
       >

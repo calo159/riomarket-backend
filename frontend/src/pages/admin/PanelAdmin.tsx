@@ -1,3 +1,4 @@
+import { NumeroAnimado } from '../../components/ui/NumeroAnimado';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -92,7 +93,7 @@ export function PanelAdmin() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
-                  <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-amber-700 dark:text-amber-300' : ''}`}>{valor}</p>
+                  <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-amber-700 dark:text-amber-300' : ''}`}><NumeroAnimado texto={valor} /></p>
                 </div>
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
                   <Icono className="h-5 w-5" />
@@ -111,7 +112,7 @@ export function PanelAdmin() {
           {metricas.map(({ etiqueta, valor }) => (
             <div key={etiqueta} className="card p-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
-              <p className="mt-1 text-2xl font-extrabold">{valor}</p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums"><NumeroAnimado texto={valor} /></p>
             </div>
           ))}
         </div>

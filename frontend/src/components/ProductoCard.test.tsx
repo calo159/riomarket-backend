@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,12 +31,14 @@ function producto(extra: Record<string, unknown> = {}): Producto {
 
 function renderizar(p: Producto) {
   return render(
-    <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route path="/" element={<ProductoCard producto={p} puesto={puesto} />} />
-        <Route path="/productos/:id" element={<p>Detalle del producto</p>} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<ProductoCard producto={p} puesto={puesto} />} />
+          <Route path="/productos/:id" element={<p>Detalle del producto</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
