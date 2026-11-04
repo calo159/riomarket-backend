@@ -243,6 +243,7 @@ class VentasView(APIView):
                         "unidades": drf_serializers.IntegerField(),
                         "ventas_brutas": _monto(),
                         "ingresos_netos": _monto(),
+                        "envios_incluidos": _monto(),
                         "ticket_promedio": _monto(),
                     },
                 ),

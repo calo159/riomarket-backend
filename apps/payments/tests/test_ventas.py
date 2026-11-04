@@ -193,6 +193,7 @@ def test_vendedor_sin_ventas_recibe_ceros_y_listas_vacias(vendedor):
         "unidades": 0,
         "ventas_brutas": "0.00",
         "ingresos_netos": "0.00",
+        "envios_incluidos": "0.00",
         "ticket_promedio": "0.00",
     }
     assert datos["top_productos"] == []
@@ -304,12 +305,22 @@ def test_neto_no_baja_de_cero_con_cupon_alto(vendedor, puesto):
     assert datos["totales"]["ventas_brutas"] == "1000.00"
 
 
-def test_tarifa_de_domicilio_no_suma(vendedor, puesto):
+def test_el_domicilio_no_es_venta_pero_si_ingreso_de_quien_reparte(vendedor, puesto):
     _pago(puesto, subtotal="10000.00", comision="500.00", tarifa="4000.00")
     datos = _ventas(vendedor)
+    # La venta es solo la mercancía; el neto suma el envío que reparte el puesto (ADR-018).
     assert datos["totales"]["ventas_brutas"] == "10000.00"
-    assert datos["totales"]["ingresos_netos"] == "9500.00"
+    assert datos["totales"]["ingresos_netos"] == "13500.00"
+    assert datos["totales"]["envios_incluidos"] == "4000.00"
     assert datos["por_dia"][-1]["ventas_brutas"] == "10000.00"
+
+
+def test_si_la_plataforma_se_queda_el_domicilio_no_entra_al_neto(vendedor, puesto, settings):
+    settings.DOMICILIO_TARIFA_PARA_VENDEDOR = False
+    _pago(puesto, subtotal="10000.00", comision="500.00", tarifa="4000.00")
+    datos = _ventas(vendedor)
+    assert datos["totales"]["ingresos_netos"] == "9500.00"
+    assert datos["totales"]["envios_incluidos"] == "0.00"
 
 
 def test_ticket_promedio(vendedor, puesto):

@@ -21,8 +21,12 @@ export async function iniciarSesion(page: Page, correo: string, destino: RegExp)
 type Fixtures = {
   /** Abre una sesión de API; al terminar la prueba la cierra. */
   api: (correo: string) => Promise<SesionApi>;
-  /** Registra un pedido para cancelarlo al terminar (si aún se puede) y devolver su stock. */
-  limpiarPedido: (api: SesionApi, id: number) => void;
+  /**
+   * Registra un pedido para cancelarlo al terminar (si aún se puede) y devolver su stock.
+   * El comprador solo cancela mientras está pendiente; si el puesto ya lo aceptó, `puesto` (la sesión
+   * del vendedor) lo cancela en su lugar.
+   */
+  limpiarPedido: (api: SesionApi, id: number, puesto?: SesionApi) => void;
 };
 
 export const test = base.extend<Fixtures>({
@@ -36,12 +40,14 @@ export const test = base.extend<Fixtures>({
     await Promise.all(abiertas.map((sesion) => sesion.cerrar()));
   },
   limpiarPedido: async ({ api: _api }, usar) => {
-    const pendientes: { api: SesionApi; id: number }[] = [];
-    await usar((api, id) => {
-      pendientes.push({ api, id });
+    const pendientes: { sesiones: SesionApi[]; id: number }[] = [];
+    await usar((api, id, puesto) => {
+      pendientes.push({ sesiones: puesto ? [api, puesto] : [api], id });
     });
     // Se cancela antes de cerrar las sesiones (el fixture `api` se desmonta después).
-    for (const { api, id } of pendientes) await api.cancelarPedido(id);
+    for (const { sesiones, id } of pendientes) {
+      for (const sesion of sesiones) if (await sesion.cancelarPedido(id)) break;
+    }
   },
 });
 

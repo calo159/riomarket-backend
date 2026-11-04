@@ -10,12 +10,16 @@ Reglas:
 - El administrador puede todo menos crear pedidos (eso es del comprador).
 - Entregar: el comprador y el administrador siempre; el vendedor del puesto
   solo en pedidos de retiro (en persona entrega y cobra). En domicilio no.
+- Cancelar: el comprador solo mientras el pedido está pendiente, es decir, antes de que el puesto
+  lo acepte. Después el puesto ya apartó o preparó la mercancía y solo el puesto o el
+  administrador lo cancelan (ADR-018).
 """
 
 from django.core.exceptions import PermissionDenied
 from django.db import models
 
 from apps.accounts.models import Usuario
+from apps.orders.models import Pedido
 
 
 class Accion(models.TextChoices):
@@ -71,6 +75,14 @@ PERMISOS: dict[str, dict[str, str | None]] = {
     },
 }
 
+# Estados en los que el comprador puede cancelar por su cuenta (después, el puesto ya aceptó).
+ESTADOS_DONDE_EL_COMPRADOR_CANCELA = (Pedido.Estado.PENDIENTE,)
+
+MENSAJE_COMPRADOR_NO_CANCELA = (
+    "El puesto ya aceptó tu pedido y está en marcha, así que ya no se puede cancelar desde aquí. "
+    "Si necesitas cancelarlo, pídeselo al puesto."
+)
+
 ACCION_POR_DESTINO: dict[str, str] = {
     "confirmado": Accion.CONFIRMAR,
     "en_preparacion": Accion.EN_PREPARACION,
@@ -103,6 +115,13 @@ def puede(usuario, accion: str, pedido=None) -> bool:
     if not reglas or accion not in reglas:
         return False
     relacion = reglas[accion]
+    if (
+        accion == Accion.CANCELAR
+        and usuario.rol == Usuario.Rol.COMPRADOR
+        and pedido is not None
+        and pedido.estado not in ESTADOS_DONDE_EL_COMPRADOR_CANCELA
+    ):
+        return False
     if relacion is None:
         return True
     if (
@@ -119,5 +138,13 @@ def exigir(usuario, accion: str, pedido=None, mensaje: str | None = None) -> Non
     """Lanza ``PermissionDenied`` (403) con un mensaje legible si no puede."""
     if puede(usuario, accion, pedido):
         return
+    if (
+        accion == Accion.CANCELAR
+        and pedido is not None
+        and getattr(usuario, "rol", None) == Usuario.Rol.COMPRADOR
+        and pedido.id_comprador_id == usuario.pk
+        and pedido.estado not in ESTADOS_DONDE_EL_COMPRADOR_CANCELA
+    ):
+        raise PermissionDenied(mensaje or MENSAJE_COMPRADOR_NO_CANCELA)
     etiqueta = Accion(accion).label.lower() if accion in Accion.values else accion
     raise PermissionDenied(mensaje or f"No tienes permiso para {etiqueta} este pedido.")

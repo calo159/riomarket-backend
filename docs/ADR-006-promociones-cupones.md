@@ -21,7 +21,9 @@ vigencia y, sobre todo, decidir **quién asume el descuento**.
    `id_pedido` (un pedido = a lo sumo un cupón).
 
 2. **El descuento lo asume el vendedor**: `total_pedido = subtotal + tarifa −
-   descuento` y `neto_vendedor = subtotal − comisión − descuento`. Se decidió
+   descuento` y `neto_vendedor = subtotal − comisión − descuento`. *(Actualizado por
+   [ADR-018](ADR-018-reglas-de-dinero-y-cancelacion.md): la comisión se calcula sobre lo
+   que se paga por la mercancía, `subtotal − descuento`.)* Se decidió
    así para que el marketplace no subsidie las promos. `Pedido` gana
    `id_cupon` (`SET_NULL`, snapshot) y `descuento_cupon`; `Pago` gana
    `descuento_aplicado`. Las `CheckConstraint` de total de `Pedido` y `Pago` se

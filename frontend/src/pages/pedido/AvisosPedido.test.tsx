@@ -20,6 +20,26 @@ function pedido(extra: Partial<Record<keyof Pedido, unknown>>): Pedido {
   } as unknown as Pedido;
 }
 
+describe('AvisosPedido: cancelar después de que el puesto aceptó', () => {
+  it.each(['confirmado', 'en_preparacion', 'listo_para_recoger'])(
+    'el comprador sin botón «Cancelar» (%s) sabe por qué y qué hacer',
+    (estado) => {
+      render(<AvisosPedido datos={pedido({ estado })} esNuevo={false} esComprador puedeCancelar={false} ahora={AHORA} />);
+      expect(screen.getByText(/ya aceptó tu pedido.*pídeselo al puesto/)).toBeInTheDocument();
+    },
+  );
+
+  it('no aparece si el comprador todavía puede cancelar', () => {
+    render(<AvisosPedido datos={pedido({ estado: 'pendiente' })} esNuevo={false} esComprador puedeCancelar ahora={AHORA} />);
+    expect(screen.queryByText(/ya aceptó tu pedido/)).not.toBeInTheDocument();
+  });
+
+  it('no aparece para el vendedor, que sí puede cancelar o ya decidió', () => {
+    render(<AvisosPedido datos={pedido({ estado: 'confirmado' })} esNuevo={false} esComprador={false} puedeCancelar={false} ahora={AHORA} />);
+    expect(screen.queryByText(/ya aceptó tu pedido/)).not.toBeInTheDocument();
+  });
+});
+
 describe('AvisosPedido: apartar con plazo', () => {
   it('muestra_recogelo_antes_del: el comprador sabe hasta cuándo y qué pasa si no pasa', () => {
     render(<AvisosPedido datos={pedido({})} esNuevo={false} esComprador efectivoPendiente ahora={AHORA} />);

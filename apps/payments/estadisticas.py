@@ -18,6 +18,7 @@ from django.utils import timezone
 
 from apps.accounts.models import Usuario
 from apps.catalog.models import Puesto
+from apps.common import pricing
 from apps.orders.models import ItemPedido, Pedido
 from apps.payments import services
 from apps.payments.models import Pago
@@ -88,7 +89,12 @@ def ventas(usuario: Usuario, *, dias: int = DIAS_POR_DEFECTO, puesto_id=None, ah
     neto = services.expresion_neto_vendedor()
 
     # 1. Totales del periodo.
-    totales = pagos.aggregate(pedidos=Count("pk"), brutas=Sum("subtotal_pedido"), netos=Sum(neto))
+    totales = pagos.aggregate(
+        pedidos=Count("pk"),
+        brutas=Sum("subtotal_pedido"),
+        netos=Sum(neto),
+        envios=Sum("tarifa_domicilio_aplicada"),
+    )
 
     # 2. Por día, cortado en hora de Colombia (TruncDate con tzinfo vale en PostgreSQL y SQLite).
     filas_dia = (
@@ -155,6 +161,10 @@ def ventas(usuario: Usuario, *, dias: int = DIAS_POR_DEFECTO, puesto_id=None, ah
             "unidades": unidades,
             "ventas_brutas": _texto(brutas),
             "ingresos_netos": _texto(totales["netos"]),
+            # Parte del neto que son envíos que reparte el puesto (0 si se los queda la plataforma).
+            "envios_incluidos": _texto(
+                totales["envios"] if pricing.tarifa_para_vendedor() else None
+            ),
             "ticket_promedio": _texto(ticket),
         },
         "por_dia": por_dia,

@@ -145,13 +145,14 @@ class Pago(models.Model):
 
     @property
     def neto_vendedor(self) -> Decimal:
-        """Lo que recibe el vendedor: subtotal - comisión - descuento (ADR-003/6b)."""
+        """Lo que recibe el vendedor: mercancía cobrada - comisión (+ domicilio), ADR-018."""
 
-        neto = pricing.neto_vendedor(self.subtotal_pedido, self.comision_plataforma) - Decimal(
-            self.descuento_aplicado
+        return pricing.neto_vendedor(
+            self.subtotal_pedido,
+            self.comision_plataforma,
+            descuento=self.descuento_aplicado,
+            tarifa_domicilio=self.tarifa_domicilio_aplicada,
         )
-        # Con un cupón muy alto el vendedor recibe 0 (la plataforma absorbe la diferencia).
-        return max(neto, Decimal("0.00"))
 
     def __str__(self):
         return f"Pago #{self.pk} - Pedido #{self.id_pedido_id} - {self.estado}"

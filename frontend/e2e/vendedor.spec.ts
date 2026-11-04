@@ -15,8 +15,9 @@ test('avanza un retiro hasta entregar y cobrar', async ({ page, api, limpiarPedi
     id_puesto: arepa.puesto,
     items: [{ id_producto: arepa.id, cantidad: 1 }],
   });
-  // Si la prueba falla antes de entregar, el pedido se cancela y el stock vuelve solo.
-  limpiarPedido(comprador, pedido.id);
+  // Si la prueba falla antes de entregar, el pedido se cancela y el stock vuelve solo. El comprador
+  // ya no cancela lo que el puesto aceptó, así que Carmen (el puesto) lo cancela en su lugar.
+  limpiarPedido(comprador, pedido.id, await api(CARMEN));
 
   try {
     await iniciarSesion(page, CARMEN, /\/vendedor$/);
@@ -51,7 +52,7 @@ test('acepta un encargo y queda confirmado', async ({ page, api, limpiarPedido }
     fecha_solicitada: fecha.toISOString(),
     items: [{ id_producto: bandeja.id, cantidad: 1, detalles: 'Sin nueces. Que diga: Felicidades' }],
   });
-  limpiarPedido(comprador, pedido.id);
+  limpiarPedido(comprador, pedido.id, await api(CARMEN));
 
   await iniciarSesion(page, CARMEN, /\/vendedor$/);
   await page.goto('/vendedor/pedidos');

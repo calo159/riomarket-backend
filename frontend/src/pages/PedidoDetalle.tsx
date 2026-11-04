@@ -158,7 +158,13 @@ export function PedidoDetalle() {
         <ArrowLeft className="h-4 w-4" /> Volver
       </Link>
 
-      <AvisosPedido datos={datos} esNuevo={esNuevo} esComprador={esComprador} efectivoPendiente={efectivoPendiente} />
+      <AvisosPedido
+        datos={datos}
+        esNuevo={esNuevo}
+        esComprador={esComprador}
+        efectivoPendiente={efectivoPendiente}
+        puedeCancelar={puedeCancelar}
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>

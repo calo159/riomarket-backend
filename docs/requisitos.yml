@@ -142,6 +142,8 @@
     - "apps/orders/tests/test_services.py::TestRegla5Transiciones"
     - "apps/orders/tests/test_rbac.py::TestMatrizDeclarada"
     - "apps/orders/tests/test_rbac.py::TestAccionesDisponibles::test_matriz_estado_rol"
+    - "apps/orders/tests/test_cancelacion_comprador.py::TestElCompradorCancelaAntesDeQueElPuestoAcepte::test_cancela_un_pedido_pendiente"
+    - "apps/orders/tests/test_cancelacion_comprador.py::TestElPuestoYElAdministradorSiCancelanDespues::test_el_puesto_cancela_un_pedido_aceptado"
     - "apps/orders/tests/test_rbac.py::TestAccionesEnApi::test_vendedor_no_puede_entregar"
     - "apps/orders/tests/test_retiro.py::test_tabla_de_transiciones"
     - "apps/orders/tests/test_retiro.py::test_en_camino_imposible_en_retiro_por_la_api"
@@ -237,7 +239,8 @@
     - "apps/promotions/tests/test_cupones.py::TestCrear"
     - "apps/promotions/tests/test_cupones.py::TestValidacion"
     - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_cupon_de_otro_puesto_no_aplica"
-    - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_neto_vendedor_resta_descuento"
+    - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_la_comision_se_cobra_sobre_lo_pagado_no_sobre_el_subtotal"
+    - "apps/promotions/tests/test_cupones.py::TestPedidosIntegracion::test_un_cupon_del_100_por_ciento_no_deja_comision_ni_deuda"
     - "apps/orders/tests/test_concurrencia.py::TestCuponAlCancelar::test_cancelar_libera_el_uso_del_cupon"
 
 - id: RF-14

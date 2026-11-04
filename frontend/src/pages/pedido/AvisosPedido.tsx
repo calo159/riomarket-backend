@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Info, Package, XCircle } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
 import { formatearFechaHora } from '../../lib/format';
 import { estaPorVencer, textoCuentaRegresiva, useAhora, yaVencio } from '../../lib/plazo';
@@ -9,6 +9,8 @@ interface Props {
   esComprador: boolean;
   /** Hay un pago en efectivo sin cobrar (en un retiro se paga en el puesto). */
   efectivoPendiente?: boolean;
+  /** El servidor ofrece «cancelar» a quien mira el pedido (por defecto sí; así los avisos no cambian). */
+  puedeCancelar?: boolean;
   /** Reloj en milisegundos; solo lo fijan las pruebas (por defecto, el reloj real). */
   ahora?: number;
 }
@@ -22,7 +24,7 @@ function finDeFrase(fecha: string): string {
 const MAX_EXTENSIONES = 2;
 
 /** Avisos de contexto sobre el pedido: recién creado, listo para recoger, en camino o con reporte de «no recibido». */
-export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = false, ahora }: Props) {
+export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = false, puedeCancelar = true, ahora }: Props) {
   const reloj = useAhora();
   const esRetiro = datos.tipo_entrega === 'retiro';
   const pagaAlRecoger = esRetiro && efectivoPendiente;
@@ -40,6 +42,13 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
                 ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
                 : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
           </p>
+        </div>
+      )}
+
+      {esComprador && !puedeCancelar && ['confirmado', 'en_preparacion', 'listo_para_recoger'].includes(datos.estado) && (
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200" role="status">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>El puesto ya aceptó tu pedido, por eso ya no se cancela desde aquí. Si necesitas cancelarlo, pídeselo al puesto.</p>
         </div>
       )}
 

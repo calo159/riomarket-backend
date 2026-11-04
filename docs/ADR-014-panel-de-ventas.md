@@ -14,7 +14,9 @@ por puesto.
 
 - **Venta** = un `Pago` con `estado = aprobado`. Su día es `fecha_aprobacion` convertido a
   `America/Bogota`. Un pago reembolsado, anulado, rechazado o pendiente no cuenta.
-- **Ingreso neto** = `max(subtotal_pedido - comision_plataforma - descuento_aplicado, 0)` por pago.
+- **Ingreso neto** = `max(subtotal_pedido - descuento_aplicado - comision_plataforma + tarifa_domicilio_aplicada, 0)`
+  por pago *(actualizado por [ADR-018](ADR-018-reglas-de-dinero-y-cancelacion.md): el domicilio que reparte el
+  puesto suma al neto, y el panel lo muestra aparte como `envios_incluidos`)*.
   Es la misma expresión que `resumen_ingresos` y `Pago.neto_vendedor`; se extrajo a
   `payments.services.expresion_neto_vendedor()` y ambos la usan, de modo que no pueden separarse.
   Una prueba comprueba que la suma de la serie diaria es igual al total de `resumen_ingresos`.
