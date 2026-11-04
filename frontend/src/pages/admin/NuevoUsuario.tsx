@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Check, Copy } from 'lucide-react';
 import { crearUsuario, type UsuarioCreado } from '../../api/admin';
+import { ContrasenaTemporal } from '../../components/admin/ContrasenaTemporal';
 import { Campo, ErrorCampo } from '../../components/ui/Campos';
 import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
@@ -37,7 +37,6 @@ export function NuevoUsuario({
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [error, setError] = useState('');
   const [creado, setCreado] = useState<UsuarioCreado | null>(null);
-  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     if (!abierto) return;
@@ -45,7 +44,6 @@ export function NuevoUsuario({
     setErrores({});
     setError('');
     setCreado(null);
-    setCopiado(false);
   }, [abierto]);
 
   const cambiar = (campo: keyof typeof VACIO, valor: string) => setDatos((actual) => ({ ...actual, [campo]: valor }));
@@ -80,17 +78,6 @@ export function NuevoUsuario({
     crear.mutate();
   };
 
-  const copiar = async () => {
-    if (!creado) return;
-    try {
-      await navigator.clipboard.writeText(creado.password_temporal);
-      setCopiado(true);
-    } catch {
-      // Sin permiso del navegador: la contraseña sigue visible para copiarla a mano.
-      toast.info('No pudimos copiarla sola: selecciónala y cópiala.');
-    }
-  };
-
   const hayErrorDeCampo = Object.keys(errores).some((campo) => campo !== '__general');
 
   return (
@@ -100,33 +87,11 @@ export function NuevoUsuario({
           <p className="text-sm text-slate-600 dark:text-slate-300">
             Ya puede entrar <strong>{creado.nombre}</strong> con este correo y esta contraseña temporal.
           </p>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="label">Correo</dt>
-              <dd className="font-medium">{creado.correo}</dd>
-            </div>
-            <div>
-              <dt className="label">
-                <label htmlFor="password-temporal">Contraseña temporal</label>
-              </dt>
-              <dd className="flex gap-2">
-                <input
-                  id="password-temporal"
-                  className="input font-mono"
-                  readOnly
-                  value={creado.password_temporal}
-                  onFocus={(evento) => evento.currentTarget.select()}
-                />
-                <button type="button" className="btn-secondary shrink-0" onClick={() => void copiar()}>
-                  {copiado ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
-                  {copiado ? 'Copiada' : 'Copiar'}
-                </button>
-              </dd>
-            </div>
+          <dl className="text-sm">
+            <dt className="label">Correo</dt>
+            <dd className="font-medium">{creado.correo}</dd>
           </dl>
-          <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" role="note">
-            Cópiala ahora: <strong>no se vuelve a mostrar</strong>. Dísela a la persona; al entrar puede cambiarla en «Mi perfil».
-          </p>
+          <ContrasenaTemporal valor={creado.password_temporal} />
           <div className="flex justify-end gap-2">
             <button
               type="button"
@@ -134,7 +99,6 @@ export function NuevoUsuario({
               onClick={() => {
                 setCreado(null);
                 setDatos(VACIO);
-                setCopiado(false);
               }}
             >
               Crear otra

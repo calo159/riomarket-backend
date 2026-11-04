@@ -11,6 +11,20 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Panel de administración más completo.** Cuatro cosas que un administrador necesita a diario:
+  - **Auditoría consultable.** La pantalla era una lista fija de 100 filas sin filtros, aunque el servidor ya los
+    soportaba. Ahora se busca por correo, nombre o entidad, se filtra por acción y por fechas, se pagina, y la columna
+    **«Qué cambió»** dice en una frase qué cambió y por qué (por ejemplo, «rol: comprador → vendedor · Motivo: …»).
+  - **Exportar a CSV** usuarios, auditoría, pedidos y pagos, con los mismos filtros que se ven en pantalla. El archivo
+    abre bien en Excel (tildes) y neutraliza las celdas que parecen fórmulas (`=`, `+`, `-`, `@`), que de otro modo
+    podrían ejecutarse al abrirlo. Tiene un tope de 20.000 filas y avisa si lo alcanza. Pedidos y pagos solo para quien
+    administra pedidos o pagos.
+  - **Editar una cuenta y restablecer su contraseña.** «Editar cuenta» en `/admin/usuarios` corrige nombre, correo o
+    celular (con motivo, auditado, avisa a la persona) y restablece la contraseña con una temporal que se muestra una
+    sola vez y cierra las sesiones abiertas. Hace falta mientras no haya correo para recuperarla. Un administrador no
+    toca su propia cuenta desde ahí (usa «Mi perfil») y quien gestiona usuarios por un rol personalizado no toca a un
+    administrador.
+  - **«Vendedores en pausa por comisión»** en «Requiere atención» del resumen, que lleva a `/admin/pagos`.
 - **El administrador edita el menú desde la propia barra.** Quien tiene el recurso `admin.recursos` ve en la barra
   lateral del panel el botón **«Editar menú»**: al activarlo, cada opción lleva un lápiz que abre una ventana para cambiar
   su **nombre, icono, grupo y orden**, y la barra se actualiza en el acto, sin ir a `/admin/recursos`. Solo cambia cómo se

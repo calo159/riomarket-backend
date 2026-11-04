@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, ClipboardList, XCircle } from 'lucide-react';
 import { ejecutarAccionPedido, listarPedidos, type AccionPedido } from '../../api/orders';
+import { BotonExportar } from '../../components/admin/BotonExportar';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
@@ -90,6 +91,11 @@ export function PedidosAdmin() {
               />
               Solo con reporte de no recibido
             </label>
+            <BotonExportar
+              ruta="/orders/pedidos/exportar/"
+              nombre="pedidos.csv"
+              params={{ estado: estado || undefined, con_no_recibido: soloNoRecibidos ? true : undefined }}
+            />
           </div>
         }
       />

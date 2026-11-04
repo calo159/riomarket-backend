@@ -5,6 +5,7 @@ import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CheckCircle2, RefreshCw, XCircle, XOctagon } from 'lucide-react';
 import { anularPago, listarPagos, reembolsarPago, simularPago } from '../../api/payments';
 import { ComisionesAdmin } from '../../components/comisiones/ComisionesAdmin';
+import { BotonExportar } from '../../components/admin/BotonExportar';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { ConfirmarModal } from '../../components/ui/Modal';
@@ -114,6 +115,11 @@ export function PagosAdmin() {
               />
               Solo por confirmar
             </label>
+            <BotonExportar
+              ruta="/payments/pagos/exportar/"
+              nombre="pagos.csv"
+              params={{ estado: estado || undefined, por_confirmar: porConfirmar ? true : undefined }}
+            />
           </div>
         }
       />

@@ -94,6 +94,43 @@ describe('Usuarios (administración)', () => {
     expect(within(dialogo).getByRole('button', { name: 'Crear cuenta' })).toBeInTheDocument();
   });
 
+  it('«Editar cuenta» abre la edición de datos y la contraseña de esa cuenta', async () => {
+    mocks.listarUsuarios.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [{ ...USUARIO, acciones_permitidas: ['editar-datos', 'restablecer-contrasena', 'suspender'] }],
+    });
+    renderizar();
+    await screen.findAllByText('Ana Pérez');
+    await userEvent.click(screen.getAllByRole('button', { name: /Editar cuenta/ })[0]);
+
+    const dialogo = await screen.findByRole('dialog');
+    expect(within(dialogo).getByRole('heading', { name: 'Editar cuenta de Ana Pérez' })).toBeInTheDocument();
+    expect(within(dialogo).getByRole('button', { name: 'Guardar datos' })).toBeInTheDocument();
+  });
+
+  it('un botón por cada cosa que se puede hacer: solo ofrece lo que el servidor permite', async () => {
+    mocks.listarUsuarios.mockResolvedValue({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [{ ...USUARIO, acciones_permitidas: ['reactivar'] }],
+    });
+    renderizar();
+    await screen.findAllByText('Ana Pérez');
+
+    expect(screen.queryByRole('button', { name: /Editar cuenta/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Gestionar acceso/ }).length).toBeGreaterThan(0);
+  });
+
+  it('ofrece exportar las cuentas a CSV', async () => {
+    renderizar();
+    await screen.findAllByText('Ana Pérez');
+
+    expect(screen.getByRole('button', { name: /Exportar CSV/ })).toBeInTheDocument();
+  });
+
   it('muestra los chips de roles adicionales de cada cuenta', async () => {
     renderizar();
     await screen.findAllByText('Ana Pérez');

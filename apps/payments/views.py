@@ -22,6 +22,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.common.exportacion import respuesta_csv
 from apps.common.query import aplicar_ordenamiento, parametro_entero
 from apps.payments import comisiones, estadisticas, services
 from apps.payments.models import Pago
@@ -60,7 +61,7 @@ class PagoViewSet(viewsets.ModelViewSet):
     throttle_scope = "pagos"
 
     def get_permissions(self):
-        if self.action in ("marcar_reembolsado", "anular"):
+        if self.action in ("marcar_reembolsado", "anular", "exportar"):
             return [TieneRecurso("admin.pagos")()]
         return [IsAuthenticated()]
 
@@ -83,6 +84,49 @@ class PagoViewSet(viewsets.ModelViewSet):
         qs = services.visibles_pagos(self.request.user, qs, params)
         qs = services.filtrar_pagos(qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PAGO)
+
+    @extend_schema(
+        parameters=PARAMETROS_PAGO,
+        responses={(200, "text/csv"): OpenApiTypes.BINARY},
+        description="Descarga en CSV los pagos con los filtros del listado (administradores).",
+    )
+    @action(detail=False, methods=["get"])
+    def exportar(self, request):
+        pagos = self.get_queryset().iterator(chunk_size=1000)
+        filas = (
+            (
+                p.id,
+                p.id_pedido_id,
+                p.id_pedido.id_puesto.nombre,
+                p.metodo_pago,
+                p.estado,
+                p.subtotal_pedido,
+                p.tarifa_domicilio_aplicada,
+                p.descuento_aplicado,
+                p.comision_plataforma,
+                p.total_cobrado,
+                p.neto_vendedor,
+                p.fecha_creacion,
+                p.fecha_aprobacion,
+            )
+            for p in pagos
+        )
+        cabeceras = [
+            "ID",
+            "Pedido",
+            "Puesto",
+            "Método",
+            "Estado",
+            "Subtotal",
+            "Domicilio",
+            "Descuento",
+            "Comisión",
+            "Total cobrado",
+            "Neto del vendedor",
+            "Creado",
+            "Aprobado",
+        ]
+        return respuesta_csv("pagos", cabeceras, filas)
 
     @extend_schema(
         description="Lista los pagos visibles para el usuario (comprador/vendedor/admin).",

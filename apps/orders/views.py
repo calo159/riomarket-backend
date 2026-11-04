@@ -16,10 +16,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.permissions import EsComprador
+from apps.common.exportacion import respuesta_csv
 from apps.common.query import aplicar_ordenamiento
 from apps.orders import services, vencimientos
 from apps.orders.models import Pedido
 from apps.orders.serializers import PedidoSerializer, ReportarNoRecibidoSerializer
+from apps.rbac.permissions import TieneRecurso
 
 PARAMETROS_PEDIDO = [
     OpenApiParameter(name="estado", enum=Pedido.Estado.values, description="Estado del pedido"),
@@ -53,6 +55,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             return [EsComprador()]
+        if self.action == "exportar":
+            return [TieneRecurso("admin.pedidos")()]
         return [IsAuthenticated()]
 
     def get_queryset(self):
@@ -60,6 +64,46 @@ class PedidoViewSet(viewsets.ModelViewSet):
         qs = Pedido.objects.select_related("id_puesto", "pago").prefetch_related("items")
         qs = services.visibles_pedidos(self.request.user, qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO)
+
+    @extend_schema(
+        responses={(200, "text/csv"): OpenApiTypes.BINARY},
+        description="Descarga en CSV los pedidos con los filtros del listado (administradores).",
+    )
+    @action(detail=False, methods=["get"])
+    def exportar(self, request):
+        pedidos = self.get_queryset().iterator(chunk_size=1000)
+        filas = (
+            (
+                p.id,
+                p.id_comprador_id,
+                p.id_puesto.nombre,
+                p.tipo_entrega,
+                p.estado,
+                p.subtotal,
+                p.tarifa_domicilio,
+                p.descuento_cupon,
+                p.total,
+                getattr(getattr(p, "pago", None), "metodo_pago", ""),
+                getattr(getattr(p, "pago", None), "estado", ""),
+                p.fecha_creacion,
+            )
+            for p in pedidos
+        )
+        cabeceras = [
+            "ID",
+            "Comprador",
+            "Puesto",
+            "Entrega",
+            "Estado",
+            "Subtotal",
+            "Domicilio",
+            "Descuento",
+            "Total",
+            "Método de pago",
+            "Estado del pago",
+            "Creado",
+        ]
+        return respuesta_csv("pedidos", cabeceras, filas)
 
     @extend_schema(
         description=(

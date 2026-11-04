@@ -15,7 +15,9 @@ from apps.administration import rbac_services, services
 from apps.administration.serializers import (
     CambiarRolSerializer,
     CrearUsuarioSerializer,
+    EditarDatosUsuarioSerializer,
     RecursoSerializer,
+    ReiniciarContrasenaSerializer,
     RolesUsuarioSerializer,
     RolRecursosSerializer,
     RolSerializer,
@@ -23,6 +25,7 @@ from apps.administration.serializers import (
     UsuarioAdminSerializer,
     UsuarioCreadoSerializer,
 )
+from apps.common.exportacion import respuesta_csv
 from apps.common.query import aplicar_ordenamiento, parametro_booleano
 from apps.rbac.models import Recurso
 from apps.rbac.permissions import TieneRecurso
@@ -78,6 +81,74 @@ class UsuarioAdminViewSet(viewsets.ReadOnlyModelViewSet):
     def _serializar(self, usuario):
         usuario = self.get_queryset().get(pk=usuario.pk)
         return self.get_serializer(usuario).data
+
+    @extend_schema(
+        parameters=PARAMETROS_USUARIO,
+        responses={(200, "text/csv"): OpenApiTypes.BINARY},
+        description="Descarga en CSV las cuentas que coinciden con los mismos filtros del listado.",
+    )
+    @action(detail=False, methods=["get"])
+    def exportar(self, request):
+        cuentas = self.get_queryset().iterator(chunk_size=1000)
+        filas = (
+            (
+                u.id,
+                u.nombre,
+                u.correo,
+                u.celular,
+                u.rol,
+                u.estado,
+                u.fecha_registro,
+                getattr(getattr(u, "vendedor", None), "estado_verificacion", ""),
+                u.total_pedidos_comprador,
+            )
+            for u in cuentas
+        )
+        cabeceras = [
+            "ID",
+            "Nombre",
+            "Correo",
+            "Celular",
+            "Rol",
+            "Estado",
+            "Registro",
+            "Verificación",
+            "Pedidos como comprador",
+        ]
+        return respuesta_csv("usuarios", cabeceras, filas)
+
+    @extend_schema(
+        request=EditarDatosUsuarioSerializer,
+        responses={200: UsuarioAdminSerializer},
+        description="Corrige nombre, correo o celular de otra cuenta; exige motivo y se audita.",
+    )
+    @action(detail=True, methods=["put"], url_path="datos")
+    def datos(self, request, pk=None):
+        serializer = EditarDatosUsuarioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario = services.editar_datos(
+            usuario=self.get_object(), actor=request.user, **serializer.validated_data
+        )
+        return Response(self._serializar(usuario))
+
+    @extend_schema(
+        request=ReiniciarContrasenaSerializer,
+        responses={200: UsuarioCreadoSerializer},
+        description=(
+            "Pone una contraseña temporal nueva, devuelta una sola vez en `password_temporal`, y "
+            "cierra las sesiones de la cuenta. Exige motivo y queda auditado."
+        ),
+    )
+    @action(detail=True, methods=["post"], url_path="restablecer-contrasena")
+    def restablecer_contrasena(self, request, pk=None):
+        serializer = ReiniciarContrasenaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario, password = services.restablecer_contrasena(
+            usuario=self.get_object(),
+            actor=request.user,
+            motivo=serializer.validated_data["motivo"],
+        )
+        return Response(dict(self._serializar(usuario), password_temporal=password))
 
     @extend_schema(
         request=CambiarRolSerializer,

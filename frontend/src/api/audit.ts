@@ -2,6 +2,7 @@ import { api } from '../lib/http';
 import type { Paginado, RegistroAuditoria } from '../lib/types';
 
 interface FiltrosAuditoria {
+  q?: string;
   entidad?: string;
   accion?: string;
   usuario?: number | string;

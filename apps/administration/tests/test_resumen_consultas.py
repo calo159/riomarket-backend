@@ -20,8 +20,9 @@ from tests.factories import (
 
 pytestmark = pytest.mark.django_db
 
-# Usuario, Pedido, Pago, Vendedor, Puesto, Producto, Reseña y Cupón: una consulta por tabla.
-CONSULTAS_ESPERADAS = 8
+# Usuario, Pedido, Pago, Vendedor, Puesto, Producto, Reseña y Cupón: una consulta por tabla; más las
+# dos de la cuenta de comisión (cobrado en efectivo y pagos anotados) que dan «en pausa».
+CONSULTAS_ESPERADAS = 10
 
 
 def test_resumen_valores_y_consultas(comprador, vendedor, puesto, admin):
@@ -65,6 +66,7 @@ def test_resumen_valores_y_consultas(comprador, vendedor, puesto, admin):
     assert datos["verificaciones_pendientes"] == 0
     assert datos["resenas"] == {"total": 1, "ocultas": 1}
     assert datos["cupones"] == {"total": 2, "activos": 1}
+    assert datos["comisiones"] == {"al_dia": 0, "aviso": 0, "bloqueado": 0}
     assert len(contexto) == CONSULTAS_ESPERADAS, [q["sql"][:80] for q in contexto.captured_queries]
 
 

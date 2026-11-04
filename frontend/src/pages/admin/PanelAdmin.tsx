@@ -5,6 +5,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CreditCard,
+  HandCoins,
   PackageX,
   ShieldCheck,
   Store,
@@ -63,6 +64,12 @@ export function PanelAdmin() {
       to: '/admin/pagos?por_confirmar=true',
     },
     {
+      etiqueta: 'Vendedores en pausa por comisión',
+      valor: datos.comisiones.bloqueado,
+      icono: HandCoins,
+      to: '/admin/pagos',
+    },
+    {
       etiqueta: 'Puestos suspendidos',
       valor: datos.puestos.por_estado.suspendido ?? 0,
       icono: Store,
@@ -87,15 +94,15 @@ export function PanelAdmin() {
         <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
           <AlertTriangle className="h-5 w-5 text-amber-500" /> Requiere atención
         </h2>
-        <div className="entra-lista grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="entra-lista grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {atencion.map(({ etiqueta, valor, icono: Icono, to }) => (
             <Link key={etiqueta} to={to} className="card p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500 dark:text-slate-400">{etiqueta}</p>
                   <p className={`mt-1 text-2xl font-extrabold ${valor > 0 ? 'text-amber-700 dark:text-amber-300' : ''}`}><NumeroAnimado texto={valor} /></p>
                 </div>
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200">
                   <Icono className="h-5 w-5" />
                 </span>
               </div>
