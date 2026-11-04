@@ -67,7 +67,7 @@ export function PedidosVendedor() {
     <div>
       <EncabezadoPagina
         titulo="Pedidos"
-        descripcion="Confirma, prepara y entrega los pedidos. En domicilio, el comprador confirma la recepción; en retiro, tú entregas y cobras en el puesto."
+        descripcion="Confirma, prepara y entrega los pedidos. Si el cliente paga en efectivo (retiro o contra entrega), tú entregas y cobras; si ya pagó a domicilio, el comprador confirma la recepción."
         acciones={
           <select
             className="input w-auto"
@@ -154,7 +154,9 @@ export function PedidosVendedor() {
                       <p className={`mt-1 text-xs ${pedido.no_recibido_en ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400'}`}>
                         {pedido.no_recibido_en
                           ? 'El comprador reportó que no le ha llegado. Espera la resolución del administrador.'
-                          : 'Esperando que el comprador confirme la recepción.'}
+                          : pedido.acciones_permitidas?.includes('confirmar-pago')
+                            ? 'Entrega el pedido y cobra en efectivo.'
+                            : 'Esperando que el comprador confirme la recepción.'}
                       </p>
                     )}
                   </div>

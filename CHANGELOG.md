@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Pago contra entrega a domicilio ([ADR-021](docs/ADR-021-pago-contra-entrega.md)).** El domicilio exigía el pago
+  aprobado antes de que el puesto aceptara, algo que sin pasarela real solo se podía simular, y no es como se compra en
+  Riohacha. Ahora el domicilio se paga **en efectivo cuando llega**: el checkout registra el pago en efectivo, el puesto
+  confirma sin cobro previo y, al entregar, **entrega y cobra** (el botón dice «Entregar y cobrar»). Si el cliente no
+  recibe y no se cobró nada, el puesto o el administrador pueden **cancelar el pedido en camino** (el stock vuelve y el
+  pago se anula). Un domicilio ya pagado se comporta como antes. El cobro suma a la comisión que el vendedor le debe a
+  RioMarket ([ADR-019](docs/ADR-019-comision-del-efectivo.md)).
 - **Términos y condiciones y política de privacidad** (`/terminos`, `/privacidad`). El registro pedía aceptar «las
   condiciones de uso y el tratamiento de mis datos personales», pero esos textos no existían. Ahora hay dos páginas que
   describen lo que la app realmente hace (qué datos guarda, para qué, cookies, derechos de la Ley 1581 de 2012, reglas

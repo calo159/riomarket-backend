@@ -25,7 +25,7 @@ import {
   valorLocalAIso,
 } from '../lib/encargos';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
-import { crearPedidoConPagoAlRecoger, type DatosPedido } from '../api/orders';
+import { crearPedidoConPagoEnEfectivo, type DatosPedido } from '../api/orders';
 import { validarCupon } from '../api/coupons';
 import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
@@ -121,7 +121,7 @@ export function Checkout() {
         });
         idDireccion = nueva.id;
       }
-      return crearPedidoConPagoAlRecoger({ ...datos, id_direccion: idDireccion });
+      return crearPedidoConPagoEnEfectivo({ ...datos, id_direccion: idDireccion });
     },
     onSuccess: (pedido) => {
       vaciar();
@@ -131,13 +131,13 @@ export function Checkout() {
         toast.exito(
           pedido.tipo_entrega === 'retiro'
             ? `¡Encargo enviado! Te avisamos cuando ${carrito?.puestoNombre ?? 'el puesto'} lo acepte. Pagas al recoger.`
-            : '¡Encargo enviado! Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.',
+            : '¡Encargo enviado! Te avisamos cuando el puesto lo acepte. Pagas en efectivo al recibirlo.',
         );
       } else {
         toast.exito(
           pedido.tipo_entrega === 'retiro'
             ? '¡Pedido creado! Pagas en el puesto al recoger.'
-            : '¡Pedido creado! Ahora puedes registrar el pago.',
+            : '¡Pedido creado! Pagas en efectivo cuando te lo entreguen.',
         );
       }
       navigate(`/pedidos/${pedido.id}?nuevo=1`);
@@ -289,6 +289,11 @@ export function Checkout() {
                 Pagas en el puesto al recoger (efectivo)
               </p>
             )}
+            {tipoEntrega === 'domicilio' && (
+              <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                Pagas en efectivo cuando te entreguen el pedido: ten listo el total, envío incluido.
+              </p>
+            )}
           </section>
 
           {tipoEntrega === 'domicilio' && (
@@ -426,11 +431,6 @@ export function Checkout() {
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                   Tu pedido tiene productos con stock y por encargo: todo se{' '}
                   {tipoEntrega === 'domicilio' ? 'entrega' : 'recoge'} en esta fecha.
-                </p>
-              )}
-              {tipoEntrega === 'domicilio' && (
-                <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                  A domicilio se paga antes de que el puesto acepte. Si no puede hacerlo, te devolvemos el dinero.
                 </p>
               )}
             </section>

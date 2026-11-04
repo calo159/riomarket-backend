@@ -8,8 +8,9 @@ Reglas:
 - Anónimo o cuenta suspendida: nunca puede.
 - El comprador actúa sobre SU pedido; el vendedor sobre los de SU puesto.
 - El administrador puede todo menos crear pedidos (eso es del comprador).
-- Entregar: el comprador y el administrador siempre; el vendedor del puesto
-  solo en pedidos de retiro (en persona entrega y cobra). En domicilio no.
+- Entregar: el comprador y el administrador siempre; el vendedor del puesto en los pedidos
+  de retiro (en persona entrega y cobra) y en los de domicilio con el efectivo por cobrar, o
+  sea contra entrega (ADR-021). Un domicilio ya pagado lo cierra el comprador, no el vendedor.
 - Cancelar: el comprador solo mientras el pedido está pendiente, es decir, antes de que el puesto
   lo acepte. Después el puesto ya apartó o preparó la mercancía y solo el puesto o el
   administrador lo cancelan (ADR-018).
@@ -38,9 +39,9 @@ class Accion(models.TextChoices):
 class Relacion(models.TextChoices):
     COMPRADOR_DEL_PEDIDO = "comprador_del_pedido", "Comprador del pedido"
     VENDEDOR_DEL_PUESTO = "vendedor_del_puesto", "Vendedor del puesto"
-    VENDEDOR_DEL_PUESTO_EN_RETIRO = (
-        "vendedor_del_puesto_en_retiro",
-        "Vendedor del puesto, solo en pedidos de retiro",
+    VENDEDOR_DEL_PUESTO_QUE_COBRA_EN_MANO = (
+        "vendedor_del_puesto_que_cobra_en_mano",
+        "Vendedor del puesto, en retiro o en domicilio con el efectivo por cobrar",
     )
 
 
@@ -57,8 +58,8 @@ PERMISOS: dict[str, dict[str, str | None]] = {
         Accion.EN_PREPARACION: Relacion.VENDEDOR_DEL_PUESTO,
         Accion.ENVIAR: Relacion.VENDEDOR_DEL_PUESTO,
         Accion.LISTO: Relacion.VENDEDOR_DEL_PUESTO,
-        # En persona el vendedor entrega y cobra; en domicilio solo confirma el comprador.
-        Accion.ENTREGAR: Relacion.VENDEDOR_DEL_PUESTO_EN_RETIRO,
+        # En persona el vendedor entrega y cobra; en domicilio solo si el cliente paga al recibir.
+        Accion.ENTREGAR: Relacion.VENDEDOR_DEL_PUESTO_QUE_COBRA_EN_MANO,
         Accion.CANCELAR: Relacion.VENDEDOR_DEL_PUESTO,
         Accion.EXTENDER_PLAZO: Relacion.VENDEDOR_DEL_PUESTO,
     },
@@ -93,15 +94,33 @@ ACCION_POR_DESTINO: dict[str, str] = {
 }
 
 
+def cobro_en_mano_pendiente(pedido) -> bool:
+    """El pedido se paga en efectivo y el dinero aún no se ha cobrado (retiro o contra entrega).
+
+    Lee ``pedido.pago`` (en los listados viene en el ``select_related``): sin pago registrado,
+    no hay nada que cobrar.
+    """
+    pago = getattr(pedido, "pago", None)
+    return (
+        pago is not None
+        and pago.metodo_pago == "efectivo"
+        and pago.estado in ("pendiente", "procesando")
+    )
+
+
 def _relacion_cumplida(usuario, pedido, relacion: str) -> bool:
     if pedido is None:
         return False
     if relacion == Relacion.COMPRADOR_DEL_PEDIDO:
         return pedido.id_comprador_id == usuario.pk
-    if relacion in (Relacion.VENDEDOR_DEL_PUESTO, Relacion.VENDEDOR_DEL_PUESTO_EN_RETIRO):
+    if relacion in (Relacion.VENDEDOR_DEL_PUESTO, Relacion.VENDEDOR_DEL_PUESTO_QUE_COBRA_EN_MANO):
         if pedido.id_puesto_id is None or pedido.id_puesto.id_vendedor_id != usuario.pk:
             return False
-        return relacion == Relacion.VENDEDOR_DEL_PUESTO or pedido.tipo_entrega == "retiro"
+        return (
+            relacion == Relacion.VENDEDOR_DEL_PUESTO
+            or pedido.tipo_entrega == "retiro"
+            or cobro_en_mano_pendiente(pedido)
+        )
     return False
 
 

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Checkout } from './Checkout';
 
 const mocks = vi.hoisted(() => ({
-  crearPedidoConPagoAlRecoger: vi.fn(),
+  crearPedidoConPagoEnEfectivo: vi.fn(),
   obtenerPuesto: vi.fn(),
   listarDirecciones: vi.fn(),
   vaciar: vi.fn(),
@@ -36,7 +36,7 @@ const CARRITO_CON_ENCARGO = {
   ],
 };
 
-vi.mock('../api/orders', () => ({ crearPedidoConPagoAlRecoger: mocks.crearPedidoConPagoAlRecoger }));
+vi.mock('../api/orders', () => ({ crearPedidoConPagoEnEfectivo: mocks.crearPedidoConPagoEnEfectivo }));
 vi.mock('../api/catalog', () => ({ obtenerPuesto: mocks.obtenerPuesto }));
 vi.mock('../api/addresses', () => ({ listarDirecciones: mocks.listarDirecciones, crearDireccion: vi.fn() }));
 vi.mock('../api/coupons', () => ({ validarCupon: vi.fn() }));
@@ -67,7 +67,7 @@ function renderizar() {
 describe('Checkout con retiro', () => {
   beforeEach(() => {
     mocks.carrito = CARRITO_CON_STOCK;
-    mocks.crearPedidoConPagoAlRecoger.mockReset();
+    mocks.crearPedidoConPagoEnEfectivo.mockReset();
     mocks.vaciar.mockReset();
     mocks.obtenerPuesto.mockResolvedValue({
       id: 5,
@@ -79,13 +79,13 @@ describe('Checkout con retiro', () => {
   });
 
   it('avisa que se paga en el puesto al recoger y crea el pedido de retiro', async () => {
-    mocks.crearPedidoConPagoAlRecoger.mockResolvedValue({ id: 31, tipo_entrega: 'retiro' });
+    mocks.crearPedidoConPagoEnEfectivo.mockResolvedValue({ id: 31, tipo_entrega: 'retiro' });
     renderizar();
     expect(await screen.findByText('Pagas en el puesto al recoger (efectivo)')).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: /Confirmar pedido/ })[0]);
-    await waitFor(() => expect(mocks.crearPedidoConPagoAlRecoger).toHaveBeenCalled());
-    expect(mocks.crearPedidoConPagoAlRecoger.mock.calls[0][0]).toMatchObject({
+    await waitFor(() => expect(mocks.crearPedidoConPagoEnEfectivo).toHaveBeenCalled());
+    expect(mocks.crearPedidoConPagoEnEfectivo.mock.calls[0][0]).toMatchObject({
       tipo_entrega: 'retiro',
       id_puesto: 5,
     });
@@ -99,19 +99,21 @@ describe('Checkout con retiro', () => {
     ).toBeInTheDocument();
   });
 
-  it('con domicilio el aviso de pago al recoger desaparece', async () => {
+  it('con domicilio el aviso de pagar en el puesto cambia por el de pagar al recibir', async () => {
     renderizar();
     await screen.findByText('Pagas en el puesto al recoger (efectivo)');
+    expect(screen.queryByText(/Pagas en efectivo cuando te entreguen/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Domicilio/ }));
     await waitFor(() =>
       expect(screen.queryByText('Pagas en el puesto al recoger (efectivo)')).not.toBeInTheDocument(),
     );
+    expect(screen.getByText(/Pagas en efectivo cuando te entreguen el pedido/)).toBeInTheDocument();
   });
 });
 
 describe('Checkout con productos por encargo', () => {
   beforeEach(() => {
-    mocks.crearPedidoConPagoAlRecoger.mockReset();
+    mocks.crearPedidoConPagoEnEfectivo.mockReset();
     mocks.vaciar.mockReset();
     mocks.obtenerPuesto.mockResolvedValue({
       id: 5,
@@ -138,13 +140,12 @@ describe('Checkout con productos por encargo', () => {
     expect(screen.getByText('Feliz cumpleaños Ana')).toBeInTheDocument();
   });
 
-  it('con domicilio cambia la etiqueta y avisa que se paga antes de que el puesto acepte', async () => {
+  it('con domicilio cambia la etiqueta de la fecha', async () => {
     mocks.carrito = CARRITO_CON_ENCARGO;
     renderizar();
     await screen.findByText(/¿Para cuándo lo necesitas\?/);
     fireEvent.click(screen.getByRole('button', { name: /Domicilio/ }));
     expect(await screen.findByLabelText('Fecha y hora de entrega')).toBeInTheDocument();
-    expect(screen.getByText(/A domicilio se paga antes de que el puesto acepte/)).toBeInTheDocument();
   });
 
   it('no deja confirmar sin fecha y muestra el error bajo el campo', async () => {
@@ -153,7 +154,7 @@ describe('Checkout con productos por encargo', () => {
     await screen.findByText(/¿Para cuándo lo necesitas\?/);
     fireEvent.click(screen.getAllByRole('button', { name: /Confirmar pedido/ })[0]);
     expect(await screen.findByText('Elige para cuándo lo necesitas.')).toBeInTheDocument();
-    expect(mocks.crearPedidoConPagoAlRecoger).not.toHaveBeenCalled();
+    expect(mocks.crearPedidoConPagoEnEfectivo).not.toHaveBeenCalled();
   });
 
   it('rechaza una fecha anterior a la preparación sin llamar al servidor', async () => {
@@ -169,12 +170,12 @@ describe('Checkout con productos por encargo', () => {
     });
     fireEvent.click(screen.getAllByRole('button', { name: /Confirmar pedido/ })[0]);
     expect(await screen.findByText(/necesita más tiempo para prepararlo/)).toBeInTheDocument();
-    expect(mocks.crearPedidoConPagoAlRecoger).not.toHaveBeenCalled();
+    expect(mocks.crearPedidoConPagoEnEfectivo).not.toHaveBeenCalled();
   });
 
   it('envia_fecha_solicitada_en_iso_y_los_detalles', async () => {
     mocks.carrito = CARRITO_CON_ENCARGO;
-    mocks.crearPedidoConPagoAlRecoger.mockResolvedValue({ id: 40, tipo_entrega: 'retiro', tiene_encargo: true });
+    mocks.crearPedidoConPagoEnEfectivo.mockResolvedValue({ id: 40, tipo_entrega: 'retiro', tiene_encargo: true });
     renderizar();
     const campo = await screen.findByLabelText('Fecha y hora para recogerlo');
     const futuro = new Date(Date.now() + 5 * 86_400_000);
@@ -183,8 +184,8 @@ describe('Checkout con productos por encargo', () => {
     const valor = `${futuro.getFullYear()}-${dos(futuro.getMonth() + 1)}-${dos(futuro.getDate())}T16:00`;
     fireEvent.change(campo, { target: { value: valor } });
     fireEvent.click(screen.getAllByRole('button', { name: /Confirmar pedido/ })[0]);
-    await waitFor(() => expect(mocks.crearPedidoConPagoAlRecoger).toHaveBeenCalled());
-    const datos = mocks.crearPedidoConPagoAlRecoger.mock.calls[0][0];
+    await waitFor(() => expect(mocks.crearPedidoConPagoEnEfectivo).toHaveBeenCalled());
+    const datos = mocks.crearPedidoConPagoEnEfectivo.mock.calls[0][0];
     expect(datos.fecha_solicitada).toBe(futuro.toISOString());
     expect(datos.items).toEqual([
       { id_producto: 1, cantidad: 2 },
@@ -195,11 +196,11 @@ describe('Checkout con productos por encargo', () => {
 
   it('sin encargos no envia fecha_solicitada', async () => {
     mocks.carrito = CARRITO_CON_STOCK;
-    mocks.crearPedidoConPagoAlRecoger.mockResolvedValue({ id: 41, tipo_entrega: 'retiro' });
+    mocks.crearPedidoConPagoEnEfectivo.mockResolvedValue({ id: 41, tipo_entrega: 'retiro' });
     renderizar();
     await screen.findByText('Pagas en el puesto al recoger (efectivo)');
     fireEvent.click(screen.getAllByRole('button', { name: /Confirmar pedido/ })[0]);
-    await waitFor(() => expect(mocks.crearPedidoConPagoAlRecoger).toHaveBeenCalled());
-    expect(mocks.crearPedidoConPagoAlRecoger.mock.calls[0][0].fecha_solicitada).toBeUndefined();
+    await waitFor(() => expect(mocks.crearPedidoConPagoEnEfectivo).toHaveBeenCalled());
+    expect(mocks.crearPedidoConPagoEnEfectivo.mock.calls[0][0].fecha_solicitada).toBeUndefined();
   });
 });

@@ -140,8 +140,8 @@ export function PedidoDetalle() {
   const puedeReportar = permitidas.includes('no-recibido') && !datos.no_recibido_en;
   const puedeConfirmarEfectivo = permitidas.includes('confirmar-pago');
   const esRetiro = datos.tipo_entrega === 'retiro';
-  // Retiro con efectivo sin cobrar: quien entrega (vendedor o admin) también cobra en mano.
-  const entregaCobrando = esRetiro && puedeEntregar && puedeConfirmarEfectivo;
+  // Efectivo sin cobrar (retiro, o domicilio contra entrega): quien entrega (vendedor o admin) también cobra en mano.
+  const entregaCobrando = puedeEntregar && puedeConfirmarEfectivo;
   const efectivoPendiente =
     pagoVigente?.metodo_pago === 'efectivo' && ['pendiente', 'procesando'].includes(pagoVigente.estado);
   const etiquetaEntregar = esComprador

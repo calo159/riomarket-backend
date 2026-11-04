@@ -138,3 +138,29 @@ describe('AvisosPedido: apartar con plazo', () => {
     expect(container.textContent).not.toMatch(/Se canceló solo/);
   });
 });
+
+describe('AvisosPedido: domicilio contra entrega', () => {
+  const enCamino = pedido({ tipo_entrega: 'domicilio', estado: 'en_camino', vence_en: null, no_recibido_en: null });
+
+  it('el comprador sabe que paga cuando se lo entreguen', () => {
+    render(<AvisosPedido datos={enCamino} esNuevo={false} esComprador efectivoPendiente ahora={AHORA} />);
+    expect(screen.getByText(/Ten el efectivo listo: pagas cuando te lo entreguen/)).toBeInTheDocument();
+    expect(screen.queryByText(/Confírmalo cuando lo tengas/)).not.toBeInTheDocument();
+  });
+
+  it('el vendedor sabe que entrega y cobra, y que puede cancelar si no lo reciben', () => {
+    render(<AvisosPedido datos={enCamino} esNuevo={false} esComprador={false} efectivoPendiente ahora={AHORA} />);
+    expect(screen.getByText(/Entrega el pedido y cobra el efectivo.*puedes cancelarlo/)).toBeInTheDocument();
+  });
+
+  it('un domicilio ya pagado conserva los avisos de siempre', () => {
+    render(<AvisosPedido datos={enCamino} esNuevo={false} esComprador ahora={AHORA} />);
+    expect(screen.getByText(/Confírmalo cuando lo tengas/)).toBeInTheDocument();
+  });
+
+  it('recién creado: dice que se paga en efectivo al recibir', () => {
+    const nuevo = pedido({ tipo_entrega: 'domicilio', estado: 'pendiente', vence_en: null });
+    render(<AvisosPedido datos={nuevo} esNuevo esComprador efectivoPendiente ahora={AHORA} />);
+    expect(screen.getByText('Tu pedido fue creado. Pagas en efectivo cuando te lo entreguen.')).toBeInTheDocument();
+  });
+});

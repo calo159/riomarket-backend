@@ -73,7 +73,8 @@ caliente o una torta con su nombre no vuelven a la venta.
   [ADR-019](ADR-019-comision-del-efectivo.md): hay una cuenta por vendedor y el administrador anota cada pago, y
   [ADR-020](ADR-020-politica-de-atraso.md) define qué pasa con quien se atrasa.)*
 - **A domicilio se paga por adelantado** y hoy no hay pasarela real, así que en producción ese camino solo funciona
-  en modo de prueba. El pago contra entrega es la forma natural en Riohacha, pero exige otro flujo de estados.
+  en modo de prueba. *(Resuelto por [ADR-021](ADR-021-pago-contra-entrega.md): el domicilio se paga en efectivo al
+  recibir.)*
 - `Usuario.puede_publicar` devuelve `true` para un vendedor sin solicitud de verificación. La aplicación siempre crea
   esa solicitud (al registrarse y al cambiar el rol), así que no es alcanzable desde ella; sí desde el panel de
   Django si alguien asigna el rol a mano.

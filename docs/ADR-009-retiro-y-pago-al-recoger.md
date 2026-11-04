@@ -24,6 +24,11 @@ el vendedor entregue y cobre.
    propio efectivo.
 5. «No me ha llegado» solo existe para domicilio en camino.
 
+> **Actualización ([ADR-021](ADR-021-pago-contra-entrega.md)):** el efectivo pendiente también deja confirmar un
+> **domicilio** (pago contra entrega), y en ese caso el vendedor entrega y cobra, y puede cancelar en camino si el
+> cliente no recibe y nada se cobró. Donde este documento dice «todo domicilio exige pago aprobado», léase «salvo el
+> efectivo contra entrega».
+
 ### Transiciones por tipo de entrega
 
 | Estado actual | Domicilio | Retiro |

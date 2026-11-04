@@ -28,6 +28,14 @@ describe('siguienteAccion', () => {
     expect(accion).toMatchObject({ accion: 'entregar', etiqueta: 'Entregar y cobrar' });
   });
 
+  it('domicilio en camino con efectivo sin cobrar (contra entrega): «Entregar y cobrar»', () => {
+    const accion = siguienteAccion(
+      pedido('en_camino', 'domicilio', ['entregar', 'cancelar', 'confirmar-pago']),
+      'vendedor',
+    );
+    expect(accion).toMatchObject({ accion: 'entregar', etiqueta: 'Entregar y cobrar' });
+  });
+
   it('retiro listo ya cobrado: «Marcar entregado»', () => {
     const accion = siguienteAccion(pedido('listo_para_recoger', 'retiro', ['entregar', 'cancelar']), 'vendedor');
     expect(accion?.etiqueta).toBe('Marcar entregado');

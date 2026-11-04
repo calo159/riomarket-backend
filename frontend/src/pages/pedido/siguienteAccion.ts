@@ -65,7 +65,7 @@ export function siguienteAccion(
       candidata = {
         accion: 'entregar',
         etiqueta:
-          esRetiro && permitidas.includes('confirmar-pago') ? 'Entregar y cobrar' : 'Marcar entregado',
+          permitidas.includes('confirmar-pago') ? 'Entregar y cobrar' : 'Marcar entregado',
         icono: 'entregar',
       };
       break;

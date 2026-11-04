@@ -63,8 +63,10 @@ cualquier estado abierto → cancelado
 
 ([ADR-009](ADR-009-retiro-y-pago-al-recoger.md) tiene la tabla completa y quién ejecuta cada acción.)
 
-- El **vendedor** confirma, prepara y envía o deja listo. En un **retiro** también entrega y cobra el efectivo.
-- En un **domicilio** solo el comprador (o un admin) confirma «ya lo recibí»; si no llegó, reporta «no me ha llegado».
+- El **vendedor** confirma, prepara y envía o deja listo. Si el pago es en **efectivo** (siempre en un retiro; en un
+  domicilio, contra entrega) también **entrega y cobra** ([ADR-021](ADR-021-pago-contra-entrega.md)).
+- En un domicilio **ya pagado** solo el comprador (o un admin) confirma «ya lo recibí». Si no llegó, el comprador
+  reporta «no me ha llegado»; y si era contra entrega y no se cobró nada, el vendedor puede cancelarlo en camino.
 - **Cancelar:** el comprador, mientras esté `pendiente`; después, el puesto o el administrador
   ([ADR-018](ADR-018-reglas-de-dinero-y-cancelacion.md)). Al cancelar se **repone el stock**, se **libera el cupón** y
   el pago se **reembolsa** (si estaba aprobado) o se **anula** (si estaba en curso).
@@ -87,9 +89,9 @@ Con domicilio ($3.000): el cliente paga $11.000; la comisión sigue siendo $640;
 - El **cupón** lo asume el vendedor, no la plataforma ([ADR-006](ADR-006-promociones-cupones.md)). Tiene vigencia,
   monto mínimo, tope y límites de uso (total y por usuario); nunca supera el subtotal. Uno global lo crea el admin.
 - **Métodos de pago:** efectivo (el vendedor confirma el cobro), y un modo de prueba (sandbox). **No hay pasarela real.**
-- **Para confirmar un pedido hace falta un pago aprobado**, con una excepción: un **retiro con efectivo** se puede
-  confirmar sin cobro previo, porque se paga al recoger ([ADR-009](ADR-009-retiro-y-pago-al-recoger.md)). Un
-  domicilio siempre exige el pago aprobado antes.
+- **Para confirmar un pedido hace falta un pago aprobado**, con una excepción: un pedido **con efectivo** se puede
+  confirmar sin cobro previo, porque se paga al recoger o, a domicilio, al recibir
+  ([ADR-009](ADR-009-retiro-y-pago-al-recoger.md), [ADR-021](ADR-021-pago-contra-entrega.md)).
 - Estados del pago: `pendiente → procesando → aprobado → reembolsado`; también `rechazado` y `anulado`.
 
 ## 6. Plazos: nada queda apartado para siempre
@@ -129,8 +131,9 @@ envíos, ticket promedio, ventas por día, lo que más vende y sus pedidos por e
   ([ADR-019](ADR-019-comision-del-efectivo.md)), y quien se atrasa recibe un aviso y luego una pausa de pedidos nuevos
   ([ADR-020](ADR-020-politica-de-atraso.md)). Pero el cobro sigue siendo manual, y los límites ($50.000 y $150.000) son
   valores razonables que el dueño debe confirmar. Tampoco se mide cuántos días lleva la deuda.
-- **Pago contra entrega a domicilio.** A domicilio se paga por adelantado y no hay pasarela real, así que en
-  producción ese camino solo funciona en modo de prueba. Es la forma natural de pagar en la ciudad.
+- **Pedidos falsos a domicilio.** Pagar contra entrega no exige nada al cliente; un pedido a una dirección falsa le
+  cuesta al vendedor un viaje perdido. Se puede cancelar sin penalización, pero no hay un historial de «pedidos no
+  recibidos» por comprador ([ADR-021](ADR-021-pago-contra-entrega.md)).
 - **Horarios del puesto.** Son texto libre: se puede pedir fuera de horario (el plazo de 24 h lo amortigua).
 - **Un solo repartidor: el puesto.** No hay repartidores propios ni cálculo de tarifa por distancia: la tarifa es una
   sola para todos.
