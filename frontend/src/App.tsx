@@ -46,6 +46,8 @@ const Auditoria = lazy(() => import('./pages/admin/Auditoria').then((modulo) => 
 const CuponesAdmin = lazy(() => import('./pages/admin/CuponesAdmin').then((modulo) => ({ default: modulo.CuponesAdmin })));
 const MapaPuestos = lazy(() => import('./pages/MapaPuestos').then((modulo) => ({ default: modulo.MapaPuestos })));
 const CreditosFotos = lazy(() => import('./pages/CreditosFotos').then((modulo) => ({ default: modulo.CreditosFotos })));
+const Terminos = lazy(() => import('./pages/Legal').then((modulo) => ({ default: modulo.Terminos })));
+const Privacidad = lazy(() => import('./pages/Legal').then((modulo) => ({ default: modulo.Privacidad })));
 const SinPermiso = lazy(() => import('./pages/SinPermiso').then((modulo) => ({ default: modulo.SinPermiso })));
 const NoEncontrado = lazy(() => import('./pages/NoEncontrado').then((modulo) => ({ default: modulo.NoEncontrado })));
 
@@ -70,6 +72,8 @@ export function App() {
             <Route path="catalogo" element={<Catalogo />} />
             <Route path="mapa" element={<MapaPuestos />} />
             <Route path="creditos-fotos" element={<CreditosFotos />} />
+            <Route path="terminos" element={<Terminos />} />
+            <Route path="privacidad" element={<Privacidad />} />
             <Route path="productos/:id" element={<ProductoDetalle />} />
             <Route path="puestos/:id" element={<PuestoDetalle />} />
             <Route path="login" element={<Login />} />

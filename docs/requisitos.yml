@@ -525,6 +525,18 @@
     - "frontend/src/components/comisiones/Comisiones.test.tsx::anota un pago con el monto propuesto y la nota, y avisa"
     - "frontend/src/components/comisiones/Comisiones.test.tsx::muestra lo que debe y cómo se compone"
 
+- id: RF-30
+  titulo: Términos y condiciones y política de privacidad, enlazados desde el registro y los pies de página
+  actor: [comprador, vendedor, visitante]
+  origen: Ley 1581 de 2012 (tratamiento de datos personales)
+  pantallas: ["/terminos", "/privacidad", "/registro"]
+  endpoints: []
+  pruebas:
+    - "frontend/src/pages/Legal.test.tsx::la política de privacidad dice qué datos se guardan, los derechos y cómo ejercerlos"
+    - "frontend/src/pages/Legal.test.tsx::los términos explican qué es RioMarket, las reglas de compra y la comisión del vendedor"
+    - "frontend/src/pages/auth/Registro.test.tsx::la aceptación enlaza a los términos y a la política de privacidad"
+    - "frontend/e2e/anonimo.spec.ts::desde el registro se leen los términos y la política de privacidad"
+
 - id: RNF-01
   titulo: Cabeceras de seguridad y CSP estricta
   origen: SEGURIDAD.md

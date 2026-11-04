@@ -20,6 +20,12 @@ function renderizar() {
 }
 
 describe('Registro: mensajes de la validación del formulario', () => {
+  it('la aceptación enlaza a los términos y a la política de privacidad', () => {
+    renderizar();
+    expect(screen.getByRole('link', { name: 'términos y condiciones' })).toHaveAttribute('href', '/terminos');
+    expect(screen.getByRole('link', { name: 'política de privacidad' })).toHaveAttribute('href', '/privacidad');
+  });
+
   it('muestra los mensajes de cada campo si se envía vacío', async () => {
     renderizar();
     await userEvent.click(screen.getByRole('button', { name: /Crear cuenta/ }));

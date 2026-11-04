@@ -69,6 +69,21 @@ test('la página de créditos de fotos lista los autores', async ({ page }) => {
   expect(errores()).toEqual([]);
 });
 
+test('desde el registro se leen los términos y la política de privacidad', async ({ page }) => {
+  const errores = vigilarErrores(page);
+  await page.goto('/registro');
+  const terminos = page.getByRole('link', { name: 'términos y condiciones', exact: true });
+  await expect(terminos).toHaveAttribute('href', '/terminos');
+  await page.goto('/terminos');
+  await expect(page.getByRole('heading', { name: 'Términos y condiciones', level: 1 })).toBeVisible();
+  await page.getByRole('link', { name: 'Política de privacidad' }).first().click();
+  await expect(page).toHaveURL(/\/privacidad$/);
+  await expect(page.getByRole('heading', { name: 'Política de privacidad', level: 1 })).toBeVisible();
+  await expect(page.getByText(/Ley 1581/)).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  expect(errores()).toEqual([]);
+});
+
 test('olvidé mi contraseña: desde el login se pide el enlace y la respuesta no revela si la cuenta existe', async ({ page }) => {
   const errores = vigilarErrores(page);
   await page.goto('/login');

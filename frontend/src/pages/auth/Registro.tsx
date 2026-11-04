@@ -242,7 +242,15 @@ export function Registro() {
               <label className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
                 <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" {...register('acepta')} />
                 <span>
-                  Acepto las condiciones de uso y el tratamiento de mis datos personales para operar en RioMarket.
+                  Acepto los{' '}
+                  <Link to="/terminos" target="_blank" className="link">
+                    términos y condiciones
+                  </Link>{' '}
+                  y el tratamiento de mis datos personales según la{' '}
+                  <Link to="/privacidad" target="_blank" className="link">
+                    política de privacidad
+                  </Link>
+                  .
                 </span>
               </label>
               {errors.acepta?.message && <p className="field-error">{errors.acepta.message}</p>}
