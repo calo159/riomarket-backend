@@ -183,6 +183,9 @@ PRIVATE_MEDIA_ROOT = env("PRIVATE_MEDIA_ROOT", default=str(BASE_DIR / "media_pri
 # ---------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_CREDENTIALS = True
+# Sin esto, con la app en otro origen el navegador esconde el nombre del archivo y las filas de las
+# exportaciones a CSV (solo deja ver los encabezados «simples»).
+CORS_EXPOSE_HEADERS = ["Content-Disposition", "X-Total-Filas", "X-Exportacion-Truncada"]
 
 # ---------------------------------------------------------------------------
 # Django REST Framework

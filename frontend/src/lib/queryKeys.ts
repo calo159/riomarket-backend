@@ -22,6 +22,8 @@ export const claves = {
   menu: ['menu'] as const,
   categorias: ['categorias'] as const,
   auditoria: ['auditoria'] as const,
+  auditoriaLista: (pagina: number, busqueda: Filtro, accion: Filtro, desde: Filtro, hasta: Filtro) =>
+    ['auditoria', pagina, busqueda, accion, desde, hasta] as const,
   adminResumen: ['admin-resumen'] as const,
   adminRoles: ['admin-roles'] as const,
   perfil: ['perfil'] as const,

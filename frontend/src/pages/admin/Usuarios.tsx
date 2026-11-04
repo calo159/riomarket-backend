@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, Search, ShieldCheck, ShieldOff, UserPlus, Users } from 'lucide-react';
+import { KeyRound, Pencil, Search, ShieldCheck, ShieldOff, UserPlus, Users } from 'lucide-react';
 import {
   asignarRolesUsuario,
   cambiarRolUsuario,
@@ -10,6 +10,7 @@ import {
   suspenderUsuario,
   type UsuarioAdmin,
 } from '../../api/admin';
+import { BotonExportar } from '../../components/admin/BotonExportar';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { Paginacion } from '../../components/ui/Paginacion';
@@ -21,6 +22,7 @@ import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import type { Rol } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { EditarCuenta } from './EditarCuenta';
 import { NuevoUsuario } from './NuevoUsuario';
 
 const TAMANO = 15;
@@ -67,6 +69,7 @@ export function Usuarios() {
   const [rolAsignado, setRolAsignado] = useState('');
   const [objetivo, setObjetivo] = useState<UsuarioAdmin | null>(null);
   const [creando, setCreando] = useState(false);
+  const [editando, setEditando] = useState<UsuarioAdmin | null>(null);
 
   useEffect(() => {
     document.title = 'Usuarios · Administración · RioMarket';
@@ -101,6 +104,7 @@ export function Usuarios() {
 
   // El usuario abierto en el modal se mantiene actualizado tras cada acción.
   const actual = objetivo ? usuarios.data?.results.find((u) => u.id === objetivo.id) ?? objetivo : null;
+  const edicion = editando ? usuarios.data?.results.find((u) => u.id === editando.id) ?? editando : null;
 
   return (
     <div>
@@ -108,9 +112,21 @@ export function Usuarios() {
         titulo="Usuarios"
         descripcion="Gestiona el rol base, los roles adicionales y el baneo de cada cuenta. Toda decisión queda auditada."
         acciones={
-          <button type="button" className="btn-primary" onClick={() => setCreando(true)}>
-            <UserPlus className="h-4 w-4" aria-hidden="true" /> Nuevo usuario
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <BotonExportar
+              ruta="/admin/usuarios/exportar/"
+              nombre="usuarios.csv"
+              params={{
+                q: busqueda.trim() || undefined,
+                rol: rol || undefined,
+                estado: estado || undefined,
+                rol_asignado: rolAsignado ? Number(rolAsignado) : undefined,
+              }}
+            />
+            <button type="button" className="btn-primary" onClick={() => setCreando(true)}>
+              <UserPlus className="h-4 w-4" aria-hidden="true" /> Nuevo usuario
+            </button>
+          </div>
         }
       />
 
@@ -193,7 +209,7 @@ export function Usuarios() {
                         </ul>
                       )}
                     </td>
-                    <td className="p-3 text-right"><BotonAcceso usuario={usuario} onAbrir={setObjetivo} /></td>
+                    <td className="p-3 text-right"><BotonAcceso usuario={usuario} onAbrir={setObjetivo} onEditar={setEditando} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -215,7 +231,7 @@ export function Usuarios() {
                   {usuario.pedidos_activos > 0 && ` · ${usuario.pedidos_activos} activos`}
                 </p>
                 <ChipsRoles usuario={usuario} />
-                <BotonAcceso usuario={usuario} onAbrir={setObjetivo} />
+                <BotonAcceso usuario={usuario} onAbrir={setObjetivo} onEditar={setEditando} />
               </article>
             ))}
           </div>
@@ -225,6 +241,8 @@ export function Usuarios() {
       )}
 
       <NuevoUsuario abierto={creando} onCerrar={() => setCreando(false)} onCreado={refrescar} />
+
+      {edicion && <EditarCuenta key={edicion.id} usuario={edicion} onCerrar={() => setEditando(null)} onCambio={refrescar} />}
 
       {actual && (
         <GestionarAcceso
@@ -239,14 +257,37 @@ export function Usuarios() {
   );
 }
 
-function BotonAcceso({ usuario, onAbrir }: { usuario: UsuarioAdmin; onAbrir: (usuario: UsuarioAdmin) => void }) {
+const ACCIONES_DE_ACCESO = ['cambiar-rol', 'roles', 'suspender', 'reactivar'];
+const ACCIONES_DE_CUENTA = ['editar-datos', 'restablecer-contrasena'];
+
+function BotonAcceso({
+  usuario,
+  onAbrir,
+  onEditar,
+}: {
+  usuario: UsuarioAdmin;
+  onAbrir: (usuario: UsuarioAdmin) => void;
+  onEditar: (usuario: UsuarioAdmin) => void;
+}) {
   if (usuario.acciones_permitidas.length === 0) {
     return <span className="text-xs text-slate-500 dark:text-slate-400">Sin acciones</span>;
   }
+  const permitidas = usuario.acciones_permitidas as string[];
+  const conAcceso = permitidas.some((accion) => ACCIONES_DE_ACCESO.includes(accion));
+  const conCuenta = permitidas.some((accion) => ACCIONES_DE_CUENTA.includes(accion));
   return (
-    <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onAbrir(usuario)}>
-      <KeyRound className="h-3.5 w-3.5" /> Gestionar acceso
-    </button>
+    <div className="flex flex-wrap justify-end gap-2">
+      {conCuenta && (
+        <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onEditar(usuario)}>
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Editar cuenta
+        </button>
+      )}
+      {conAcceso && (
+        <button type="button" className="btn-secondary py-1.5 text-xs" onClick={() => onAbrir(usuario)}>
+          <KeyRound className="h-3.5 w-3.5" aria-hidden="true" /> Gestionar acceso
+        </button>
+      )}
+    </div>
   );
 }
 

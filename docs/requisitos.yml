@@ -685,3 +685,48 @@
     - "apps/administration/tests/test_crear_usuario.py::TestQuienPuede"
     - "frontend/src/pages/admin/NuevoUsuario.test.tsx::muestra la contraseña temporal una vez, con el aviso de que no se vuelve a mostrar"
     - "frontend/src/pages/admin/Usuarios.test.tsx::el botón «Nuevo usuario» abre el formulario para crear una cuenta"
+
+- id: RF-34
+  titulo: Auditoría consultable con filtros, paginación, detalle legible y exportación
+  actor: [administrador]
+  origen: Petición del dueño del proyecto
+  pantallas: ["/admin/auditoria"]
+  endpoints:
+    - "GET /api/audit/registros/"
+    - "GET /api/audit/registros/exportar/"
+  pruebas:
+    - "apps/administration/tests/test_exportaciones.py::TestBusquedaYExportacionDeAuditoria"
+    - "frontend/src/pages/admin/Auditoria.test.tsx::filtra por acción y por texto, vuelve a la primera página y exporta con los mismos filtros"
+    - "frontend/src/lib/auditoria.test.ts::un cambio de campo dice de qué a qué y el motivo"
+
+- id: RF-35
+  titulo: Exportar a CSV usuarios, pedidos y pagos con los filtros de la pantalla, sin fórmulas ejecutables
+  actor: [administrador]
+  origen: Petición del dueño del proyecto
+  pantallas: ["/admin/usuarios", "/admin/pedidos", "/admin/pagos", "/admin/auditoria"]
+  endpoints:
+    - "GET /api/admin/usuarios/exportar/"
+    - "GET /api/orders/pedidos/exportar/"
+    - "GET /api/payments/pagos/exportar/"
+  pruebas:
+    - "apps/administration/tests/test_exportaciones.py::TestCelda"
+    - "apps/administration/tests/test_exportaciones.py::TestExportarUsuarios"
+    - "apps/administration/tests/test_exportaciones.py::TestExportarPedidosYPagos"
+    - "apps/administration/tests/test_exportaciones.py::TestEncabezadosParaElNavegador"
+    - "frontend/src/components/admin/BotonExportar.test.tsx::descarga con los filtros recibidos y dice cuántas filas salieron"
+    - "frontend/src/lib/descargas.test.ts::pide el archivo como blob con los filtros y lo guarda con el nombre del servidor"
+
+- id: RF-36
+  titulo: Editar los datos de una cuenta y restablecer su contraseña, con motivo y auditoría
+  actor: [administrador]
+  origen: Petición del dueño del proyecto
+  pantallas: ["/admin/usuarios"]
+  endpoints:
+    - "PUT /api/admin/usuarios/{id}/datos/"
+    - "POST /api/admin/usuarios/{id}/restablecer-contrasena/"
+  pruebas:
+    - "apps/administration/tests/test_gestion_cuentas.py::TestEditarDatos"
+    - "apps/administration/tests/test_gestion_cuentas.py::TestRestablecerContrasena"
+    - "apps/administration/tests/test_gestion_cuentas.py::TestAccionesPermitidas"
+    - "frontend/src/pages/admin/EditarCuenta.test.tsx::muestra la contraseña temporal una sola vez, con el motivo enviado"
+    - "frontend/src/pages/admin/PanelAdmin.test.tsx::la tarjeta lleva a pagos y cuenta a los vendedores en pausa"

@@ -1,7 +1,7 @@
 import { api } from '../lib/http';
 import type { Paginado, Rol } from '../lib/types';
 
-type AccionUsuario = 'cambiar-rol' | 'roles' | 'suspender' | 'reactivar';
+type AccionUsuario = 'cambiar-rol' | 'roles' | 'suspender' | 'reactivar' | 'editar-datos' | 'restablecer-contrasena';
 type EstadoUsuario = 'activo' | 'suspendido';
 
 interface RolAsignado {
@@ -66,6 +66,8 @@ interface ResumenAdmin {
   productos: { total: number; por_estado: Record<string, number>; bloqueados: number };
   resenas: { total: number; ocultas: number };
   cupones: { total: number; activos: number };
+  /** Cuántos vendedores hay al día, en aviso o en pausa por la comisión que deben (ADR-020). */
+  comisiones: { al_dia: number; aviso: number; bloqueado: number };
   generado_en: string;
 }
 
@@ -88,6 +90,24 @@ export interface UsuarioCreado extends UsuarioAdmin {
 
 export async function crearUsuario(datos: DatosNuevoUsuario): Promise<UsuarioCreado> {
   const { data } = await api.post<UsuarioCreado>('/admin/usuarios/', datos);
+  return data;
+}
+
+export interface DatosEdicionUsuario {
+  nombre: string;
+  correo: string;
+  celular: string;
+  motivo: string;
+}
+
+export async function editarDatosUsuario(id: number, datos: DatosEdicionUsuario): Promise<UsuarioAdmin> {
+  const { data } = await api.put<UsuarioAdmin>(`/admin/usuarios/${id}/datos/`, datos);
+  return data;
+}
+
+/** Devuelve la cuenta con la contraseña temporal nueva, que solo viene en esta respuesta. */
+export async function restablecerContrasenaUsuario(id: number, motivo: string): Promise<UsuarioCreado> {
+  const { data } = await api.post<UsuarioCreado>(`/admin/usuarios/${id}/restablecer-contrasena/`, { motivo });
   return data;
 }
 

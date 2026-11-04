@@ -104,6 +104,22 @@ class SuspenderSerializer(serializers.Serializer):
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
 
 
+class EditarDatosUsuarioSerializer(serializers.Serializer):
+    nombre = serializers.CharField(max_length=120)
+    correo = serializers.EmailField()
+    celular = serializers.CharField(max_length=20)
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+    def validate_celular(self, value):
+        if not CELULAR_PATRON.match(value):
+            raise serializers.ValidationError("Usa solo dígitos, espacios, +, (), - o .")
+        return value
+
+
+class ReiniciarContrasenaSerializer(serializers.Serializer):
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+
 class UsuarioCreadoSerializer(UsuarioAdminSerializer):
     """La cuenta recién creada, con la contraseña temporal que se muestra una sola vez."""
 

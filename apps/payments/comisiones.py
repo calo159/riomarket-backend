@@ -150,6 +150,17 @@ def resumen(usuario) -> list[dict]:
     return sorted(filas, key=lambda fila: (-fila["comision_pendiente"], fila["vendedor"]))
 
 
+def cuentas_por_estado() -> dict[str, int]:
+    """Cuántos vendedores hay al día, en aviso o en pausa (resumen del administrador)."""
+    generada, liquidado = _generada_por_vendedor(), _liquidado_por_vendedor()
+    cuentas = dict.fromkeys((AL_DIA, AVISO, BLOQUEADO), 0)
+    for vendedor_id in set(generada) | set(liquidado):
+        generado = _dinero(generada.get(vendedor_id, {}).get("comision"))
+        pagado = _dinero(liquidado.get(vendedor_id, {}).get("total"))
+        cuentas[estado_de(generado - pagado)] += 1
+    return cuentas
+
+
 def pendiente_de(vendedor_id: int) -> Decimal:
     """Comisión que debe un vendedor (2 consultas)."""
     cuenta = _cuenta(

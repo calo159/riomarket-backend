@@ -19,7 +19,7 @@ from decimal import Decimal
 
 from django.contrib.auth import password_validation
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
@@ -33,6 +33,7 @@ from apps.common.query import parametro_entero
 from apps.notifications.models import Notificacion
 from apps.notifications.services import crear_notificacion
 from apps.orders.models import Pedido
+from apps.payments import comisiones
 from apps.payments.models import Pago
 from apps.promotions.models import Cupon
 from apps.rbac.acceso import recursos_de_usuario
@@ -168,6 +169,73 @@ def crear_usuario(
         id_entidad=usuario.pk,
         detalle={"rol": rol, "origen": "administrador"},
     )
+    return usuario, password
+
+
+def _exigir_gestion_de_cuenta(usuario: Usuario, actor: Usuario, accion: str) -> None:
+    exigir_admin(actor)
+    if usuario.pk == actor.pk:
+        raise ValidationError({"usuario": f"{accion} tu propia cuenta desde «Mi perfil»."})
+    _exigir_alcance(usuario, actor)
+
+
+def editar_datos(
+    *, usuario: Usuario, actor: Usuario, nombre: str, correo: str, celular: str, motivo: str
+) -> Usuario:
+    """El administrador corrige nombre, correo o celular de una cuenta (queda auditado)."""
+    _exigir_gestion_de_cuenta(usuario, actor, "Edita")
+    motivo = _motivo(motivo)
+    nuevos = {
+        "nombre": nombre.strip(),
+        "correo": Usuario.normalizar_correo(correo),
+        "celular": Usuario.normalizar_celular(celular),
+    }
+    cambios = {c: v for c, v in nuevos.items() if getattr(usuario, c) != v}
+    if not cambios:
+        raise ValidationError({"datos": "No cambiaste ningún dato."})
+    if "correo" in cambios and Usuario.objects.filter(correo=cambios["correo"]).exists():
+        raise ValidationError({"correo": "Ya existe una cuenta con ese correo."})
+    if "celular" in cambios and Usuario.objects.filter(celular=cambios["celular"]).exists():
+        raise ValidationError({"celular": "Ya existe una cuenta con ese celular."})
+
+    anterior = {c: getattr(usuario, c) for c in cambios}
+    try:
+        with transaction.atomic():
+            for campo, valor in cambios.items():
+                setattr(usuario, campo, valor)
+            usuario.save(update_fields=list(cambios))
+    except IntegrityError as exc:  # carrera con otro registro del mismo correo o celular
+        raise ValidationError({"correo": "Ya existe una cuenta con ese correo o celular."}) from exc
+
+    for campo, valor in cambios.items():
+        _auditar(actor, usuario, campo, anterior[campo], valor, motivo)
+    _notificar(
+        usuario,
+        "Actualizaron los datos de tu cuenta",
+        f"Un administrador cambió: {', '.join(cambios)}. Motivo: {motivo}",
+    )
+    return usuario
+
+
+def restablecer_contrasena(*, usuario: Usuario, actor: Usuario, motivo: str) -> tuple[Usuario, str]:
+    """Pone una contraseña temporal nueva (se muestra una sola vez) y cierra las sesiones.
+
+    Es lo que hace falta cuando alguien olvidó la suya y aún no hay correo para recuperarla.
+    """
+    _exigir_gestion_de_cuenta(usuario, actor, "Cambia")
+    motivo = _motivo(motivo)
+    password = generar_password_temporal()
+    with transaction.atomic():
+        usuario.set_password(password)
+        usuario.save(update_fields=["password"])
+        _invalidar_sesiones(usuario)
+    _notificar(
+        usuario,
+        "Restablecieron tu contraseña",
+        f"Un administrador restableció tu contraseña. Motivo: {motivo}",
+    )
+    # La contraseña nunca va a la auditoría: solo que se restableció.
+    _auditar(actor, usuario, "contraseña", "", "restablecida", motivo)
     return usuario, password
 
 
@@ -403,7 +471,7 @@ def acciones_permitidas(
     if total_admins is None:
         total_admins = _admins_activos()
     es_ultimo_admin = usuario.rol == Usuario.Rol.ADMINISTRADOR and total_admins <= 1
-    acciones = []
+    acciones = ["editar-datos", "restablecer-contrasena"]
     if "admin.roles" in recursos:
         if not es_ultimo_admin:
             acciones.append("cambiar-rol")
@@ -497,6 +565,7 @@ def resumen() -> dict:
         },
         "resenas": resenas,
         "cupones": cupones,
+        "comisiones": comisiones.cuentas_por_estado(),
         "generado_en": timezone.now().isoformat(),
     }
 

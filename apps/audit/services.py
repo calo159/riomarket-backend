@@ -8,7 +8,7 @@ import logging
 from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from apps.audit.models import RegistroAuditoria
@@ -76,6 +76,13 @@ def filtrar_registros(qs: QuerySet[RegistroAuditoria], params) -> QuerySet[Regis
         if not str(id_entidad).isdigit():
             raise ValidationError({"id_entidad": "Debe ser un ID entero."})
         qs = qs.filter(id_entidad=int(id_entidad))
+    consulta = (params.get("q") or "").strip()
+    if consulta:
+        qs = qs.filter(
+            Q(id_usuario__correo__icontains=consulta)
+            | Q(id_usuario__nombre__icontains=consulta)
+            | Q(entidad__icontains=consulta)
+        )
     desde = _inicio_del_dia(params.get("desde"), "desde")
     if desde:
         qs = qs.filter(fecha_creacion__gte=desde)
