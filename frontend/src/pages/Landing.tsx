@@ -530,6 +530,8 @@ export function Landing() {
             <span>Riohacha, La Guajira · Proyecto académico · © 2026</span>
             <nav aria-label="Pie de página">
               <Link to="/login">Ingresar</Link>
+              <Link to="/terminos">Términos</Link>
+              <Link to="/privacidad">Privacidad</Link>
               <Link to="/creditos-fotos">Créditos de fotos</Link>
             </nav>
           </div>

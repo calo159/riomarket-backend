@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Términos y condiciones y política de privacidad** (`/terminos`, `/privacidad`). El registro pedía aceptar «las
+  condiciones de uso y el tratamiento de mis datos personales», pero esos textos no existían. Ahora hay dos páginas que
+  describen lo que la app realmente hace (qué datos guarda, para qué, cookies, derechos de la Ley 1581 de 2012, reglas
+  de compra y de comisión), enlazadas desde la casilla del registro y los pies de página. Son un texto base: conviene
+  que el dueño del negocio confirme el contacto y que un abogado los revise antes de operar con clientes reales.
 - **Política de atraso con la comisión del efectivo ([ADR-020](docs/ADR-020-politica-de-atraso.md)).** Hasta ahora
   deber la comisión no tenía consecuencia. Ahora la cuenta de cada vendedor tiene un estado: **al día**, **aviso**
   (deuda desde $50.000: el vendedor lo ve y recibe una notificación) y **en pausa** (desde $150.000: sus puestos no

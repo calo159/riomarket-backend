@@ -192,6 +192,10 @@ export function PublicLayout() {
               <br />
               Soporte: soporte@riomarket.test
               <br />
+              <Link className="pie-enlace" to="/terminos">Términos y condiciones</Link>
+              <br />
+              <Link className="pie-enlace" to="/privacidad">Política de privacidad</Link>
+              <br />
               <Link className="pie-enlace" to="/creditos-fotos">Créditos de fotos</Link>
             </p>
           </div>
