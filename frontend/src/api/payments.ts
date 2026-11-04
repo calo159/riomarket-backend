@@ -41,6 +41,21 @@ export async function obtenerVentas(parametros: { dias: DiasVentas; puesto?: num
   return data;
 }
 
+export type Comision = components['schemas']['Comision'];
+export type Liquidacion = components['schemas']['Liquidacion'];
+
+/** Comisión que se debe por el efectivo: todas las cuentas (administrador) o la propia (vendedor). */
+export async function listarComisiones(): Promise<Comision[]> {
+  const { data } = await api.get<Comision[]>('/payments/comisiones/');
+  return data;
+}
+
+/** El administrador anota un pago de comisión recibido de un vendedor. */
+export async function registrarLiquidacion(datos: { id_vendedor: number; monto: string; nota?: string }): Promise<Liquidacion> {
+  const { data } = await api.post<Liquidacion>('/payments/comisiones/liquidaciones/', datos);
+  return data;
+}
+
 export async function crearPago(datos: { pedido: number; metodo_pago: string; notas?: string }): Promise<Pago> {
   const { data } = await api.post<Pago>('/payments/pagos/', datos);
   return data;

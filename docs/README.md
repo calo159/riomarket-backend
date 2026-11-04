@@ -58,6 +58,7 @@ stack, pruebas y despliegue.
 - [ADR-016: pruebas end-to-end por rol en el CI](ADR-016-pruebas-end-to-end.md)
 - [ADR-017: arquitectura en capas y reglas de dependencia](ADR-017-arquitectura-en-capas.md)
 - [ADR-018: reglas de dinero y de cancelación](ADR-018-reglas-de-dinero-y-cancelacion.md)
+- [ADR-019: la comisión del efectivo se anota y se cobra](ADR-019-comision-del-efectivo.md)
 
 ## Entrega
 

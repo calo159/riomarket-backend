@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { listarPuestos } from '../../api/catalog';
 import { obtenerVentas, type DiasVentas } from '../../api/payments';
 import { useSession } from '../../auth/SessionProvider';
+import { ComisionDelVendedor } from '../../components/comisiones/ComisionDelVendedor';
 import { ConteoEstados } from '../../components/graficos/ConteoEstados';
 import { SeccionTopProductos, SeccionVentasPorDia, TarjetasVentas } from '../../components/ventas/SeccionesVentas';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
@@ -113,6 +114,7 @@ export function Ventas() {
       ) : (
         <div className="space-y-5">
           {controles}
+          <ComisionDelVendedor />
 
           {ventas.isLoading && <EsqueletoVentas />}
           {ventas.isError && !datos && (

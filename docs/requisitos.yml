@@ -506,6 +506,23 @@
     - "apps/catalog/tests/test_generar_miniaturas.py::test_genera_miniatura_y_medidas"
     - "tests/test_robustez.py::TestImagenes"
 
+- id: RF-29
+  titulo: Comisión por cobrar del efectivo, con la cuenta de cada vendedor y los pagos que anota el administrador
+  actor: [vendedor, administrador]
+  origen: ADR-019
+  pantallas: ["/admin/pagos", "/vendedor/ventas"]
+  endpoints:
+    - "GET /api/payments/comisiones/"
+    - "GET /api/payments/comisiones/liquidaciones/"
+    - "POST /api/payments/comisiones/liquidaciones/"
+  pruebas:
+    - "apps/payments/tests/test_comisiones.py::TestCuantoDebeCadaVendedor"
+    - "apps/payments/tests/test_comisiones.py::TestAnotarUnPago"
+    - "apps/payments/tests/test_comisiones.py::TestPorLaApi"
+    - "apps/payments/tests/test_comisiones.py::TestCostoFijo"
+    - "frontend/src/components/comisiones/Comisiones.test.tsx::anota un pago con el monto propuesto y la nota, y avisa"
+    - "frontend/src/components/comisiones/Comisiones.test.tsx::muestra lo que debe y cómo se compone"
+
 - id: RNF-01
   titulo: Cabeceras de seguridad y CSP estricta
   origen: SEGURIDAD.md
