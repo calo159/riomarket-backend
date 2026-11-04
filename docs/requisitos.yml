@@ -554,6 +554,24 @@
     - "frontend/src/api/orders.test.ts::domicilio: también registra el pago en efectivo, que se cobra contra entrega"
     - "frontend/src/pages/pedido/AvisosPedido.test.tsx::el vendedor sabe que entrega y cobra, y que puede cancelar si no lo reciben"
 
+- id: RF-33
+  titulo: Editar desde la barra del panel el nombre, icono, grupo y orden de cada opción del menú
+  actor: [administrador]
+  origen: Petición del dueño del proyecto (menú dinámico por recursos, RF-16)
+  pantallas: ["/admin", "/admin/recursos"]
+  endpoints:
+    - "GET /api/admin/recursos/"
+    - "PATCH /api/admin/recursos/{id}/"
+  pruebas:
+    - "apps/administration/tests/test_rbac_admin.py::TestRecursos::test_recurso_sistema_candados"
+    - "frontend/src/components/layout/PanelLayout.test.tsx::sin el recurso admin.recursos no hay nada para editar"
+    - "frontend/src/components/layout/PanelLayout.test.tsx::con el permiso, el botón activa los lápices y se puede desactivar"
+    - "frontend/src/components/layout/PanelLayout.test.tsx::el lápiz abre solo nombre, icono, grupo y orden (nada que toque los permisos)"
+    - "frontend/src/components/layout/PanelLayout.test.tsx::guarda solo lo visual, vuelve a pedir el menú y cierra la ventana"
+    - "frontend/src/components/layout/PanelLayout.test.tsx::si el servidor rechaza el cambio lo dice en la misma ventana y no la cierra ni toca el menú"
+    - "frontend/src/components/admin/FormularioRecurso.test.tsx::en un recurso de sistema bloquea código, ámbito, ruta y los interruptores, y solo envía lo editable"
+    - "frontend/src/components/layout/MenuItems.test.tsx::con onEditar cada opción lleva su lápiz con nombre propio; sin él no hay ninguno"
+
 - id: RNF-01
   titulo: Cabeceras de seguridad y CSP estricta
   origen: SEGURIDAD.md

@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { iconoDe } from '../../navigation/iconos';
@@ -52,6 +53,7 @@ export function MenuItems({
   variante = 'horizontal',
   onNavegar,
   todos = items,
+  onEditar,
 }: {
   items: MenuItem[];
   badges: Record<string, number>;
@@ -59,18 +61,20 @@ export function MenuItems({
   onNavegar?: () => void;
   /** Todos los ítems del menú, para detectar la raíz de un panel entre grupos. */
   todos?: MenuItem[];
+  /** Si viene, cada opción lleva un lápiz para editarla (modo «Editar menú» del panel). */
+  onEditar?: (item: MenuItem) => void;
 }) {
   return (
     <>
       {items.map((item) => {
         const Icono = iconoDe(item.icono);
         const badge = textoBadge(badges[item.codigo]);
-        return (
+        const enlace = (
           <NavLink
             key={item.codigo}
             to={item.ruta}
             end={esRaiz(item, todos)}
-            className={enlaceClase(variante)}
+            className={cn(enlaceClase(variante), onEditar && 'min-w-0 flex-1')}
             onClick={onNavegar}
           >
             <span className="inline-flex w-full items-center gap-2">
@@ -87,6 +91,20 @@ export function MenuItems({
             </span>
           </NavLink>
         );
+        if (!onEditar) return enlace;
+        return (
+          <div key={item.codigo} className="flex items-center gap-1">
+            {enlace}
+            <button
+              type="button"
+              className="btn-ghost !min-h-[44px] !min-w-[40px] shrink-0 p-2 md:!min-h-[40px]"
+              aria-label={`Editar «${item.nombre}»`}
+              onClick={() => onEditar(item)}
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        );
       })}
     </>
   );
@@ -97,10 +115,12 @@ export function MenuPanel({
   items,
   badges,
   onNavegar,
+  onEditar,
 }: {
   items: MenuItem[];
   badges: Record<string, number>;
   onNavegar?: () => void;
+  onEditar?: (item: MenuItem) => void;
 }) {
   return (
     <>
@@ -117,6 +137,7 @@ export function MenuPanel({
             variante="vertical"
             onNavegar={onNavegar}
             todos={items}
+            onEditar={onEditar}
           />
         </div>
       ))}

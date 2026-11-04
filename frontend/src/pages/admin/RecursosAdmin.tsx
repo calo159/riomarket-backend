@@ -1,37 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LayoutList, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import {
-  actualizarRecurso,
-  crearRecurso,
-  eliminarRecurso,
-  ETIQUETAS_AMBITO,
-  listarRecursos,
-  type AmbitoRecurso,
-  type DatosRecurso,
-  type RecursoAdmin,
-} from '../../api/admin';
+import { eliminarRecurso, ETIQUETAS_AMBITO, listarRecursos, type RecursoAdmin } from '../../api/admin';
+import { FormularioRecurso } from '../../components/admin/FormularioRecurso';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
-import { ConfirmarModal, Modal } from '../../components/ui/Modal';
-import { Campo, ErrorCampo } from '../../components/ui/Campos';
+import { ConfirmarModal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/Toast';
-import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
+import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
-
-const VACIO: DatosRecurso = {
-  codigo: '',
-  nombre: '',
-  descripcion: '',
-  ambito: 'panel_admin',
-  ruta: '',
-  icono: '',
-  grupo: '',
-  orden: 0,
-  es_publico: false,
-  activo: true,
-};
 
 export function RecursosAdmin() {
   const queryClient = useQueryClient();
@@ -189,123 +167,5 @@ export function RecursosAdmin() {
         onCerrar={() => setAEliminar(null)}
       />
     </div>
-  );
-}
-
-function FormularioRecurso({
-  recurso,
-  onCerrar,
-  onGuardado,
-}: {
-  recurso: RecursoAdmin | 'nuevo' | null;
-  onCerrar: () => void;
-  onGuardado: () => void;
-}) {
-  const toast = useToast();
-  const existente = recurso && recurso !== 'nuevo' ? recurso : null;
-  const sistema = existente?.es_sistema ?? false;
-  const [datos, setDatos] = useState<DatosRecurso>(VACIO);
-  const [error, setError] = useState('');
-  const [errores, setErrores] = useState<Record<string, string[]>>({});
-
-  useEffect(() => {
-    setDatos(existente ? { ...VACIO, ...existente } : VACIO);
-    setError('');
-    setErrores({});
-  }, [recurso, existente]);
-
-  const campo = <K extends keyof DatosRecurso>(clave: K, valor: DatosRecurso[K]) =>
-    setDatos((actual) => ({ ...actual, [clave]: valor }));
-
-  const guardar = useMutation({
-    mutationFn: () => {
-      if (!existente) return crearRecurso(datos);
-      // En un recurso de sistema solo se envían los campos editables.
-      const { nombre, descripcion, icono, grupo, orden } = datos;
-      return actualizarRecurso(existente.id, sistema ? { nombre, descripcion, icono, grupo, orden } : datos);
-    },
-    onSuccess: () => {
-      toast.exito(existente ? 'Recurso actualizado.' : 'Recurso creado.');
-      onGuardado();
-    },
-    onError: (fallo) => {
-      setErrores(erroresDeCampo(fallo));
-      setError(mensajeDeError(fallo));
-    },
-  });
-
-  const enviar = () => {
-    if (!datos.codigo.trim() || !datos.nombre.trim()) {
-      setError('El código y el nombre son obligatorios.');
-      return;
-    }
-    if (datos.ruta && !datos.ruta.startsWith('/')) {
-      setError('La ruta debe estar vacía o empezar con «/».');
-      return;
-    }
-    setError('');
-    guardar.mutate();
-  };
-
-  return (
-    <Modal
-      abierto={recurso !== null}
-      onCerrar={onCerrar}
-      titulo={existente ? `Editar «${existente.codigo}»` : 'Nuevo recurso'}
-      ancho="max-w-xl"
-    >
-      {sistema && (
-        <p className="mb-3 rounded-xl bg-slate-100 p-3 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          Es un recurso de sistema: código, ruta, ámbito, visibilidad pública y estado no se pueden cambiar.
-        </p>
-      )}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Campo etiqueta="Código" htmlFor="rec-codigo" error={errores.codigo?.[0]} ayuda="Ej.: admin.reportes">
-          <input id="rec-codigo" className="input" value={datos.codigo} disabled={sistema} onChange={(e) => campo('codigo', e.target.value)} />
-        </Campo>
-        <Campo etiqueta="Nombre" htmlFor="rec-nombre" error={errores.nombre?.[0]}>
-          <input id="rec-nombre" className="input" value={datos.nombre} maxLength={80} onChange={(e) => campo('nombre', e.target.value)} />
-        </Campo>
-        <Campo etiqueta="Ámbito" htmlFor="rec-ambito">
-          <select id="rec-ambito" className="input" value={datos.ambito} disabled={sistema} onChange={(e) => campo('ambito', e.target.value as AmbitoRecurso)}>
-            {Object.entries(ETIQUETAS_AMBITO).map(([valor, etiqueta]) => (
-              <option key={valor} value={valor}>{etiqueta}</option>
-            ))}
-          </select>
-        </Campo>
-        <Campo etiqueta="Ruta" htmlFor="rec-ruta" error={errores.ruta?.[0]} ayuda="Vacía si no aparece en el menú.">
-          <input id="rec-ruta" className="input" value={datos.ruta} disabled={sistema} onChange={(e) => campo('ruta', e.target.value)} />
-        </Campo>
-        <Campo etiqueta="Icono (lucide)" htmlFor="rec-icono">
-          <input id="rec-icono" className="input" value={datos.icono} onChange={(e) => campo('icono', e.target.value)} />
-        </Campo>
-        <Campo etiqueta="Grupo del menú" htmlFor="rec-grupo">
-          <input id="rec-grupo" className="input" value={datos.grupo} onChange={(e) => campo('grupo', e.target.value)} />
-        </Campo>
-        <Campo etiqueta="Orden" htmlFor="rec-orden">
-          <input id="rec-orden" type="number" min={0} className="input" value={datos.orden} onChange={(e) => campo('orden', Number(e.target.value) || 0)} />
-        </Campo>
-        <Campo etiqueta="Descripción" htmlFor="rec-descripcion">
-          <input id="rec-descripcion" className="input" value={datos.descripcion} maxLength={200} onChange={(e) => campo('descripcion', e.target.value)} />
-        </Campo>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={datos.es_publico} disabled={sistema} onChange={(e) => campo('es_publico', e.target.checked)} />
-          Visible sin sesión
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={datos.activo} disabled={sistema} onChange={(e) => campo('activo', e.target.checked)} />
-          Activo
-        </label>
-      </div>
-      <ErrorCampo mensaje={error} />
-      <div className="mt-4 flex justify-end gap-2">
-        <button type="button" className="btn-secondary" onClick={onCerrar} disabled={guardar.isPending}>Cancelar</button>
-        <button type="button" className="btn-primary" onClick={enviar} disabled={guardar.isPending}>
-          {guardar.isPending ? 'Guardando…' : 'Guardar'}
-        </button>
-      </div>
-    </Modal>
   );
 }

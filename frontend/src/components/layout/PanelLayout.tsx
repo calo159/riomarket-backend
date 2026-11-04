@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, Store, X } from 'lucide-react';
+import { LogOut, Menu, Pencil, Store, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { NotificationBell } from './NotificationBell';
+import { EditarOpcionMenu } from './EditarOpcionMenu';
 import { MenuPanel } from './MenuItems';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useSession } from '../../auth/SessionProvider';
 import { useMenu } from '../../navigation/useMenu';
-import { itemsDe } from '../../navigation/tipos';
+import { itemsDe, type MenuItem } from '../../navigation/tipos';
 import { ETIQUETAS_ROL } from '../../lib/format';
-import { iniciales } from '../../lib/utils';
+import { cn, iniciales } from '../../lib/utils';
 
 export function PanelLayout() {
   const { usuario, cerrarSesion } = useSession();
   const { menu, badges } = useMenu();
   const [abierto, setAbierto] = useState(false);
+  // Modo «Editar menú»: con el recurso admin.recursos se puede cambiar cómo se ve cada opción desde la barra.
+  const [editando, setEditando] = useState(false);
+  const [enEdicion, setEnEdicion] = useState<MenuItem | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -27,6 +31,8 @@ export function PanelLayout() {
   const esAdmin = location.pathname.startsWith('/admin');
   const tituloPanel = esAdmin ? 'Administración' : 'Panel de vendedor';
   const itemsPanel = itemsDe(menu, esAdmin ? 'panel_admin' : 'panel_vendedor');
+
+  const puedeEditarMenu = menu.recursos.includes('admin.recursos');
 
   const salir = async () => {
     await cerrarSesion();
@@ -41,8 +47,35 @@ export function PanelLayout() {
         <p className="text-xs text-slate-500 dark:text-slate-400">{ETIQUETAS_ROL[usuario.rol]}</p>
       </div>
       <nav className="flex-1 space-y-2 overflow-y-auto p-3" aria-label="Navegación del panel">
-        <MenuPanel items={itemsPanel} badges={badges} onNavegar={() => setAbierto(false)} />
+        <MenuPanel
+          items={itemsPanel}
+          badges={badges}
+          onNavegar={() => setAbierto(false)}
+          onEditar={puedeEditarMenu && editando ? setEnEdicion : undefined}
+        />
       </nav>
+      {puedeEditarMenu && (
+        <div className="border-t px-3 py-2">
+          <button
+            type="button"
+            aria-pressed={editando}
+            onClick={() => setEditando((actual) => !actual)}
+            className={cn(
+              'flex min-h-[44px] w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors md:min-h-[40px]',
+              editando
+                ? 'bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200'
+                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+            )}
+          >
+            <Pencil className="h-[18px] w-[18px]" aria-hidden="true" /> {editando ? 'Terminar de editar' : 'Editar menú'}
+          </button>
+          {editando && (
+            <p className="px-3 pt-1 text-xs text-slate-500 dark:text-slate-400">
+              Toca el lápiz de una opción para cambiar su nombre, icono, grupo u orden.
+            </p>
+          )}
+        </div>
+      )}
       <div className="space-y-1 border-t p-3">
         <Link
           to="/tienda"
@@ -122,6 +155,10 @@ export function PanelLayout() {
             {barraLateral}
           </aside>
         </div>
+      )}
+
+      {puedeEditarMenu && (
+        <EditarOpcionMenu item={enEdicion} habilitado={editando} onCerrar={() => setEnEdicion(null)} />
       )}
 
       <div className="pt-14 lg:pl-60">
