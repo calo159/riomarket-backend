@@ -156,3 +156,41 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago #{self.pk} - Pedido #{self.id_pedido_id} - {self.estado}"
+
+
+class LiquidacionComision(models.Model):
+    """Un pago de comisión que un vendedor le hizo a la plataforma (ADR-019).
+
+    El efectivo se cobra en el puesto, así que la plataforma no recibe su comisión sola: el
+    administrador anota aquí cada pago que le llega (Nequi, transferencia o en mano). La
+    comisión que se debe es lo generado por los pagos en efectivo aprobados menos la suma de
+    estos registros. No mueve dinero: es el libro de cuentas.
+    """
+
+    id_vendedor = models.ForeignKey(
+        "accounts.Usuario", on_delete=models.PROTECT, related_name="liquidaciones_comision"
+    )
+    monto = models.DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
+    nota = models.CharField(max_length=200, blank=True)
+    registrada_por = models.ForeignKey(
+        "accounts.Usuario", on_delete=models.PROTECT, related_name="+"
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "liquidación de comisión"
+        verbose_name_plural = "liquidaciones de comisión"
+        ordering = ["-fecha_creacion", "-id"]
+        indexes = [
+            models.Index(fields=["id_vendedor", "fecha_creacion"], name="liquid_vend_fecha_idx")
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(monto__gt=0), name="liquidacion_monto_positivo"
+            ),
+        ]
+
+    def __str__(self):
+        return f"Liquidación #{self.pk} - vendedor {self.id_vendedor_id} - {self.monto}"

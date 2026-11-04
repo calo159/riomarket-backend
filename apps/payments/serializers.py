@@ -8,7 +8,7 @@ vendedor y ``datos_sandbox``) se expone según el rol del solicitante.
 from rest_framework import serializers
 
 from apps.orders.models import Pedido
-from apps.payments.models import Pago
+from apps.payments.models import LiquidacionComision, Pago
 
 
 class PagoSerializer(serializers.ModelSerializer):
@@ -77,3 +77,45 @@ class ReembolsarPagoSerializer(serializers.Serializer):
 
 class AnularPagoSerializer(serializers.Serializer):
     notas = serializers.CharField(required=False, allow_blank=True)
+
+
+class ComisionSerializer(serializers.Serializer):
+    """La cuenta de comisión de un vendedor (ADR-019). Solo lectura."""
+
+    id_vendedor = serializers.IntegerField(read_only=True)
+    vendedor = serializers.CharField(read_only=True)
+    pagos_en_efectivo = serializers.IntegerField(read_only=True)
+    cobrado_en_efectivo = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    comision_generada = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    comision_pagada = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    comision_pendiente = serializers.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        read_only=True,
+        help_text="Lo que el vendedor todavía debe. Negativo = saldo a favor.",
+    )
+    ultimo_pago = serializers.DateTimeField(read_only=True, allow_null=True)
+
+
+class LiquidacionSerializer(serializers.ModelSerializer):
+    vendedor = serializers.CharField(source="id_vendedor.nombre", read_only=True)
+    registrada_por_nombre = serializers.CharField(source="registrada_por.nombre", read_only=True)
+
+    class Meta:
+        model = LiquidacionComision
+        fields = (
+            "id",
+            "id_vendedor",
+            "vendedor",
+            "monto",
+            "nota",
+            "registrada_por_nombre",
+            "fecha_creacion",
+        )
+        read_only_fields = fields
+
+
+class CrearLiquidacionSerializer(serializers.Serializer):
+    id_vendedor = serializers.IntegerField(min_value=1)
+    monto = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0)
+    nota = serializers.CharField(required=False, allow_blank=True, max_length=200)

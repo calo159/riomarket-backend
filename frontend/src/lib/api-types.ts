@@ -991,6 +991,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/comisiones/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuentas de comisión por el efectivo cobrado en el puesto: lo generado, lo ya pagado y lo pendiente. El administrador de pagos ve a todos los vendedores; un vendedor, solo la suya. */
+        get: operations["payments_comisiones_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/comisiones/liquidaciones/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description ``/api/payments/comisiones/liquidaciones/``: pagos de comisión que anota el administrador. */
+        get: operations["payments_comisiones_liquidaciones_list"];
+        put?: never;
+        /** @description ``/api/payments/comisiones/liquidaciones/``: pagos de comisión que anota el administrador. */
+        post: operations["payments_comisiones_liquidaciones_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/pagos/": {
         parameters: {
             query?: never;
@@ -1352,11 +1387,36 @@ export interface components {
             id_categoria_padre?: number | null;
             activa?: boolean;
         };
+        /** @description La cuenta de comisión de un vendedor (ADR-019). Solo lectura. */
+        Comision: {
+            readonly id_vendedor: number;
+            readonly vendedor: string;
+            readonly pagos_en_efectivo: number;
+            /** Format: decimal */
+            readonly cobrado_en_efectivo: string;
+            /** Format: decimal */
+            readonly comision_generada: string;
+            /** Format: decimal */
+            readonly comision_pagada: string;
+            /**
+             * Format: decimal
+             * @description Lo que el vendedor todavía debe. Negativo = saldo a favor.
+             */
+            readonly comision_pendiente: string;
+            /** Format: date-time */
+            readonly ultimo_pago: string | null;
+        };
         ConfirmarEfectivoRequest: {
             notas?: string;
         };
         ContadorNoLeidasResponse: {
             no_leidas: number;
+        };
+        CrearLiquidacionRequest: {
+            id_vendedor: number;
+            /** Format: decimal */
+            monto: string;
+            nota?: string;
         };
         CrearPagoRequest: {
             pedido: number;
@@ -1592,6 +1652,17 @@ export interface components {
             /** @description Solo para productos por encargo: sabor, mensaje, etc. (máximo 300). */
             detalles?: string;
         };
+        Liquidacion: {
+            readonly id: number;
+            readonly id_vendedor: number;
+            readonly vendedor: string;
+            /** Format: decimal */
+            readonly monto: string;
+            readonly nota: string;
+            readonly registrada_por_nombre: string;
+            /** Format: date-time */
+            readonly fecha_creacion: string;
+        };
         /** @description Igual que el login JWT estándar, agregando los datos del usuario. */
         LoginRequest: {
             correo: string;
@@ -1751,6 +1822,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["ImagenProducto"][];
+        };
+        PaginatedLiquidacionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Liquidacion"][];
         };
         PaginatedNotificacionList: {
             /** @example 123 */
@@ -4909,6 +4995,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Pedido"];
+                };
+            };
+        };
+    };
+    payments_comisiones_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comision"][];
+                };
+            };
+        };
+    };
+    payments_comisiones_liquidaciones_list: {
+        parameters: {
+            query?: {
+                /** @description Un número de página dentro del conjunto de resultados paginado. */
+                page?: number;
+                /** @description Número de resultados a devolver por página. */
+                page_size?: number;
+                /** @description ID del vendedor */
+                vendedor?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedLiquidacionList"];
+                };
+            };
+        };
+    };
+    payments_comisiones_liquidaciones_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearLiquidacionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CrearLiquidacionRequest"];
+                "multipart/form-data": components["schemas"]["CrearLiquidacionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Liquidacion"];
                 };
             };
         };

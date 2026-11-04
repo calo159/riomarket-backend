@@ -69,9 +69,9 @@ caliente o una torta con su nombre no vuelven a la venta.
 
 ## Lo que se vio y no se cambió (decisiones del dueño del negocio)
 
-- **La comisión de los pagos en efectivo no se cobra a nadie.** Casi todo el dinero pasa de mano en mano, así que el
-  sistema calcula y suma la comisión pero no tiene cómo cobrarla. Hace falta decidir el proceso (por ejemplo, una
-  liquidación semanal por transferencia) antes de construir nada.
+- **La comisión de los pagos en efectivo no se cobraba a nadie.** *(Resuelto a medias por
+  [ADR-019](ADR-019-comision-del-efectivo.md): hay una cuenta por vendedor y el administrador anota cada pago; falta la
+  política para quien se atrasa.)*
 - **A domicilio se paga por adelantado** y hoy no hay pasarela real, así que en producción ese camino solo funciona
   en modo de prueba. El pago contra entrega es la forma natural en Riohacha, pero exige otro flujo de estados.
 - `Usuario.puede_publicar` devuelve `true` para un vendedor sin solicitud de verificación. La aplicación siempre crea

@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CheckCircle2, RefreshCw, XCircle, XOctagon } from 'lucide-react';
 import { anularPago, listarPagos, reembolsarPago, simularPago } from '../../api/payments';
+import { ComisionesAdmin } from '../../components/comisiones/ComisionesAdmin';
 import { EncabezadoPagina } from '../../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../../components/ui/Estado';
 import { ConfirmarModal } from '../../components/ui/Modal';
@@ -116,6 +117,7 @@ export function PagosAdmin() {
           </div>
         }
       />
+      <ComisionesAdmin />
       {pagos.isLoading && <CargandoBloque mensaje="Cargando pagos…" />}
       {pagos.isError && <EstadoError mensaje="No pudimos cargar pagos." onReintentar={() => void pagos.refetch()} />}
       <div className="overflow-x-auto card">

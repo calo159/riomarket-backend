@@ -4,9 +4,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Ventas } from './Ventas';
 
-const mocks = vi.hoisted(() => ({ obtenerVentas: vi.fn(), listarPuestos: vi.fn() }));
+const mocks = vi.hoisted(() => ({ obtenerVentas: vi.fn(), listarPuestos: vi.fn(), listarComisiones: vi.fn() }));
 
-vi.mock('../../api/payments', () => ({ obtenerVentas: mocks.obtenerVentas }));
+vi.mock('../../api/payments', () => ({ obtenerVentas: mocks.obtenerVentas, listarComisiones: mocks.listarComisiones }));
 vi.mock('../../api/catalog', () => ({ listarPuestos: mocks.listarPuestos }));
 vi.mock('../../auth/SessionProvider', () => ({ useSession: () => ({ usuario: { id: 7, nombre: 'Carmen Gómez' } }) }));
 
@@ -54,6 +54,7 @@ describe('Ventas', () => {
   beforeEach(() => {
     Object.values(mocks).forEach((mock) => mock.mockReset());
     mocks.listarPuestos.mockResolvedValue(puestos(1));
+    mocks.listarComisiones.mockResolvedValue([]);
   });
 
   it('muestra las cifras que calcula el servidor, el gráfico y lo más vendido', async () => {

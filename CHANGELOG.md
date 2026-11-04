@@ -77,6 +77,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **La comisión del efectivo ya se puede cobrar ([ADR-019](docs/ADR-019-comision-del-efectivo.md)).** Casi todo se
+  paga en efectivo en el puesto, así que el vendedor se queda con el dinero y le debe su comisión a RioMarket; antes
+  el sistema la calculaba pero no había cómo cobrarla. Ahora hay una cuenta por vendedor (lo generado, lo pagado y lo
+  que debe): el administrador la ve en `/admin/pagos` y **anota cada pago que recibe** (Nequi, transferencia o en
+  mano), y el vendedor ve su saldo en «Ventas». No se puede anotar más de lo que se debe, cada anotación queda en la
+  auditoría y avisa al vendedor. No cobra solo ni suspende a nadie: esa política la decide el dueño.
 - **Logo nuevo.** Un toldo de puesto de mercado sobre dos olas de río (el Ranchería de Riohacha), junto a la
   palabra «RioMarket». Aparece en el encabezado, el pie, el panel, el login y la landing; hay versiones
   horizontales y sin cuadro para fondos oscuros, favicon propio para pestañas pequeñas, íconos de la app

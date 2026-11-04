@@ -14,8 +14,8 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
 )
+from rest_framework import generics, status, viewsets
 from rest_framework import serializers as drf_serializers
-from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -23,12 +23,15 @@ from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.common.query import aplicar_ordenamiento, parametro_entero
-from apps.payments import estadisticas, services
+from apps.payments import comisiones, estadisticas, services
 from apps.payments.models import Pago
 from apps.payments.serializers import (
     AnularPagoSerializer,
+    ComisionSerializer,
     ConfirmarEfectivoSerializer,
+    CrearLiquidacionSerializer,
     CrearPagoSerializer,
+    LiquidacionSerializer,
     PagoAdminSerializer,
     PagoSerializer,
     PagoVendedorSerializer,
@@ -294,3 +297,56 @@ class VentasView(APIView):
         dias = estadisticas.validar_dias(params.get("dias"))
         puesto_id = parametro_entero(params, "puesto")
         return Response(estadisticas.ventas(request.user, dias=dias, puesto_id=puesto_id))
+
+
+class ComisionesView(APIView):
+    """``GET /api/payments/comisiones/`` — la comisión que se debe por el efectivo (ADR-019)."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "pagos"
+
+    @extend_schema(
+        description=(
+            "Cuentas de comisión por el efectivo cobrado en el puesto: lo generado, lo ya pagado y "
+            "lo pendiente. El administrador de pagos ve a todos los vendedores; un vendedor, "
+            "solo la suya."
+        ),
+        responses=ComisionSerializer(many=True),
+    )
+    def get(self, request):
+        return Response(ComisionSerializer(comisiones.resumen(request.user), many=True).data)
+
+
+class LiquidacionesView(generics.ListCreateAPIView):
+    """``/api/payments/comisiones/liquidaciones/``: pagos de comisión que anota el administrador."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "pagos"
+    serializer_class = LiquidacionSerializer
+
+    def get_queryset(self):
+        return comisiones.liquidaciones(
+            self.request.user, vendedor_id=parametro_entero(self.request.query_params, "vendedor")
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="vendedor", type=OpenApiTypes.INT, description="ID del vendedor")
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(request=CrearLiquidacionSerializer, responses={201: LiquidacionSerializer})
+    def post(self, request, *args, **kwargs):
+        datos = CrearLiquidacionSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        liquidacion = comisiones.registrar_liquidacion(
+            actor=request.user,
+            id_vendedor=datos.validated_data["id_vendedor"],
+            monto=datos.validated_data["monto"],
+            nota=datos.validated_data.get("nota", ""),
+        )
+        return Response(LiquidacionSerializer(liquidacion).data, status=status.HTTP_201_CREATED)

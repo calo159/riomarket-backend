@@ -104,7 +104,14 @@ recoge a tiempo un pedido con efectivo sin cobrar, el sistema lo **cancela solo*
 Solo después de un pedido **entregado** de ese puesto, una reseña por comprador y puesto (1 a 5 y comentario). El
 autor la edita, el puesto la responde, y el administrador puede ocultarla (sale de la reputación sin borrarse).
 
-## 8. El panel de ventas
+## 8. La comisión del efectivo
+
+El efectivo se cobra en el puesto, así que el vendedor se queda con todo y **le debe a RioMarket su comisión**
+([ADR-019](ADR-019-comision-del-efectivo.md)). Por cada vendedor: `lo que debe = comisión de sus cobros en efectivo −
+lo que ya pagó`. El vendedor entrega la comisión (Nequi, transferencia o en mano) y el administrador **anota** cada
+pago en `/admin/pagos`; el vendedor ve su saldo en «Ventas». No hay cobros automáticos.
+
+## 9. El panel de ventas
 
 Una **venta** es un pago aprobado. El vendedor ve ventas brutas (solo mercancía), ingreso neto, cuánto del neto son
 envíos, ticket promedio, ventas por día, lo que más vende y sus pedidos por estado
@@ -112,9 +119,10 @@ envíos, ticket promedio, ventas por día, lo que más vende y sus pedidos por e
 
 ## Lo que el negocio todavía no resuelve
 
-- **Cobrar la comisión del efectivo.** El sistema la calcula y la suma, pero el dinero cambia de mano en el puesto.
-  Hace falta definir un proceso (por ejemplo, liquidar cada semana por transferencia o Nequi) y recién entonces
-  construir las cuentas por cobrar. Hoy es el hueco de ingresos más grande.
+- **Cobrar la comisión del efectivo, solo a medias.** Desde [ADR-019](ADR-019-comision-del-efectivo.md) hay una cuenta
+  por vendedor (lo generado, lo pagado y lo que debe) y el administrador anota cada pago que recibe. Pero el cobro
+  sigue siendo manual y **no hay política** para quien se atrasa (¿cuánta deuda? ¿cuántos días? ¿se suspende el
+  puesto?): eso debe decidirlo el dueño.
 - **Pago contra entrega a domicilio.** A domicilio se paga por adelantado y no hay pasarela real, así que en
   producción ese camino solo funciona en modo de prueba. Es la forma natural de pagar en la ciudad.
 - **Horarios del puesto.** Son texto libre: se puede pedir fuera de horario (el plazo de 24 h lo amortigua).
