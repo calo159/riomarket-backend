@@ -308,6 +308,11 @@ PLATFORM_COMMISSION_PERCENTAGE = Decimal(env("PLATFORM_COMMISSION_PERCENTAGE", d
 # El puesto reparte los pedidos a domicilio: la tarifa que paga el comprador es suya (ADR-018).
 # Con False la plataforma se la queda.
 DOMICILIO_TARIFA_PARA_VENDEDOR = env.bool("DOMICILIO_TARIFA_PARA_VENDEDOR", default=True)
+# Política de atraso de la comisión del efectivo (ADR-020), en pesos pendientes (0 = apagado).
+# Al llegar al aviso se le avisa al vendedor; al llegar al bloqueo sus puestos no reciben pedidos
+# nuevos (los que ya tienen en curso siguen).
+COMISION_LIMITE_AVISO = Decimal(env("COMISION_LIMITE_AVISO", default="50000"))
+COMISION_LIMITE_BLOQUEO = Decimal(env("COMISION_LIMITE_BLOQUEO", default="150000"))
 # La pasarela sandbox (simular pagos) SOLO se permite en desarrollo/tests.
 PAYMENTS_SANDBOX_ENABLED = env.bool("PAYMENTS_SANDBOX_ENABLED", default=DEBUG)
 # Secreto para verificar la firma de los webhooks de la pasarela real.

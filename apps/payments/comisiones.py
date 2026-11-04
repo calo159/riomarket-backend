@@ -12,6 +12,7 @@ la plataforma recibiría ese dinero y le debería el neto al vendedor, que es ot
 import contextlib
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, F, Max, Sum
@@ -27,6 +28,10 @@ from apps.rbac.acceso import tiene_recurso
 CERO = Decimal("0.00")
 RECURSO_ADMIN = "admin.pagos"  # el mismo que ya gobierna los pagos del administrador
 
+# Estados de la cuenta de un vendedor según lo que debe (ADR-020), de menos a más grave.
+AL_DIA, AVISO, BLOQUEADO = "al_dia", "aviso", "bloqueado"
+_GRAVEDAD = {AL_DIA: 0, AVISO: 1, BLOQUEADO: 2}
+
 
 def _dinero(valor) -> Decimal:
     return (valor or CERO).quantize(Decimal("0.01"))
@@ -35,6 +40,32 @@ def _dinero(valor) -> Decimal:
 def _pesos(valor: Decimal) -> str:
     """``$1.500``: pesos colombianos, con punto de miles (no la coma de ``{:,}``)."""
     return "$" + f"{valor:,.0f}".replace(",", ".")
+
+
+def limites() -> tuple[Decimal, Decimal]:
+    """(aviso, bloqueo) en pesos de comisión pendiente; 0 apaga ese escalón."""
+    return (
+        Decimal(str(getattr(settings, "COMISION_LIMITE_AVISO", 0) or 0)),
+        Decimal(str(getattr(settings, "COMISION_LIMITE_BLOQUEO", 0) or 0)),
+    )
+
+
+def estado_de(pendiente: Decimal) -> str:
+    """``bloqueado`` desde el límite de bloqueo, ``aviso`` desde el de aviso, si no ``al_dia``."""
+    aviso, bloqueo = limites()
+    if bloqueo > 0 and pendiente >= bloqueo:
+        return BLOQUEADO
+    if aviso > 0 and pendiente >= aviso:
+        return AVISO
+    return AL_DIA
+
+
+def pagar_para_reactivar(pendiente: Decimal) -> Decimal:
+    """Cuánto falta pagar para quedar por debajo del límite de bloqueo (0 si no está bloqueado)."""
+    _, bloqueo = limites()
+    if bloqueo <= 0 or pendiente < bloqueo:
+        return CERO
+    return _dinero(pendiente - bloqueo + 1)  # un peso por debajo del límite
 
 
 def _es_admin_de_pagos(usuario) -> bool:
@@ -89,6 +120,10 @@ def _cuenta(vendedor_id: int, nombre: str, generada: dict, liquidado: dict) -> d
         # Negativo = saldo a favor (p. ej. un cobro reembolsado tras haber pagado la comisión).
         "comision_pendiente": comision - total_pagado,
         "ultimo_pago": pagado.get("ultima"),
+        "estado": estado_de(comision - total_pagado),
+        "limite_aviso": limites()[0],
+        "limite_bloqueo": limites()[1],
+        "pagar_para_reactivar": pagar_para_reactivar(comision - total_pagado),
     }
 
 
@@ -113,6 +148,61 @@ def resumen(usuario) -> list[dict]:
     filas = [_cuenta(pk, nombres.get(pk, ""), generada, liquidado) for pk in ids]
     # Los que más deben primero; a igualdad, por nombre.
     return sorted(filas, key=lambda fila: (-fila["comision_pendiente"], fila["vendedor"]))
+
+
+def pendiente_de(vendedor_id: int) -> Decimal:
+    """Comisión que debe un vendedor (2 consultas)."""
+    cuenta = _cuenta(
+        vendedor_id, "", _generada_por_vendedor(vendedor_id), _liquidado_por_vendedor(vendedor_id)
+    )
+    return cuenta["comision_pendiente"]
+
+
+def vendedor_bloqueado(vendedor_id: int) -> bool:
+    """¿Sus puestos dejaron de recibir pedidos nuevos por la comisión que debe? (ADR-020).
+
+    Sin límite de bloqueo configurado no consulta nada: no cuesta ni una consulta.
+    """
+    _, bloqueo = limites()
+    return bloqueo > 0 and pendiente_de(vendedor_id) >= bloqueo
+
+
+def avisar_si_empeora(pago: Pago) -> None:
+    """Tras aprobarse un cobro en efectivo, avisa al vendedor si su cuenta pasó a un estado peor.
+
+    Compara lo que debe ahora con lo que debía sin este cobro: solo avisa al cruzar un límite, no en
+    cada pedido. Un aviso fallido nunca deshace el cobro.
+    """
+    if pago.metodo_pago != Pago.MetodoPago.EFECTIVO or pago.estado != Pago.Estado.APROBADO:
+        return
+    vendedor = pago.id_pedido.id_puesto.id_vendedor
+    ahora = pendiente_de(vendedor.pk)
+    antes_estado, ahora_estado = estado_de(ahora - pago.comision_plataforma), estado_de(ahora)
+    if _GRAVEDAD[ahora_estado] <= _GRAVEDAD[antes_estado]:
+        return
+    _, bloqueo = limites()
+    if ahora_estado == BLOQUEADO:
+        titulo = "Tus puestos están en pausa para pedidos nuevos"
+        faltan = _pesos(pagar_para_reactivar(ahora))
+        mensaje = (
+            f"Tu comisión pendiente es de {_pesos(ahora)} y el límite es {_pesos(bloqueo)}, "
+            f"así que tus puestos no reciben pedidos nuevos hasta que pagues {faltan}. "
+            "Los pedidos que ya tienes en curso siguen igual."
+        )
+    else:
+        titulo = "Tu comisión pendiente va creciendo"
+        mensaje = f"Tu comisión pendiente llegó a {_pesos(ahora)}."
+        if bloqueo > 0:
+            mensaje += (
+                f" Si pasa de {_pesos(bloqueo)}, tus puestos dejarán de recibir pedidos nuevos "
+                "hasta que la pagues a RioMarket."
+            )
+        else:
+            mensaje += " Págala a RioMarket."
+    with contextlib.suppress(ValidationError):
+        notificaciones.crear_notificacion(
+            usuario=vendedor, tipo=Notificacion.Tipo.GENERAL, titulo=titulo, mensaje=mensaje
+        )
 
 
 def liquidaciones(usuario, vendedor_id=None):
@@ -163,6 +253,7 @@ def registrar_liquidacion(*, actor, id_vendedor, monto, nota="") -> LiquidacionC
         liquidacion = LiquidacionComision.objects.create(
             id_vendedor=vendedor, monto=monto, nota=nota, registrada_por=actor
         )
+        reactivado = estado_de(pendiente) == BLOQUEADO and estado_de(pendiente - monto) != BLOQUEADO
 
     audit.registrar(
         usuario=actor,
@@ -171,13 +262,15 @@ def registrar_liquidacion(*, actor, id_vendedor, monto, nota="") -> LiquidacionC
         id_entidad=liquidacion.pk,
         detalle={"vendedor": vendedor.pk, "monto": str(monto), "pendiente_antes": str(pendiente)},
     )
-    _avisar(vendedor, monto, pendiente - monto)
+    _avisar(vendedor, monto, pendiente - monto, reactivado=reactivado)
     return liquidacion
 
 
-def _avisar(vendedor, monto: Decimal, queda: Decimal) -> None:
+def _avisar(vendedor, monto: Decimal, queda: Decimal, *, reactivado: bool = False) -> None:
     """Avisa al vendedor que su pago quedó anotado; un aviso fallido nunca deshace el registro."""
     resto = f" Te queda por pagar {_pesos(queda)}." if queda > 0 else " Quedaste al día."
+    if reactivado:
+        resto += " Tus puestos vuelven a recibir pedidos nuevos."
     with contextlib.suppress(ValidationError):
         notificaciones.crear_notificacion(
             usuario=vendedor,

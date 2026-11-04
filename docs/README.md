@@ -59,6 +59,7 @@ stack, pruebas y despliegue.
 - [ADR-017: arquitectura en capas y reglas de dependencia](ADR-017-arquitectura-en-capas.md)
 - [ADR-018: reglas de dinero y de cancelación](ADR-018-reglas-de-dinero-y-cancelacion.md)
 - [ADR-019: la comisión del efectivo se anota y se cobra](ADR-019-comision-del-efectivo.md)
+- [ADR-020: quien se atrasa con la comisión recibe un aviso y, si sigue, una pausa](ADR-020-politica-de-atraso.md)
 
 ## Entrega
 

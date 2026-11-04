@@ -1405,7 +1405,31 @@ export interface components {
             readonly comision_pendiente: string;
             /** Format: date-time */
             readonly ultimo_pago: string | null;
+            /**
+             * @description bloqueado: sus puestos no reciben pedidos nuevos hasta que pague (ADR-020).
+             *
+             *     * `al_dia` - al_dia
+             *     * `aviso` - aviso
+             *     * `bloqueado` - bloqueado
+             */
+            readonly estado: components["schemas"]["ComisionEstadoEnum"];
+            /** Format: decimal */
+            readonly limite_aviso: string;
+            /** Format: decimal */
+            readonly limite_bloqueo: string;
+            /**
+             * Format: decimal
+             * @description Cuánto falta pagar para volver a recibir pedidos (0 si no está bloqueado).
+             */
+            readonly pagar_para_reactivar: string;
         };
+        /**
+         * @description * `al_dia` - al_dia
+         *     * `aviso` - aviso
+         *     * `bloqueado` - bloqueado
+         * @enum {string}
+         */
+        ComisionEstadoEnum: "al_dia" | "aviso" | "bloqueado";
         ConfirmarEfectivoRequest: {
             notas?: string;
         };

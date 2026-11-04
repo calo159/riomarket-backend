@@ -9,6 +9,16 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Política de atraso con la comisión del efectivo ([ADR-020](docs/ADR-020-politica-de-atraso.md)).** Hasta ahora
+  deber la comisión no tenía consecuencia. Ahora la cuenta de cada vendedor tiene un estado: **al día**, **aviso**
+  (deuda desde $50.000: el vendedor lo ve y recibe una notificación) y **en pausa** (desde $150.000: sus puestos no
+  reciben pedidos *nuevos* hasta que pague; los pedidos en curso siguen). Al anotarse el pago que baja la deuda del
+  límite, se reactiva solo y se le avisa; la pantalla le dice cuánto pagar. Los avisos salen al cruzar de estado, no
+  en cada venta. Los límites se cambian con `COMISION_LIMITE_AVISO` y `COMISION_LIMITE_BLOQUEO` (`0` apaga cada uno).
+  El administrador ve el estado de cada vendedor en `/admin/pagos`.
+
 ### Cambiado
 
 - **Reglas de dinero y de cancelación revisadas ([ADR-018](docs/ADR-018-reglas-de-dinero-y-cancelacion.md)).** Una

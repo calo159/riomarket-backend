@@ -32,6 +32,9 @@ os.environ.setdefault("PAYMENTS_SANDBOX_ENABLED", "True")
 # los resultados (antes heredaba los valores de desarrollo).
 os.environ.setdefault("DOMICILIO_TARIFA_BASE", "0.00")
 os.environ.setdefault("PLATFORM_COMMISSION_PERCENTAGE", "0.00")
+# La política de atraso queda apagada en las pruebas; las que la ejercitan fijan sus límites.
+os.environ.setdefault("COMISION_LIMITE_AVISO", "0")
+os.environ.setdefault("COMISION_LIMITE_BLOQUEO", "0")
 
 from .base import *
 

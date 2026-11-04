@@ -33,8 +33,8 @@ Un libro de cuentas, sin mover dinero y sin automatismos que castiguen:
 ## Qué no hace (a propósito)
 
 - **No cobra solo**: no hay cargos automáticos ni recordatorios. Es el registro que permite hacer el cobro.
-- **No suspende a quien se atrasa.** Es una política (¿cuánta deuda? ¿cuántos días?) que debe fijar el dueño del
-  negocio; con este libro es fácil de añadir después (una condición sobre `comision_pendiente`).
+- **No suspende a quien se atrasa.** Esta decisión quedó para después y se tomó en
+  [ADR-020](ADR-020-politica-de-atraso.md): un aviso y, si la deuda sigue creciendo, una pausa de pedidos nuevos.
 - **No fija la periodicidad.** Se sugiere liquidar cada semana, pero el sistema no lo impone.
 - **No es contabilidad**: no concilia con Nequi ni con el banco. El administrador es quien confirma que recibió el
   dinero.

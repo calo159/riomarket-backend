@@ -509,7 +509,7 @@
 - id: RF-29
   titulo: Comisión por cobrar del efectivo, con la cuenta de cada vendedor y los pagos que anota el administrador
   actor: [vendedor, administrador]
-  origen: ADR-019
+  origen: ADR-019, ADR-020
   pantallas: ["/admin/pagos", "/vendedor/ventas"]
   endpoints:
     - "GET /api/payments/comisiones/"
@@ -520,6 +520,8 @@
     - "apps/payments/tests/test_comisiones.py::TestAnotarUnPago"
     - "apps/payments/tests/test_comisiones.py::TestPorLaApi"
     - "apps/payments/tests/test_comisiones.py::TestCostoFijo"
+    - "apps/payments/tests/test_politica_de_atraso.py"
+    - "frontend/src/components/comisiones/Comisiones.test.tsx::en pausa: lo dice como alerta, cuánto pagar y que los pedidos en curso siguen"
     - "frontend/src/components/comisiones/Comisiones.test.tsx::anota un pago con el monto propuesto y la nota, y avisa"
     - "frontend/src/components/comisiones/Comisiones.test.tsx::muestra lo que debe y cómo se compone"
 
