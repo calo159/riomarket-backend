@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, Search, ShieldCheck, ShieldOff, Users } from 'lucide-react';
+import { KeyRound, Search, ShieldCheck, ShieldOff, UserPlus, Users } from 'lucide-react';
 import {
   asignarRolesUsuario,
   cambiarRolUsuario,
@@ -21,6 +21,7 @@ import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import type { Rol } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { NuevoUsuario } from './NuevoUsuario';
 
 const TAMANO = 15;
 const ROLES: Rol[] = ['comprador', 'vendedor', 'administrador'];
@@ -65,6 +66,7 @@ export function Usuarios() {
   const [estado, setEstado] = useState('');
   const [rolAsignado, setRolAsignado] = useState('');
   const [objetivo, setObjetivo] = useState<UsuarioAdmin | null>(null);
+  const [creando, setCreando] = useState(false);
 
   useEffect(() => {
     document.title = 'Usuarios · Administración · RioMarket';
@@ -105,6 +107,11 @@ export function Usuarios() {
       <EncabezadoPagina
         titulo="Usuarios"
         descripcion="Gestiona el rol base, los roles adicionales y el baneo de cada cuenta. Toda decisión queda auditada."
+        acciones={
+          <button type="button" className="btn-primary" onClick={() => setCreando(true)}>
+            <UserPlus className="h-4 w-4" aria-hidden="true" /> Nuevo usuario
+          </button>
+        }
       />
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -216,6 +223,8 @@ export function Usuarios() {
           <Paginacion pagina={pagina} total={usuarios.data.count} tamano={TAMANO} onCambiar={setPagina} cargando={usuarios.isFetching} />
         </>
       )}
+
+      <NuevoUsuario abierto={creando} onCerrar={() => setCreando(false)} onCreado={refrescar} />
 
       {actual && (
         <GestionarAcceso

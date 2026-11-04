@@ -13,8 +13,11 @@ para que sea verificable y para que la API no pueda saltársela. Reglas:
 """
 
 import logging
+import secrets
+import string
 from decimal import Decimal
 
+from django.contrib.auth import password_validation
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, Subquery, Sum
@@ -22,7 +25,7 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
-from apps.accounts.services import invalidar_sesiones
+from apps.accounts.services import crear_cuenta, invalidar_sesiones
 from apps.audit.services import registrar
 from apps.catalog.models import Producto, Puesto
 from apps.common.motivo import validar_motivo
@@ -115,6 +118,57 @@ def pedidos_activos_en_puestos(usuario: Usuario):
     return Pedido.objects.filter(id_puesto__id_vendedor=usuario).exclude(
         estado__in=Pedido.ESTADOS_FINALES
     )
+
+
+# Sin 0/O, 1/l/I: la contraseña temporal se lee y se dicta por teléfono sin confusiones.
+_LETRAS_TEMPORAL = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ"
+_DIGITOS_TEMPORAL = "23456789"
+LARGO_PASSWORD_TEMPORAL = 12
+
+
+def generar_password_temporal() -> str:
+    """Contraseña aleatoria (``secrets``), legible, con letras y números, válida para Django."""
+    alfabeto = _LETRAS_TEMPORAL + _DIGITOS_TEMPORAL
+    while True:
+        candidata = "".join(secrets.choice(alfabeto) for _ in range(LARGO_PASSWORD_TEMPORAL))
+        tiene_letra = any(c in string.ascii_letters for c in candidata)
+        tiene_digito = any(c in _DIGITOS_TEMPORAL for c in candidata)
+        if not (tiene_letra and tiene_digito):
+            continue
+        try:
+            password_validation.validate_password(candidata)
+        except ValidationError:  # pragma: no cover - 12 al azar casi nunca caen en una lista común
+            continue
+        return candidata
+
+
+def crear_usuario(
+    *, actor: Usuario, nombre: str, correo: str, celular: str, rol: str
+) -> tuple[Usuario, str]:
+    """El administrador crea una cuenta; devuelve ``(usuario, contraseña_temporal)``.
+
+    La contraseña la genera el sistema y se muestra una sola vez (no se guarda en claro ni en la
+    auditoría); la persona la cambia al entrar desde «Mi perfil». Un vendedor nace pendiente de
+    verificación, igual que al registrarse. Solo un administrador base crea administradores.
+    """
+    exigir_admin(actor)
+    if rol not in Usuario.Rol.values:
+        raise ValidationError({"rol": f"Rol inválido: {rol!r}."})
+    if rol == Usuario.Rol.ADMINISTRADOR and not actor.es_administrador:
+        raise PermissionDenied("Solo un administrador puede crear a otro administrador.")
+
+    password = generar_password_temporal()
+    usuario = crear_cuenta(
+        nombre=nombre, correo=correo, celular=celular, rol=rol, password=password
+    )
+    registrar(
+        usuario=actor,
+        accion="crear",
+        entidad="usuario",
+        id_entidad=usuario.pk,
+        detalle={"rol": rol, "origen": "administrador"},
+    )
+    return usuario, password
 
 
 def cambiar_rol(*, usuario: Usuario, nuevo_rol: str, motivo: str, actor: Usuario) -> Usuario:

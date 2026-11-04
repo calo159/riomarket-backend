@@ -284,6 +284,7 @@
     - "GET /api/auth/menu/"
     - "GET /api/admin/resumen/"
     - "GET /api/admin/usuarios/"
+    - "POST /api/admin/usuarios/"
     - "POST /api/admin/usuarios/{id}/cambiar-rol/"
     - "PUT /api/admin/usuarios/{id}/roles/"
     - "POST /api/admin/usuarios/{id}/suspender/"
@@ -669,3 +670,18 @@
     - "frontend/src/pages/MapaPuestos.test.tsx::la lista se usa con teclado: «Ver en el mapa» selecciona el puesto"
     - "frontend/src/components/Destacados.test.tsx::mantiene_el_carrusel_accesible_y_las_diapositivas_ocultas_para_lectores"
   evidencia: ["docs/rendimiento.md"]
+
+- id: RF-32
+  titulo: El administrador crea cuentas con una contraseña temporal generada por el sistema
+  actor: [administrador]
+  origen: Petición del dueño del proyecto
+  pantallas: ["/admin/usuarios"]
+  endpoints:
+    - "POST /api/admin/usuarios/"
+  pruebas:
+    - "apps/administration/tests/test_crear_usuario.py::TestCrearCuenta"
+    - "apps/administration/tests/test_crear_usuario.py::TestContraseñaTemporal"
+    - "apps/administration/tests/test_crear_usuario.py::TestValidaciones"
+    - "apps/administration/tests/test_crear_usuario.py::TestQuienPuede"
+    - "frontend/src/pages/admin/NuevoUsuario.test.tsx::muestra la contraseña temporal una vez, con el aviso de que no se vuelve a mostrar"
+    - "frontend/src/pages/admin/Usuarios.test.tsx::el botón «Nuevo usuario» abre el formulario para crear una cuenta"

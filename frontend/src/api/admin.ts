@@ -74,6 +74,23 @@ export async function listarUsuarios(filtros: FiltrosUsuario = {}): Promise<Pagi
   return data;
 }
 
+export interface DatosNuevoUsuario {
+  nombre: string;
+  correo: string;
+  celular: string;
+  rol: Rol;
+}
+
+/** La cuenta recién creada; `password_temporal` solo viene en esta respuesta y no se vuelve a mostrar. */
+export interface UsuarioCreado extends UsuarioAdmin {
+  password_temporal: string;
+}
+
+export async function crearUsuario(datos: DatosNuevoUsuario): Promise<UsuarioCreado> {
+  const { data } = await api.post<UsuarioCreado>('/admin/usuarios/', datos);
+  return data;
+}
+
 export async function cambiarRolUsuario(
   id: number,
   datos: { rol: Rol; motivo: string },

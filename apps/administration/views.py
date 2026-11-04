@@ -14,12 +14,14 @@ from rest_framework.views import APIView
 from apps.administration import rbac_services, services
 from apps.administration.serializers import (
     CambiarRolSerializer,
+    CrearUsuarioSerializer,
     RecursoSerializer,
     RolesUsuarioSerializer,
     RolRecursosSerializer,
     RolSerializer,
     SuspenderSerializer,
     UsuarioAdminSerializer,
+    UsuarioCreadoSerializer,
 )
 from apps.common.query import aplicar_ordenamiento, parametro_booleano
 from apps.rbac.models import Recurso
@@ -52,6 +54,21 @@ class UsuarioAdminViewSet(viewsets.ReadOnlyModelViewSet):
     @extend_schema(parameters=PARAMETROS_USUARIO)
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        request=CrearUsuarioSerializer,
+        responses={201: UsuarioCreadoSerializer},
+        description=(
+            "Crea una cuenta con una contraseña temporal que genera el sistema y que se devuelve "
+            "una sola vez en `password_temporal`. Solo un administrador crea administradores."
+        ),
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = CrearUsuarioSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        usuario, password = services.crear_usuario(actor=request.user, **serializer.validated_data)
+        datos = dict(self._serializar(usuario), password_temporal=password)
+        return Response(datos, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         params = self.request.query_params
