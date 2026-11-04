@@ -118,8 +118,10 @@ export function ModalPago({
           <option value="daviplata">Daviplata</option>
         </select>
       </Campo>
-      {tipoEntrega === 'retiro' && metodo === 'efectivo' && (
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Pagas en el puesto al recoger tu pedido.</p>
+      {metodo === 'efectivo' && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          {tipoEntrega === 'retiro' ? 'Pagas en el puesto al recoger tu pedido.' : 'Pagas en efectivo cuando te lo entreguen.'}
+        </p>
       )}
       <ErrorCampo mensaje={error} />
       <div className="mt-5 flex justify-end gap-2">

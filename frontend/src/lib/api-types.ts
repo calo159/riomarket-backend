@@ -915,7 +915,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Cierra la entrega. Domicilio: el comprador confirma que lo recibió (en_camino → entregado); el vendedor no puede. Retiro: desde listo_para_recoger puede el vendedor del puesto, el comprador o el administrador; si el pago es en efectivo y sigue pendiente, solo el vendedor o el administrador (cobran en mano y el pago pasa a aprobado). */
+        /** @description Cierra la entrega. Domicilio ya pagado: el comprador confirma que lo recibió (en_camino → entregado); el vendedor no puede. Domicilio contra entrega (efectivo por cobrar): entrega y cobra el vendedor del puesto o el administrador. Retiro: desde listo_para_recoger puede el vendedor del puesto, el comprador o el administrador; si el pago es en efectivo y sigue pendiente, solo el vendedor o el administrador (cobran en mano y el pago pasa a aprobado). */
         post: operations["orders_pedidos_entregar_create"];
         delete?: never;
         options?: never;

@@ -12,7 +12,7 @@ from apps.orders import services
 from apps.orders.models import Pedido
 from apps.payments import services as pagos_services
 from apps.payments.models import Pago
-from tests.factories import PedidoFactory, PuestoFactory, VendedorPendienteFactory
+from tests.factories import PagoFactory, PedidoFactory, PuestoFactory, VendedorPendienteFactory
 
 from .conftest import PEDIDOS
 from .test_services import datos_pedido
@@ -38,7 +38,7 @@ ESPERADO = {
         E.PENDIENTE: {E.CONFIRMADO, E.CANCELADO},
         E.CONFIRMADO: {E.EN_PREPARACION, E.CANCELADO},
         E.EN_PREPARACION: {E.EN_CAMINO, E.CANCELADO},
-        E.EN_CAMINO: {E.ENTREGADO},
+        E.EN_CAMINO: {E.ENTREGADO, E.CANCELADO},
         E.LISTO_PARA_RECOGER: set(),
         E.ENTREGADO: set(),
         E.CANCELADO: set(),
@@ -56,6 +56,9 @@ def test_tabla_de_transiciones(tipo, origen, destino, comprador, puesto):
     pedido = PedidoFactory(
         id_comprador=comprador, id_puesto=puesto, tipo_entrega=tipo, estado=origen
     )
+    if tipo == DOMICILIO and origen == E.EN_CAMINO and destino == E.CANCELADO:
+        # La tabla lo admite, pero solo con el efectivo por cobrar (ADR-021).
+        PagoFactory(id_pedido=pedido, metodo_pago=Pago.MetodoPago.EFECTIVO)
     if destino in ESPERADO[tipo][origen]:
         services._validar_transicion(pedido, destino)
     else:
@@ -226,7 +229,7 @@ class TestConfirmarSinPagoAprobado:
         with pytest.raises(DjangoValidationError):
             services.confirmar_pedido(pedido=pedido, usuario=vendedor)
 
-    def test_domicilio_efectivo_pendiente_no_se_confirma(
+    def test_domicilio_efectivo_pendiente_se_confirma_contra_entrega(
         self, comprador, vendedor, puesto_domicilio, producto_domicilio
     ):
         pedido = services.crear_pedido(
@@ -238,7 +241,26 @@ class TestConfirmarSinPagoAprobado:
                 direccion_entrega="Calle 15 #7-42",
             ),
         )
-        _pago(pedido, comprador, Pago.MetodoPago.EFECTIVO)
+        pago = _pago(pedido, comprador, Pago.MetodoPago.EFECTIVO)
+        services.confirmar_pedido(pedido=pedido, usuario=vendedor)
+        pago.refresh_from_db()
+        assert pedido.estado == E.CONFIRMADO
+        assert pago.estado == Pago.Estado.PENDIENTE  # se cobra al entregar
+
+    @pytest.mark.parametrize("metodo", [Pago.MetodoPago.NEQUI, Pago.MetodoPago.TARJETA])
+    def test_domicilio_otro_metodo_pendiente_no_se_confirma(
+        self, metodo, comprador, vendedor, puesto_domicilio, producto_domicilio
+    ):
+        pedido = services.crear_pedido(
+            usuario=comprador,
+            datos=datos_pedido(
+                puesto_domicilio,
+                [(producto_domicilio, 1)],
+                tipo_entrega=DOMICILIO,
+                direccion_entrega="Calle 15 #7-42",
+            ),
+        )
+        _pago(pedido, comprador, metodo)
         with pytest.raises(DjangoValidationError) as error:
             services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         assert "pago" in error.value.message_dict

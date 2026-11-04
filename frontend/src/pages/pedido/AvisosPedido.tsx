@@ -7,7 +7,7 @@ interface Props {
   datos: Pedido;
   esNuevo: boolean;
   esComprador: boolean;
-  /** Hay un pago en efectivo sin cobrar (en un retiro se paga en el puesto). */
+  /** Hay un pago en efectivo sin cobrar: en un retiro se paga en el puesto; en un domicilio, al recibir. */
   efectivoPendiente?: boolean;
   /** El servidor ofrece «cancelar» a quien mira el pedido (por defecto sí; así los avisos no cambian). */
   puedeCancelar?: boolean;
@@ -28,6 +28,7 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
   const reloj = useAhora();
   const esRetiro = datos.tipo_entrega === 'retiro';
   const pagaAlRecoger = esRetiro && efectivoPendiente;
+  const pagaAlRecibir = !esRetiro && efectivoPendiente;
   return (
     <>
       {esNuevo && datos.estado === 'pendiente' && (
@@ -35,12 +36,14 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
           <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             {datos.tiene_encargo
-              ? pagaAlRecoger
-                ? 'Tu encargo fue enviado. El puesto lo revisa y lo acepta o te avisa si no puede. Pagas al recoger.'
+              ? pagaAlRecoger || pagaAlRecibir
+                ? `Tu encargo fue enviado. El puesto lo revisa y lo acepta o te avisa si no puede. ${pagaAlRecibir ? 'Pagas al recibirlo.' : 'Pagas al recoger.'}`
                 : 'Tu encargo fue enviado. Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.'
               : pagaAlRecoger
                 ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
-                : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
+                : pagaAlRecibir
+                  ? 'Tu pedido fue creado. Pagas en efectivo cuando te lo entreguen.'
+                  : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
           </p>
         </div>
       )}
@@ -117,13 +120,21 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
           {!datos.no_recibido_en && esComprador && (
             <div className="flex items-start gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-200">
               <Package className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>El vendedor ya entregó tu pedido al domiciliario. Confírmalo cuando lo tengas.</p>
+              <p>
+                {pagaAlRecibir
+                  ? 'Tu pedido va en camino. Ten el efectivo listo: pagas cuando te lo entreguen.'
+                  : 'El vendedor ya entregó tu pedido al domiciliario. Confírmalo cuando lo tengas.'}
+              </p>
             </div>
           )}
           {!datos.no_recibido_en && !esComprador && (
             <div className="flex items-start gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
               <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>Esperando que el comprador confirme que recibió el pedido.</p>
+              <p>
+                {pagaAlRecibir
+                  ? 'Entrega el pedido y cobra el efectivo. Si el cliente no lo recibe, puedes cancelarlo y el stock vuelve.'
+                  : 'Esperando que el comprador confirme que recibió el pedido.'}
+              </p>
             </div>
           )}
         </div>

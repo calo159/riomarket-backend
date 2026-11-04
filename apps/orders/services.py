@@ -58,7 +58,9 @@ TRANSICIONES_POR_TIPO: dict[str, dict[str, tuple[str, ...]]] = {
         Pedido.Estado.PENDIENTE: (Pedido.Estado.CONFIRMADO, Pedido.Estado.CANCELADO),
         Pedido.Estado.CONFIRMADO: (Pedido.Estado.EN_PREPARACION, Pedido.Estado.CANCELADO),
         Pedido.Estado.EN_PREPARACION: (Pedido.Estado.EN_CAMINO, Pedido.Estado.CANCELADO),
-        Pedido.Estado.EN_CAMINO: (Pedido.Estado.ENTREGADO,),
+        # Cancelar en camino solo se permite si nadie ha pagado todavía (contra entrega): ver
+        # ``_validar_transicion``: el cliente no recibe y no hay dinero que devolver.
+        Pedido.Estado.EN_CAMINO: (Pedido.Estado.ENTREGADO, Pedido.Estado.CANCELADO),
         Pedido.Estado.LISTO_PARA_RECOGER: (),
         Pedido.Estado.ENTREGADO: (),
         Pedido.Estado.CANCELADO: (),
@@ -456,6 +458,19 @@ def _validar_transicion(pedido: Pedido, destino: str) -> None:
                 )
             }
         )
+    if (
+        destino == Pedido.Estado.CANCELADO
+        and pedido.estado == Pedido.Estado.EN_CAMINO
+        and not _cobro_en_mano_pendiente_en_bd(pedido)
+    ):
+        raise ValidationError(
+            {
+                "estado": (
+                    "Un pedido pagado que ya va en camino no se cancela desde aquí. "
+                    "El comprador puede reportar que no le llegó."
+                )
+            }
+        )
 
 
 def _transicionar(*, pedido: Pedido, usuario, destino: str) -> Pedido:
@@ -493,11 +508,7 @@ def _aplicar_transicion(
             pedido.motivo_cancelacion = actual.motivo_cancelacion
             _validar_transicion(pedido, destino)
         estado_anterior = pedido.estado
-        if (
-            destino == Pedido.Estado.ENTREGADO
-            and pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
-            and usuario is not None
-        ):
+        if destino == Pedido.Estado.ENTREGADO and usuario is not None:
             _cerrar_cobro_en_mano(pedido, usuario)
         if destino == Pedido.Estado.CANCELADO:
             _reponer_stock(pedido)
@@ -538,8 +549,7 @@ def _cobro_en_mano_pendiente_en_bd(pedido: Pedido) -> bool:
 
     pago = Pago.objects.filter(id_pedido=pedido).first()
     return (
-        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
-        and pago is not None
+        pago is not None
         and pago.metodo_pago == Pago.MetodoPago.EFECTIVO
         and pago.estado in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
     )
@@ -552,10 +562,10 @@ def _exigir_pago_para_confirmar(pedido: Pedido) -> None:
     con ``payments.confirmar_efectivo``; con pasarela, el pago se aprueba al
     simular (sandbox) o vía webhook.
 
-    Excepción (pagar al recoger, ADR-009): un RETIRO con pago en efectivo
-    registrado (pendiente o procesando) se puede confirmar sin cobro previo; el
-    vendedor cobra al entregar. Cualquier otro método, y todo domicilio, exige el
-    pago aprobado.
+    Excepción (pagar al recibir, ADR-009 y ADR-021): un pedido con pago en efectivo
+    registrado (pendiente o procesando) se puede confirmar sin cobro previo, sea retiro
+    o domicilio; el vendedor cobra al entregar. Cualquier otro método exige el pago
+    aprobado.
     """
 
     pago = Pago.objects.filter(id_pedido=pedido).first()
@@ -565,10 +575,9 @@ def _exigir_pago_para_confirmar(pedido: Pedido) -> None:
         )
     if pago.estado == Pago.Estado.APROBADO:
         return
-    if (
-        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
-        and pago.metodo_pago == Pago.MetodoPago.EFECTIVO
-        and pago.estado in (Pago.Estado.PENDIENTE, Pago.Estado.PROCESANDO)
+    if pago.metodo_pago == Pago.MetodoPago.EFECTIVO and pago.estado in (
+        Pago.Estado.PENDIENTE,
+        Pago.Estado.PROCESANDO,
     ):
         return
     raise ValidationError(
@@ -681,6 +690,12 @@ def acciones_disponibles(pedido: Pedido, usuario) -> list[str]:
             # El comprador no cierra su propio efectivo: se le oculta el botón (el servicio
             # igualmente lo rechazaría) y el vendedor entrega y cobra.
             continue
+        if (
+            destino == Pedido.Estado.CANCELADO
+            and pedido.estado == Pedido.Estado.EN_CAMINO
+            and not _cobro_en_mano_pendiente(pedido)
+        ):
+            continue  # ya pagado: no se cancela en camino (ver ``_validar_transicion``)
         acciones.append(accion)
     if (
         pedido.tipo_entrega == Pedido.TipoEntrega.DOMICILIO
@@ -717,14 +732,8 @@ def horas_de_extension(pedido: Pedido) -> int | None:
 
 
 def _cobro_en_mano_pendiente(pedido: Pedido) -> bool:
-    """Retiro con pago en efectivo aún sin cobrar (pendiente o procesando)."""
-    pago = getattr(pedido, "pago", None)
-    return (
-        pedido.tipo_entrega == Pedido.TipoEntrega.RETIRO
-        and pago is not None
-        and pago.metodo_pago == "efectivo"
-        and pago.estado in ("pendiente", "procesando")
-    )
+    """Pago en efectivo aún sin cobrar (retiro, o domicilio contra entrega)."""
+    return permissions.cobro_en_mano_pendiente(pedido)
 
 
 def _puede_cobrar(pedido: Pedido, usuario) -> bool:
