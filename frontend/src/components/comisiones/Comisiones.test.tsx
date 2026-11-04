@@ -22,6 +22,10 @@ function cuenta(extra: Partial<Comision> = {}): Comision {
     comision_pagada: '1000.00',
     comision_pendiente: '3000.00',
     ultimo_pago: '2026-10-30T15:00:00Z',
+    estado: 'al_dia',
+    limite_aviso: '50000.00',
+    limite_bloqueo: '150000.00',
+    pagar_para_reactivar: '0.00',
     ...extra,
   };
 }
@@ -49,14 +53,28 @@ describe('ComisionesAdmin', () => {
     expect(screen.getByText('Por cobrar en total').nextSibling).toHaveTextContent(/3\.500/);
   });
 
+  it('el estado de cada cuenta se ve en la tabla: al día, en aviso o en pausa', async () => {
+    api.listarComisiones.mockResolvedValue([
+      cuenta({ id_vendedor: 1, vendedor: 'Uno', estado: 'bloqueado' }),
+      cuenta({ id_vendedor: 2, vendedor: 'Dos', estado: 'aviso' }),
+      cuenta({ id_vendedor: 3, vendedor: 'Tres', estado: 'al_dia' }),
+    ]);
+    montar(<ComisionesAdmin />);
+
+    const estadoDe = async (nombre: string) => (await screen.findByText(nombre)).closest('tr')!;
+    expect(within(await estadoDe('Uno')).getByText('En pausa')).toBeInTheDocument();
+    expect(within(await estadoDe('Dos')).getByText('En aviso')).toBeInTheDocument();
+    expect(within(await estadoDe('Tres')).getByText('Al día')).toBeInTheDocument();
+  });
+
   it('un vendedor al día no tiene botón activo, y uno con saldo a favor lo indica', async () => {
     api.listarComisiones.mockResolvedValue([
-      cuenta({ vendedor: 'Al día', comision_pendiente: '0.00' }),
+      cuenta({ vendedor: 'Cuenta saldada', comision_pendiente: '0.00' }),
       cuenta({ id_vendedor: 9, vendedor: 'Con saldo', comision_pendiente: '-200.00' }),
     ]);
     montar(<ComisionesAdmin />);
 
-    await screen.findByText('Al día');
+    await screen.findByText('Cuenta saldada');
     for (const boton of screen.getAllByRole('button', { name: 'Anotar pago' })) expect(boton).toBeDisabled();
     expect(screen.getByText(/200.* a favor/)).toBeInTheDocument();
   });
@@ -127,6 +145,34 @@ describe('ComisionDelVendedor', () => {
 
     expect(await screen.findByText('Estás al día')).toBeInTheDocument();
     expect(screen.queryByText(/Entrégala a RioMarket/)).not.toBeInTheDocument();
+  });
+
+  it('al día no muestra ninguna advertencia', async () => {
+    montar(<ComisionDelVendedor />);
+
+    await screen.findByText(/Entrégala a RioMarket/);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/pausa/)).not.toBeInTheDocument();
+  });
+
+  it('en aviso: dice a cuánto se pausan los pedidos nuevos, sin alarmar', async () => {
+    api.listarComisiones.mockResolvedValue([cuenta({ estado: 'aviso', comision_pendiente: '60000.00' })]);
+    montar(<ComisionDelVendedor />);
+
+    expect(await screen.findByText(/Tu deuda va creciendo/)).toHaveTextContent(/150\.000.*pedidos nuevos/);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('en pausa: lo dice como alerta, cuánto pagar y que los pedidos en curso siguen', async () => {
+    api.listarComisiones.mockResolvedValue([
+      cuenta({ estado: 'bloqueado', comision_pendiente: '151000.00', pagar_para_reactivar: '1001.00' }),
+    ]);
+    montar(<ComisionDelVendedor />);
+
+    const alerta = await screen.findByRole('alert');
+    expect(alerta).toHaveTextContent('Tus puestos están en pausa para pedidos nuevos');
+    expect(alerta).toHaveTextContent(/Paga.*1\.001/);
+    expect(alerta).toHaveTextContent('Los pedidos que ya tienes en curso siguen igual');
   });
 
   it('no aparece si nunca cobró en efectivo', async () => {

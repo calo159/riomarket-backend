@@ -30,6 +30,7 @@ from apps.notifications import services as notif
 from apps.notifications.services import formatear_cuando
 from apps.orders import permissions
 from apps.orders.models import ItemPedido, Pedido
+from apps.payments import comisiones
 from apps.payments import services as pagos_services
 from apps.payments.models import Pago
 from apps.promotions import services as promos_services
@@ -108,6 +109,11 @@ def crear_pedido(*, usuario, datos: dict) -> Pedido:
     referencia = (datos.get("referencia_entrega") or "").strip()
     if puesto.estado != Puesto.Estado.ACTIVO:
         raise ValidationError({"id_puesto": "Ese puesto no está activo."})
+    if comisiones.vendedor_bloqueado(puesto.id_vendedor_id):
+        # Sin decir por qué: al comprador no le toca saber de la cuenta del vendedor (ADR-020).
+        raise ValidationError(
+            {"id_puesto": "Este puesto no está recibiendo pedidos nuevos por ahora."}
+        )
     if tipo_entrega not in Pedido.TipoEntrega.values:
         raise ValidationError({"tipo_entrega": f"Tipo de entrega inválido: {tipo_entrega}."})
     direccion_guardada = _resolver_direccion(usuario, datos.get("id_direccion"))

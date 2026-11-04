@@ -111,6 +111,12 @@ El efectivo se cobra en el puesto, así que el vendedor se queda con todo y **le
 lo que ya pagó`. El vendedor entrega la comisión (Nequi, transferencia o en mano) y el administrador **anota** cada
 pago en `/admin/pagos`; el vendedor ve su saldo en «Ventas». No hay cobros automáticos.
 
+Si la deuda crece, la cuenta pasa por tres estados ([ADR-020](ADR-020-politica-de-atraso.md)): **al día**; **aviso** al
+llegar a $50.000 (el vendedor lo ve y recibe una notificación); y **en pausa** al llegar a $150.000, cuando sus puestos
+dejan de recibir pedidos *nuevos* hasta que pague (los que ya estaban en marcha siguen). Al anotarse el pago que baja la
+deuda del límite, se reactiva solo. Los límites se cambian en `COMISION_LIMITE_AVISO` y `COMISION_LIMITE_BLOQUEO`
+(`0` apaga cada uno).
+
 ## 9. El panel de ventas
 
 Una **venta** es un pago aprobado. El vendedor ve ventas brutas (solo mercancía), ingreso neto, cuánto del neto son
@@ -119,10 +125,10 @@ envíos, ticket promedio, ventas por día, lo que más vende y sus pedidos por e
 
 ## Lo que el negocio todavía no resuelve
 
-- **Cobrar la comisión del efectivo, solo a medias.** Desde [ADR-019](ADR-019-comision-del-efectivo.md) hay una cuenta
-  por vendedor (lo generado, lo pagado y lo que debe) y el administrador anota cada pago que recibe. Pero el cobro
-  sigue siendo manual y **no hay política** para quien se atrasa (¿cuánta deuda? ¿cuántos días? ¿se suspende el
-  puesto?): eso debe decidirlo el dueño.
+- **Cobrar la comisión del efectivo, solo a medias.** Hay una cuenta por vendedor y el administrador anota cada pago
+  ([ADR-019](ADR-019-comision-del-efectivo.md)), y quien se atrasa recibe un aviso y luego una pausa de pedidos nuevos
+  ([ADR-020](ADR-020-politica-de-atraso.md)). Pero el cobro sigue siendo manual, y los límites ($50.000 y $150.000) son
+  valores razonables que el dueño debe confirmar. Tampoco se mide cuántos días lleva la deuda.
 - **Pago contra entrega a domicilio.** A domicilio se paga por adelantado y no hay pasarela real, así que en
   producción ese camino solo funciona en modo de prueba. Es la forma natural de pagar en la ciudad.
 - **Horarios del puesto.** Son texto libre: se puede pedir fuera de horario (el plazo de 24 h lo amortigua).

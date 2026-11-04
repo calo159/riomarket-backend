@@ -10,6 +10,18 @@ import { CargandoBloque, EstadoError } from '../ui/Estado';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
 
+const ESTADOS: Record<Comision['estado'], { texto: string; clase: string }> = {
+  al_dia: { texto: 'Al día', clase: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
+  aviso: { texto: 'En aviso', clase: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
+  bloqueado: { texto: 'En pausa', clase: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' },
+};
+
+/** «En pausa» = sus puestos no reciben pedidos nuevos hasta que pague (ADR-020). */
+function EstadoCuenta({ estado }: { estado: Comision['estado'] }) {
+  const { texto, clase } = ESTADOS[estado];
+  return <span className={`badge ${clase}`}>{texto}</span>;
+}
+
 /**
  * Comisión por cobrar (ADR-019). El efectivo se cobra en el puesto, así que cada vendedor le debe su comisión
  * a RioMarket; el administrador anota aquí cada pago que recibe (Nequi, transferencia o en mano).
@@ -90,6 +102,7 @@ export function ComisionesAdmin() {
                 <th className="p-3 text-right">Comisión generada</th>
                 <th className="p-3 text-right">Ya pagó</th>
                 <th className="p-3 text-right">Debe</th>
+                <th className="p-3">Estado</th>
                 <th className="p-3">Último pago</th>
                 <th className="p-3 text-right">
                   <span className="sr-only">Acciones</span>
@@ -111,6 +124,9 @@ export function ComisionesAdmin() {
                       ) : (
                         formatearMoneda(debe)
                       )}
+                    </td>
+                    <td className="p-3">
+                      <EstadoCuenta estado={fila.estado} />
                     </td>
                     <td className="p-3 text-slate-500 dark:text-slate-400">{fila.ultimo_pago ? formatearFecha(fila.ultimo_pago) : '—'}</td>
                     <td className="p-3 text-right">

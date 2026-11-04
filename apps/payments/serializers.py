@@ -95,6 +95,19 @@ class ComisionSerializer(serializers.Serializer):
         help_text="Lo que el vendedor todavía debe. Negativo = saldo a favor.",
     )
     ultimo_pago = serializers.DateTimeField(read_only=True, allow_null=True)
+    estado = serializers.ChoiceField(
+        choices=["al_dia", "aviso", "bloqueado"],
+        read_only=True,
+        help_text="bloqueado: sus puestos no reciben pedidos nuevos hasta que pague (ADR-020).",
+    )
+    limite_aviso = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    limite_bloqueo = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    pagar_para_reactivar = serializers.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        read_only=True,
+        help_text="Cuánto falta pagar para volver a recibir pedidos (0 si no está bloqueado).",
+    )
 
 
 class LiquidacionSerializer(serializers.ModelSerializer):

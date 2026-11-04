@@ -25,6 +25,7 @@ from apps.audit import services as audit
 from apps.common import pricing
 from apps.common.query import parametro_booleano, parametro_entero
 from apps.orders.models import Pedido
+from apps.payments import comisiones
 from apps.payments.models import Pago
 from apps.rbac.acceso import tiene_recurso
 
@@ -200,6 +201,8 @@ def _aplicar_estado(
                 vence_en=None, aviso_vencimiento_en=None
             )
     _auditar_pago(usuario, bloqueado, _ACCION_POR_ESTADO.get(destino, destino))
+    if destino == Pago.Estado.APROBADO:
+        comisiones.avisar_si_empeora(bloqueado)  # ADR-020: avisa al cruzar un límite de deuda
     return bloqueado
 
 
