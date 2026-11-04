@@ -32,7 +32,7 @@ RioMarket conecta vendedores de puestos con compradores locales sin obligarlos a
 | Verificación | Listo | Cédula cifrada, foto privada y aprobación o rechazo por el administrador |
 | Reseñas, cupones y avisos | Listo | Reseñas solo de pedidos entregados; cupones por puesto; correo opcional |
 | Paneles | Listo | Comprador, vendedor y administrador en una sola SPA |
-| Administración y RBAC | Listo | Usuarios (rol base, roles adicionales y baneo), roles, recursos, menú dinámico por recursos, moderación de puestos/productos, categorías, reseñas y resumen, todo con auditoría |
+| Administración y RBAC | Listo | Usuarios (rol base, roles adicionales y baneo), roles, recursos, menú dinámico por recursos (editable desde la propia barra con «Editar menú»), moderación de puestos/productos, categorías, reseñas y resumen, todo con auditoría |
 | Contacto por WhatsApp | Listo | Botón «Escribir por WhatsApp» en el puesto y el producto; **apagado por defecto**: el vendedor lo activa y solo se publica con puesto activo y vendedor verificado ([ADR-010](docs/ADR-010-contacto-mapa-y-pwa.md)) |
 | Mapa de puestos | Listo | `/mapa` con Leaflet y OpenStreetMap (chunk diferido), mini-mapa y «Cómo llegar» en cada puesto |
 | Volver a pedir | Listo | Repite un pedido entregado o cancelado con el stock y los productos actuales |

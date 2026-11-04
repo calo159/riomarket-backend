@@ -50,6 +50,9 @@ const ICONOS: Record<string, LucideIcon> = {
   Users,
 };
 
+/** Iconos que el menú sabe dibujar: los que se pueden elegir al editar un recurso. */
+export const NOMBRES_ICONOS: string[] = Object.keys(ICONOS).sort();
+
 export function iconoDe(nombre: string | null | undefined): LucideIcon {
   return (nombre && ICONOS[nombre]) || Circle;
 }

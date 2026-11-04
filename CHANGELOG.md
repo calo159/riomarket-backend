@@ -11,6 +11,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **El administrador edita el menú desde la propia barra.** Quien tiene el recurso `admin.recursos` ve en la barra
+  lateral del panel el botón **«Editar menú»**: al activarlo, cada opción lleva un lápiz que abre una ventana para cambiar
+  su **nombre, icono, grupo y orden**, y la barra se actualiza en el acto, sin ir a `/admin/recursos`. Solo cambia cómo se
+  ve la opción: la ruta, el ámbito y los permisos no se tocan desde ahí, así que no se puede dejar a nadie sin acceso. El
+  icono se elige de una lista (con vista previa) en lugar de escribir su nombre, y el grupo sugiere los que ya existen. El
+  formulario es el mismo de `/admin/recursos`, ahora compartido (`components/admin/FormularioRecurso`).
 - **Pago contra entrega a domicilio ([ADR-021](docs/ADR-021-pago-contra-entrega.md)).** El domicilio exigía el pago
   aprobado antes de que el puesto aceptara, algo que sin pasarela real solo se podía simular, y no es como se compra en
   Riohacha. Ahora el domicilio se paga **en efectivo cuando llega**: el checkout registra el pago en efectivo, el puesto

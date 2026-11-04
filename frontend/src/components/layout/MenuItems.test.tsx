@@ -70,6 +70,26 @@ describe('MenuItems', () => {
     expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
+  it('con onEditar cada opción lleva su lápiz con nombre propio; sin él no hay ninguno', async () => {
+    const editar = vi.fn();
+    const items = itemsDe(MENU_ADMIN, 'panel_admin');
+    const { rerender } = render(
+      <MemoryRouter>
+        <MenuPanel items={items} badges={{}} onEditar={editar} />
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByRole('button', { name: /^Editar «/ })).toHaveLength(items.length);
+    await userEvent.click(screen.getByRole('button', { name: 'Editar «Usuarios»' }));
+    expect(editar).toHaveBeenCalledWith(expect.objectContaining({ codigo: 'admin.usuarios' }));
+
+    rerender(
+      <MemoryRouter>
+        <MenuPanel items={items} badges={{}} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('button', { name: /^Editar «/ })).not.toBeInTheDocument();
+  });
+
   it('sin dato de badge no pinta nada', () => {
     render(
       <MemoryRouter>
