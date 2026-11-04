@@ -84,7 +84,8 @@ def crear_pago(*, pedido: Pedido, usuario: Usuario, datos: dict) -> Pago:
 
     # El pedido ya congeló la tarifa (fuente única en crear_pedido): se copia.
     tarifa = pedido.tarifa_domicilio
-    comision = pricing.comision_plataforma(pedido.subtotal)
+    # La comisión es sobre lo cobrado por la mercancía, ya sin el cupón (ADR-018).
+    comision = pricing.comision_plataforma(pedido.subtotal, pedido.descuento_cupon)
     total = pedido.subtotal + tarifa - pedido.descuento_cupon
 
     with transaction.atomic():
@@ -388,13 +389,16 @@ def visibles_pagos(usuario: Usuario, qs: QuerySet[Pago], params: dict) -> QueryS
 
 
 def expresion_neto_vendedor() -> Greatest:
-    """Neto del vendedor por pago, calculado en la base: subtotal - comisión - descuento (mín. 0).
+    """Neto del vendedor por pago, en la base: subtotal - descuento - comisión (+ domicilio).
 
-    Es la misma regla que ``Pago.neto_vendedor``. ``resumen_ingresos`` y el panel de ventas
-    (``estadisticas.ventas``) la comparten para que sus totales nunca se separen.
+    Es la misma regla que ``Pago.neto_vendedor`` (ADR-018; mínimo 0). ``resumen_ingresos`` y el
+    panel de ventas (``estadisticas.ventas``) la comparten para que sus totales nunca se separen.
     """
+    neto = F("subtotal_pedido") - F("descuento_aplicado") - F("comision_plataforma")
+    if pricing.tarifa_para_vendedor():
+        neto = neto + F("tarifa_domicilio_aplicada")
     return Greatest(
-        F("subtotal_pedido") - F("comision_plataforma") - F("descuento_aplicado"),
+        neto,
         Value(Decimal("0.00")),
         output_field=DecimalField(max_digits=12, decimal_places=2),
     )
@@ -404,8 +408,8 @@ def resumen_ingresos(usuario: Usuario) -> dict:
     """Pagos aprobados visibles para el usuario y lo que recibe el vendedor (neto) en total.
 
     Solo vendedores y administradores: el neto no tiene sentido para el comprador. Calcula en
-    la base de datos lo mismo que ``Pago.neto_vendedor`` (subtotal - comisión - descuento, sin
-    bajar de 0) y sin el tope de paginación del listado.
+    la base de datos lo mismo que ``Pago.neto_vendedor`` (subtotal - descuento - comisión, más el
+    domicilio si es del puesto; sin bajar de 0) y sin el tope de paginación del listado.
     """
     if not (usuario and usuario.is_active and (usuario.es_administrador or usuario.es_vendedor)):
         raise PermissionDenied("Solo vendedores y administradores ven el resumen de ingresos.")

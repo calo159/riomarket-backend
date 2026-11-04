@@ -59,7 +59,8 @@ class TestCrearPago:
         assert pago.tarifa_domicilio_aplicada == Decimal("3000.00")
         assert pago.comision_plataforma == Decimal("2000.00")
         assert pago.total_cobrado == Decimal("23000.00")
-        assert pago.neto_vendedor == Decimal("18000.00")
+        # 20.000 de mercancía - 2.000 de comisión + 3.000 de domicilio que reparte el puesto.
+        assert pago.neto_vendedor == Decimal("21000.00")
 
     def test_metodo_por_defecto_simulado_en_sandbox(self, comprador, pedido):
         pago = pagos_services.crear_pago(pedido=pedido, usuario=comprador, datos={})

@@ -78,9 +78,9 @@ export class SesionApi {
     return pedido;
   }
 
-  /** Cancela un pedido para devolver el stock; si ya no se puede cancelar, no hace nada. */
-  async cancelarPedido(id: number): Promise<void> {
-    await this.enviar(`/api/orders/pedidos/${id}/cancelar/`);
+  /** Cancela un pedido para devolver el stock. Devuelve `false` si esta sesión no puede (o ya no se puede). */
+  async cancelarPedido(id: number): Promise<boolean> {
+    return (await this.enviar(`/api/orders/pedidos/${id}/cancelar/`)).ok();
   }
 
   /** Devuelve al inventario unidades que una entrega ya consumió (la vendedora sube el stock). */

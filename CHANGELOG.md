@@ -11,6 +11,21 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Reglas de dinero y de cancelación revisadas ([ADR-018](docs/ADR-018-reglas-de-dinero-y-cancelacion.md)).** Una
+  revisión de la lógica de negocio ([resumen](docs/logica-de-negocio.md)) encontró tres reglas que no tenían sentido
+  para el negocio y que ninguna prueba cuestionaba:
+  - **La comisión se calcula sobre lo que el cliente paga por la mercancía** (`subtotal − cupón`), no sobre el
+    subtotal bruto. Antes, con un cupón del 50 % la plataforma cobraba en realidad un 16 % de lo que cobraba el
+    puesto, y con uno del 100 % registraba comisión por un pedido de $0.
+  - **La tarifa de domicilio es del puesto que reparte** (antes no era de nadie: el comprador la pagaba, el vendedor
+    no la recibía y la plataforma se la quedaba además de su comisión). El panel de ventas muestra cuánto del ingreso
+    neto son envíos. Se controla con `DOMICILIO_TARIFA_PARA_VENDEDOR` (por defecto `true`).
+  - **El comprador cancela solo mientras el pedido está pendiente.** Antes podía cancelar con el producto ya
+    cocinado o el encargo ya empezado, y recuperar todo su dinero. Ahora, tras aceptarlo el puesto, cancela el
+    puesto o el administrador; el comprador ve un aviso que le explica qué hacer.
+  - Los pagos ya registrados conservan su comisión; lo que cambia retroactivamente es que el neto de un domicilio
+    anterior incluye su tarifa. Con la pasarela real habría que revisarlo con contabilidad antes de desplegar.
+
 - **Arquitectura en capas ([ADR-017](docs/ADR-017-arquitectura-en-capas.md)).** Las apps del backend y las
   carpetas del frontend forman capas y solo dependen hacia abajo. Antes `common` (el núcleo) y `rbac` dependían de
   casi todo el dominio, había ciclos entre apps y 35 imports escondidos dentro de funciones para esquivarlos; ahora

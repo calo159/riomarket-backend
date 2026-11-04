@@ -30,7 +30,7 @@ function respuesta(extra: Record<string, unknown> = {}, dias = 30) {
     hasta: '2026-10-31',
     zona_horaria: 'America/Bogota',
     puesto: null,
-    totales: { pedidos_pagados: 2, unidades: 5, ventas_brutas: '30000.00', ingresos_netos: '28500.00', ticket_promedio: '15000.00' },
+    totales: { pedidos_pagados: 2, unidades: 5, ventas_brutas: '30000.00', ingresos_netos: '28500.00', envios_incluidos: '0.00', ticket_promedio: '15000.00' },
     por_dia,
     top_productos: [{ id_producto: 1, nombre: 'Enrollado de dulce', unidades: 5, ventas_brutas: '30000.00', puesto_nombre: null }],
     pedidos_por_estado: { pendiente: 1, confirmado: 0, en_preparacion: 0, en_camino: 0, listo_para_recoger: 0, entregado: 2, cancelado: 1 },
@@ -68,10 +68,27 @@ describe('Ventas', () => {
     expect(mocks.obtenerVentas).toHaveBeenCalledWith({ dias: 30, puesto: null });
   });
 
+  it('aclara cuánto del ingreso neto son envíos que repartió el puesto', async () => {
+    mocks.obtenerVentas.mockResolvedValue(
+      respuesta({
+        totales: { pedidos_pagados: 2, unidades: 5, ventas_brutas: '30000.00', ingresos_netos: '34500.00', envios_incluidos: '6000.00', ticket_promedio: '15000.00' },
+      }),
+    );
+    renderizar();
+    expect(await screen.findByText(/Incluye .*6\.000.* de envíos/)).toBeInTheDocument();
+  });
+
+  it('sin envíos no menciona el domicilio en el ingreso neto', async () => {
+    mocks.obtenerVentas.mockResolvedValue(respuesta());
+    renderizar();
+    await screen.findByText('Ingreso neto');
+    expect(screen.queryByText(/de envíos/)).not.toBeInTheDocument();
+  });
+
   it('estado vacío sin ventas', async () => {
     mocks.obtenerVentas.mockResolvedValue(
       respuesta({
-        totales: { pedidos_pagados: 0, unidades: 0, ventas_brutas: '0.00', ingresos_netos: '0.00', ticket_promedio: '0.00' },
+        totales: { pedidos_pagados: 0, unidades: 0, ventas_brutas: '0.00', ingresos_netos: '0.00', envios_incluidos: '0.00', ticket_promedio: '0.00' },
         top_productos: [],
         cancelados_por_plazo: 0,
       }),

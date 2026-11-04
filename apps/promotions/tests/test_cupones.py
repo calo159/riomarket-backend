@@ -308,13 +308,15 @@ class TestPedidosIntegracion:
         assert pago.descuento_aplicado == Decimal("2000.00")
         assert pago.total_cobrado == Decimal("3000.00")
 
-    def test_neto_vendedor_resta_descuento(self, comprador, producto, cupon):
-        from apps.common import pricing as pricing_mod
+    def test_la_comision_se_cobra_sobre_lo_pagado_no_sobre_el_subtotal(
+        self, comprador, producto, cupon, settings
+    ):
         from apps.orders import services as orders_services
         from apps.orders.models import Pedido
         from apps.payments import services as pagos_services
         from apps.payments.models import Pago
 
+        settings.PLATFORM_COMMISSION_PERCENTAGE = Decimal("10.00")
         pedido = orders_services.crear_pedido(
             usuario=comprador,
             datos={
@@ -327,8 +329,40 @@ class TestPedidosIntegracion:
         pago = pagos_services.crear_pago(
             pedido=pedido, usuario=comprador, datos={"metodo_pago": Pago.MetodoPago.SIMULADO}
         )
-        comision = pricing_mod.comision_plataforma(Decimal("5000.00"))
-        assert pago.neto_vendedor == Decimal("5000.00") - comision - Decimal("2000.00")
+        # 5.000 de subtotal - 2.000 de cupón = 3.000 por la mercancía -> 10 % = 300 (no 500).
+        assert pago.comision_plataforma == Decimal("300.00")
+        assert pago.neto_vendedor == Decimal("2700.00")  # 3.000 cobrados - 300 de comisión
+
+    def test_un_cupon_del_100_por_ciento_no_deja_comision_ni_deuda(
+        self, comprador, producto, puesto, settings
+    ):
+        from apps.orders import services as orders_services
+        from apps.orders.models import Pedido
+        from apps.payments import services as pagos_services
+        from apps.payments.models import Pago
+
+        settings.PLATFORM_COMMISSION_PERCENTAGE = Decimal("10.00")
+        gratis = CuponFactory(
+            id_puesto=puesto,
+            tipo_descuento="porcentaje",
+            valor=Decimal("100.00"),
+            tope_descuento=None,
+        )
+        pedido = orders_services.crear_pedido(
+            usuario=comprador,
+            datos={
+                "id_puesto": producto.id_puesto,
+                "tipo_entrega": Pedido.TipoEntrega.RETIRO,
+                "codigo_cupon": gratis.codigo,
+                "items": [{"id_producto": producto, "cantidad": 1}],
+            },
+        )
+        pago = pagos_services.crear_pago(
+            pedido=pedido, usuario=comprador, datos={"metodo_pago": Pago.MetodoPago.SIMULADO}
+        )
+        assert pago.total_cobrado == Decimal("0.00")
+        assert pago.comision_plataforma == Decimal("0.00")  # antes: 500 por un pedido de $0
+        assert pago.neto_vendedor == Decimal("0.00")
 
 
 @pytest.mark.django_db

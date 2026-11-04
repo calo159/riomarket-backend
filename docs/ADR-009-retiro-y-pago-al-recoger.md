@@ -37,6 +37,10 @@ el vendedor entregue y cobre.
 
 ### Quién ejecuta cada acción
 
+> **Actualización ([ADR-018](ADR-018-reglas-de-dinero-y-cancelacion.md)):** el comprador solo cancela
+> mientras el pedido está `pendiente`. Después de que el puesto lo acepta, cancela el puesto o el
+> administrador.
+
 | Acción (endpoint) | Comprador | Vendedor del puesto (verificado) | Administrador |
 | --- | --- | --- | --- |
 | `listo-para-recoger` | No | Sí (retiro) | Sí |

@@ -2691,6 +2691,8 @@ export interface components {
             /** @description Decimal con 2 cifras */
             ingresos_netos: string;
             /** @description Decimal con 2 cifras */
+            envios_incluidos: string;
+            /** @description Decimal con 2 cifras */
             ticket_promedio: string;
         };
         /** @description Fila de la cola de revisión: identifica al vendedor sin datos sensibles. */

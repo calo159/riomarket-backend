@@ -17,7 +17,9 @@ asumían tarifa `0.00` y pagos la leían de `settings`).
    copian del pedido ya congelado, nunca del cliente.
 
 2. **La comisión se descuenta al vendedor**:
-   `neto_vendedor = subtotal - comision_plataforma`. El comprador paga
+   `neto_vendedor = subtotal - comision_plataforma`. *(Actualizado por
+   [ADR-018](ADR-018-reglas-de-dinero-y-cancelacion.md): la comisión se calcula sobre
+   `subtotal - descuento` y el neto suma la tarifa de domicilio, que es del puesto que reparte.)* El comprador paga
    `subtotal + tarifa_domicilio`; la comisión **no** se le suma. La propiedad
    `Pago.neto_vendedor` expone el cálculo.
 

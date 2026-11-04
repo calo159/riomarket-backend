@@ -305,6 +305,9 @@ LOGGING = construir_logging(LOG_FORMAT, debug=DEBUG, nivel=env("LOG_LEVEL", defa
 # Montos como Decimal (nunca float: 0.1+0.2 != 0.3). Se leen como texto.
 DOMICILIO_TARIFA_BASE = Decimal(env("DOMICILIO_TARIFA_BASE", default="0.00"))
 PLATFORM_COMMISSION_PERCENTAGE = Decimal(env("PLATFORM_COMMISSION_PERCENTAGE", default="0.00"))
+# El puesto reparte los pedidos a domicilio: la tarifa que paga el comprador es suya (ADR-018).
+# Con False la plataforma se la queda.
+DOMICILIO_TARIFA_PARA_VENDEDOR = env.bool("DOMICILIO_TARIFA_PARA_VENDEDOR", default=True)
 # La pasarela sandbox (simular pagos) SOLO se permite en desarrollo/tests.
 PAYMENTS_SANDBOX_ENABLED = env.bool("PAYMENTS_SANDBOX_ENABLED", default=DEBUG)
 # Secreto para verificar la firma de los webhooks de la pasarela real.

@@ -118,7 +118,8 @@ Sin esas variables la pantalla funciona, pero ningún correo sale. Las respuesta
 
 ## Montos de la demo
 
-- Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`) y comisión: 8 %
+- Domicilio: 3000.00 (`DOMICILIO_TARIFA_BASE`; es del puesto que reparte, ver `DOMICILIO_TARIFA_PARA_VENDEDOR`)
+  y comisión: 8 %
   (`PLATFORM_COMMISSION_PERCENTAGE`). Se pueden cambiar en Environment.
 - Si cambias la tarifa, actualiza también `VITE_TARIFA_DOMICILIO` en
   `Dockerfile.render` (vista previa del checkout) y redeploy: el monto final

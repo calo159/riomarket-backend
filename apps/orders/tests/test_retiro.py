@@ -391,7 +391,8 @@ class TestCancelarRetiro:
         services.confirmar_pedido(pedido=pedido, usuario=vendedor)
         services.iniciar_preparacion(pedido=pedido, usuario=vendedor)
         services.marcar_listo_para_recoger(pedido=pedido, usuario=vendedor)
-        services.cancelar_pedido(pedido=pedido, usuario=comprador)
+        # Ya aceptado: lo cancela el puesto (el comprador se lo pide); el pago se reembolsa igual.
+        services.cancelar_pedido(pedido=pedido, usuario=vendedor)
         pago.refresh_from_db()
         assert pedido.estado == E.CANCELADO
         assert pago.estado == Pago.Estado.REEMBOLSADO
@@ -434,9 +435,7 @@ class TestSerializacionYAvisos:
             "listo-para-recoger",
             "cancelar",
         ]
-        assert cliente_comprador.get(f"{PEDIDOS}{pedido.pk}/").data["acciones_permitidas"] == [
-            "cancelar"
-        ]
+        assert cliente_comprador.get(f"{PEDIDOS}{pedido.pk}/").data["acciones_permitidas"] == []
 
     def test_filtro_por_estado_acepta_listo_para_recoger(self, cliente_vendedor, comprador, puesto):
         listo = _retiro(comprador, puesto, E.LISTO_PARA_RECOGER)

@@ -82,10 +82,16 @@ class TestRelaciones:
         otro = UsuarioFactory(rol=Usuario.Rol.COMPRADOR)
         propio = pedido_en(Pedido.Estado.EN_CAMINO, comprador, puesto, tipo_entrega=DOMICILIO)
         ajeno = pedido_en(Pedido.Estado.EN_CAMINO, otro, puesto, tipo_entrega=DOMICILIO)
-        for accion in (Accion.EDITAR, Accion.ENTREGAR, Accion.NO_RECIBIDO, Accion.CANCELAR):
+        for accion in (Accion.EDITAR, Accion.ENTREGAR, Accion.NO_RECIBIDO):
             assert permissions.puede(comprador, accion, propio)
             assert not permissions.puede(comprador, accion, ajeno)
             assert not permissions.puede(otro, accion, propio)
+        # Cancelar es del comprador solo mientras el pedido está pendiente (ADR-018).
+        propio_pendiente = pedido_en(Pedido.Estado.PENDIENTE, comprador, puesto)
+        ajeno_pendiente = pedido_en(Pedido.Estado.PENDIENTE, otro, puesto)
+        assert permissions.puede(comprador, Accion.CANCELAR, propio_pendiente)
+        assert not permissions.puede(comprador, Accion.CANCELAR, ajeno_pendiente)
+        assert not permissions.puede(otro, Accion.CANCELAR, propio_pendiente)
 
     def test_vendedor_solo_su_puesto(self, vendedor, comprador, puesto):
         otro_vendedor = UsuarioFactory(rol=Usuario.Rol.VENDEDOR)
@@ -120,14 +126,15 @@ class TestAccionesDisponibles:
                 Usuario.Rol.ADMINISTRADOR,
                 ["editar", "confirmar", "cancelar", "pagar"],
             ),
-            (Pedido.Estado.CONFIRMADO, Usuario.Rol.COMPRADOR, ["cancelar"]),
+            # El puesto ya aceptó: el comprador no cancela solo, se lo pide al puesto (ADR-018).
+            (Pedido.Estado.CONFIRMADO, Usuario.Rol.COMPRADOR, []),
             (Pedido.Estado.CONFIRMADO, Usuario.Rol.VENDEDOR, ["en-preparacion", "cancelar"]),
             (
                 Pedido.Estado.CONFIRMADO,
                 Usuario.Rol.ADMINISTRADOR,
                 ["en-preparacion", "cancelar"],
             ),
-            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.COMPRADOR, ["cancelar"]),
+            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.COMPRADOR, []),
             (Pedido.Estado.EN_PREPARACION, Usuario.Rol.VENDEDOR, ["enviar", "cancelar"]),
             (Pedido.Estado.EN_CAMINO, Usuario.Rol.COMPRADOR, ["entregar", "no-recibido"]),
             (Pedido.Estado.EN_CAMINO, Usuario.Rol.VENDEDOR, []),
@@ -153,7 +160,7 @@ class TestAccionesDisponibles:
             (Pedido.Estado.PENDIENTE, Usuario.Rol.COMPRADOR, ["editar", "cancelar", "pagar"]),
             (Pedido.Estado.PENDIENTE, Usuario.Rol.VENDEDOR, ["confirmar", "cancelar"]),
             (Pedido.Estado.CONFIRMADO, Usuario.Rol.VENDEDOR, ["en-preparacion", "cancelar"]),
-            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.COMPRADOR, ["cancelar"]),
+            (Pedido.Estado.EN_PREPARACION, Usuario.Rol.COMPRADOR, []),
             (
                 Pedido.Estado.EN_PREPARACION,
                 Usuario.Rol.VENDEDOR,
@@ -169,7 +176,7 @@ class TestAccionesDisponibles:
             (
                 Pedido.Estado.LISTO_PARA_RECOGER,
                 Usuario.Rol.COMPRADOR,
-                ["entregar", "cancelar"],
+                ["entregar"],
             ),
             (
                 Pedido.Estado.LISTO_PARA_RECOGER,
