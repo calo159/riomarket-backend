@@ -4,6 +4,7 @@ from drf_spectacular.utils import OpenApiTypes, extend_schema_field
 from rest_framework import serializers
 
 from apps.accounts.models import Usuario
+from apps.accounts.serializers import CELULAR_PATRON
 from apps.administration import services
 from apps.common.motivo import MOTIVO_MAX, MOTIVO_MIN
 from apps.rbac.models import Recurso, Rol
@@ -80,6 +81,20 @@ class UsuarioAdminSerializer(serializers.ModelSerializer):
         return services.acciones_permitidas(obj, request.user, cache["recursos"], cache["admins"])
 
 
+class CrearUsuarioSerializer(serializers.Serializer):
+    """Datos para que el administrador cree una cuenta; la contraseña la genera el sistema."""
+
+    nombre = serializers.CharField(max_length=120)
+    correo = serializers.EmailField()
+    celular = serializers.CharField(max_length=20)
+    rol = serializers.ChoiceField(choices=Usuario.Rol.choices)
+
+    def validate_celular(self, value):
+        if not CELULAR_PATRON.match(value):
+            raise serializers.ValidationError("Usa solo dígitos, espacios, +, (), - o .")
+        return value
+
+
 class CambiarRolSerializer(serializers.Serializer):
     rol = serializers.ChoiceField(choices=Usuario.Rol.values)
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
@@ -87,6 +102,15 @@ class CambiarRolSerializer(serializers.Serializer):
 
 class SuspenderSerializer(serializers.Serializer):
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+
+class UsuarioCreadoSerializer(UsuarioAdminSerializer):
+    """La cuenta recién creada, con la contraseña temporal que se muestra una sola vez."""
+
+    password_temporal = serializers.CharField(read_only=True)
+
+    class Meta(UsuarioAdminSerializer.Meta):
+        fields = (*UsuarioAdminSerializer.Meta.fields, "password_temporal")
 
 
 class RolesUsuarioSerializer(serializers.Serializer):

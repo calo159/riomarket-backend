@@ -15,7 +15,7 @@ vende cada puesto.
 | --- | --- |
 | **Comprador** | Buscar, armar el carrito, pedir (retiro o domicilio), pagar, cancelar mientras esté pendiente, confirmar que recibió, reseñar un puesto donde compró |
 | **Vendedor** | Verificarse, publicar puestos y productos, aceptar y preparar pedidos, entregar y cobrar en efectivo (retiro), crear cupones, responder reseñas, ver sus ventas |
-| **Administrador** | Verificar vendedores, moderar puestos, productos y reseñas, atender pedidos y pagos, gestionar usuarios, roles y recursos, ver la auditoría |
+| **Administrador** | Verificar vendedores, moderar puestos, productos y reseñas, atender pedidos y pagos, crear y gestionar usuarios, roles y recursos, ver la auditoría |
 
 Los permisos finos no están fijos en el código: son **recursos** que los roles otorgan y el administrador edita (RBAC).
 El menú de cada persona sale de ahí, y el servidor es quien decide (el frontend solo pregunta).

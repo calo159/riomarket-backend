@@ -20,13 +20,22 @@ ROLES_REGISTRABLES = (Usuario.Rol.COMPRADOR, Usuario.Rol.VENDEDOR)
 
 
 def registrar_usuario(*, nombre, correo, celular, rol, password) -> Usuario:
-    correo = Usuario.normalizar_correo(correo)
-    celular = Usuario.normalizar_celular(celular)
-
     if rol not in ROLES_REGISTRABLES:
         raise ValidationError(
             {"rol": "El rol en el registro solo puede ser 'comprador' o 'vendedor'."}
         )
+    return crear_cuenta(nombre=nombre, correo=correo, celular=celular, rol=rol, password=password)
+
+
+def crear_cuenta(*, nombre, correo, celular, rol, password) -> Usuario:
+    """Crea la cuenta con todas sus reglas (unicidad, contraseña fuerte, registro de vendedor).
+
+    No restringe el rol: el registro público solo llama aquí con comprador o vendedor
+    (``registrar_usuario``); un administrador puede crear cualquiera (``administration``).
+    """
+    correo = Usuario.normalizar_correo(correo)
+    celular = Usuario.normalizar_celular(celular)
+
     if Usuario.objects.filter(correo=correo).exists():
         raise ValidationError({"correo": "Ya existe una cuenta con ese correo."})
     if Usuario.objects.filter(celular=celular).exists():

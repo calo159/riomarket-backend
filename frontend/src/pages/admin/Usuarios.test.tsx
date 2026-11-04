@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   asignarRolesUsuario: vi.fn(),
   suspenderUsuario: vi.fn(),
   reactivarUsuario: vi.fn(),
+  crearUsuario: vi.fn(),
 }));
 
 vi.mock('../../api/admin', () => mocks);
@@ -81,6 +82,16 @@ describe('Usuarios (administración)', () => {
       { id: 9, nombre: 'moderador', descripcion: '', activo: true, es_sistema: false, total_usuarios: 1, total_recursos: 2, recursos: [] },
       { id: 10, nombre: 'soporte', descripcion: '', activo: true, es_sistema: false, total_usuarios: 0, total_recursos: 1, recursos: [] },
     ]);
+  });
+
+  it('el botón «Nuevo usuario» abre el formulario para crear una cuenta', async () => {
+    renderizar();
+    await screen.findAllByText('Ana Pérez');
+    await userEvent.click(screen.getByRole('button', { name: /Nuevo usuario/ }));
+
+    const dialogo = await screen.findByRole('dialog');
+    expect(within(dialogo).getByRole('heading', { name: 'Nuevo usuario' })).toBeInTheDocument();
+    expect(within(dialogo).getByRole('button', { name: 'Crear cuenta' })).toBeInTheDocument();
   });
 
   it('muestra los chips de roles adicionales de cada cuenta', async () => {

@@ -17,6 +17,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   ve la opción: la ruta, el ámbito y los permisos no se tocan desde ahí, así que no se puede dejar a nadie sin acceso. El
   icono se elige de una lista (con vista previa) en lugar de escribir su nombre, y el grupo sugiere los que ya existen. El
   formulario es el mismo de `/admin/recursos`, ahora compartido (`components/admin/FormularioRecurso`).
+- **El administrador crea usuarios con un botón.** En `/admin/usuarios`, «Nuevo usuario» pide nombre, correo, celular y
+  rol (comprador, vendedor o administrador). El sistema genera una **contraseña temporal** aleatoria (12 caracteres
+  legibles) y la muestra **una sola vez**, con botón para copiarla: el administrador se la entrega a la persona, que
+  la cambia en «Mi perfil». No se guarda en claro ni en la auditoría, que sí registra quién creó la cuenta. Un vendedor
+  nace pendiente de verificación, como al registrarse, y solo un administrador base crea administradores (no quien
+  gestiona usuarios por un rol personalizado). Endpoint: `POST /api/admin/usuarios/`.
 - **Pago contra entrega a domicilio ([ADR-021](docs/ADR-021-pago-contra-entrega.md)).** El domicilio exigía el pago
   aprobado antes de que el puesto aceptara, algo que sin pasarela real solo se podía simular, y no es como se compra en
   Riohacha. Ahora el domicilio se paga **en efectivo cuando llega**: el checkout registra el pago en efectivo, el puesto
