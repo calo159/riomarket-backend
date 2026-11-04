@@ -30,9 +30,10 @@ test('ve en la auditoría el vencimiento hecho por el sistema y el pedido vencid
   await menu(page).getByRole('link', { name: 'Auditoría' }).click();
   await expect(page.getByRole('heading', { name: 'Auditoría', level: 1 })).toBeVisible();
 
-  // La auditoría muestra las últimas 100 acciones; el barrido que cancela los retiros no recogidos
-  // (el pedido de demostración [SM-31] nace vencido) se hace al preparar la base, antes que las demás.
-  const fila = page.getByRole('row').filter({ hasText: 'Sistema' }).filter({ hasText: 'vencimiento' }).first();
+  // El barrido que cancela los retiros no recogidos (el pedido de demostración [SM-31] nace vencido)
+  // se hace al preparar la base, antes que las demás acciones: se llega a él filtrando por la acción.
+  await page.getByRole('combobox', { name: 'Filtrar por acción' }).selectOption('vencimiento');
+  const fila = page.getByRole('row').filter({ hasText: 'Sistema' }).filter({ hasText: 'Cancelado por plazo' }).first();
   await expect(fila).toBeVisible();
   const entidad = (await fila.getByRole('cell').nth(3).innerText()).trim();
   const idPedido = /^pedido #(\d+)$/.exec(entidad)?.[1];
