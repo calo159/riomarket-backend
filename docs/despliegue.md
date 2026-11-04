@@ -91,6 +91,22 @@ Usa Supabase (free, no caduca):
 2. En Render → Environment, reemplaza `DATABASE_URL` por esa cadena y haz
    "Manual Deploy".
 
+### Un solo servicio por base de datos (límite de conexiones)
+
+El **Session pooler** de Supabase admite **15 clientes en total**, compartidos por todo lo que se conecte a esa base:
+cada servicio de Render, tu computador y el panel de Supabase. Cada hilo de la aplicación abre una conexión y la
+conserva 60 segundos (`CONN_MAX_AGE`), y durante un despliegue conviven la instancia vieja y la nueva.
+
+- Por eso el arranque usa **1 proceso con 4 hilos** (`WEB_CONCURRENCY` y `GUNICORN_THREADS` lo cambian): 4 conexiones
+  por instancia, 8 durante un despliegue. Con 2 procesos eran 16 y el despliegue fallaba.
+- **No conectes dos servicios de Render a la misma base**: se roban las conexiones y, además, los dos corren
+  `seed_masivo` al arrancar sobre los mismos datos. Si migras de cuenta o de servicio, borra el anterior.
+- Si ves en el registro del despliegue `FATAL: (EMAXCONNSESSION) max clients reached in session mode`, es este
+  límite: apaga lo que no necesites (otro servicio, un `runserver` local con la misma `DATABASE_URL`) y vuelve a
+  desplegar con **Manual Deploy → Deploy latest commit**.
+- Si algún día necesitas más capacidad, usa el **Transaction pooler** (puerto 6543) con `CONN_MAX_AGE=0`; la aplicación
+  no usa cursores del lado del servidor ni transacciones entre peticiones, pero pruébalo antes en una base de ensayo.
+
 ## Almacenamiento S3-compatible (persistir imágenes)
 
 1. En Supabase Storage crea dos buckets: `productos` (público) y `privado` (privado).

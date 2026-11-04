@@ -105,6 +105,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Corregido
 
+- **Los despliegues en Render fallaban con `EMAXCONNSESSION`.** El arranque usaba 2 procesos × 4 hilos, hasta 8
+  conexiones por instancia, y cada una se conserva 60 segundos; el *Session pooler* de Supabase admite 15 en total y,
+  durante un despliegue, conviven la instancia vieja y la nueva (más cualquier otro servicio conectado a la misma
+  base). Ahora usa 1 proceso × 4 hilos por defecto (`WEB_CONCURRENCY` y `GUNICORN_THREADS` lo ajustan) y
+  `docs/despliegue.md` explica el límite y la regla de un solo servicio por base de datos.
 - **«Ingresar» no estaba al lado derecho del carrito.** En escritorio quedaba antes de «Mis pedidos», lejos del
   borde; ahora el orden es «Mis pedidos · Carrito · Ingresar» (con sesión iniciada, tu cuenta ocupa ese último
   lugar). En el celular no había ningún «Ingresar» en el encabezado (solo dentro de «Cuenta», en la barra de

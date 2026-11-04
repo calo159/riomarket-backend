@@ -15,4 +15,8 @@ esac
 python manage.py generar_miniaturas --limite 200 || true
 # Apartar con plazo (ADR-012): Render gratis no tiene cron; cada arranque libera lo vencido (acotado).
 python manage.py cancelar_pedidos_vencidos --limite 100 || true
-exec gunicorn config.wsgi:application --bind 0.0.0.0:"$PORT" --workers 2 --threads 4 --timeout 120
+# Cada hilo abre su propia conexión a la base y la conserva (CONN_MAX_AGE). El pooler de Supabase en modo sesión
+# admite 15 clientes EN TOTAL y, durante un despliegue, conviven la instancia vieja y la nueva: con 2 procesos × 4 hilos
+# eran 16 conexiones y el arranque fallaba con EMAXCONNSESSION. Render fija WEB_CONCURRENCY (1 en el plan gratis).
+exec gunicorn config.wsgi:application --bind 0.0.0.0:"$PORT" \
+  --workers "${WEB_CONCURRENCY:-1}" --threads "${GUNICORN_THREADS:-4}" --timeout 120
