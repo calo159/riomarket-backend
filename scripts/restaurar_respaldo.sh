@@ -24,6 +24,24 @@ if [ "$tablas" != "0" ] && [ "${RESTAURAR_SOBRE_BASE_CON_DATOS:-no}" != "si" ]; 
   exit 1
 fi
 
-gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 --decrypt "$archivo" 3<<<"$RESPALDO_CLAVE" \
-  | pg_restore --no-owner --no-privileges --exit-on-error --dbname "$destino"
+registro="$(mktemp)"
+trap 'rm -f "$registro"' EXIT
+
+# Sin --exit-on-error: el respaldo trae `CREATE SCHEMA public`, que en una base nueva ya existe y haría
+# fallar la restauración entera. Ese único error conocido se ignora; cualquier otro la hace fallar.
+set +e
+gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 --decrypt "$archivo" 3<<<"$RESPALDO_CLAVE"   | pg_restore --no-owner --no-privileges --dbname "$destino" 2> "$registro"
+estados=("${PIPESTATUS[@]}")
+set -e
+
+if [ "${estados[0]}" -ne 0 ]; then
+  echo "No se pudo descifrar el respaldo (¿clave equivocada o archivo dañado?)." >&2
+  exit 1
+fi
+reales="$(grep -E '^pg_restore: (error|warning):' "$registro"   | grep -v 'schema "public" already exists'   | grep -v 'errors ignored on restore: 1$' || true)"
+if [ -n "$reales" ]; then
+  echo "La restauración tuvo errores:" >&2
+  cat "$registro" >&2
+  exit 1
+fi
 echo "Respaldo restaurado en la base destino." >&2
