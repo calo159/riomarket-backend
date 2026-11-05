@@ -9,6 +9,7 @@ import { Destacados } from '../components/Destacados';
 import { MedallaCategoria } from '../components/iconos';
 import { Imagen } from '../components/Imagen';
 import { desvanecerEnMancha, PatronOlas } from '../components/ui/Decoracion';
+import { TituloSeccion } from '../components/ui/TituloSeccion';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
@@ -53,8 +54,8 @@ function Estante({
   };
   return (
     <Revela as="section" bloque className="mt-6 md:mt-[30px]" aria-label={titulo}>
-      <div className="mb-2.5 flex items-baseline gap-3.5 md:mb-3">
-        <h2 className="text-xl font-bold tracking-tight md:text-[23px]">{titulo}</h2>
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 md:mb-4">
+        <TituloSeccion texto={titulo} />
         <Link to={to} className="link text-sm">
           {textoVer}
         </Link>
@@ -278,8 +279,8 @@ export function Inicio() {
       >
         <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('100% 0%', 55, 140)} />
         <div className="relative mx-auto max-w-[1240px] px-3 py-8 md:px-5 md:py-11">
-          <div className="mb-3 flex items-baseline gap-3.5 md:mb-4">
-            <h2 className="text-xl font-bold tracking-tight md:text-[23px]">Puestos de Riohacha</h2>
+          <div className="mb-4 flex items-baseline gap-3.5 md:mb-5">
+            <TituloSeccion texto="Puestos de Riohacha" claro />
           </div>
           {puestos.isLoading && <EsqueletoGrid cantidad={4} />}
           {puestos.isError && <EstadoError mensaje="No pudimos cargar los puestos." onReintentar={() => void puestos.refetch()} />}

@@ -1,3 +1,4 @@
+import { TituloSeccion } from '../components/ui/TituloSeccion';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -192,7 +193,7 @@ export function PuestoDetalle() {
       <div className="mx-auto max-w-[1240px] px-3 py-6 sm:px-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-[23px] font-bold tracking-tight">Productos</h2>
+            <TituloSeccion texto="Productos" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {categoria ? categorias.find((item) => item.id === categoria)?.nombre : 'Todo el puesto'}
             </p>
@@ -232,7 +233,7 @@ export function PuestoDetalle() {
         )}
 
         <section className="mt-12">
-          <h2 className="text-[23px] font-bold tracking-tight">Reseñas del puesto</h2>
+          <TituloSeccion texto="Reseñas del puesto" />
           {resenas.isLoading && <p className="mt-2 text-sm text-slate-500">Cargando reseñas…</p>}
           {resenas.data && resenas.data.results.length === 0 && (
             <p className="card mt-3 border-dashed px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">

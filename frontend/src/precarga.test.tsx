@@ -96,7 +96,7 @@ describe('precargarRuta', () => {
       </QueryClientProvider>,
     );
 
-    await screen.findByText('Recién llegados');
+    await screen.findByRole('heading', { name: 'Recién llegados' });
     expect(catalogo.listarCategorias).toHaveBeenCalledTimes(llamadas.categorias);
     expect(catalogo.listarProductos).toHaveBeenCalledTimes(llamadas.productos);
     expect(catalogo.listarPuestos).toHaveBeenCalledTimes(llamadas.puestos);

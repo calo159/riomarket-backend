@@ -133,7 +133,23 @@
     @apply block py-2 text-[#CFDCE1] transition-colors hover:text-white md:py-1;
   }
   .precio {
-    @apply font-bold tracking-tight tabular-nums;
+    @apply font-extrabold tracking-tight tabular-nums;
+  }
+  /* Título de sección de la tienda (componente TituloSeccion): la escala de la landing, en pequeño. */
+  .titulo-seccion {
+    @apply text-[26px] font-black leading-[1.08] md:text-[34px];
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .titulo-seccion .resalta {
+    @apply text-brand-600 dark:text-brand-300;
+  }
+  /* Sobre una banda de color: texto blanco y resalte amarillo (4,9:1 sobre el turquesa; es texto grande). */
+  .titulo-seccion-claro {
+    @apply text-white;
+  }
+  .titulo-seccion-claro .resalta {
+    @apply text-amarillo dark:text-amarillo;
   }
 }
 
