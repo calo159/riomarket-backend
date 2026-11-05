@@ -57,8 +57,8 @@ de la base.
 
 ## Alternativas descartadas
 
-- **Sentry u OpenTelemetry**: exigen cuenta, claves y, a futuro, coste. Quedan como siguiente
-  paso si el servicio sale del plan gratis.
+- **Sentry u OpenTelemetry**: exigen cuenta, claves y, a futuro, coste. *(Sentry quedó como opción
+  desactivada por defecto en [ADR-023](ADR-023-respaldo-y-alertas.md); OpenTelemetry sigue pendiente.)*
 - **Un paquete de registro JSON**: una dependencia más para algo que cabe en 40 líneas.
 - **`request_id` en el cuerpo de los errores y en `handler500`** (previsto en el plan E2): fuera de
   esta entrega; cambia el contrato de los errores. La cabecera de la respuesta ya lo permite.

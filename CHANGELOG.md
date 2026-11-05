@@ -11,6 +11,15 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Respaldo diario de la base, cifrado y con la restauración probada** (ADR-023). Cada día un flujo de GitHub copia la base
+  (solo los datos de RioMarket), la cifra con AES-256 antes de escribirla y la sube a un bucket privado; guarda 30 días. El
+  archivo nunca se sube como artefacto de GitHub porque el repositorio es público. Una segunda prueba (al cambiar los
+  scripts y una vez al mes) hace el ciclo completo con datos de demostración: respalda, comprueba que no se puede leer ni
+  abrir con otra clave, restaura en una base vacía y compara las filas de cada tabla. Restaurar se niega a pisar una base que
+  ya tiene datos. Requiere cargar los secretos `RESPALDO_*` una vez (ver `docs/despliegue.md`); sin ellos falla y avisa.
+- **Aviso de errores a Sentry, opcional.** Con `SENTRY_DSN` los errores no controlados llegan con su línea de código;
+  sin él no se envía nada. Solo errores y sin datos de personas: sin cuerpos, cabeceras, cookies, variables locales ni
+  identidad del usuario.
 - **Comisión, tarifa de domicilio y límites de atraso editables desde el panel** (ADR-022). Antes se cambiaban en
   variables de Render, con reinicio y sin rastro. Ahora **Administración → Configuración** deja ajustar la comisión (0 a
   50 %), la tarifa de domicilio, el aviso y la pausa por comisión pendiente. Lo del panel gana sobre la variable (que

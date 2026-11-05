@@ -34,7 +34,7 @@ services:
       # Demo: permite simular/autoaprobar pagos. Poner False con pasarela real.
       - key: PAYMENTS_SANDBOX_ENABLED
         value: "True"
-      # Deben coincidir con lo que muestra el frontend (VITE_TARIFA_DOMICILIO).
+      # Valores de partida: el administrador los cambia desde el panel (Administración → Configuración, ADR-022).
       - key: DOMICILIO_TARIFA_BASE
         value: "3000.00"
       - key: PLATFORM_COMMISSION_PERCENTAGE
@@ -61,4 +61,7 @@ services:
       - key: BREVO_API_KEY
         sync: false
       - key: DEFAULT_FROM_EMAIL
+        sync: false
+      # Aviso de errores a Sentry (opcional, ADR-023). Sin él no se envía nada.
+      - key: SENTRY_DSN
         sync: false

@@ -1,0 +1,158 @@
+name: Prueba del respaldo
+
+# Un respaldo que nunca se restauró es una esperanza, no un respaldo. Esta prueba hace el ciclo
+# completo con datos de demostración: respalda una base, la restaura en otra vacía y comprueba que
+# quedó igual. Corre cuando cambian los scripts de respaldo y una vez al mes.
+on:
+  pull_request:
+    paths:
+      - "scripts/respaldar_base.sh"
+      - "scripts/restaurar_respaldo.sh"
+      - ".github/workflows/respaldo-prueba.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/respaldar_base.sh"
+      - "scripts/restaurar_respaldo.sh"
+      - ".github/workflows/respaldo-prueba.yml"
+  schedule:
+    - cron: "41 5 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo-prueba-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ciclo-completo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: riomarket
+          POSTGRES_PASSWORD: riomarket
+          POSTGRES_DB: origen
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U riomarket"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+      SECURE_SSL_REDIRECT: "False"
+      SECRET_KEY: ci-respaldo-secret-key-riomarket-0123456789abcdefghijklmnopqrstuvwxyz
+      FERNET_KEY: 5yje5UOGK7sn3fg3xean97SK9QMXDRl-jS8LiAKULP8=
+      SEED_DEMO_PASSWORD: RioMarket2026!
+      PGPASSWORD: riomarket
+      URL_ORIGEN: postgres://riomarket:riomarket@localhost:5432/origen
+      URL_DESTINO: postgres://riomarket:riomarket@localhost:5432/destino
+      RESPALDO_CLAVE: frase-de-prueba-solo-para-el-ci
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Instalar el cliente de PostgreSQL 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Crear la base de origen con datos de demostración
+        env:
+          DATABASE_URL: ${{ env.URL_ORIGEN }}
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_masivo
+
+      - name: Respaldar
+        env:
+          DATABASE_URL: ${{ env.URL_ORIGEN }}
+        run: |
+          archivo="$(bash scripts/respaldar_base.sh respaldos | tail -n 1)"
+          echo "ARCHIVO=$archivo" >> "$GITHUB_ENV"
+
+      - name: El respaldo está cifrado (no se puede leer como una copia de la base)
+        run: |
+          # gpg lo reconoce como cifrado con clave simétrica...
+          gpg --batch --list-packets "$ARCHIVO" 2>&1 | grep -q "symkey enc packet"
+          # ...y sin descifrarlo, pg_restore no lo entiende: no hay nada legible a la vista.
+          if pg_restore --list "$ARCHIVO" > /dev/null 2>&1; then
+            echo "::error::El respaldo se puede leer sin la clave: no está cifrado."
+            exit 1
+          fi
+          echo "Cifrado correctamente: $ARCHIVO"
+
+      - name: Con una clave equivocada no se puede abrir
+        run: |
+          psql "postgres://riomarket:riomarket@localhost:5432/postgres" -c "create database vacia"
+          if RESPALDO_CLAVE=otra-frase bash scripts/restaurar_respaldo.sh "$ARCHIVO" \
+               "postgres://riomarket:riomarket@localhost:5432/vacia"; then
+            echo "::error::Se restauró con una clave equivocada."
+            exit 1
+          fi
+          echo "Rechazó la clave equivocada, como debe."
+
+      - name: Restaurar en una base vacía
+        run: |
+          psql "postgres://riomarket:riomarket@localhost:5432/postgres" -c "create database destino"
+          bash scripts/restaurar_respaldo.sh "$ARCHIVO" "$URL_DESTINO"
+
+      - name: Se niega a restaurar encima de una base con datos
+        run: |
+          if bash scripts/restaurar_respaldo.sh "$ARCHIVO" "$URL_DESTINO"; then
+            echo "::error::Restauró sobre una base que ya tenía datos."
+            exit 1
+          fi
+          echo "Se negó, como debe."
+
+      - name: La base restaurada es igual a la original
+        run: |
+          contar() {
+            psql "$1" --no-psqlrc --tuples-only --no-align --command "
+              select table_name || '=' ||
+                (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I', table_name), false, true, '')))[1]::text
+              from information_schema.tables
+              where table_schema = 'public' and table_type = 'BASE TABLE'
+              order by table_name"
+          }
+          contar "$URL_ORIGEN" > origen.txt
+          contar "$URL_DESTINO" > destino.txt
+          echo "Tablas comparadas: $(wc -l < origen.txt)"
+          if [ "$(wc -l < origen.txt)" -lt 20 ]; then
+            echo "::error::Muy pocas tablas en el origen: la prueba no probó nada."
+            exit 1
+          fi
+          if ! diff origen.txt destino.txt; then
+            echo "::error::La base restaurada no coincide con la original."
+            exit 1
+          fi
+          grep -E "^(accounts_usuario|usuario|pedido|pago)=" origen.txt || true
+
+      - name: Django arranca sobre la base restaurada
+        env:
+          DATABASE_URL: ${{ env.URL_DESTINO }}
+        run: |
+          python manage.py migrate --check
+          python manage.py shell -c "from apps.accounts.models import Usuario; assert Usuario.objects.filter(correo='admin@riomarket.test').exists(); print('Usuarios restaurados:', Usuario.objects.count())"

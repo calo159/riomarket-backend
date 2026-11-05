@@ -1,0 +1,95 @@
+name: Respaldo de la base
+
+# Cada día copia la base de producción, la cifra y la sube a un bucket PRIVADO. Ver ADR-023 y la
+# sección «Respaldo de la base» de docs/despliegue.md. Hace falta cargar los secretos una vez
+# (Configuración → Secrets and variables → Actions); sin ellos el trabajo falla a propósito: un
+# respaldo que se salta en silencio es peor que ninguno.
+#
+# El repositorio es PÚBLICO: el respaldo contiene datos personales y nunca se sube como artefacto de
+# GitHub (los de un repositorio público los puede descargar cualquiera con cuenta).
+on:
+  schedule:
+    - cron: "23 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+env:
+  # Cuántos días se conservan los respaldos en el bucket.
+  RESPALDO_DIAS: ${{ vars.RESPALDO_DIAS || '30' }}
+
+jobs:
+  respaldar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.RESPALDO_DATABASE_URL }}
+      RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+      S3_ENDPOINT: ${{ secrets.RESPALDO_S3_ENDPOINT }}
+      S3_BUCKET: ${{ secrets.RESPALDO_S3_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.RESPALDO_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.RESPALDO_S3_SECRET_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.RESPALDO_S3_REGION || 'us-east-1' }}
+      # Varios almacenes compatibles con S3 rechazan las sumas de verificación nuevas de la CLI.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Comprobar que están los secretos
+        run: |
+          faltan=""
+          [ -n "$DATABASE_URL" ] || faltan="$faltan RESPALDO_DATABASE_URL"
+          [ -n "$RESPALDO_CLAVE" ] || faltan="$faltan RESPALDO_CLAVE"
+          [ -n "$S3_ENDPOINT" ] || faltan="$faltan RESPALDO_S3_ENDPOINT"
+          [ -n "$S3_BUCKET" ] || faltan="$faltan RESPALDO_S3_BUCKET"
+          [ -n "$AWS_ACCESS_KEY_ID" ] || faltan="$faltan RESPALDO_S3_ACCESS_KEY"
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || faltan="$faltan RESPALDO_S3_SECRET_KEY"
+          if [ -n "$faltan" ]; then
+            echo "::error::Faltan secretos para el respaldo:$faltan (ver docs/despliegue.md, «Respaldo de la base»)."
+            exit 1
+          fi
+
+      - name: Instalar el cliente de PostgreSQL 17
+        # El cliente debe ser igual o más nuevo que el servidor; el de la imagen es más viejo.
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Respaldar y cifrar
+        id: respaldo
+        run: |
+          archivo="$(bash scripts/respaldar_base.sh respaldos | tail -n 1)"
+          echo "archivo=$archivo" >> "$GITHUB_OUTPUT"
+
+      - name: Subir al bucket privado
+        run: |
+          aws configure set default.s3.addressing_style path
+          aws s3 cp "${{ steps.respaldo.outputs.archivo }}" \
+            "s3://$S3_BUCKET/respaldos/$(basename "${{ steps.respaldo.outputs.archivo }}")" \
+            --endpoint-url "$S3_ENDPOINT" --only-show-errors
+
+      - name: Borrar los respaldos más viejos que el plazo
+        # Va DESPUÉS de subir el de hoy: si los respaldos llevaran semanas fallando, el último bueno
+        # nunca se borra porque el plazo cuenta desde la fecha de cada archivo y el de hoy es nuevo.
+        run: |
+          limite="$(date -u -d "-$RESPALDO_DIAS days" +%Y-%m-%dT%H:%M:%SZ)"
+          viejos="$(aws s3api list-objects-v2 --bucket "$S3_BUCKET" --prefix respaldos/ \
+            --endpoint-url "$S3_ENDPOINT" \
+            --query "Contents[?LastModified<'$limite'].Key" --output text)"
+          for clave in $viejos; do
+            [ "$clave" = "None" ] && continue
+            echo "Borrando $clave"
+            aws s3api delete-object --bucket "$S3_BUCKET" --key "$clave" --endpoint-url "$S3_ENDPOINT"
+          done
+          total="$(aws s3api list-objects-v2 --bucket "$S3_BUCKET" --prefix respaldos/ \
+            --endpoint-url "$S3_ENDPOINT" --query 'length(Contents)' --output text)"
+          echo "Respaldos guardados: $total"

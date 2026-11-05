@@ -62,6 +62,7 @@ stack, pruebas y despliegue.
 - [ADR-020: quien se atrasa con la comisión recibe un aviso y, si sigue, una pausa](ADR-020-politica-de-atraso.md)
 - [ADR-021: pago contra entrega a domicilio](ADR-021-pago-contra-entrega.md)
 - [ADR-022: configuración editable desde el panel (comisión, tarifa y límites)](ADR-022-configuracion-editable-desde-el-panel.md)
+- [ADR-023: respaldo de la base y aviso de errores](ADR-023-respaldo-y-alertas.md)
 
 ## Entrega
 
