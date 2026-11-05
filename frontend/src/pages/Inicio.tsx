@@ -1,4 +1,4 @@
-import { Revela } from '../components/Revela';
+import { lugar, Revela } from '../components/Revela';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -54,8 +54,8 @@ function Estante({
     if (el) el.scrollBy({ left: el.clientWidth * 0.6, behavior: 'smooth' });
   };
   return (
-    <Revela as="section" bloque className="mt-6 md:mt-[30px]" aria-label={titulo}>
-      <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 md:mb-4">
+    <Revela as="section" className="mt-6 md:mt-[30px]" aria-label={titulo}>
+      <div className="rv mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 md:mb-4">
         <TituloSeccion texto={titulo} />
         <Link to={to} className="link text-sm">
           {textoVer}
@@ -74,8 +74,8 @@ function Estante({
             ref={fila}
             className="-m-[3px] grid snap-x snap-mandatory auto-cols-[calc((100%-9px)/2)] grid-flow-col gap-[9px] overflow-x-auto scroll-smooth p-[3px] pb-2 [scrollbar-width:none] md:auto-cols-[calc((100%-56px)/5)] md:snap-none md:gap-3.5 [&::-webkit-scrollbar]:hidden"
           >
-            {productos.map((producto) => (
-              <div key={producto.id} className="snap-start">
+            {productos.map((producto, i) => (
+              <div key={producto.id} className="rv snap-start" style={lugar(i + 1)}>
                 <ProductoCard producto={producto} categoria={nombreCategoria(categorias, producto.id_categoria)} />
               </div>
             ))}
@@ -133,7 +133,7 @@ export function Inicio() {
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
         <nav
           aria-label="Categorías"
-          className="relative z-[4] -mt-9 flex snap-x gap-0.5 overflow-x-auto rounded-xl bg-white px-2 py-3 shadow-flota [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-0 md:px-1.5 md:py-3.5 dark:bg-slate-900 [&::-webkit-scrollbar]:hidden"
+          className="entra-medallas relative z-[4] -mt-9 flex snap-x gap-0.5 overflow-x-auto rounded-xl bg-white px-2 py-3 shadow-flota [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-0 md:px-1.5 md:py-3.5 dark:bg-slate-900 [&::-webkit-scrollbar]:hidden"
         >
           {categorias.isLoading &&
             Array.from({ length: 8 }).map((_, i) => (
@@ -142,9 +142,10 @@ export function Inicio() {
                 <div className="skeleton h-3 w-14" />
               </div>
             ))}
-          {visibles.map((c) => (
+          {visibles.map((c, i) => (
             <Link
               key={c.id}
+              style={lugar(i)}
               to={`/catalogo?categoria=${c.id}`}
               className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-brand-200"
             >
@@ -159,6 +160,7 @@ export function Inicio() {
           {lista.length > 8 && (
             <Link
               to="/catalogo"
+              style={lugar(visibles.length)}
               className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800"
             >
               <span className="grid h-12 w-12 place-items-center rounded-full bg-brand-50 text-brand-600 transition-transform duration-[220ms] [transition-timing-function:cubic-bezier(.2,1.5,.4,1)] group-hover:-translate-y-[3px] group-hover:scale-[1.07] md:h-14 md:w-14 dark:bg-slate-800 dark:text-brand-200">
@@ -280,14 +282,13 @@ export function Inicio() {
       {/* Banda turquesa de ancho completo: la tienda deja de ser un solo plano y el color vuelve a aparecer al bajar. */}
       <Revela
         as="section"
-        bloque
         id="puestos"
         className="relative mt-9 scroll-mt-4 overflow-hidden bg-brand-600 text-white dark:bg-brand-900 md:mt-12"
         aria-label="Puestos de Riohacha"
       >
         <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('100% 0%', 55, 140)} />
         <div className="relative mx-auto max-w-[1240px] px-3 py-8 md:px-5 md:py-11">
-          <div className="mb-4 flex items-baseline gap-3.5 md:mb-5">
+          <div className="rv mb-4 flex items-baseline gap-3.5 md:mb-5">
             <TituloSeccion texto="Puestos de Riohacha" claro />
           </div>
           {puestos.isLoading && <EsqueletoGrid cantidad={4} />}
@@ -296,9 +297,11 @@ export function Inicio() {
             <div className="card px-6 py-10 text-center text-slate-500 dark:text-slate-400">Todavía no hay puestos publicados.</div>
           )}
           {puestos.data && puestos.data.results.length > 0 && (
-            <div className="entra-lista grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {puestos.data.results.slice(0, 8).map((puesto) => (
-                <PuestoCard key={puesto.id} puesto={puesto} />
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {puestos.data.results.slice(0, 8).map((puesto, i) => (
+                <div key={puesto.id} className="rv [&>*]:h-full" style={lugar(i % 4)}>
+                  <PuestoCard puesto={puesto} />
+                </div>
               ))}
             </div>
           )}

@@ -11,6 +11,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Movimiento con intención en la tienda (fase 4 de 5 del rediseño visual).** Un solo momento de marca al cargar: las categorías suben
+  una tras otra justo después del carrusel. Más abajo, en lugar de que cada estante aparezca entero de golpe, el título y luego
+  cada producto entran escalonados al llegar a ellos, y la banda turquesa de puestos ya está a la vista mientras sus tarjetas
+  entran. Al agregar al carrito, el icono de confirmación hace un «sello» breve (también en el botón de escritorio). Todo con la
+  misma curva que la landing, solo `transform` y `opacity`, y quieto con «reducir movimiento» (comprobado: nada se anima y nada
+  queda oculto).
 - **Tienda más ordenada: menos repetido y la regla de un pedido por puesto a la vista (fase 3 de 5 del rediseño visual).**
   Los dos destacados de debajo del primer estante ya no repiten los puestos del carrusel (si no queda ninguno, no se muestran).
   En la tarjeta de producto «Domicilio disponible» desaparece (era lo normal, 15 veces seguidas) y solo se avisa «Solo retiro en

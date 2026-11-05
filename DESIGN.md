@@ -86,6 +86,8 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
 
 ## Animaciones (sin dependencias)
 
+**Momento de marca de la tienda:** al cargar, las categorías suben escalonadas (`.entra-medallas`, `--i` con `lugar()`); al hacer scroll, el título y cada producto de un estante entran escalonados con `.rv` (el bloque ya no aparece entero) y la banda turquesa de puestos está siempre visible mientras sus tarjetas entran. Al agregar, el icono de confirmación hace `pop`.
+
 Vuelo de la miniatura al carrito (`volarAlCarrito`) con rebote del contador (`animate-pop`) y toast; progreso del carrusel; elevación y zoom de tarjetas;
 rebote de categorías; zoom de foto en producto; barras (`animate-grow`); esqueletos; transición entre rutas (`.ruta-entra`); apertura de modales y menús.
 Todo se desactiva con `prefers-reduced-motion` (regla global en `index.css` y comprobación en `volarAlCarrito`).

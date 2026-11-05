@@ -250,6 +250,19 @@
   }
 }
 
+/* Momento de marca de la tienda: al cargar, las categorías suben una tras otra, justo después del carrusel.
+   --i (lugar() en components/Revela) da el orden; con «reducir movimiento» no se anima (regla global de abajo). */
+.entra-medallas > * {
+  animation: sube-medalla 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(140ms + min(var(--i, 0), 9) * 45ms);
+}
+@keyframes sube-medalla {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.92);
+  }
+}
+
 /* Un campo de un formulario con error se sacude una vez al marcarse inválido: llama la atención sin gritar. */
 form .input[aria-invalid='true'] {
   animation: sacude 0.38s ease-out;
