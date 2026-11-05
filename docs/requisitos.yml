@@ -730,3 +730,26 @@
     - "apps/administration/tests/test_gestion_cuentas.py::TestAccionesPermitidas"
     - "frontend/src/pages/admin/EditarCuenta.test.tsx::muestra la contraseña temporal una sola vez, con el motivo enviado"
     - "frontend/src/pages/admin/PanelAdmin.test.tsx::la tarjeta lleva a pagos y cuenta a los vendedores en pausa"
+
+- id: RF-37
+  titulo: Cambiar la comisión, la tarifa de domicilio y los límites de atraso desde el panel, con motivo y auditoría
+  actor: [administrador]
+  origen: Petición del dueño del proyecto
+  pantallas: ["/admin/configuracion", "/checkout"]
+  endpoints:
+    - "GET /api/admin/configuracion/"
+    - "PUT /api/admin/configuracion/"
+    - "GET /api/configuracion/publica/"
+  pruebas:
+    - "apps/administration/tests/test_configuracion.py::TestCambiar"
+    - "apps/administration/tests/test_configuracion.py::TestValidacion"
+    - "apps/administration/tests/test_configuracion.py::TestAuditoria"
+    - "apps/administration/tests/test_configuracion.py::TestPermisos"
+    - "apps/administration/tests/test_configuracion.py::TestPublica"
+    - "apps/payments/tests/test_ajustes_del_panel.py::test_cambiar_la_comision_no_toca_los_pagos_ya_creados"
+    - "apps/payments/tests/test_ajustes_del_panel.py::test_los_limites_del_panel_deciden_quien_queda_en_pausa"
+    - "apps/configuracion/tests/test_lectura.py::test_la_lectura_se_guarda_unos_segundos_y_guardar_la_descarta"
+    - "frontend/src/pages/admin/Configuracion.test.tsx::lista lo que va a cambiar y guarda solo eso, con el motivo"
+    - "frontend/src/pages/admin/Configuracion.test.tsx::avisa si la pausa queda por debajo del aviso"
+    - "frontend/src/pages/admin/Configuracion.test.tsx::«Usar el del servidor» borra el valor del panel y se envía null"
+    - "frontend/src/pages/Checkout.test.tsx::anuncia la tarifa de domicilio que fijó el administrador, no una de compilación"

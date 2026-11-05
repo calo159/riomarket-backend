@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   crearPedidoConPagoEnEfectivo: vi.fn(),
   obtenerPuesto: vi.fn(),
   listarDirecciones: vi.fn(),
+  obtenerConfiguracionPublica: vi.fn(),
   vaciar: vi.fn(),
   // El carrito se puede cambiar por prueba (productos por encargo).
   carrito: null as unknown,
@@ -40,6 +41,7 @@ vi.mock('../api/orders', () => ({ crearPedidoConPagoEnEfectivo: mocks.crearPedid
 vi.mock('../api/catalog', () => ({ obtenerPuesto: mocks.obtenerPuesto }));
 vi.mock('../api/addresses', () => ({ listarDirecciones: mocks.listarDirecciones, crearDireccion: vi.fn() }));
 vi.mock('../api/coupons', () => ({ validarCupon: vi.fn() }));
+vi.mock('../api/config', () => ({ obtenerConfiguracionPublica: mocks.obtenerConfiguracionPublica }));
 vi.mock('../auth/SessionProvider', () => ({ useSession: () => ({ usuario: { id: 2, rol: 'comprador' }, rol: 'comprador' }) }));
 vi.mock('../components/ui/Toast', () => ({ useToast: () => ({ exito: vi.fn(), error: vi.fn(), info: vi.fn() }) }));
 vi.mock('../cart/CartProvider', () => ({
@@ -76,6 +78,7 @@ describe('Checkout con retiro', () => {
       ofrece_domicilio: true,
     });
     mocks.listarDirecciones.mockResolvedValue([]);
+    mocks.obtenerConfiguracionPublica.mockResolvedValue({ tarifa_domicilio: '3000.00' });
   });
 
   it('avisa que se paga en el puesto al recoger y crea el pedido de retiro', async () => {
@@ -97,6 +100,15 @@ describe('Checkout con retiro', () => {
     expect(
       await screen.findByText('Te apartamos el pedido. Si no lo recoges a tiempo, se cancela solo.'),
     ).toBeInTheDocument();
+  });
+
+  it('anuncia la tarifa de domicilio que fijó el administrador, no una de compilación', async () => {
+    mocks.obtenerConfiguracionPublica.mockResolvedValue({ tarifa_domicilio: '4500.00' });
+    renderizar();
+
+    expect(await screen.findByText(/Tarifa: .*4\.500/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Domicilio/ }));
+    await waitFor(() => expect(screen.getAllByText(/4\.500/).length).toBeGreaterThan(1));
   });
 
   it('con domicilio el aviso de pagar en el puesto cambia por el de pagar al recibir', async () => {
@@ -122,6 +134,7 @@ describe('Checkout con productos por encargo', () => {
       ofrece_domicilio: true,
     });
     mocks.listarDirecciones.mockResolvedValue([]);
+    mocks.obtenerConfiguracionPublica.mockResolvedValue({ tarifa_domicilio: '3000.00' });
   });
 
   it('pide_fecha_solo_con_encargos', async () => {

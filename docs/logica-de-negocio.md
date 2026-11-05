@@ -116,8 +116,10 @@ pago en `/admin/pagos`; el vendedor ve su saldo en «Ventas». No hay cobros aut
 Si la deuda crece, la cuenta pasa por tres estados ([ADR-020](ADR-020-politica-de-atraso.md)): **al día**; **aviso** al
 llegar a $50.000 (el vendedor lo ve y recibe una notificación); y **en pausa** al llegar a $150.000, cuando sus puestos
 dejan de recibir pedidos *nuevos* hasta que pague (los que ya estaban en marcha siguen). Al anotarse el pago que baja la
-deuda del límite, se reactiva solo. Los límites se cambian en `COMISION_LIMITE_AVISO` y `COMISION_LIMITE_BLOQUEO`
-(`0` apaga cada uno).
+deuda del límite, se reactiva solo. Los límites los cambia el administrador en **Administración → Configuración**
+([ADR-022](ADR-022-configuracion-editable-desde-el-panel.md); de partida valen `COMISION_LIMITE_AVISO` y
+`COMISION_LIMITE_BLOQUEO`; `0` apaga cada uno). La comisión y la tarifa de domicilio se cambian ahí mismo y rigen solo
+para los pedidos nuevos.
 
 ## 9. El panel de ventas
 

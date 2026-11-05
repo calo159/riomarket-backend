@@ -15,6 +15,7 @@ RAIZ = Path(__file__).resolve().parent.parent / "apps"
 # es justamente la decisión de diseño que esta prueba obliga a tomar.
 NIVELES = {
     "common": 0,  # núcleo: excepciones, paginación, seguridad, almacenamiento (sin dominio)
+    "configuracion": 1,  # ajustes editables desde el panel; common los lee por un gancho
     "rbac": 1,  # roles y recursos; el menú recibe sus insignias de las apps de negocio (registro)
     "accounts": 2,
     "audit": 2,

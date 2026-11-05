@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "storages",
     # Apps del proyecto
     "apps.common",
+    "apps.configuracion",
     "apps.accounts",
     "apps.catalog",
     "apps.orders",
@@ -316,6 +317,11 @@ DOMICILIO_TARIFA_PARA_VENDEDOR = env.bool("DOMICILIO_TARIFA_PARA_VENDEDOR", defa
 # nuevos (los que ya tienen en curso siguen).
 COMISION_LIMITE_AVISO = Decimal(env("COMISION_LIMITE_AVISO", default="50000"))
 COMISION_LIMITE_BLOQUEO = Decimal(env("COMISION_LIMITE_BLOQUEO", default="150000"))
+# La comisión, la tarifa y los dos límites los puede cambiar el administrador desde el panel
+# (ADR-022): lo que pone allí gana y estas variables quedan como valor de partida. Con False se
+# ignora el panel. La lectura se guarda unos segundos en memoria de cada proceso.
+AJUSTES_EN_BASE_DE_DATOS = env.bool("AJUSTES_EN_BASE_DE_DATOS", default=True)
+AJUSTES_CACHE_SEGUNDOS = env.int("AJUSTES_CACHE_SEGUNDOS", default=15)
 # La pasarela sandbox (simular pagos) SOLO se permite en desarrollo/tests.
 PAYMENTS_SANDBOX_ENABLED = env.bool("PAYMENTS_SANDBOX_ENABLED", default=DEBUG)
 # Secreto para verificar la firma de los webhooks de la pasarela real.

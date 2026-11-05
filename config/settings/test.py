@@ -85,6 +85,10 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # y las pruebas de apps/orders/tests/test_*vencimientos.py lo activan a propósito (ADR-012).
 PEDIDOS_LIBERAR_EN_LECTURA = False
 
+# Leer los ajustes del panel sumaría una consulta a las pruebas de número de consultas: se apaga
+# aquí y las pruebas de apps/configuracion/tests lo activan a propósito (ADR-022).
+AJUSTES_EN_BASE_DE_DATOS = False
+
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
 }

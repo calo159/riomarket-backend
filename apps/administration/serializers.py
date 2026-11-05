@@ -191,3 +191,49 @@ class RecursoSerializer(serializers.ModelSerializer):
         if valor and not valor.startswith("/"):
             raise serializers.ValidationError("La ruta debe estar vacía o empezar con «/».")
         return valor
+
+
+class CampoConfiguracionSerializer(serializers.Serializer):
+    clave = serializers.CharField()
+    etiqueta = serializers.CharField()
+    ayuda = serializers.CharField()
+    unidad = serializers.ChoiceField(choices=["%", "$"])
+    minimo = serializers.DecimalField(max_digits=12, decimal_places=2)
+    maximo = serializers.DecimalField(max_digits=12, decimal_places=2)
+    valor = serializers.DecimalField(max_digits=12, decimal_places=2)
+    del_servidor = serializers.DecimalField(max_digits=12, decimal_places=2)
+    origen = serializers.ChoiceField(choices=["panel", "servidor"])
+
+
+class VendedoresPorEstadoSerializer(serializers.Serializer):
+    al_dia = serializers.IntegerField()
+    aviso = serializers.IntegerField()
+    bloqueado = serializers.IntegerField()
+
+
+class ConfiguracionSerializer(serializers.Serializer):
+    campos = CampoConfiguracionSerializer(many=True)
+    vendedores = VendedoresPorEstadoSerializer()
+    actualizado = serializers.DateTimeField(allow_null=True)
+
+
+class ValoresConfiguracionSerializer(serializers.Serializer):
+    """Solo los campos presentes se cambian; ``null`` borra el valor del panel."""
+
+    comision_porcentaje = serializers.DecimalField(
+        max_digits=7, decimal_places=2, required=False, allow_null=True
+    )
+    tarifa_domicilio = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, allow_null=True
+    )
+    limite_aviso = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, allow_null=True
+    )
+    limite_bloqueo = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, allow_null=True
+    )
+
+
+class ActualizarConfiguracionSerializer(serializers.Serializer):
+    valores = ValoresConfiguracionSerializer()
+    motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)

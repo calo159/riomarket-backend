@@ -60,3 +60,15 @@ test('consulta los usuarios y los roles', async ({ page }) => {
   await page.getByRole('tab', { name: 'Matriz' }).click();
   await expect(page.getByRole('tab', { name: 'Matriz' })).toHaveAttribute('aria-selected', 'true');
 });
+
+test('ve la configuración de la plataforma con lo que rige hoy y sin poder guardar sin cambios', async ({ page }) => {
+  await menu(page).getByRole('link', { name: 'Configuración' }).click();
+  await expect(page.getByRole('heading', { name: 'Configuración', level: 1 })).toBeVisible();
+
+  for (const campo of ['Comisión de la plataforma', 'Tarifa de domicilio', 'Aviso por comisión pendiente', 'Pausa por comisión pendiente']) {
+    await expect(page.getByLabel(campo)).toBeVisible();
+  }
+  // No se cambia nada (el recorrido es de solo lectura): sin cambios no se puede guardar.
+  await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
+  await expect(page.getByText(/Ejemplo: en una venta de/)).toBeVisible();
+});

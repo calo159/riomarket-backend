@@ -11,6 +11,15 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Comisión, tarifa de domicilio y límites de atraso editables desde el panel** (ADR-022). Antes se cambiaban en
+  variables de Render, con reinicio y sin rastro. Ahora **Administración → Configuración** deja ajustar la comisión (0 a
+  50 %), la tarifa de domicilio, el aviso y la pausa por comisión pendiente. Lo del panel gana sobre la variable (que
+  queda como valor de partida) y «Usar el del servidor» devuelve a ella. Rige solo para pedidos y pagos **nuevos**: los
+  ya creados conservan lo que se les cobró. Cada cambio pide un motivo y queda en la auditoría con el valor anterior y el
+  nuevo; hay topes contra errores de dedo y la pausa no puede quedar bajo el aviso. La pantalla muestra un ejemplo en
+  pesos y cuántos vendedores hay al día, en aviso y en pausa. Es un recurso más del RBAC (`admin.configuracion`).
+  - **Arreglo relacionado:** el checkout anunciaba la tarifa de domicilio con un valor fijado al compilar el frontend, que
+    podía no coincidir con la que el servidor cobraba. Ahora la pide al servidor (`GET /api/configuracion/publica/`).
 - **Más automatización en el repositorio.** Cuatro piezas que quitan trabajo manual y avisan antes de que lo note un
   cliente:
   - **Dependabot** propone cada semana las actualizaciones de Python y npm (agrupadas las menores) y cada mes las de

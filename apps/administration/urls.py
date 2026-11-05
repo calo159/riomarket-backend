@@ -4,6 +4,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from apps.administration.views import (
+    ConfiguracionAdminView,
     RecursoAdminViewSet,
     ResumenAdminView,
     RolAdminViewSet,
@@ -17,5 +18,6 @@ router.register("recursos", RecursoAdminViewSet, basename="admin-recurso")
 
 urlpatterns = [
     path("resumen/", ResumenAdminView.as_view(), name="admin-resumen"),
+    path("configuracion/", ConfiguracionAdminView.as_view(), name="admin-configuracion"),
     *router.urls,
 ]

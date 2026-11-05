@@ -13,7 +13,9 @@ from rest_framework.views import APIView
 
 from apps.administration import rbac_services, services
 from apps.administration.serializers import (
+    ActualizarConfiguracionSerializer,
     CambiarRolSerializer,
+    ConfiguracionSerializer,
     CrearUsuarioSerializer,
     EditarDatosUsuarioSerializer,
     RecursoSerializer,
@@ -336,3 +338,31 @@ class ResumenAdminView(APIView):
     @extend_schema(responses={200: OpenApiTypes.OBJECT})
     def get(self, request):
         return Response(services.resumen(), status=status.HTTP_200_OK)
+
+
+class ConfiguracionAdminView(APIView):
+    """Comisión, tarifa de domicilio y límites de atraso, editables desde el panel (ADR-022)."""
+
+    permission_classes = [TieneRecurso("admin.configuracion")]
+
+    @extend_schema(responses={200: ConfiguracionSerializer})
+    def get(self, request):
+        return Response(ConfiguracionSerializer(services.configuracion_actual()).data)
+
+    @extend_schema(
+        request=ActualizarConfiguracionSerializer,
+        responses={200: ConfiguracionSerializer},
+        description=(
+            "Fija los valores enviados; con ``null`` se borra el del panel y vuelve a regir el "
+            "del servidor. Exige motivo y deja un registro de auditoría por cada cambio."
+        ),
+    )
+    def put(self, request):
+        serializer = ActualizarConfiguracionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datos = services.actualizar_configuracion(
+            actor=request.user,
+            valores=dict(serializer.validated_data["valores"]),
+            motivo=serializer.validated_data["motivo"],
+        )
+        return Response(ConfiguracionSerializer(datos).data)
