@@ -155,7 +155,7 @@ export function ProductoCard({
   const icono = agregando ? (
     <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
   ) : agregado ? (
-    <Check className="h-5 w-5" strokeWidth={2.6} aria-hidden="true" />
+    <Check className="h-5 w-5 animate-pop" strokeWidth={2.6} aria-hidden="true" />
   ) : (
     <Plus className="h-[22px] w-[22px]" strokeWidth={2.6} aria-hidden="true" />
   );
@@ -255,6 +255,7 @@ export function ProductoCard({
           }`}
         >
           {agregando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {agregado && <Check className="h-4 w-4 animate-pop" strokeWidth={2.8} aria-hidden="true" />}
           {agotado ? 'Agotado' : agregado ? 'Agregado' : pideDetalles ? 'Encargar' : 'Agregar al carrito'}
         </button>
       </div>
