@@ -145,3 +145,8 @@ el comando del arranque lo cancela y la demo muestra un pedido «Se canceló sol
 - Con PostgreSQL real, `skip_locked` hace que el barrido nunca espere a una petición que
   ya tiene el pedido; con SQLite (desarrollo y pruebas locales) los bloqueos de fila no
   existen y el barrido se apoya en la revalidación del estado.
+- **Cron externo (nota posterior).** El flujo `.github/workflows/tareas-programadas.yml` visita el
+  sistema cada 10 minutos (salud y catálogo). Eso despierta el servicio dormido y dispara el barrido
+  perezoso aunque nadie compre, así que el stock apartado se libera a tiempo sin pagar un Cron Job de
+  Render. Es una ayuda, no una garantía: GitHub puede retrasar un cron unos minutos, y si falla el
+  barrido de arranque y el de lectura siguen siendo la red de seguridad.

@@ -1,0 +1,34 @@
+name: Despliegue
+
+# Render despliega solo cada vez que algo llega a main. Este trabajo espera a que ESE commit esté
+# sirviéndose y entonces comprueba que el sistema vivo está sano (scripts/humo_produccion.py).
+# Si falla, GitHub te avisa por correo: te enteras tú antes que un cliente.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Se puede cambiar sin tocar el código: Configuración → Variables → URL_PRODUCCION.
+  URL_PRODUCCION: ${{ vars.URL_PRODUCCION || 'https://riomarket.onrender.com' }}
+
+jobs:
+  humo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Esperar el despliegue y probar el sistema vivo
+        run: python scripts/humo_produccion.py "$URL_PRODUCCION" --version "$GITHUB_SHA" --espera 1200
