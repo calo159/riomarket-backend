@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
-import { Destacados } from '../components/Destacados';
+import { Destacados, puestosDelCarrusel } from '../components/Destacados';
+import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { MedallaCategoria } from '../components/iconos';
 import { Imagen } from '../components/Imagen';
 import { desvanecerEnMancha, PatronOlas } from '../components/ui/Decoracion';
@@ -116,7 +117,12 @@ export function Inicio() {
   }, []);
 
   const todosPuestos = puestos.data?.results ?? [];
-  const promos = [...todosPuestos].sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada))).slice(0, 2);
+  // Los dos destacados de abajo son OTROS puestos: los del carrusel ya se vieron arriba (antes se repetían).
+  const enCarrusel = new Set(puestosDelCarrusel(todosPuestos).map((p) => p.id));
+  const promos = todosPuestos
+    .filter((p) => !enCarrusel.has(p.id))
+    .sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada)))
+    .slice(0, 2);
   const visibles = lista.length > 8 ? lista.slice(0, 7) : lista;
 
   return (
@@ -127,7 +133,7 @@ export function Inicio() {
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
         <nav
           aria-label="Categorías"
-          className="relative z-[4] -mt-9 grid grid-cols-4 gap-0.5 rounded-xl bg-white px-2 py-3 shadow-flota md:grid-cols-8 md:gap-0 md:px-1.5 md:py-3.5 dark:bg-slate-900"
+          className="relative z-[4] -mt-9 flex snap-x gap-0.5 overflow-x-auto rounded-xl bg-white px-2 py-3 shadow-flota [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-0 md:px-1.5 md:py-3.5 dark:bg-slate-900 [&::-webkit-scrollbar]:hidden"
         >
           {categorias.isLoading &&
             Array.from({ length: 8 }).map((_, i) => (
@@ -140,7 +146,7 @@ export function Inicio() {
             <Link
               key={c.id}
               to={`/catalogo?categoria=${c.id}`}
-              className="group flex min-h-[86px] flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-brand-200"
+              className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-brand-200"
             >
               <MedallaCategoria
                 nombre={c.nombre}
@@ -153,7 +159,7 @@ export function Inicio() {
           {lista.length > 8 && (
             <Link
               to="/catalogo"
-              className="group flex min-h-[86px] flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800"
+              className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800"
             >
               <span className="grid h-12 w-12 place-items-center rounded-full bg-brand-50 text-brand-600 transition-transform duration-[220ms] [transition-timing-function:cubic-bezier(.2,1.5,.4,1)] group-hover:-translate-y-[3px] group-hover:scale-[1.07] md:h-14 md:w-14 dark:bg-slate-800 dark:text-brand-200">
                 <LayoutGrid className="h-[25px] w-[25px] md:h-7 md:w-7" aria-hidden="true" />
@@ -222,6 +228,8 @@ export function Inicio() {
             );
           })}
         </section>
+
+        <AvisoUnPuesto className="mt-4" />
 
         <Estante
           titulo="Recién llegados"

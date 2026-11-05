@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Tienda más ordenada: menos repetido y la regla de un pedido por puesto a la vista (fase 3 de 5 del rediseño visual).**
+  Los dos destacados de debajo del primer estante ya no repiten los puestos del carrusel (si no queda ninguno, no se muestran).
+  En la tarjeta de producto «Domicilio disponible» desaparece (era lo normal, 15 veces seguidas) y solo se avisa «Solo retiro en
+  el puesto» cuando falta; en la página de un puesto sus productos ya no repiten el nombre, la calificación ni la entrega del
+  puesto. Si el carrito ya tiene productos, la tienda y el catálogo dicen de qué puesto es el pedido y que cada pedido es de uno
+  solo, antes de que alguien intente agregar de otro (antes se enteraba por un aviso de error). En celular las categorías pasan de
+  dos filas a una fila deslizable, que deja ver los productos antes.
 - **Títulos con la escala de la landing (fase 2 de 5 del rediseño visual).** Los títulos de sección de la tienda y de la página
   del puesto pasan de 23 px en peso 700 a 26-34 px en peso 900, con la última palabra resaltada («Recién **llegados**»; en la
   banda turquesa el resalte es amarillo) y los precios a peso 800. Es un componente nuevo, `TituloSeccion`.

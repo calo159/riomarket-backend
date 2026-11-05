@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Puesto } from '../lib/types';
-import { Destacados } from './Destacados';
+import { Destacados, puestosDelCarrusel } from './Destacados';
 
 const puesto = (id: number, portada: string | null = `/media/portada-${id}.webp`) =>
   ({ id, nombre: `Puesto ${id}`, descripcion: 'Fruta de la Guajira', portada, logo: null }) as unknown as Puesto;
@@ -91,5 +91,18 @@ describe('Destacados', () => {
     const { container } = montar([puesto(1, null), puesto(2, null)]);
 
     expect(fotos(container)).toHaveLength(0);
+  });
+});
+
+describe('puestosDelCarrusel', () => {
+  it('toma_hasta_cuatro_con_los_que_tienen_portada_primero', () => {
+    const puestos = [puesto(1, null), puesto(2), puesto(3, null), puesto(4), puesto(5), puesto(6)];
+
+    expect(puestosDelCarrusel(puestos).map((p) => p.id)).toEqual([2, 4, 5, 6]);
+  });
+
+  it('con_menos_de_cuatro_los_toma_todos', () => {
+    expect(puestosDelCarrusel([puesto(1)])).toHaveLength(1);
+    expect(puestosDelCarrusel([])).toEqual([]);
   });
 });
