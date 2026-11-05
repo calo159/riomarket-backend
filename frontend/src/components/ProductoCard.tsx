@@ -14,6 +14,21 @@ import { abrirConFotoCompartida } from '../lib/fotoCompartida';
 import { claves } from '../lib/queryKeys';
 import { volarAlCarrito } from '../lib/volarAlCarrito';
 import { Imagen } from './Imagen';
+import { cartulinaDe } from './cartulina';
+
+/** Unidades de medida abreviadas para el celular, donde la etiqueta de precio no da para la palabra entera. */
+const ABREVIATURAS: Record<string, string> = {
+  unidad: 'un.',
+  docena: 'doc.',
+  porción: 'porc.',
+  porcion: 'porc.',
+  paquete: 'paq.',
+  libra: 'lb',
+  litro: 'L',
+};
+export function abreviarUnidad(unidad: string): string {
+  return ABREVIATURAS[unidad.trim().toLowerCase()] ?? unidad;
+}
 
 /** Ancho de la tarjeta según la rejilla: ½ en celular, ⅓ en tableta y ≈230 px en escritorio. */
 export const SIZES_TARJETA = '(min-width: 1280px) 230px, (min-width: 768px) 33vw, 50vw';
@@ -110,6 +125,7 @@ export function ProductoCard({
   const domicilio = puesto ? Boolean(puesto.ofrece_domicilio) : producto.puesto_ofrece_domicilio;
   const calificacion = puesto?.calificacion_promedio ?? producto.puesto_calificacion;
   const unidad = producto.unidad_medida ?? 'unidad';
+  const cartulina = cartulinaDe(categoria);
 
   useEffect(() => () => window.clearTimeout(temporizador.current), []);
 
@@ -209,11 +225,24 @@ export function ProductoCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1 px-[11px] pb-3 pt-[9px] md:px-[13px] md:pb-[13px] md:pt-3">
-        <p className="precio whitespace-nowrap text-xl md:text-[21px] xl:text-[23px]">
-          {formatearMoneda(producto.precio)}{' '}
-          <small className="text-xs font-medium tracking-normal text-slate-500 md:text-[13px] dark:text-slate-400">
-            / {unidad}
-          </small>
+        {/* La cartulina del precio asoma sobre el borde de la foto, como en un puesto, con la inclinación de quien la puso a mano
+            (cambia de una a otra) y la unidad escrita en la misma cartulina. */}
+        <p className="-mt-[22px] mb-0.5 flex whitespace-nowrap md:-mt-[26px]">
+          <span
+            className="etiqueta-precio precio text-lg md:text-[21px] xl:text-[22px]"
+            style={{
+              background: cartulina.fondo,
+              color: cartulina.tinta,
+              transform: `rotate(${((producto.id % 3) - 1) * 2}deg)`,
+              transformOrigin: 'left center',
+            }}
+          >
+            {formatearMoneda(producto.precio)}
+            <small>
+              <span className="md:hidden">/ {abreviarUnidad(unidad)}</span>
+              <span className="hidden md:inline">/ {unidad}</span>
+            </small>
+          </span>
         </p>
         <Link
           to={`/productos/${producto.id}`}
@@ -242,21 +271,25 @@ export function ProductoCard({
             Solo retiro en el puesto
           </p>
         )}
-        {/* Escritorio: botón con texto, en coral (el color de la acción de comprar, igual que el + del celular). */}
+        {/* Escritorio: botón compacto en coral (el color de comprar). Ancho como la etiqueta, no a todo lo ancho: diez
+            botones enteros por pantalla pesaban más que el producto. */}
         <button
           type="button"
           onClick={() => void alAgregar()}
           disabled={agotado || agregando}
           aria-label={pideDetalles ? `Encargar ${producto.nombre}` : `Agregar ${producto.nombre} al carrito`}
-          className={`mt-2 hidden min-h-[44px] items-center justify-center gap-2 rounded-[7px] border-[1.5px] text-sm font-bold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 md:flex ${
-            agregado
-              ? 'border-exito bg-exito text-white'
-              : 'border-accion bg-accion text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] hover:border-accion-hover hover:bg-accion-hover'
+          className={`mt-2 hidden min-h-[36px] items-center justify-center gap-1.5 self-start rounded-full px-4 text-sm font-bold text-white transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex ${
+            agregado ? 'bg-exito' : 'bg-accion hover:bg-accion-hover'
           }`}
         >
-          {agregando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-          {agregado && <Check className="h-4 w-4 animate-pop" strokeWidth={2.8} aria-hidden="true" />}
-          {agotado ? 'Agotado' : agregado ? 'Agregado' : pideDetalles ? 'Encargar' : 'Agregar al carrito'}
+          {agregando ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : agregado ? (
+            <Check className="h-4 w-4 animate-pop" strokeWidth={2.8} aria-hidden="true" />
+          ) : (
+            <Plus className="h-4 w-4" strokeWidth={2.8} aria-hidden="true" />
+          )}
+          {agotado ? 'Agotado' : agregado ? 'Agregado' : pideDetalles ? 'Encargar' : 'Agregar'}
         </button>
       </div>
     </article>

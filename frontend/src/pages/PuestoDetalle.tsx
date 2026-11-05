@@ -85,7 +85,7 @@ export function PuestoDetalle() {
     <div>
       <div className="mx-auto max-w-[1240px] px-3 pt-4 sm:px-5">
         <section className="card overflow-hidden">
-          <div className="relative h-32 w-full overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800 sm:h-48 dark:from-brand-800 dark:to-brand-950">
+          <div className="relative h-32 w-full overflow-hidden bg-brand-600 sm:h-48 dark:bg-slate-800">
             {!portada && <PatronOlas className="text-white opacity-[.12]" />}
             {portada && (
               <Imagen

@@ -36,7 +36,7 @@ export function EstadoVacio({
   icono?: ReactNode;
 }) {
   return (
-    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-gradient-to-b from-white to-brand-50/60 px-6 py-14 text-center dark:border-slate-700 dark:from-slate-900 dark:to-slate-900">
+    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
       <PatronOlas className="text-brand-600 opacity-[.07] dark:text-white dark:opacity-[.04]" style={desvanecerEnMancha('50% 100%', 80, 100)} />
       <div className="relative mb-3 grid h-14 w-14 place-items-center rounded-full bg-brand-50 text-brand-600 ring-8 ring-brand-50/70 dark:bg-slate-800 dark:text-brand-300 dark:ring-slate-800/60">{icono ?? <Inbox className="h-7 w-7" />}</div>
       <h2 className="relative text-lg font-bold">{titulo}</h2>

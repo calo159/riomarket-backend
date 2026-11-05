@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Producto } from '../lib/types';
-import { ProductoCard } from './ProductoCard';
+import { abreviarUnidad, ProductoCard } from './ProductoCard';
 
 const mocks = vi.hoisted(() => ({ agregar: vi.fn(() => 'agregado'), obtenerPuesto: vi.fn() }));
 
@@ -105,5 +105,18 @@ describe('ProductoCard', () => {
 
     renderizar(producto(), { puesto: { id: 5, nombre: 'Dulces de Carmen', ofrece_domicilio: false } });
     expect(screen.getByText('Solo retiro en el puesto')).toBeInTheDocument();
+  });
+});
+
+describe('abreviarUnidad', () => {
+  it('abrevia_las_unidades_largas_para_la_etiqueta_del_celular', () => {
+    expect(abreviarUnidad('unidad')).toBe('un.');
+    expect(abreviarUnidad('Docena')).toBe('doc.');
+    expect(abreviarUnidad('libra')).toBe('lb');
+  });
+
+  it('deja_igual_las_que_ya_son_cortas_o_desconocidas', () => {
+    expect(abreviarUnidad('kg')).toBe('kg');
+    expect(abreviarUnidad('racimo')).toBe('racimo');
   });
 });
