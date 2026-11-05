@@ -5,12 +5,11 @@ import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { Imagen } from './Imagen';
 import { EtiquetaEstado } from './ui/EtiquetaEstado';
-import { desvanecerEnMancha, PatronOlas } from './ui/Decoracion';
 
 /** Franjas del toldo: coral y crema, los colores del símbolo de la marca. */
-const FRANJAS = 10;
-const ANCHO_FRANJA = 52;
-const ALTO_TOLDO = 56;
+const FRANJAS = 13;
+const ANCHO_FRANJA = 40;
+const ALTO_TOLDO = 40;
 
 /**
  * Toldo de puesto de mercado dibujado con la marca (franjas coral y crema, borde festoneado). Es el motivo del
@@ -53,21 +52,9 @@ function Toldo({ className }: { className?: string }) {
   );
 }
 
-/** Ticket de papel con muescas: lo que el visitante tiene entre manos (su pedido, o un puesto para empezar). */
+/** Ticket de papel: lo que el visitante tiene entre manos (su pedido, o un puesto para empezar). Limpio, sin adornos. */
 function Ticket({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative rounded-lg bg-white p-4 text-tinta shadow-menu dark:bg-slate-800 dark:text-slate-100">
-      <span
-        aria-hidden="true"
-        className="absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-brand-600 dark:bg-slate-900"
-      />
-      <span
-        aria-hidden="true"
-        className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-brand-600 dark:bg-slate-900"
-      />
-      {children}
-    </div>
-  );
+  return <div className="rounded-xl bg-white p-4 text-tinta shadow-menu dark:bg-slate-800 dark:text-slate-100">{children}</div>;
 }
 
 /**
@@ -83,20 +70,25 @@ export function Escaparate({
   /** Pedido sin terminar del comprador con sesión, si lo hay. */
   pedido?: Pedido | null;
 }) {
-  const primero = [...puestos].sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada)))[0] ?? null;
+  // El puesto de la foto: con portada primero y, entre los que la tienen, el mejor calificado.
+  const primero =
+    [...puestos].sort(
+      (a, b) =>
+        Number(Boolean(b.portada)) - Number(Boolean(a.portada)) ||
+        (b.calificacion_promedio ?? 0) - (a.calificacion_promedio ?? 0),
+    )[0] ?? null;
   const delPedido = pedido ? (puestos.find((p) => p.id === pedido.id_puesto) ?? null) : null;
   // La foto es la del puesto del pedido en curso (si lo hay y está en la lista); si no, la del primer puesto con portada.
   const puesto = delPedido ?? primero;
   const portada = urlAbsoluta(puesto?.portada);
 
   return (
-    <section className="relative overflow-hidden bg-brand-600 text-white dark:bg-slate-900" aria-labelledby="titular-tienda">
-      <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('0% 100%', 55, 140)} />
-      <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-8 md:px-5 md:pb-28 md:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+    <section className="relative overflow-hidden bg-brand-600 text-white dark:bg-[#0B3A3F]" aria-labelledby="titular-tienda">
+      <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-10 md:px-5 md:pb-28 md:pt-[72px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
         <div>
           <h1
             id="titular-tienda"
-            className="text-balance text-[clamp(36px,6vw,66px)] font-black leading-[1.02] tracking-[-0.04em] animate-rise"
+            className="animate-rise text-balance text-[clamp(34px,5vw,56px)] font-bold leading-[1.06] tracking-[-0.03em]"
           >
             Compra directo en los puestos de <span className="text-amarillo">Riohacha</span>
           </h1>
@@ -117,18 +109,18 @@ export function Escaparate({
         </div>
 
         <div className="relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto">
-          <Toldo className="toldo-desplega relative z-[2] block h-[44px] w-full drop-shadow-[0_3px_0_rgba(0,0,0,0.18)] md:h-[56px]" />
-          <div className="relative -mt-2 overflow-hidden rounded-b-xl bg-brand-700 dark:bg-slate-800">
+          <Toldo className="toldo-desplega relative z-[2] block h-[28px] w-full md:h-[38px]" />
+          <div className="relative -mt-1 overflow-hidden rounded-b-[16px] bg-brand-700 dark:bg-slate-800">
             {portada ? (
               <Imagen
                 src={portada}
                 fallbackNombre={puesto?.nombre ?? 'RioMarket'}
                 alt={`Puesto ${puesto?.nombre ?? ''}`}
-                contenedorClassName="aspect-[16/10] w-full md:aspect-[4/3]"
+                contenedorClassName="aspect-[16/10] w-full md:aspect-[5/4]"
                 prioridad
               />
             ) : (
-              <div className="grid aspect-[16/10] w-full place-items-center md:aspect-[4/3]">
+              <div className="grid aspect-[16/10] w-full place-items-center md:aspect-[5/4]">
                 <Store className="h-16 w-16 text-white/60" aria-hidden="true" />
               </div>
             )}

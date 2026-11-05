@@ -187,7 +187,7 @@ export function ProductoDetalle() {
         <span className="truncate text-slate-800 dark:text-slate-200">{datos.nombre}</span>
       </nav>
 
-      <div className={`card grid gap-4 p-3 md:p-5 ${imagenes.length > 1 ? 'lg:grid-cols-[76px_minmax(0,1fr)_372px]' : 'lg:grid-cols-[minmax(0,1fr)_372px]'}`}>
+      <div className={`grid gap-4 lg:gap-8 ${imagenes.length > 1 ? 'lg:grid-cols-[76px_minmax(0,1fr)_372px]' : 'lg:grid-cols-[minmax(0,1fr)_372px]'}`}>
         {imagenes.length > 1 && (
         <div className="order-2 flex gap-2 overflow-x-auto lg:order-none lg:flex-col lg:overflow-visible">
           {imagenes.map((item, indice) => (
@@ -239,7 +239,7 @@ export function ProductoDetalle() {
           />
         </ImagenAmpliable>
 
-        <aside className="flex flex-col gap-2.5 self-start rounded-xl border border-slate-200 p-4 dark:border-slate-700 md:p-[18px]" aria-label="Comprar">
+        <aside className="flex flex-col gap-2.5 self-start rounded-2xl border border-slate-200 bg-white p-4 shadow-reposo dark:border-slate-700 dark:bg-slate-900 md:p-5 lg:sticky lg:top-4" aria-label="Comprar">
           <p className="text-[13px] text-slate-500 dark:text-slate-400">
             {encargo
               ? `Por encargo · listo en ~${preparacion}`
@@ -390,14 +390,14 @@ export function ProductoDetalle() {
       )}
 
       {datos.descripcion && (
-        <section className="card mt-3.5 p-5">
+        <section className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-800">
           <h2 className="mb-2 text-xl font-bold">Descripción</h2>
           <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">{datos.descripcion}</p>
         </section>
       )}
 
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_372px]">
-        <section className="card p-5" aria-label="Reseñas del puesto">
+        <section className="border-t border-slate-200 pt-8 dark:border-slate-800" aria-label="Reseñas del puesto">
           <h2 className="mb-1 text-xl font-bold">Reseñas del puesto</h2>
           <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
             Opiniones sobre {nombrePuesto ?? 'el puesto'}, de compradores que recibieron su pedido.
@@ -435,7 +435,7 @@ export function ProductoDetalle() {
         </section>
 
         {otros.length > 0 && (
-          <aside className="card self-start p-5" aria-label="Más de este puesto">
+          <aside className="self-start border-t border-slate-200 pt-8 dark:border-slate-800" aria-label="Más de este puesto">
             <h2 className="mb-2.5 text-xl font-bold">Más de este puesto</h2>
             {otros.map((otro) => (
               <Link

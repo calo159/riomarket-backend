@@ -1,15 +1,13 @@
 import { lugar, Revela } from '../components/Revela';
-import { cartulinaDe } from '../components/cartulina';
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
+import { ChevronRight, LayoutGrid } from 'lucide-react';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
 import { Escaparate } from '../components/Escaparate';
 import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { MedallaCategoria } from '../components/iconos';
-import { desvanecerEnMancha, PatronOlas } from '../components/ui/Decoracion';
 import { TituloSeccion } from '../components/ui/TituloSeccion';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
@@ -56,10 +54,14 @@ function Estante({
   };
   return (
     <Revela as="section" className="mt-6 md:mt-[30px]" aria-label={titulo}>
-      <div className="rv mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 md:mb-4">
+      <div className="rv mb-4 flex items-end justify-between gap-4 md:mb-5">
         <TituloSeccion texto={titulo} />
-        <Link to={to} className="link text-sm">
+        <Link
+          to={to}
+          className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800 dark:text-brand-200 dark:hover:text-brand-100"
+        >
           {textoVer}
+          <ChevronRight className="h-4 w-4" strokeWidth={2.4} aria-hidden="true" />
         </Link>
       </div>
       {cargando && <EsqueletoGrid cantidad={5} />}
@@ -132,42 +134,48 @@ export function Inicio() {
       <Escaparate puestos={todosPuestos} pedido={pedidoActivo.data?.results[0] ?? null} />
 
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
-        {/* Las categorías son cartulinas de colores, una por categoría (components/cartulina.ts), con la foto del producto
-            típico asomando. Reemplazan la caja blanca con círculos, que era lo más genérico de la página. */}
+        {/* Fila de categorías limpia, como la de Airbnb: la foto del producto típico en un círculo y su nombre. Sin caja
+            ni colores vivos: el color lo ponen las fotos. */}
         <nav
           aria-label="Categorías"
-          className="entra-medallas relative z-[4] -mt-9 flex snap-x gap-2 overflow-x-auto px-0.5 pb-3 pt-1.5 [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-2.5 md:overflow-visible [&::-webkit-scrollbar]:hidden"
+          className="entra-medallas relative mt-7 flex snap-x gap-2 overflow-x-auto pb-2 [scrollbar-width:none] md:mt-9 md:grid md:grid-cols-8 md:gap-0 md:overflow-visible [&::-webkit-scrollbar]:hidden"
         >
           {categorias.isLoading &&
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="skeleton h-[88px] w-[132px] shrink-0 md:w-auto" aria-hidden="true" />
+              <div key={i} className="flex w-[88px] shrink-0 flex-col items-center gap-2.5 md:w-auto" aria-hidden="true">
+                <div className="skeleton h-16 w-16 rounded-full md:h-[68px] md:w-[68px]" />
+                <div className="skeleton h-3 w-14" />
+              </div>
             ))}
-          {visibles.map((c, i) => {
-            const cartulina = cartulinaDe(c.nombre);
-            return (
-              <Link
-                key={c.id}
-                to={`/catalogo?categoria=${c.id}`}
-                style={{ ...lugar(i), background: cartulina.fondo, color: cartulina.tinta, '--giro': `${i % 2 ? 1.2 : -1.2}deg` } as CSSProperties}
-                className="group relative flex h-[88px] w-[132px] shrink-0 snap-start items-end overflow-hidden rounded-lg p-2.5 text-[13px] font-extrabold leading-[1.15] shadow-flota transition-transform duration-200 [transform:rotate(var(--giro))] hover:[transform:rotate(0deg)_translateY(-3px)] active:scale-95 md:w-auto md:text-sm"
-              >
-                <MedallaCategoria
-                  nombre={c.nombre}
-                  className="absolute right-2 top-2 h-10 w-10 ring-2 ring-white/80 transition-transform duration-200 group-hover:scale-110"
-                  iconoClassName="h-5 w-5"
-                />
-                <span className="relative z-[1]">{c.nombre}</span>
-              </Link>
-            );
-          })}
+          {visibles.map((c, i) => (
+            <Link
+              key={c.id}
+              style={lugar(i)}
+              to={`/catalogo?categoria=${c.id}`}
+              className="group flex w-[88px] shrink-0 snap-start flex-col items-center gap-2 rounded-lg px-1 py-1 text-center text-[13px] font-semibold leading-[1.2] text-slate-700 transition-colors hover:text-brand-700 md:w-auto dark:text-slate-200 dark:hover:text-brand-200"
+            >
+              <MedallaCategoria
+                nombre={c.nombre}
+                className="h-16 w-16 transition duration-300 ease-out group-hover:scale-105 group-hover:shadow-flota md:h-[68px] md:w-[68px]"
+                iconoClassName="h-7 w-7"
+              />
+              <span className="border-b-2 border-transparent pb-0.5 transition-colors group-hover:border-brand-600 dark:group-hover:border-brand-300">
+                {c.nombre}
+              </span>
+            </Link>
+          ))}
           {lista.length > 8 && (
             <Link
               to="/catalogo"
               style={lugar(visibles.length)}
-              className="group relative flex h-[88px] w-[132px] shrink-0 snap-start items-end overflow-hidden rounded-lg bg-white p-2.5 text-[13px] font-extrabold leading-[1.15] text-tinta shadow-flota transition-transform duration-200 hover:-translate-y-[3px] md:w-auto md:text-sm dark:bg-slate-800 dark:text-slate-100"
+              className="group flex w-[88px] shrink-0 snap-start flex-col items-center gap-2 rounded-lg px-1 py-1 text-center text-[13px] font-semibold leading-[1.2] text-slate-700 transition-colors hover:text-brand-700 md:w-auto dark:text-slate-200 dark:hover:text-brand-200"
             >
-              <LayoutGrid className="absolute right-3 top-3 h-6 w-6 text-brand-600 dark:text-brand-300" aria-hidden="true" />
-              Ver todas
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-brand-700 transition duration-300 ease-out group-hover:scale-105 md:h-[68px] md:w-[68px] dark:bg-slate-800 dark:text-brand-200">
+                <LayoutGrid className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span className="border-b-2 border-transparent pb-0.5 transition-colors group-hover:border-brand-600 dark:group-hover:border-brand-300">
+                Ver todas
+              </span>
             </Link>
           )}
           {categorias.isError && (
@@ -190,17 +198,16 @@ export function Inicio() {
 
       </div>
 
-      {/* Banda turquesa de ancho completo: la tienda deja de ser un solo plano y el color vuelve a aparecer al bajar. */}
+      {/* Sección de puestos sobre blanco, de ancho completo: separa el ritmo de la página sin competir con las fotos. */}
       <Revela
         as="section"
         id="puestos"
-        className="relative mt-9 scroll-mt-4 overflow-hidden bg-brand-600 text-white dark:bg-brand-700 md:mt-12"
+        className="mt-12 scroll-mt-4 md:mt-16"
         aria-label="Puestos de Riohacha"
       >
-        <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('100% 0%', 55, 140)} />
-        <div className="relative mx-auto max-w-[1240px] px-3 py-8 md:px-5 md:py-11">
-          <div className="rv mb-4 flex items-baseline gap-3.5 md:mb-5">
-            <TituloSeccion texto="Puestos de Riohacha" claro />
+        <div className="mx-auto max-w-[1240px] px-3 md:px-5">
+          <div className="rv mb-4 md:mb-5">
+            <TituloSeccion texto="Puestos de Riohacha" />
           </div>
           {puestos.isLoading && <EsqueletoGrid cantidad={4} />}
           {puestos.isError && <EstadoError mensaje="No pudimos cargar los puestos." onReintentar={() => void puestos.refetch()} />}
@@ -210,7 +217,7 @@ export function Inicio() {
           {puestos.data && puestos.data.results.length > 0 && (
             <div
               className={cn(
-                'grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3',
+                'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3',
                 // Con 6 o menos puestos, tres columnas: 4 arriba y 2 abajo dejaba un hueco vacío.
                 puestos.data.results.length > 6 && 'xl:grid-cols-4',
               )}
@@ -240,22 +247,10 @@ export function Inicio() {
         </div>
       )}
 
-      <Revela as="section" bloque className="mt-9 bg-amarillo text-tinta dark:border-t-4 dark:border-amarillo dark:bg-slate-900 dark:text-slate-100" aria-label="Cómo funciona">
-        <div className="mx-auto grid max-w-[1240px] gap-5 px-5 py-6 md:grid-cols-3 md:gap-6">
-          {[
-            { icono: Store, titulo: 'Un pedido por puesto', texto: 'Compras directo a cada vendedor.' },
-            { icono: MapPin, titulo: 'Sigue tu pedido', texto: 'Del puesto hasta tus manos, paso a paso.' },
-            { icono: Star, titulo: 'Reseñas de compradores', texto: 'Solo opina quien recibió su pedido.' },
-          ].map(({ icono: Icono, titulo, texto }) => (
-            <div key={titulo} className="flex items-start gap-3">
-              <Icono className="h-[30px] w-[30px] shrink-0 text-brand-700 dark:text-amarillo" strokeWidth={1.8} aria-hidden="true" />
-              <div>
-                <b className="block">{titulo}</b>
-                <span className="text-sm text-tinta/80 dark:text-slate-400">{texto}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+      <Revela as="section" bloque className="mx-auto mt-14 max-w-[1240px] px-5 text-center md:mt-20" aria-label="Cómo funciona">
+        <p className="mx-auto max-w-2xl text-balance text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
+          Cada pedido es de un solo puesto, lo sigues paso a paso desde el puesto hasta tus manos, y solo opina quien recibió su pedido.
+        </p>
       </Revela>
     </div>
   );

@@ -67,6 +67,7 @@ export default {
         menu: '0 8px 22px rgba(10, 29, 33, 0.22)',
       },
       keyframes: {
+        asienta: { from: { opacity: '0', transform: 'scale(.7)' }, to: { opacity: '1', transform: 'none' } },
         pop: { '0%': { transform: 'scale(.6)' }, '60%': { transform: 'scale(1.35)' }, '100%': { transform: 'scale(1)' } },
         rise: { from: { opacity: '0', transform: 'translateY(14px)' }, to: { opacity: '1', transform: 'none' } },
         fadein: { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -91,6 +92,7 @@ export default {
         pulsepaso: { '0%': { boxShadow: '0 0 0 0 rgba(0,98,109,.45)' }, '100%': { boxShadow: '0 0 0 10px rgba(0,98,109,0)' } },
       },
       animation: {
+        asienta: 'asienta .32s cubic-bezier(.16,1,.3,1)',
         pop: 'pop .42s cubic-bezier(.2,1.6,.4,1)',
         rise: 'rise .28s cubic-bezier(.2,.9,.3,1)',
         fadein: 'fadein .2s ease',
