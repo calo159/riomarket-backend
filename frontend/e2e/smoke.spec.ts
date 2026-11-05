@@ -12,7 +12,7 @@ test('la tienda vive en /tienda', async ({ page }) => {
   await page.goto('/tienda');
 
   await expect(page).toHaveTitle(/RioMarket/);
-  await expect(page.getByRole('heading', { name: /RioMarket, el mercado de Riohacha/i })).toBeAttached();
+  await expect(page.getByRole('heading', { name: /Compra directo en los puestos de Riohacha/i })).toBeAttached();
 });
 
 test('muestra el login y permite ir al registro', async ({ page }) => {
