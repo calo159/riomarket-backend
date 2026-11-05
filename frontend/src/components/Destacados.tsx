@@ -18,11 +18,11 @@ interface Diapositiva {
   puesto: Puesto | null;
 }
 
-/** Colores de fondo de las diapositivas (del diseño); el texto cumple AA sobre cada uno. */
+/** Colores de fondo de las diapositivas (turquesa, amarillo, crema del toldo y coral); el texto cumple AA sobre cada uno. */
 const FONDOS = [
-  { fondo: '#0D5C8A', color: '#FFFFFF' },
-  { fondo: '#FFD166', color: '#1B2A33' },
   { fondo: '#00626D', color: '#FFFFFF' },
+  { fondo: '#FFD166', color: '#1B2A33' },
+  { fondo: '#FFF4DC', color: '#1B2A33' },
   { fondo: '#CF3F1B', color: '#FFFFFF' },
 ];
 
