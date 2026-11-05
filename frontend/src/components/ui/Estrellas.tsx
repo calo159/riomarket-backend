@@ -22,10 +22,22 @@ export function Estrellas({
         const numero = indice + 1;
         const llena = numero <= Math.round(valor);
         if (!interactivo) {
+          // Un 4,5 se ve como 4 estrellas y media (antes se redondeaba y se dibujaban 5 llenas).
+          const resto = valor - indice;
+          if (resto >= 0.25 && resto < 0.75) {
+            return (
+              <span key={numero} className="relative inline-flex" aria-hidden="true">
+                <Star className={cn(tamano, 'text-slate-300 dark:text-slate-600')} />
+                <span className="absolute inset-0 overflow-hidden [clip-path:inset(0_50%_0_0)]">
+                  <Star className={cn(tamano, 'fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400')} />
+                </span>
+              </span>
+            );
+          }
           return (
             <Star
               key={numero}
-              className={cn(tamano, llena ? 'fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600')}
+              className={cn(tamano, resto >= 0.75 ? 'fill-estrella text-estrella dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600')}
               aria-hidden="true"
             />
           );

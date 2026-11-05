@@ -176,28 +176,26 @@ export function PublicLayout() {
               {tiene('mis_pedidos') && <li><Link className="pie-enlace" to="/mis-pedidos">Mis pedidos</Link></li>}
             </ul>
           </div>
-          <div>
-            <h2 className="font-bold text-white">Vender</h2>
-            <ul className="mt-1">
-              {!autenticado && (
-                <li><Link className="pie-enlace" to="/registro?rol=vendedor">Crear cuenta de vendedor</Link></li>
-              )}
-              {panel && <li><Link className="pie-enlace" to={panel.ruta}>Ir a mi panel</Link></li>}
-            </ul>
-          </div>
+          {(!autenticado || panel) && (
+            <div>
+              <h2 className="font-bold text-white">Vender</h2>
+              <ul className="mt-1">
+                {!autenticado && (
+                  <li><Link className="pie-enlace" to="/registro?rol=vendedor">Crear cuenta de vendedor</Link></li>
+                )}
+                {panel && <li><Link className="pie-enlace" to={panel.ruta}>Ir a mi panel</Link></li>}
+              </ul>
+            </div>
+          )}
           <div>
             <h2 className="font-bold text-white">RioMarket</h2>
-            <p className="mt-2">
-              Riohacha, La Guajira · Colombia
-              <br />
-              Soporte: soporte@riomarket.test
-              <br />
-              <Link className="pie-enlace" to="/terminos">Términos y condiciones</Link>
-              <br />
-              <Link className="pie-enlace" to="/privacidad">Política de privacidad</Link>
-              <br />
-              <Link className="pie-enlace" to="/creditos-fotos">Créditos de fotos</Link>
-            </p>
+            <ul className="mt-1">
+              <li className="py-2 md:py-1">Riohacha, La Guajira · Colombia</li>
+              <li className="py-2 md:py-1">Soporte: soporte@riomarket.test</li>
+              <li><Link className="pie-enlace" to="/terminos">Términos y condiciones</Link></li>
+              <li><Link className="pie-enlace" to="/privacidad">Política de privacidad</Link></li>
+              <li><Link className="pie-enlace" to="/creditos-fotos">Créditos de fotos</Link></li>
+            </ul>
           </div>
         </div>
         <p className="mx-auto mt-6 max-w-[1240px] border-t border-white/10 px-5 pt-4 text-xs">

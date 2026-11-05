@@ -61,6 +61,10 @@ borde izquierdo inclinado con una banda translúcida detrás. Con texto blanco e
 (`calc(52vw - 4.5rem)` en tablet, `calc(42vw - 4.5rem)` desde `lg`) y la flecha izquierda mide 36 px para no tapar la primera letra.
 El contraste real (píxeles detrás del texto) se midió en cinco anchos y las cuatro diapositivas: mínimo 5,1:1.
 
+## Superficies del navegador
+
+Lo que el navegador dibuja por su cuenta también está tematizado (`index.css`, capa base): `::selection` amarillo `#FFD166` con texto tinta, `caret-color` y `accent-color` turquesa (`#7DB6BC` en oscuro) y `scrollbar-color` en el tono del papel. Las calificaciones usan estrellas llenas, medias y vacías (`Estrellas`): un 4,5 son cuatro y media.
+
 ## Tipografía
 
 Figtree variable autoalojada (`@fontsource-variable/figtree`, solo el subconjunto latino, 20 kB, sin CDN). Base 15 px.
