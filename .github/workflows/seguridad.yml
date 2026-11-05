@@ -1,7 +1,8 @@
 name: Seguridad
 
-# Busca vulnerabilidades conocidas en las dependencias y en el código propio. Corre en cada
-# PR a main y una vez por semana: un aviso nuevo puede aparecer sin que cambie una línea.
+# Busca vulnerabilidades conocidas en las dependencias. Corre en cada PR a main y una vez por
+# semana: un aviso nuevo puede aparecer sin que cambie una línea. El análisis del código propio
+# (CodeQL) ya lo hace la configuración predeterminada de GitHub (Ajustes → Code security).
 on:
   pull_request:
     branches: [main]
@@ -46,24 +47,3 @@ jobs:
         # Solo lo que viaja a producción; las herramientas de desarrollo no llegan al usuario.
         working-directory: frontend
         run: npm audit --omit=dev --audit-level=high
-
-  codeql:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [python, javascript-typescript]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-          queries: security-extended
-
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: /language:${{ matrix.language }}

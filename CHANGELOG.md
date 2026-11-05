@@ -16,7 +16,7 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   - **Dependabot** propone cada semana las actualizaciones de Python y npm (agrupadas las menores) y cada mes las de
     GitHub Actions; el CI las prueba como cualquier PR.
   - **Escaneo de seguridad** en cada PR a `main` y una vez por semana: vulnerabilidades conocidas en las dependencias
-    (`pip-audit`, `npm audit`) y análisis del código con CodeQL.
+    (`pip-audit`, `npm audit`). El análisis del código con CodeQL ya lo hacía GitHub por su cuenta.
   - **Prueba de humo tras cada despliegue** (`scripts/humo_produccion.py`): espera a que Render sirva el commit unido y
     comprueba que el sistema responde, que las migraciones están al día, que las cabeceras de seguridad están y que las
     rutas privadas exigen sesión. Solo lee; si falla, GitHub avisa por correo.
