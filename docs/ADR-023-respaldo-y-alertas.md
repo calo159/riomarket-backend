@@ -49,6 +49,8 @@ despliegue gratis de Render no tiene tareas programadas propias (ADR-012). El re
   `SENTRY_DSN`. Hasta entonces el respaldo diario falla y avisa.
 - **Perder la frase `RESPALDO_CLAVE` equivale a perder los respaldos.** Guárdala también fuera de GitHub (gestor de
   contraseñas). Rotarla no descifra los archivos anteriores.
+- **Se restaura en PostgreSQL 17 o más nuevo.** `pg_dump` 17 escribe parámetros que un servidor más viejo rechaza; lo
+  descubrió la propia prueba de restauración. El cliente es 17 para poder leer cualquier servidor actual.
 - El respaldo es de la **base**. Las imágenes viven en su propio bucket S3, que es duradero por sí mismo.
 - Peor caso asumido: se pierde hasta un día de datos (el intervalo entre respaldos). Si el negocio crece, el siguiente
   paso es un plan con respaldo continuo (Supabase Pro o equivalente), no más scripts.

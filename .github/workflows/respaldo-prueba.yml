@@ -33,7 +33,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # Misma versión que el cliente que respalda: un respaldo hecho con pg_dump 17 no se restaura en un
+        # servidor más viejo (usa parámetros que no conoce). Restaurar en uno igual o más nuevo sí.
+        image: postgres:17
         env:
           POSTGRES_USER: riomarket
           POSTGRES_PASSWORD: riomarket

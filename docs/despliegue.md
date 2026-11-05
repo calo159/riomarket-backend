@@ -140,7 +140,7 @@ RESPALDO_CLAVE='la-frase-guardada' bash scripts/restaurar_respaldo.sh riomarket-
 # 3. Para usarla: pon esa URI en DATABASE_URL en Render y haz Manual Deploy.
 ```
 
-El script se niega a restaurar sobre una base que ya tiene tablas. La restauración se ensaya sola cada mes y cada vez que
+**La base destino debe ser PostgreSQL 17 o más nueva**: el respaldo se hace con `pg_dump` 17 y un servidor más viejo no entiende lo que escribe (la prueba mensual lo descubrió). En Supabase crea el proyecto nuevo con la versión más reciente. El script se niega a restaurar sobre una base que ya tiene tablas. La restauración se ensaya sola cada mes y cada vez que
 cambian los scripts (flujo **Prueba del respaldo**), con datos de demostración.
 
 Lo que **no** cubre: las imágenes (viven en su propio bucket, que ya es duradero) y lo ocurrido entre dos respaldos (hasta
