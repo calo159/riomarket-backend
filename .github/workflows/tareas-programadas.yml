@@ -1,0 +1,44 @@
+name: Tareas programadas
+
+# Render gratis no tiene cron (ADR-012). Cada 10 minutos este trabajo visita el sistema:
+#   1. Despierta el servicio si se durmió por inactividad, así el primer cliente no espera ~1 min.
+#   2. Al leer el catálogo y los pedidos se dispara el barrido de pedidos vencidos
+#      (apps/orders/middleware.py), de modo que el stock apartado se libera a tiempo aunque
+#      nadie esté comprando.
+#   3. Si el sistema no responde o no está sano, el trabajo falla y GitHub te avisa.
+#
+# Notas: GitHub puede retrasar los cron unos minutos en horas de mucha carga, y desactiva los
+# programados si el repositorio pasa 60 días sin actividad. Con un plan de pago de Render esto
+# se reemplaza por un Cron Job propio.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tareas-programadas
+  cancel-in-progress: false
+
+env:
+  URL_PRODUCCION: ${{ vars.URL_PRODUCCION || 'https://riomarket.onrender.com' }}
+
+jobs:
+  mantenimiento:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Despertar el servicio y comprobar su salud
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 15 --retry-all-errors \
+            --max-time 90 "$URL_PRODUCCION/api/health/" | tee salud.json
+          grep -q '"status": *"ok"' salud.json
+          grep -q '"database": *"up"' salud.json
+
+      - name: Disparar la liberación de pedidos vencidos
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors \
+            --max-time 60 --output /dev/null \
+            "$URL_PRODUCCION/api/catalog/productos/?page_size=1"

@@ -11,6 +11,17 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Más automatización en el repositorio.** Cuatro piezas que quitan trabajo manual y avisan antes de que lo note un
+  cliente:
+  - **Dependabot** propone cada semana las actualizaciones de Python y npm (agrupadas las menores) y cada mes las de
+    GitHub Actions; el CI las prueba como cualquier PR.
+  - **Escaneo de seguridad** en cada PR a `main` y una vez por semana: vulnerabilidades conocidas en las dependencias
+    (`pip-audit`, `npm audit`). El análisis del código con CodeQL ya lo hacía GitHub por su cuenta.
+  - **Prueba de humo tras cada despliegue** (`scripts/humo_produccion.py`): espera a que Render sirva el commit unido y
+    comprueba que el sistema responde, que las migraciones están al día, que las cabeceras de seguridad están y que las
+    rutas privadas exigen sesión. Solo lee; si falla, GitHub avisa por correo.
+  - **Tareas programadas**: cada 10 minutos se visita el sistema, lo que lo despierta y dispara la liberación de pedidos
+    vencidos aunque nadie esté comprando (Render gratis no tiene cron; ver ADR-012).
 - **Panel de administración más completo.** Cuatro cosas que un administrador necesita a diario:
   - **Auditoría consultable.** La pantalla era una lista fija de 100 filas sin filtros, aunque el servidor ya los
     soportaba. Ahora se busca por correo, nombre o entidad, se filtra por acción y por fechas, se pagina, y la columna

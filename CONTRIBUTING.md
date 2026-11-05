@@ -61,6 +61,18 @@ dentro de `frontend/`. Si cambia un texto o un botón que recorren, ajuste la pr
 Si cambia serializers o rutas, regenere los tipos del frontend con el backend corriendo
 (`npm run gen:api`) y valide el esquema: `python manage.py spectacular --file schema.yaml --validate`.
 
+## Lo que se automatiza solo
+
+- **Dependabot** abre cada lunes un PR con las actualizaciones de Python y npm (agrupadas las menores y los parches)
+  y cada mes las de GitHub Actions. El CI las prueba; si pasa, se revisa el CHANGELOG de la biblioteca y se une.
+- **Seguridad** (`.github/workflows/seguridad.yml`): `pip-audit` y `npm audit` en cada PR a `main` y una vez
+  por semana. Para correr las de dependencias en local: `pip install pip-audit && pip-audit -r requirements.txt
+  --no-deps --disable-pip` y `npm audit --omit=dev --audit-level=high` dentro de `frontend/`.
+- **Prueba de humo tras cada despliegue** (`despliegue.yml`): espera a que Render sirva el commit unido y corre
+  `python scripts/humo_produccion.py <url>`. Solo lee y no necesita credenciales; también sirve a mano.
+- **Tareas programadas** (`tareas-programadas.yml`): cada 10 minutos despierta el servicio y dispara la liberación de
+  pedidos vencidos (ver [ADR-012](docs/ADR-012-apartar-con-plazo.md)).
+
 ## La matriz de trazabilidad
 
 [`docs/requisitos.yml`](docs/requisitos.yml) es la fuente de verdad de los requisitos y
