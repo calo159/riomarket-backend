@@ -27,6 +27,11 @@ updates:
     groups:
       frontend-menores:
         update-types: [minor, patch]
+    ignore:
+      # La 0.5 exige ESLint 9 y el proyecto sigue en ESLint 8: con ella npm no resuelve el árbol.
+      # Se retoma al migrar a ESLint 9.
+      - dependency-name: eslint-plugin-react-refresh
+        update-types: [version-update:semver-minor]
 
   - package-ecosystem: github-actions
     directory: /
