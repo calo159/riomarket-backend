@@ -240,7 +240,7 @@ export function ProductoCard({
             {domicilio ? 'Domicilio disponible' : 'Retiro en el puesto'}
           </p>
         )}
-        {/* Escritorio: botón con texto, como el mock. */}
+        {/* Escritorio: botón con texto, en coral (el color de la acción de comprar, igual que el + del celular). */}
         <button
           type="button"
           onClick={() => void alAgregar()}
@@ -249,7 +249,7 @@ export function ProductoCard({
           className={`mt-2 hidden min-h-[44px] items-center justify-center gap-2 rounded-[7px] border-[1.5px] text-sm font-bold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 md:flex ${
             agregado
               ? 'border-exito bg-exito text-white'
-              : 'border-brand-600 bg-white text-brand-600 hover:bg-brand-600 hover:text-white dark:border-brand-300 dark:bg-transparent dark:text-brand-200 dark:hover:bg-brand-300 dark:hover:text-slate-950'
+              : 'border-accion bg-accion text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] hover:border-accion-hover hover:bg-accion-hover'
           }`}
         >
           {agregando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}

@@ -1,6 +1,6 @@
 # Sistema de diseño de RioMarket
 
-Interfaz densa de marketplace: encabezado turquesa, tarjetas blancas sobre fondo gris frío, acción en coral.
+Interfaz densa de marketplace: encabezado turquesa, tarjetas blancas con borde y sombra de reposo sobre papel cálido, bandas de color de ancho completo, acción en coral.
 La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio celular, producto).
 
 ## Tokens (`frontend/tailwind.config.js`)
@@ -11,12 +11,14 @@ La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio c
 | `accion` / `accion-hover` | `#CF3F1B` / `#B53414` | Comprar, agregar, confirmar (`.btn-primary`) |
 | `amarillo` | `#FFD166` | Detalles: «Market» del logo, contadores, foco de la búsqueda |
 | `tinta` | `#1B2A33` | Texto principal |
-| `slate-*` | escala fría; `500 = #566973`, `200 = #DDE4E8` | Texto secundario y bordes. En oscuro, `900` es la tarjeta y `950` la página |
-| `fondo` | `#EDF1F3` | Fondo de página |
+| `slate-*` | `50-300` cálidos (`200 = #E4D9C3`, bordes y superficies); `400-950` fríos (`500 = #566973`) | Texto secundario y bordes. En oscuro, `900` es la tarjeta y `950` la página |
+| `fondo` | `#F4EBDA` | Fondo de página: papel cálido del toldo (antes un gris frío `#EDF1F3`). `papel` `#FBF7EE` y `crema` `#FFF4DC` son las bandas claras |
 | `exito`, `azul`, `estrella`, `pie` | `#0B7A3E`, `#0D5C8A`, `#9A5B00`, `#17313B` | Domicilio/éxito, bloque azul, calificación, pie |
 
 `estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` porque el original daba 4,2:1 sobre blanco; ahora 5,4:1.
-`sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin vidrio ni manchas decorativas; sombras solo al pasar el cursor (`shadow-hover`) o en elementos flotantes (`shadow-flota`, `shadow-menu`). Los degradados y las texturas existen, pero salen de la marca (ver «Detalles de marca»).
+`sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin vidrio ni manchas decorativas. En reposo la tarjeta se separa del papel con borde cálido y una sombra corta (`shadow-reposo`); sube con `shadow-hover` al pasar el cursor y los elementos flotantes usan `shadow-flota` y `shadow-menu`. Los degradados y las texturas existen, pero salen de la marca (ver «Detalles de marca»).
+
+**Ritmo de color de la tienda.** El color no se queda arriba: tras el carrusel y las categorías, la sección «Puestos de Riohacha» es una banda turquesa de ancho completo (`brand-600`, olas muy tenues, tarjetas blancas encima) y «Cómo funciona» una banda crema. Contraste medido (AA): tinta sobre papel 12,5:1, texto secundario 4,8:1, enlace turquesa 6,0:1, blanco sobre turquesa 7,1:1 y sobre coral 4,8:1. La tarjeta blanca contra el papel es 1,18:1 por valor: la separan el borde y la sombra, no el contraste.
 
 ## Marca
 
@@ -53,7 +55,7 @@ Los dos motivos del logo (las olas y el toldo festoneado) se usan como textura y
 Además: fondo de página con un velo turquesa (arriba a la izquierda) y otro amarillo (arriba a la derecha) solo en claro; tarjetas
 con un reflejo en el borde superior; símbolo del logo como marca de agua en el panel de login.
 
-**Carrusel de destacados.** Cada diapositiva lleva el color del diseño con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
+**Carrusel de destacados.** Las diapositivas rotan turquesa, amarillo, crema del toldo y coral (ya no hay azul: chocaba con el turquesa del encabezado). Cada una lleva su color con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
 borde izquierdo inclinado con una banda translúcida detrás. Con texto blanco el lado del texto se oscurece un 8 % para dejar margen al contraste;
 `color-mix` queda de respaldo en el color sólido. El texto se limita al espacio libre a la izquierda de la foto
 (`calc(52vw - 4.5rem)` en tablet, `calc(42vw - 4.5rem)` desde `lg`) y la flecha izquierda mide 36 px para no tapar la primera letra.

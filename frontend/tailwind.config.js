@@ -26,14 +26,18 @@ export default {
         exito: { DEFAULT: '#0B7A3E', suave: '#E2F4E7' },
         estrella: '#9A5B00',
         tinta: '#1B2A33',
-        fondo: '#EDF1F3',
+        // Papel cálido del toldo: la página ya no es un gris de hospital y las tarjetas blancas se despegan de él.
+        fondo: '#F4EBDA',
+        papel: '#FBF7EE',
+        crema: '#FFF4DC',
         pie: '#17313B',
-        // Grises fríos del diseño: 200 = borde, 500 = texto secundario, 900 = tinta.
+        // Neutros: del 50 al 300 son de papel cálido (superficies y bordes); del 400 al 950 siguen fríos
+        // (texto y tema oscuro). 200 = borde, 500 = texto secundario, 900 = tinta.
         slate: {
-          50: '#F4F6F7',
-          100: '#EDF1F3',
-          200: '#DDE4E8',
-          300: '#BFCBD1',
+          50: '#FAF6EC',
+          100: '#F3ECDD',
+          200: '#E4D9C3',
+          300: '#CDBFA4',
           400: '#8797A1',
           500: '#566973',
           600: '#465862',
@@ -53,6 +57,8 @@ export default {
       },
       boxShadow: {
         // Las sombras aparecen solo al pasar el cursor (tarjetas) o en elementos flotantes.
+        // En reposo: una línea de contacto y una sombra corta, lo justo para que la tarjeta se separe del papel.
+        reposo: '0 1px 0 rgba(27, 42, 51, 0.04), 0 2px 8px rgba(27, 42, 51, 0.07)',
         hover: '0 7px 20px rgba(16, 44, 54, 0.16)',
         flota: '0 3px 12px rgba(16, 44, 54, 0.12)',
         menu: '0 8px 22px rgba(16, 44, 54, 0.22)',

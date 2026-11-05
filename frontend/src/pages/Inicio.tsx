@@ -8,6 +8,7 @@ import { PuestoCard } from '../components/PuestoCard';
 import { Destacados } from '../components/Destacados';
 import { MedallaCategoria } from '../components/iconos';
 import { Imagen } from '../components/Imagen';
+import { desvanecerEnMancha, PatronOlas } from '../components/ui/Decoracion';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
 import { inicioPorRol } from '../auth/permisos';
@@ -188,7 +189,7 @@ export function Inicio() {
           ].map(({ to, titulo, texto, foto, destacado }) => {
             const clase = cn(
               'card card-hover grid min-h-[116px] grid-cols-[minmax(0,1fr)_38%] overflow-hidden text-tinta hover:text-tinta dark:text-slate-100 dark:hover:text-slate-100',
-              destacado && 'border-transparent bg-amarillo dark:bg-amarillo dark:text-tinta dark:hover:text-tinta',
+              destacado && 'border-transparent bg-amarillo dark:bg-[#E9B949] dark:text-tinta dark:hover:text-tinta',
             );
             const contenido = (
               <>
@@ -242,7 +243,7 @@ export function Inicio() {
                   key={p.id}
                   to={`/puestos/${p.id}`}
                   className={`grid h-[132px] grid-cols-[minmax(0,1fr)_40%] overflow-hidden rounded-xl transition duration-[180ms] hover:-translate-y-0.5 hover:shadow-hover md:h-[176px] md:grid-cols-[minmax(0,1fr)_44%] ${
-                    claro ? 'bg-amarillo text-tinta hover:text-tinta' : 'bg-azul text-white hover:text-white'
+                    claro ? 'bg-amarillo text-tinta hover:text-tinta dark:bg-[#E9B949]' : 'bg-brand-600 text-white hover:text-white dark:bg-brand-800'
                   }`}
                 >
                   <div className="flex flex-col justify-center gap-1.5 p-4 md:p-[22px]">
@@ -265,8 +266,19 @@ export function Inicio() {
           </Revela>
         )}
 
-        <Revela as="section" bloque id="puestos" className="mt-6 scroll-mt-4 md:mt-[30px]" aria-label="Puestos de Riohacha">
-          <div className="mb-2.5 flex items-baseline gap-3.5 md:mb-3">
+      </div>
+
+      {/* Banda turquesa de ancho completo: la tienda deja de ser un solo plano y el color vuelve a aparecer al bajar. */}
+      <Revela
+        as="section"
+        bloque
+        id="puestos"
+        className="relative mt-9 scroll-mt-4 overflow-hidden bg-brand-600 text-white dark:bg-brand-900 md:mt-12"
+        aria-label="Puestos de Riohacha"
+      >
+        <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('100% 0%', 55, 140)} />
+        <div className="relative mx-auto max-w-[1240px] px-3 py-8 md:px-5 md:py-11">
+          <div className="mb-3 flex items-baseline gap-3.5 md:mb-4">
             <h2 className="text-xl font-bold tracking-tight md:text-[23px]">Puestos de Riohacha</h2>
           </div>
           {puestos.isLoading && <EsqueletoGrid cantidad={4} />}
@@ -281,9 +293,11 @@ export function Inicio() {
               ))}
             </div>
           )}
-        </Revela>
+        </div>
+      </Revela>
 
-        {destacada && (
+      {destacada && (
+        <div className="mx-auto max-w-[1240px] px-3 md:px-5">
           <Estante
             titulo={destacada.nombre}
             to={`/catalogo?categoria=${destacada.id}`}
@@ -294,10 +308,10 @@ export function Inicio() {
             error={deCategoria.isError}
             alReintentar={() => void deCategoria.refetch()}
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      <Revela as="section" bloque className="mt-9 bg-white dark:bg-slate-900" aria-label="Cómo funciona">
+      <Revela as="section" bloque className="mt-9 bg-crema dark:bg-slate-900" aria-label="Cómo funciona">
         <div className="mx-auto grid max-w-[1240px] gap-5 px-5 py-6 md:grid-cols-3 md:gap-6">
           {[
             { icono: Store, titulo: 'Un pedido por puesto', texto: 'Compras directo a cada vendedor.' },

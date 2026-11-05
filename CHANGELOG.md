@@ -9,6 +9,15 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+### Cambiado
+
+- **La tienda se ve más viva y más de RioMarket (fase 1 de 5 del rediseño visual).** El revisor del proyecto la encontró «pálida»
+  frente a la landing; la medición mostró que no faltaba color sino contraste y calidez. Ahora: fondo de papel cálido en lugar del
+  gris frío; tarjetas con borde cálido y sombra de reposo; botón «Agregar al carrito» en coral relleno (antes un contorno turquesa
+  repetido 15 veces); el carrusel ya no usa el azul que chocaba con el encabezado; «Puestos de Riohacha» pasa a una banda turquesa de
+  ancho completo y «Cómo funciona» a una banda crema; en modo oscuro el amarillo es menos brillante. Todos los textos siguen en
+  contraste AA. Siguen: tipografía, estructura, movimiento y acabado.
+
 ### Añadido
 
 - **Respaldo diario de la base, cifrado y con la restauración probada** (ADR-023). Cada día un flujo de GitHub copia la base
