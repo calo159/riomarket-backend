@@ -253,7 +253,7 @@ export function Destacados({ puestos }: { puestos: Puesto[] }) {
                 className="grid h-9 place-items-center px-[3px]"
               >
                 <span
-                  className="relative block h-[6px] w-[22px] overflow-hidden rounded-[3px] md:w-[26px]"
+                  className="relative block h-[8px] w-[26px] overflow-hidden rounded-[4px] md:w-[32px]"
                   style={{ color: slides[indice].colorTexto }}
                 >
                   <span className="absolute inset-0 bg-current opacity-40" />

@@ -32,6 +32,22 @@
     line-height: 1.4;
     text-wrap: pretty;
   }
+  /* Lo que el navegador pinta por su cuenta también lleva la marca: selección amarilla, cursor y casillas turquesa,
+     barra de desplazamiento en el tono del papel. */
+  ::selection {
+    background: #ffd166;
+    color: #1b2a33;
+  }
+  html {
+    accent-color: #00626d;
+    caret-color: #00626d;
+    scrollbar-color: #cdbfa4 transparent;
+  }
+  .dark {
+    accent-color: #7db6bc;
+    caret-color: #7db6bc;
+    scrollbar-color: #34454e transparent;
+  }
   :focus-visible {
     @apply outline-none ring-[3px] ring-[#FFB703] ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }

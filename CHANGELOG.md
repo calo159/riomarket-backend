@@ -11,6 +11,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Acabado de la tienda (fase 5 de 5 del rediseño visual).** Una calificación de 4,5 ya no se dibuja como cinco estrellas llenas
+  (se redondeaba): ahora son cuatro y media. El pie se ordena (la columna «RioMarket» es una lista como las demás y la de «Vender»
+  no aparece vacía para un comprador con sesión), los puntos del carrusel son más grandes y visibles, y lo que el navegador pinta por
+  su cuenta lleva la marca: selección de texto amarilla, cursor y casillas turquesa y barra de desplazamiento en el tono del papel.
 - **Movimiento con intención en la tienda (fase 4 de 5 del rediseño visual).** Un solo momento de marca al cargar: las categorías suben
   una tras otra justo después del carrusel. Más abajo, en lugar de que cada estante aparezca entero de golpe, el título y luego
   cada producto entran escalonados al llegar a ellos, y la banda turquesa de puestos ya está a la vista mientras sus tarjetas
