@@ -11,6 +11,14 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Modo oscuro más legible y más movimiento visible.** *Oscuro:* se midió el contraste real de cada texto en 13 pantallas. Había textos con un gris
+  pensado para el modo claro y sin versión oscura (la cabecera y las celdas de la tabla de usuarios del panel, a 2,25:1) y la etiqueta del ticket
+  (3,65:1); ahora el oscuro tiene su propia rampa de texto (principal `#EDF1EC`, secundario `#A8B8B1`) con una red de seguridad que aclara esos grises
+  sin tocar el claro, y el resultado es 0 textos bajo AA en ambos temas. Una prueba e2e nueva (`oscuro.spec.ts`) lo vigila en la tienda, el catálogo,
+  el inicio de sesión y el registro. *Movimiento:* el escaparate tiene una coreografía de ~1,3 s (titular palabra por palabra, toldo, foto que se
+  descubre y se asienta, acciones y ticket) y luego entran las categorías; con scroll, la foto se desliza un poco más lenta que la página; las
+  entradas por scroll tienen más recorrido (26 px) y escalonado, las fotos de producto y de puesto se elevan con sombra al pasar el cursor y el
+  cambio de ruta dura 0,4 s. Con «reducir movimiento» desaparecen los desplazamientos y los bucles, pero se conserva el feedback de color y opacidad.
 - **La tienda pasa a un diseño sobrio y presentable, con la vara de Apple, Airbnb y Etsy.** Después de dos rondas que seguían viéndose «hechas por
   IA» (el crema con coral y las cartulinas de colores vivos), se pidió al dueño el rumbo y se eligió «sobrio y profesional». Se quitan los
   colores vivos y las bandas de color, los degradados, los títulos bicolor repetidos, el «cómo funciona» de tres iconos en círculo y las

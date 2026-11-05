@@ -44,7 +44,7 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
   // Sin marco ni avatar encima de la foto: la foto, el nombre y tres líneas (calificación y entrega, dirección, descripción).
   return (
     <Link to={`/puestos/${puesto.id}`} className="group block text-tinta dark:text-slate-100">
-      <div className="aspect-[3/2] overflow-hidden rounded-xl bg-brand-50 dark:bg-slate-800">
+      <div className="aspect-[3/2] overflow-hidden rounded-xl bg-brand-50 transition duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-hover dark:bg-slate-800">
         {portada ? (
           <Imagen
             src={portada}

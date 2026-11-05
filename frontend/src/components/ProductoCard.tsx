@@ -183,7 +183,7 @@ export function ProductoCard({
           ref={foto}
           to={`/productos/${producto.id}`}
           onClick={alAbrirFoto}
-          className="relative block aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800"
+          className="relative block aspect-square overflow-hidden rounded-xl bg-slate-100 transition duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-hover dark:bg-slate-800"
           aria-label={producto.nombre}
         >
           <ImagenProducto
