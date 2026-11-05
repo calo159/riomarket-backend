@@ -1,7 +1,8 @@
-import { CheckCircle2, Clock, Info, Package, XCircle } from 'lucide-react';
+import { Clock, Info, Package, XCircle } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
 import { formatearFechaHora } from '../../lib/format';
 import { estaPorVencer, textoCuentaRegresiva, useAhora, yaVencio } from '../../lib/plazo';
+import { TicketEnviado } from './TicketEnviado';
 
 interface Props {
   datos: Pedido;
@@ -29,24 +30,18 @@ export function AvisosPedido({ datos, esNuevo, esComprador, efectivoPendiente = 
   const esRetiro = datos.tipo_entrega === 'retiro';
   const pagaAlRecoger = esRetiro && efectivoPendiente;
   const pagaAlRecibir = !esRetiro && efectivoPendiente;
+  const mensajeNuevo = datos.tiene_encargo
+    ? pagaAlRecoger || pagaAlRecibir
+      ? `Tu encargo fue enviado. El puesto lo revisa y lo acepta o te avisa si no puede. ${pagaAlRecibir ? 'Pagas al recibirlo.' : 'Pagas al recoger.'}`
+      : 'Tu encargo fue enviado. Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.'
+    : pagaAlRecoger
+      ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
+      : pagaAlRecibir
+        ? 'Tu pedido fue creado. Pagas en efectivo cuando te lo entreguen.'
+        : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.';
   return (
     <>
-      {esNuevo && datos.estado === 'pendiente' && (
-        <div className="mb-5 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            {datos.tiene_encargo
-              ? pagaAlRecoger || pagaAlRecibir
-                ? `Tu encargo fue enviado. El puesto lo revisa y lo acepta o te avisa si no puede. ${pagaAlRecibir ? 'Pagas al recibirlo.' : 'Pagas al recoger.'}`
-                : 'Tu encargo fue enviado. Registra el pago; si el puesto no puede hacerlo, te devolvemos el dinero.'
-              : pagaAlRecoger
-                ? 'Tu pedido fue creado. Pasa por el puesto cuando esté listo. Pagas ahí.'
-                : pagaAlRecibir
-                  ? 'Tu pedido fue creado. Pagas en efectivo cuando te lo entreguen.'
-                  : 'Tu pedido fue creado. Registra el pago para que el vendedor pueda confirmarlo.'}
-          </p>
-        </div>
-      )}
+      {esNuevo && datos.estado === 'pendiente' && <TicketEnviado datos={datos} mensaje={mensajeNuevo} />}
 
       {esComprador && !puedeCancelar && ['confirmado', 'en_preparacion', 'listo_para_recoger'].includes(datos.estado) && (
         <div className="mb-5 flex items-start gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200" role="status">

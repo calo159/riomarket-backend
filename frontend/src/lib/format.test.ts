@@ -36,6 +36,5 @@ describe('estado listo para recoger', () => {
     expect(etiquetaEstado('listo_para_recoger')).toBe('Listo para recoger');
     expect(OPCIONES_FILTRO_PEDIDO.find((o) => o.valor === 'listo_para_recoger')?.etiqueta).toBe('Listos para recoger');
     expect(colorEstado('listo_para_recoger')).not.toBe(colorEstado('en_camino'));
-    expect(colorEstado('listo_para_recoger')).toContain('teal');
   });
 });

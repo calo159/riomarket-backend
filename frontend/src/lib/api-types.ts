@@ -1645,6 +1645,8 @@ export interface components {
         ItemPedido: {
             readonly id: number;
             id_producto: number;
+            /** Miniatura de la primera foto del producto; solo viene en el detalle y el listado. */
+            readonly imagen: string | null;
             readonly nombre_producto: string;
             readonly unidad_medida: components["schemas"]["UnidadMedidaEnum"];
             /** Format: decimal */

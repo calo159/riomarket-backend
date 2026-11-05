@@ -2,6 +2,23 @@ import { Link } from 'react-router-dom';
 import { Bike, CalendarClock, MapPin, Package, Store } from 'lucide-react';
 import type { Pedido } from '../../lib/types';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
+import { urlAbsoluta } from '../../lib/utils';
+import { Imagen } from '../../components/Imagen';
+
+/** Foto del producto en una línea del pedido; sin foto, un recuadro neutro con el icono de paquete. */
+function Foto({ url, nombre }: { url: string | null; nombre: string }) {
+  const src = urlAbsoluta(url);
+  return src ? (
+    <Imagen src={src} alt="" fallbackNombre={nombre} contenedorClassName="h-14 w-14 shrink-0 rounded-lg" />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-800"
+    >
+      <Package className="h-6 w-6" />
+    </span>
+  );
+}
 
 export function ProductosPedido({ datos }: { datos: Pedido }) {
   return (
@@ -9,8 +26,9 @@ export function ProductosPedido({ datos }: { datos: Pedido }) {
       <h2 className="flex items-center gap-2 text-lg font-bold"><Package className="h-5 w-5" /> Productos</h2>
       <div className="mt-3 divide-y">
         {datos.items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between gap-3 py-3">
-            <div className="min-w-0">
+          <div key={item.id} className="flex items-center gap-3 py-3">
+            <Foto url={item.imagen} nombre={item.nombre_producto} />
+            <div className="min-w-0 flex-1">
               <p className="font-medium">{item.nombre_producto}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {formatearMoneda(item.precio_unitario)} / {item.unidad_medida} × {item.cantidad}

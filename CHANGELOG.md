@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **El pedido y la compra se ven completos: fotos, un cierre con ticket y colores de estado de la marca.** Del checkout y el detalle del pedido faltaba lo
+  más básico de una tienda: ver las fotos de lo que compras. Ahora el resumen del checkout y la lista de productos del pedido llevan la miniatura de cada
+  producto (el servidor la trae en cada línea del pedido, `imagen`, precargada en bloque: sin una consulta por línea, comprobado con pruebas de conteo de
+  consultas; la respuesta de «crear pedido» no la trae). Al confirmar, el aviso verde genérico pasa a ser un **ticket que se «imprime»** de arriba abajo con
+  el sello de «enviado», el resumen (productos, entrega, total) y el mensaje de siempre sobre qué pasa ahora y cómo se paga. Los colores de estado
+  (pendiente, en marcha, listo, entregado, cancelado) dejan los colores por defecto de la librería por tonos apagados y parejos de la marca, con versión
+  oscura. En oscuro, las fotos se atenúan un poco para que las de fondo blanco no brillen como linternas.
 - **Modo oscuro más legible y más movimiento visible.** *Oscuro:* se midió el contraste real de cada texto en 13 pantallas. Había textos con un gris
   pensado para el modo claro y sin versión oscura (la cabecera y las celdas de la tabla de usuarios del panel, a 2,25:1) y la etiqueta del ticket
   (3,65:1); ahora el oscuro tiene su propia rampa de texto (principal `#EDF1EC`, secundario `#A8B8B1`) con una red de seguridad que aclara esos grises
