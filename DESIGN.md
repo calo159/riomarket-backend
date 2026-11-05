@@ -36,7 +36,7 @@ Los tonos están separados a propósito de los que significan otra cosa: el ají
 
 **Claro y oscuro.** De día, la sal con tarjetas blancas, bandas turquesa y amarilla de ancho completo y botones de compra coral planos. De noche, la «noche de mercado»: los neutros del 600 al 950 son un verde marino muy oscuro (`#0A1D21` la página, `#133136` la tarjeta, `#214449` el borde) en lugar del azul-gris genérico, y las cartulinas brillan sobre él como bajo el bombillo de un puesto. El oscuro no es el claro invertido: el encabezado y los paneles pasan de turquesa a `slate-900`, la banda de puestos sigue siendo turquesa (`brand-700`), los amarillos bajan a `#C99A2E` para no deslumbrar y «Cómo funciona» lleva una franja amarilla arriba.
 
-**Ritmo de color de la tienda.** El color no se queda arriba: tras el carrusel y las categorías, «Puestos de Riohacha» es una banda turquesa de ancho completo (`brand-600`, olas muy tenues) y «Cómo funciona» una banda amarilla. Contraste medido (AA): tinta sobre sal 14,4:1, texto secundario `#4F6663` 5,7:1, blanco sobre turquesa 7,1:1 y sobre coral 4,8:1. La tarjeta blanca contra la sal se separa por borde y sombra de reposo, no por contraste de valor.
+**Ritmo de color de la tienda.** El color no se queda arriba: tras el escaparate y las categorías, «Puestos de Riohacha» es una banda turquesa de ancho completo (`brand-600`, olas muy tenues) y «Cómo funciona» una banda amarilla. Contraste medido (AA): tinta sobre sal 14,4:1, texto secundario `#4F6663` 5,7:1, blanco sobre turquesa 7,1:1 y sobre coral 4,8:1. La tarjeta blanca contra la sal se separa por borde y sombra de reposo, no por contraste de valor.
 
 ## Marca
 
@@ -66,18 +66,14 @@ Los dos motivos del logo (las olas y el toldo festoneado) se usan como textura y
 
 | Pieza | Dónde |
 | --- | --- |
-| `PatronOlas` (filas de olas con `currentColor`, se atenúa con `opacity-*` y se difumina con `desvanecer` o `desvanecerEnMancha`) | Carrusel de destacados, panel izquierdo de login y registro, cabecera de página (`EncabezadoPagina`), estados vacíos, portada del puesto sin foto |
-| `OlasInferiores` (dos siluetas que se mecen; `animate-deriva`) | Borde inferior del carrusel y de la portada del puesto (en el color de la tarjeta, funde la foto con el contenido) |
+| `PatronOlas` (filas de olas con `currentColor`, se atenúa con `opacity-*` y se difumina con `desvanecer` o `desvanecerEnMancha`) | Primer pliegue (escaparate), panel izquierdo de login y registro, cabecera de página (`EncabezadoPagina`), estados vacíos, portada del puesto sin foto |
+| `OlasInferiores` (dos siluetas que se mecen; `animate-deriva`) | Borde inferior de la portada del puesto (en el color de la tarjeta, funde la foto con el contenido) |
 | `BordeFestoneado` (medias lunas del toldo) | Borde superior del pie de página |
 
 Además: fondo de página con un velo turquesa (arriba a la izquierda) y otro amarillo (arriba a la derecha) solo en claro; tarjetas
 con un reflejo en el borde superior; símbolo del logo como marca de agua en el panel de login.
 
-**Carrusel de destacados.** Las diapositivas rotan turquesa, amarillo, aguamarina y coral (ya no hay azul: chocaba con el turquesa del encabezado). Cada una lleva su color con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
-borde izquierdo inclinado con una banda translúcida detrás. Con texto blanco el lado del texto se oscurece un 8 % para dejar margen al contraste;
-`color-mix` queda de respaldo en el color sólido. El texto se limita al espacio libre a la izquierda de la foto
-(`calc(52vw - 4.5rem)` en tablet, `calc(42vw - 4.5rem)` desde `lg`) y la flecha izquierda mide 36 px para no tapar la primera letra.
-El contraste real (píxeles detrás del texto) se midió en cinco anchos y las cuatro diapositivas: mínimo 5,1:1.
+**Primer pliegue: el escaparate (`Escaparate`).** Reemplaza al carrusel de destacados, que era la plantilla de marketplace más repetida. Es fijo: un titular grande («Compra directo en los puestos de **Riohacha**», peso 900, −0,04 em, la última palabra en amarillo), dos acciones («Ver el catálogo» en coral y «Conocer los puestos» en contorno) y, a la derecha, un **puesto con toldo**: el toldo es el símbolo del logo llevado a gran tamaño (franjas coral `#E4502A` y crema `#FFF4DC`, borde festoneado, dibujado en SVG, se despliega desde arriba al cargar). Debajo del toldo va la portada de un puesto real, y sobre ella un **ticket** de papel con muescas: es el pedido en curso del comprador con sesión (puesto, estado, total, «Seguir mi pedido») o, si no tiene uno, un puesto real para empezar (calificación, domicilio, «Ver el puesto»). Es la idea del ticket de la landing, ahora con datos. La foto es la del puesto del pedido si lo hay. Fondo turquesa en claro y `slate-900` en oscuro. Se quitaron además las tres tarjetas de «accesos rápidos» y los dos destacados repetidos, que decían lo mismo que el titular y la banda de puestos.
 
 ## Superficies del navegador
 
@@ -98,8 +94,7 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
 
 - `PublicLayout`: encabezado turquesa con buscador (con categoría), pedidos, carrito; barra inferior de 5 pestañas en celular
   (Tienda, Catálogo, Carrito, Pedidos o Panel según permisos, Cuenta, que abre una hoja). `PanelLayout`: barra superior de marca y menú lateral con iconos e ítem activo marcado.
-- `Destacados`: carrusel con puestos reales (portada si existe; color sólido si no; 0 o 1 elementos se ven bien), barra de progreso,
-  pausa con el cursor o el foco, entrada escalonada del texto. Sin autoavance con `prefers-reduced-motion`.
+- `Escaparate`: primer pliegue fijo de la tienda (titular, acciones, toldo y ticket); ver «Primer pliegue» arriba. El ticket usa el pedido sin terminar del comprador (`pedidos.activoDelComprador`) o un puesto real.
 - `ProductoCard`: foto cuadrada, «Quedan N» solo con stock de 1 a 5, calificación del puesto solo si existe, «Solo retiro en el puesto» únicamente cuando el puesto no hace domicilio (lo normal no se repite), botón `+` redondo en celular y coral relleno en escritorio. Con `ocultarPuesto` (página del puesto) no repite nombre, calificación ni entrega. `AvisoUnPuesto` recuerda de qué puesto es el pedido en curso y que cada pedido es de uno solo.
 - `iconos.tsx`: 8 iconos de categoría propios y uno genérico; la reserva sin foto usa el icono de la categoría sobre gris.
 - `PuestoCard` / `LogoPuesto`: portada, logo o iniciales sobre color propio.
@@ -110,7 +105,7 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
 
 **Momento de marca de la tienda:** al cargar, las categorías suben escalonadas (`.entra-medallas`, `--i` con `lugar()`); al hacer scroll, el título y cada producto de un estante entran escalonados con `.rv` (el bloque ya no aparece entero) y la banda turquesa de puestos está siempre visible mientras sus tarjetas entran. Al agregar, el icono de confirmación hace `pop`.
 
-Vuelo de la miniatura al carrito (`volarAlCarrito`) con rebote del contador (`animate-pop`) y toast; progreso del carrusel; elevación y zoom de tarjetas;
+Vuelo de la miniatura al carrito (`volarAlCarrito`) con rebote del contador (`animate-pop`) y toast; el toldo que se despliega al cargar; elevación y zoom de tarjetas;
 rebote de categorías; zoom de foto en producto; barras (`animate-grow`); esqueletos; transición entre rutas (`.ruta-entra`); apertura de modales y menús.
 Todo se desactiva con `prefers-reduced-motion` (regla global en `index.css` y comprobación en `volarAlCarrito`).
 

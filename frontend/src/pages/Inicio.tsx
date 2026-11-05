@@ -6,15 +6,13 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
-import { Destacados, puestosDelCarrusel } from '../components/Destacados';
+import { Escaparate } from '../components/Escaparate';
 import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { MedallaCategoria } from '../components/iconos';
-import { Imagen } from '../components/Imagen';
 import { desvanecerEnMancha, PatronOlas } from '../components/ui/Decoracion';
 import { TituloSeccion } from '../components/ui/TituloSeccion';
 import { EsqueletoGrid, EstadoError } from '../components/ui/Estado';
 import { useSession } from '../auth/SessionProvider';
-import { inicioPorRol } from '../auth/permisos';
 import {
   categoriaDestacada,
   consultaCategorias,
@@ -22,7 +20,9 @@ import {
   consultaProductosInicio,
   consultaPuestosInicio,
 } from '../api/consultas';
-import { cn, urlAbsoluta } from '../lib/utils';
+import { cn } from '../lib/utils';
+import { claves } from '../lib/queryKeys';
+import { listarPedidos } from '../api/orders';
 import type { Categoria, Producto } from '../lib/types';
 
 function nombreCategoria(categorias: Categoria[] | undefined, id: number): string | null {
@@ -104,6 +104,13 @@ export function Inicio() {
   const categorias = useQuery(consultaCategorias);
   const productos = useQuery(consultaProductosInicio);
   const puestos = useQuery(consultaPuestosInicio);
+  // El «ticket» del primer pliegue: el pedido sin terminar del comprador, si lo hay.
+  const pedidoActivo = useQuery({
+    queryKey: claves.pedidos.activoDelComprador,
+    queryFn: () => listarPedidos({ abiertos: true, page_size: 1 }),
+    enabled: autenticado && rol === 'comprador',
+    staleTime: 30_000,
+  });
 
   // Segundo estante: los productos de la primera categoría que lo permita (frutas si existe).
   const lista = categorias.data ?? [];
@@ -118,18 +125,11 @@ export function Inicio() {
   }, []);
 
   const todosPuestos = puestos.data?.results ?? [];
-  // Los dos destacados de abajo son OTROS puestos: los del carrusel ya se vieron arriba (antes se repetían).
-  const enCarrusel = new Set(puestosDelCarrusel(todosPuestos).map((p) => p.id));
-  const promos = todosPuestos
-    .filter((p) => !enCarrusel.has(p.id))
-    .sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada)))
-    .slice(0, 2);
   const visibles = lista.length > 8 ? lista.slice(0, 7) : lista;
 
   return (
     <div>
-      <h1 className="sr-only">RioMarket, el mercado de Riohacha en línea</h1>
-      <Destacados puestos={todosPuestos} />
+      <Escaparate puestos={todosPuestos} pedido={pedidoActivo.data?.results[0] ?? null} />
 
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
         {/* Las categorías son cartulinas de colores, una por categoría (components/cartulina.ts), con la foto del producto
@@ -175,63 +175,6 @@ export function Inicio() {
           )}
         </nav>
 
-        <section className="mt-4 hidden grid-cols-3 gap-3.5 md:grid" aria-label="Accesos rápidos">
-          {[
-            {
-              to: '/catalogo',
-              titulo: 'Pide a domicilio o recoge en el puesto',
-              texto: 'Tú eliges cómo recibirlo en cada pedido.',
-              foto: '/landing/arepa-de-huevo.webp',
-            },
-            {
-              to: '#puestos',
-              titulo: 'Conoce los puestos de Riohacha',
-              texto: 'Vendedores con la identidad verificada.',
-              foto: '/landing/aguacate.webp',
-            },
-            {
-              to: autenticado ? inicioPorRol(rol) : '/registro?rol=vendedor',
-              titulo: 'Vende en RioMarket',
-              texto: 'Abre tu puesto en línea.',
-              foto: '/landing/coco.webp',
-              destacado: true,
-            },
-          ].map(({ to, titulo, texto, foto, destacado }) => {
-            const clase = cn(
-              'card card-hover grid min-h-[116px] grid-cols-[minmax(0,1fr)_38%] overflow-hidden text-tinta hover:text-tinta dark:text-slate-100 dark:hover:text-slate-100',
-              destacado && 'border-transparent bg-amarillo dark:bg-[#C99A2E] dark:text-tinta dark:hover:text-tinta',
-            );
-            const contenido = (
-              <>
-                <span className="flex flex-col justify-center gap-1 p-4">
-                  <b className="text-base leading-tight">{titulo}</b>
-                  <small className={cn('text-[13px]', destacado ? 'text-tinta/85' : 'text-slate-500 dark:text-slate-400')}>
-                    {texto}
-                  </small>
-                </span>
-                <img
-                  src={foto}
-                  alt=""
-                  width={640}
-                  height={640}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
-              </>
-            );
-            return to.startsWith('#') ? (
-              <a key={titulo} href={to} className={clase}>
-                {contenido}
-              </a>
-            ) : (
-              <Link key={titulo} to={to} className={clase}>
-                {contenido}
-              </Link>
-            );
-          })}
-        </section>
-
         <AvisoUnPuesto className="mt-4" />
 
         <Estante
@@ -244,39 +187,6 @@ export function Inicio() {
           error={productos.isError}
           alReintentar={() => void productos.refetch()}
         />
-
-        {promos.length > 0 && (
-          <Revela as="section" bloque className="mt-6 grid gap-3.5 md:mt-[30px] md:grid-cols-2" aria-label="Puestos destacados">
-            {promos.map((p, i) => {
-              const claro = i === 0;
-              const foto = urlAbsoluta(p.portada);
-              return (
-                <Link
-                  key={p.id}
-                  to={`/puestos/${p.id}`}
-                  className={`grid h-[132px] grid-cols-[minmax(0,1fr)_40%] overflow-hidden rounded-xl transition duration-[180ms] hover:-translate-y-0.5 hover:shadow-hover md:h-[176px] md:grid-cols-[minmax(0,1fr)_44%] ${
-                    claro ? 'bg-amarillo text-tinta hover:text-tinta dark:bg-[#C99A2E]' : 'bg-brand-600 text-white hover:text-white dark:bg-brand-800'
-                  }`}
-                >
-                  <div className="flex flex-col justify-center gap-1.5 p-4 md:p-[22px]">
-                    <h3 className="line-clamp-2 text-xl font-extrabold leading-[1.1] tracking-tight md:text-2xl">{p.nombre}</h3>
-                    {p.descripcion && <p className="line-clamp-2 text-sm md:text-[15px]">{p.descripcion}</p>}
-                    <span className="mt-1 self-start rounded-[5px] border-[1.5px] border-dashed border-current px-2 py-[3px] text-sm font-bold">
-                      Ver el puesto
-                    </span>
-                  </div>
-                  {foto ? (
-                    <Imagen src={foto} fallbackNombre={p.nombre} contenedorClassName="h-full w-full" alt="" />
-                  ) : (
-                    <div className="grid place-items-center bg-black/10">
-                      <Store className="h-12 w-12 opacity-70" aria-hidden="true" />
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </Revela>
-        )}
 
       </div>
 

@@ -69,6 +69,8 @@ export const claves = {
     vendedor: (usuarioId: Id, pagina: Filtro, estado: Filtro) =>
       ['pedidos', 'vendedor', idClave(usuarioId), pagina, estado] as const,
     vendedorPendientes: ['pedidos', 'vendedor', 'pendientes'] as const,
+    /** El pedido sin terminar del comprador, para el «ticket» del primer pliegue de la tienda. */
+    activoDelComprador: ['pedidos', 'comprador', 'activo'] as const,
   },
 
   pagos: {

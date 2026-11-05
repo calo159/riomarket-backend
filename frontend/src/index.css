@@ -297,6 +297,19 @@
   }
 }
 
+/* El toldo del primer pliegue se despliega desde arriba al cargar (components/Escaparate.tsx); con «reducir movimiento»
+   no se anima (regla global de abajo). */
+.toldo-desplega {
+  transform-origin: top;
+  animation: desplega 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes desplega {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
 /* Un campo de un formulario con error se sacude una vez al marcarse inválido: llama la atención sin gritar. */
 form .input[aria-invalid='true'] {
   animation: sacude 0.38s ease-out;

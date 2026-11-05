@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **El carrusel genérico del primer pliegue de la tienda se reemplaza por un escaparate propio.** Era la plantilla de marketplace más
+  repetida (carrusel con corte diagonal, flechas pegadas al borde y puntos). Ahora el primer pliegue es fijo: un titular grande
+  («Compra directo en los puestos de Riohacha»), dos acciones, y un **puesto con toldo** (el símbolo del logo, franjas coral y crema con
+  borde festoneado, que se despliega al cargar) con la portada de un puesto real. Sobre la foto va un **ticket** con muescas: el pedido en
+  curso del comprador (estado, total y «Seguir mi pedido») o, si no tiene, un puesto real para empezar. Es la idea del ticket de la landing,
+  ahora con datos. Se quitan también las tres tarjetas de «accesos rápidos» y los dos destacados repetidos, que decían lo mismo que el
+  titular y la banda de puestos. El titular visible reemplaza al texto oculto de antes.
 - **Identidad de color propia, en claro y en oscuro: las cartulinas de precio de un puesto de mercado.** La tienda «se veía simple y hecha por
   IA»: el crema con coral de la fase 1 es justo la apariencia en la que caen las interfaces generadas, y los degradados en botones y
   encabezados eran otra señal. Ahora el color significa algo: cada categoría tiene su cartulina (limón para frutas, guayaba para dulces,

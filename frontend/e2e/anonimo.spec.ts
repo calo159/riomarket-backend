@@ -30,7 +30,7 @@ test('la landing carga sin errores y lleva a la tienda', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: /Haz el mercado desde el celular/i })).toBeVisible();
   await page.getByRole('link', { name: 'Ir a la tienda' }).first().click();
   await expect(page).toHaveURL(/\/tienda$/);
-  await expect(page.getByRole('heading', { name: /RioMarket, el mercado de Riohacha/i })).toBeAttached();
+  await expect(page.getByRole('heading', { name: /Compra directo en los puestos de Riohacha/i })).toBeAttached();
   await page.waitForLoadState('networkidle');
   expect(errores()).toEqual([]);
 });

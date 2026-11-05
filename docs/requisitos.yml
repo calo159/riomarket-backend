@@ -668,7 +668,7 @@
     - "frontend/src/pages/admin/Verificaciones.test.tsx::los botones solo-icono tienen nombre accesible"
     - "frontend/src/pages/Landing.test.tsx::el interruptor responde a las flechas del teclado"
     - "frontend/src/pages/MapaPuestos.test.tsx::la lista se usa con teclado: «Ver en el mapa» selecciona el puesto"
-    - "frontend/src/components/Destacados.test.tsx::mantiene_el_carrusel_accesible_y_las_diapositivas_ocultas_para_lectores"
+    - "frontend/src/components/Escaparate.test.tsx::el_toldo_y_los_adornos_no_los_lee_un_lector_de_pantalla"
   evidencia: ["docs/rendimiento.md"]
 
 - id: RF-32
