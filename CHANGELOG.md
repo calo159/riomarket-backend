@@ -11,6 +11,7 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- La landing ya no dice «Proyecto académico» (la nota sobre los pagos en línea en modo de prueba se conserva).
 - **Modo oscuro más legible y más movimiento visible.** *Oscuro:* se midió el contraste real de cada texto en 13 pantallas. Había textos con un gris
   pensado para el modo claro y sin versión oscura (la cabecera y las celdas de la tabla de usuarios del panel, a 2,25:1) y la etiqueta del ticket
   (3,65:1); ahora el oscuro tiene su propia rampa de texto (principal `#EDF1EC`, secundario `#A8B8B1`) con una red de seguridad que aclara esos grises
