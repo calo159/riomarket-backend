@@ -1,3 +1,4 @@
+import { Fragment, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Store, Truck } from 'lucide-react';
 import type { Pedido, Puesto } from '../lib/types';
@@ -5,6 +6,21 @@ import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { Imagen } from './Imagen';
 import { EtiquetaEstado } from './ui/EtiquetaEstado';
+
+/** El titular sube palabra por palabra desde una máscara (`.palabra`, index.css); `desde` es el lugar de la primera. */
+function Palabras({ texto, desde = 0 }: { texto: string; desde?: number }) {
+  return (
+    <>
+      {texto.split(' ').map((palabra, i) => (
+        <Fragment key={i}>
+          <span className="palabra">
+            <span style={{ '--i': desde + i } as CSSProperties}>{palabra}</span>
+          </span>{' '}
+        </Fragment>
+      ))}
+    </>
+  );
+}
 
 /** Franjas del toldo: coral y crema, los colores del símbolo de la marca. */
 const FRANJAS = 13;
@@ -88,14 +104,20 @@ export function Escaparate({
         <div>
           <h1
             id="titular-tienda"
-            className="animate-rise text-balance text-[clamp(34px,5vw,56px)] font-bold leading-[1.06] tracking-[-0.03em]"
+            className="text-balance text-[clamp(34px,5vw,56px)] font-bold leading-[1.06] tracking-[-0.03em]"
           >
-            Compra directo en los puestos de <span className="text-amarillo">Riohacha</span>
+            <Palabras texto="Compra directo en los puestos de" />
+            <span className="text-amarillo">
+              <Palabras texto="Riohacha" desde={6} />
+            </span>
           </h1>
-          <p className="mt-4 max-w-[34rem] text-[17px] leading-snug text-white/90 md:text-lg">
+          <p
+            className="hero-aparece mt-4 max-w-[34rem] text-[17px] leading-snug text-white/90 md:text-lg"
+            style={{ '--retraso': '650ms' } as CSSProperties}
+          >
             Cada pedido es de un solo puesto: sabes quién lo prepara y a quién preguntarle. A domicilio o para recoger.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="hero-aparece mt-6 flex flex-wrap gap-3" style={{ '--retraso': '800ms' } as CSSProperties}>
             <Link to="/catalogo" className="btn-primary !min-h-[52px] px-6 text-base">
               Ver el catálogo
             </Link>
@@ -108,9 +130,9 @@ export function Escaparate({
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto">
+        <div className="foto-flota relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto">
           <Toldo className="toldo-desplega relative z-[2] block h-[28px] w-full md:h-[38px]" />
-          <div className="relative -mt-1 overflow-hidden rounded-b-[16px] bg-brand-700 dark:bg-slate-800">
+          <div className="foto-entra relative -mt-1 overflow-hidden rounded-b-[16px] bg-brand-700 dark:bg-slate-800">
             {portada ? (
               <Imagen
                 src={portada}
@@ -127,11 +149,11 @@ export function Escaparate({
           </div>
 
           {(pedido || puesto) && (
-            <div className="absolute -bottom-12 left-3 right-3 z-[3] animate-fadezoom [animation-delay:350ms] md:-bottom-14 md:left-6 md:right-auto md:w-[78%]">
+            <div className="absolute -bottom-12 left-3 right-3 z-[3] ticket-entra md:-bottom-14 md:left-6 md:right-auto md:w-[78%]">
               <Ticket>
                 {pedido ? (
                   <>
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tu pedido en curso</p>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Tu pedido en curso</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <b className="text-base">{delPedido?.nombre ?? `Pedido #${pedido.id}`}</b>
                       <EtiquetaEstado estado={pedido.estado} />
@@ -144,7 +166,7 @@ export function Escaparate({
                 ) : (
                   puesto && (
                     <>
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Un puesto para empezar</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Un puesto para empezar</p>
                       <b className="mt-1 block text-base">{puesto.nombre}</b>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-slate-600 dark:text-slate-300">
                         {puesto.calificacion_promedio ? (

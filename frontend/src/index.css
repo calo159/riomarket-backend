@@ -48,6 +48,21 @@
     caret-color: #7db6bc;
     scrollbar-color: #2b474b transparent;
   }
+  /* Texto en oscuro: rampa propia. Muchos textos usan un gris de modo claro (`text-slate-500`…) sin variante oscura y en
+     oscuro quedaban a 2:1; esto los aclara sin tocar el claro. Las variantes explícitas `dark:text-*` ganan (van después). */
+  .dark .text-slate-500 {
+    color: #a8b8b1;
+  }
+  .dark .text-slate-600 {
+    color: #b9c6c0;
+  }
+  .dark .text-slate-700 {
+    color: #cbd5d0;
+  }
+  .dark .text-slate-800,
+  .dark .text-slate-900 {
+    color: #edf1ec;
+  }
   :focus-visible {
     @apply outline-none ring-[3px] ring-[#FFB703] ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }
@@ -161,7 +176,7 @@
 @layer utilities {
   /* Transición suave entre rutas. */
   .ruta-entra {
-    animation: entraruta 0.22s ease backwards;
+    animation: entraruta 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   .barra-progreso {
     transform-origin: left;
@@ -177,7 +192,7 @@
 @keyframes entraruta {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -218,18 +233,18 @@
    --i es el lugar del elemento dentro de su grupo (0, 1, 2…) y da un retraso corto, nunca mayor a 0,32 s. */
 [data-revela='oculto'] .rv {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(26px) scale(0.985);
 }
 [data-revela='visto'] .rv {
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: calc(min(var(--i, 0), 4) * 80ms);
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(min(var(--i, 0), 5) * 90ms);
 }
 
 [data-revela='oculto'].rv-self {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(22px);
 }
 [data-revela='visto'].rv-self {
   transition:
@@ -256,28 +271,94 @@
 }
 
 /* Momento de marca de la tienda: al cargar, las categorías suben una tras otra, justo después del escaparate.
-   --i (lugar() en components/Revela) da el orden; con «reducir movimiento» no se anima (regla global de abajo). */
+   --i (lugar() en components/Revela) da el orden. Entran DESPUÉS de la coreografía del escaparate (1,1 s). */
 .entra-medallas > * {
-  animation: sube-medalla 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(140ms + min(var(--i, 0), 9) * 45ms);
+  animation: sube-medalla 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(1100ms + min(var(--i, 0), 9) * 60ms);
 }
 @keyframes sube-medalla {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px) scale(0.9);
   }
 }
 
-/* El toldo del primer pliegue se despliega desde arriba al cargar (components/Escaparate.tsx); con «reducir movimiento»
-   no se anima (regla global de abajo). */
+/* Coreografía del escaparate (components/Escaparate.tsx), el momento central de la tienda, de ~1,3 s:
+   1) el titular sube palabra por palabra desde una máscara; 2) el toldo se despliega; 3) la foto se descubre de arriba
+   abajo y se asienta; 4) las acciones aparecen; 5) el ticket sube al final. Después, las categorías. */
+.palabra {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.palabra > span {
+  display: inline-block;
+  animation: sube-palabra 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(120ms + var(--i, 0) * 70ms);
+}
+@keyframes sube-palabra {
+  from {
+    transform: translateY(110%);
+  }
+}
+.hero-aparece {
+  animation: hero-aparece 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--retraso, 0ms);
+}
+@keyframes hero-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
 .toldo-desplega {
   transform-origin: top;
-  animation: desplega 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: desplega 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
 }
 @keyframes desplega {
   from {
     transform: scaleY(0);
     opacity: 0;
+  }
+}
+.foto-entra {
+  animation: foto-entra 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+}
+.foto-entra img {
+  animation: foto-asienta 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+}
+@keyframes foto-entra {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+@keyframes foto-asienta {
+  from {
+    transform: scale(1.14);
+  }
+}
+.ticket-entra {
+  animation: ticket-entra 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.95s backwards;
+}
+@keyframes ticket-entra {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+}
+/* Con scroll, la columna de la foto se desliza un poco más lenta que la página (solo donde el navegador lo soporta). */
+@supports (animation-timeline: scroll()) {
+  .foto-flota {
+    animation: foto-flota linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 620px;
+  }
+  @keyframes foto-flota {
+    to {
+      transform: translateY(44px);
+    }
   }
 }
 
@@ -314,12 +395,16 @@ html.cambiando-tema::view-transition-new(root) {
 }
 
 /* Con "reducir movimiento" no se anima nada. */
+/* «Reducir movimiento»: sin desplazamientos, escalas ni bucles, pero el feedback sigue (fundidos y cambios de color de
+   150 ms): una persona que lo pide quiere menos movimiento, no una interfaz que no responde. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation: none !important;
-    transition: none !important;
+    transition-property: opacity, color, background-color, border-color !important;
+    transition-duration: 0.15s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
   [data-revela] .rv,

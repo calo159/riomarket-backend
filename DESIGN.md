@@ -93,16 +93,19 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
 
 ## Animaciones (sin dependencias)
 
-**Momento de marca de la tienda:** al cargar, las categorías suben escalonadas (`.entra-medallas`, `--i` con `lugar()`); al hacer scroll, el título y cada producto de un estante entran escalonados con `.rv` (el bloque ya no aparece entero) y la banda turquesa de puestos está siempre visible mientras sus tarjetas entran. Al agregar, el icono de confirmación hace `pop`.
+**Momento central: la coreografía del escaparate** (`Escaparate`, ~1,3 s, una sola vez al cargar). El titular sube **palabra por palabra** desde una máscara (`.palabra`); el toldo se despliega desde arriba (`.toldo-desplega`); la foto se descubre de arriba abajo con un recorte (`.foto-entra`) y se asienta desde un zoom de 1,14 (`.foto-entra img`); la bajada y las acciones aparecen con un retraso (`.hero-aparece`, `--retraso`); el ticket sube al final (`.ticket-entra`); y por último las categorías suben escalonadas (`.entra-medallas`, a partir de 1,1 s). Con scroll, la columna de la foto se desliza un poco más lenta que la página (`.foto-flota`, `animation-timeline: scroll()`, solo donde el navegador lo soporta). Más abajo, el título y cada producto de un estante entran escalonados al llegar (`.rv`: 26 px y 0,85 s, 90 ms entre uno y otro, tope de 5). Fotos de producto y de puesto: se elevan 4 px con sombra al pasar el cursor.
 
 Vuelo de la miniatura al carrito (`volarAlCarrito`) con rebote del contador (`animate-pop`) y toast; el toldo que se despliega al cargar; elevación y zoom de tarjetas;
-rebote de categorías; zoom de foto en producto; barras (`animate-grow`); esqueletos; transición entre rutas (`.ruta-entra`); apertura de modales y menús.
-Todo se desactiva con `prefers-reduced-motion` (regla global en `index.css` y comprobación en `volarAlCarrito`).
+zoom de foto en producto; barras (`animate-grow`); esqueletos; transición entre rutas (`.ruta-entra`); apertura de modales y menús.
+Con `prefers-reduced-motion` desaparecen los desplazamientos, las escalas y los bucles (regla global en `index.css` y comprobación en `volarAlCarrito`), pero el **feedback se conserva**: los cambios de color, fondo, borde y opacidad siguen con 150 ms. Tiempos: 100-150 ms para feedback inmediato, 300-500 ms para cambios de ruta (`.ruta-entra`, 0,4 s) y 0,8-1,2 s solo para la coreografía del escaparate.
 
 ## Tema oscuro
 
-Se conserva el botón. Fondo `#0F1A20`, tarjetas `#1B2A33`, bordes `#26363E`, enlaces `brand-300`. Contrastes medidos ≥ 4,9:1.
+La «noche de mercado»: verde marino muy oscuro, no el azul-gris genérico. Página `#0A1D21`, tarjeta `#133136`, borde y chip `#214449`, escaparate `#0B3A3F` (para que se separe de la página), enlaces `brand-300`. Es un tema propio, no el claro invertido: el encabezado y los paneles pasan de turquesa a `slate-900` y los amarillos bajan a `#C99A2E`.
 
+**Rampa de texto en oscuro.** Principal `#EDF1EC` (12:1 sobre la tarjeta), secundario `#A8B8B1` (6,7:1) y terciario `slate-400` `#A3B4AD`. Muchos textos usan un gris pensado para el modo claro (`text-slate-500`…) y sin variante `dark:`; en oscuro quedaban a 2,25:1 (la cabecera y las celdas de la tabla de usuarios del panel). `index.css` los aclara con una red de seguridad (`.dark .text-slate-500/600/700/800/900`) que no pisa a las variantes `dark:text-*` explícitas, que van después. `text-tinta` queda fuera a propósito: lo usan los textos sobre amarillo (avatar, contador de notificaciones).
+
+**Cómo se comprueba.** `frontend/e2e/oscuro.spec.ts` mide el contraste real de cada texto de la tienda, el catálogo, el inicio de sesión y el registro, en oscuro y en claro, y falla si alguno baja de AA (4,5:1; 3:1 en texto grande). Los textos sobre fotos o degradados no se miden (`e2e/contraste.ts`). Al medir las 13 pantallas del producto (también panel de administración y de vendedor) el resultado fue 0 fallos en ambos temas.
 ## Datos y voz
 
 Solo se muestran datos que la API entrega. Las reseñas son del puesto y se etiquetan así. No hay promesas de «fresco», «del día», «pago seguro» ni «gratis».
