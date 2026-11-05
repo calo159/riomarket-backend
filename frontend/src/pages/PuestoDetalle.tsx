@@ -219,7 +219,7 @@ export function PuestoDetalle() {
           <>
             <div className={GRID_PRODUCTOS}>
               {productos.data.results.map((producto) => (
-                <ProductoCard key={producto.id} producto={producto} puesto={tienda} />
+                <ProductoCard key={producto.id} producto={producto} puesto={tienda} ocultarPuesto />
               ))}
             </div>
             <Paginacion

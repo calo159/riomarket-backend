@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Loader2, Plus, Truck } from 'lucide-react';
+import { Check, Loader2, Plus, Store } from 'lucide-react';
 import type { Producto, Puesto } from '../lib/types';
 import { formatearMoneda } from '../lib/format';
 import { esEncargo, formatearPreparacion } from '../lib/encargos';
@@ -78,9 +78,12 @@ export function ProductoCard({
   categoria,
   prioridad,
   cargaInmediata,
+  ocultarPuesto,
 }: {
   producto: Producto;
   puesto?: Puesto;
+  /** En la página del puesto el puesto ya está en el encabezado: no se repite su nombre, calificación ni entrega en cada tarjeta. */
+  ocultarPuesto?: boolean;
   /** Nombre de la categoría del producto (lo conoce la pantalla que ya cargó las categorías). */
   categoria?: string | null;
   /** Las primeras tarjetas (candidatas a LCP) cargan su foto con prioridad alta. */
@@ -218,26 +221,25 @@ export function ProductoCard({
         >
           {producto.nombre}
         </Link>
-        <p className="flex items-center gap-1 text-xs text-slate-500 md:text-[13px] dark:text-slate-400">
-          {nombrePuesto && (
-            <Link to={`/puestos/${producto.id_puesto}`} className="min-w-0 truncate hover:text-brand-600 hover:underline dark:hover:text-brand-300">
-              {nombrePuesto}
-            </Link>
-          )}
-          {calificacion ? (
-            <span className="shrink-0 font-bold text-estrella dark:text-amber-400">
-              {nombrePuesto && <span className="font-normal text-slate-500 dark:text-slate-400">· </span>}★ {calificacion.toFixed(1)}
-            </span>
-          ) : null}
-        </p>
-        {domicilio !== undefined && (
-          <p
-            className={`flex items-center gap-1 text-xs font-semibold md:text-[13px] ${
-              domicilio ? 'text-exito dark:text-[#6FD596]' : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {domicilio && <Truck className="h-3.5 w-3.5" aria-hidden="true" />}
-            {domicilio ? 'Domicilio disponible' : 'Retiro en el puesto'}
+        {!ocultarPuesto && (
+          <p className="flex items-center gap-1 text-xs text-slate-500 md:text-[13px] dark:text-slate-400">
+            {nombrePuesto && (
+              <Link to={`/puestos/${producto.id_puesto}`} className="min-w-0 truncate hover:text-brand-600 hover:underline dark:hover:text-brand-300">
+                {nombrePuesto}
+              </Link>
+            )}
+            {calificacion ? (
+              <span className="shrink-0 font-bold text-estrella dark:text-amber-400">
+                {nombrePuesto && <span className="font-normal text-slate-500 dark:text-slate-400">· </span>}★ {calificacion.toFixed(1)}
+              </span>
+            ) : null}
+          </p>
+        )}
+        {/* El domicilio es lo normal: solo se avisa cuando falta, para que la tarjeta no repita lo mismo 15 veces. */}
+        {!ocultarPuesto && domicilio === false && (
+          <p className="flex items-center gap-1 text-xs font-semibold text-slate-500 md:text-[13px] dark:text-slate-400">
+            <Store className="h-3.5 w-3.5" aria-hidden="true" />
+            Solo retiro en el puesto
           </p>
         )}
         {/* Escritorio: botón con texto, en coral (el color de la acción de comprar, igual que el + del celular). */}

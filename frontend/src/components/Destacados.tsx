@@ -51,10 +51,14 @@ function recortar(texto: string, max: number) {
   return limpio.length > max ? `${limpio.slice(0, max - 1).trimEnd()}…` : limpio;
 }
 
-/** Con datos reales: cada puesto (los que tienen portada primero) es una diapositiva. */
+/** Los puestos que muestra el carrusel (los que tienen portada primero, hasta 4). */
+export function puestosDelCarrusel(puestos: Puesto[]): Puesto[] {
+  return [...puestos].sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada))).slice(0, 4);
+}
+
+/** Con datos reales: cada puesto del carrusel es una diapositiva. */
 function diapositivasDe(puestos: Puesto[]): Diapositiva[] {
-  const ordenados = [...puestos].sort((a, b) => Number(Boolean(b.portada)) - Number(Boolean(a.portada)));
-  const reales = ordenados.slice(0, 4).map<Diapositiva>((p, i) => ({
+  const reales = puestosDelCarrusel(puestos).map<Diapositiva>((p, i) => ({
     clave: `p${p.id}`,
     titulo: p.nombre,
     texto: p.descripcion ? recortar(p.descripcion, 110) : 'Mira lo que tiene este puesto de Riohacha.',

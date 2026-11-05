@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react';
@@ -191,6 +192,7 @@ export function Catalogo() {
         </Modal>
 
         <div className="min-w-0">
+          <AvisoUnPuesto className="mb-3" />
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h1 className="text-[22px] font-extrabold tracking-tight">{categoriaActual ?? 'Catálogo'}</h1>

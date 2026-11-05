@@ -78,7 +78,7 @@ Objetivos táctiles de 44 px en móvil (`min-h-[44px]`, 40 px desde `md`). Foco 
   (Tienda, Catálogo, Carrito, Pedidos o Panel según permisos, Cuenta, que abre una hoja). `PanelLayout`: barra superior de marca y menú lateral con iconos e ítem activo marcado.
 - `Destacados`: carrusel con puestos reales (portada si existe; color sólido si no; 0 o 1 elementos se ven bien), barra de progreso,
   pausa con el cursor o el foco, entrada escalonada del texto. Sin autoavance con `prefers-reduced-motion`.
-- `ProductoCard`: foto cuadrada, «Quedan N» solo con stock de 1 a 5, calificación del puesto solo si existe, domicilio, botón `+` redondo en celular.
+- `ProductoCard`: foto cuadrada, «Quedan N» solo con stock de 1 a 5, calificación del puesto solo si existe, «Solo retiro en el puesto» únicamente cuando el puesto no hace domicilio (lo normal no se repite), botón `+` redondo en celular y coral relleno en escritorio. Con `ocultarPuesto` (página del puesto) no repite nombre, calificación ni entrega. `AvisoUnPuesto` recuerda de qué puesto es el pedido en curso y que cada pedido es de uno solo.
 - `iconos.tsx`: 8 iconos de categoría propios y uno genérico; la reserva sin foto usa el icono de la categoría sobre gris.
 - `PuestoCard` / `LogoPuesto`: portada, logo o iniciales sobre color propio.
 - `Modal` (hoja inferior en celular), `Toast` (`role="status"`, `aria-live`), `Estado*` (vacíos útiles, esqueletos con la forma real), `EtiquetaEstado` (chips consistentes).
