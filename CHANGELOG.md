@@ -11,6 +11,17 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Identidad de color propia, en claro y en oscuro: las cartulinas de precio de un puesto de mercado.** La tienda «se veía simple y hecha por
+  IA»: el crema con coral de la fase 1 es justo la apariencia en la que caen las interfaces generadas, y los degradados en botones y
+  encabezados eran otra señal. Ahora el color significa algo: cada categoría tiene su cartulina (limón para frutas, guayaba para dulces,
+  aguamarina para pescados, mango para bebidas…) y el precio de cada producto va en una etiqueta de ese color, con hueco para el cordel
+  y una inclinación mínima, a caballo entre la foto y el texto; las categorías llevan un aro de su color y los chips de los puestos también.
+  El fondo pasa del crema a «sal» (blanco verdoso), «Cómo funciona» es una banda amarilla, y se quitan los degradados de botones,
+  encabezados y paneles. En oscuro, los neutros dejan el azul-gris genérico por una «noche de mercado» verde marino donde las cartulinas
+  brillan. Cada par de colores cumple contraste AA y una prueba lo comprueba. Una segunda revisión independiente pidió más: la fila de
+  categorías pasa de círculos en una caja blanca a cartulinas de color, la unidad va dentro de la etiqueta del precio, el botón de
+  comprar de cada tarjeta es una pastilla compacta en vez de un bloque a todo lo ancho, los colores de cartulina se separan del coral de
+  comprar y del turquesa de la marca, la grilla de puestos deja de dejar un hueco, y el oscuro separa mejor tarjetas y fondo.
 - **Acabado de la tienda (fase 5 de 5 del rediseño visual).** Una calificación de 4,5 ya no se dibuja como cinco estrellas llenas
   (se redondeaba): ahora son cuatro y media. El pie se ordena (la columna «RioMarket» es una lista como las demás y la de «Vender»
   no aparece vacía para un comprador con sesión), los puntos del carrusel son más grandes y visibles, y lo que el navegador pinta por

@@ -3,6 +3,7 @@ import { MapPin, Truck } from 'lucide-react';
 import type { Puesto } from '../lib/types';
 import { Imagen } from './Imagen';
 import { coloresDePuesto, inicialesDe } from './iconos';
+import { cartulinaDe } from './cartulina';
 import { urlAbsoluta } from '../lib/utils';
 
 /** Logo redondo del puesto: su foto, o las iniciales sobre un color propio. */
@@ -85,7 +86,11 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
         {categorias.length > 0 && (
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {categorias.slice(0, 3).map((categoria) => (
-              <span key={categoria.id} className="badge bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200">
+              <span
+                key={categoria.id}
+                className="badge"
+                style={{ background: cartulinaDe(categoria.nombre).fondo, color: cartulinaDe(categoria.nombre).tinta }}
+              >
                 {categoria.nombre}
               </span>
             ))}

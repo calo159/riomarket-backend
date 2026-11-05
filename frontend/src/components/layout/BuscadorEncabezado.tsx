@@ -186,7 +186,7 @@ export function BuscadorEncabezado({ categorias }: { categorias: Categoria[] | u
         <button
           type="submit"
           aria-label="Buscar"
-          className="grid w-14 place-items-center bg-gradient-to-b from-accion to-[#BB3515] text-white transition-colors hover:from-accion-hover hover:to-[#A02D10]"
+          className="grid w-14 place-items-center bg-accion text-white transition-colors hover:bg-accion-hover"
         >
           <Search className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden="true" />
         </button>

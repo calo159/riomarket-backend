@@ -1,5 +1,6 @@
 import { lugar, Revela } from '../components/Revela';
-import { useEffect, useRef } from 'react';
+import { cartulinaDe } from '../components/cartulina';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, LayoutGrid, MapPin, Star, Store } from 'lucide-react';
@@ -131,41 +132,41 @@ export function Inicio() {
       <Destacados puestos={todosPuestos} />
 
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
+        {/* Las categorías son cartulinas de colores, una por categoría (components/cartulina.ts), con la foto del producto
+            típico asomando. Reemplazan la caja blanca con círculos, que era lo más genérico de la página. */}
         <nav
           aria-label="Categorías"
-          className="entra-medallas relative z-[4] -mt-9 flex snap-x gap-0.5 overflow-x-auto rounded-xl bg-white px-2 py-3 shadow-flota [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-0 md:px-1.5 md:py-3.5 dark:bg-slate-900 [&::-webkit-scrollbar]:hidden"
+          className="entra-medallas relative z-[4] -mt-9 flex snap-x gap-2 overflow-x-auto px-0.5 pb-3 pt-1.5 [scrollbar-width:none] md:grid md:grid-cols-8 md:gap-2.5 md:overflow-visible [&::-webkit-scrollbar]:hidden"
         >
           {categorias.isLoading &&
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 py-2.5" aria-hidden="true">
-                <div className="skeleton h-12 w-12 rounded-full md:h-14 md:w-14" />
-                <div className="skeleton h-3 w-14" />
-              </div>
+              <div key={i} className="skeleton h-[88px] w-[132px] shrink-0 md:w-auto" aria-hidden="true" />
             ))}
-          {visibles.map((c, i) => (
-            <Link
-              key={c.id}
-              style={lugar(i)}
-              to={`/catalogo?categoria=${c.id}`}
-              className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-brand-200"
-            >
-              <MedallaCategoria
-                nombre={c.nombre}
-                className="h-12 w-12 transition-transform duration-[220ms] [transition-timing-function:cubic-bezier(.2,1.5,.4,1)] group-hover:-translate-y-[3px] group-hover:scale-[1.07] group-active:scale-90 md:h-14 md:w-14"
-                iconoClassName="h-[25px] w-[25px] md:h-7 md:w-7"
-              />
-              {c.nombre}
-            </Link>
-          ))}
+          {visibles.map((c, i) => {
+            const cartulina = cartulinaDe(c.nombre);
+            return (
+              <Link
+                key={c.id}
+                to={`/catalogo?categoria=${c.id}`}
+                style={{ ...lugar(i), background: cartulina.fondo, color: cartulina.tinta, '--giro': `${i % 2 ? 1.2 : -1.2}deg` } as CSSProperties}
+                className="group relative flex h-[88px] w-[132px] shrink-0 snap-start items-end overflow-hidden rounded-lg p-2.5 text-[13px] font-extrabold leading-[1.15] shadow-flota transition-transform duration-200 [transform:rotate(var(--giro))] hover:[transform:rotate(0deg)_translateY(-3px)] active:scale-95 md:w-auto md:text-sm"
+              >
+                <MedallaCategoria
+                  nombre={c.nombre}
+                  className="absolute right-2 top-2 h-10 w-10 ring-2 ring-white/80 transition-transform duration-200 group-hover:scale-110"
+                  iconoClassName="h-5 w-5"
+                />
+                <span className="relative z-[1]">{c.nombre}</span>
+              </Link>
+            );
+          })}
           {lista.length > 8 && (
             <Link
               to="/catalogo"
               style={lugar(visibles.length)}
-              className="group flex min-h-[86px] w-[78px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-lg px-1 py-1.5 text-center text-xs font-semibold leading-[1.2] text-tinta transition-colors hover:bg-brand-50 hover:text-brand-600 md:w-auto md:gap-2 md:py-2.5 md:text-[13px] dark:text-slate-100 dark:hover:bg-slate-800"
+              className="group relative flex h-[88px] w-[132px] shrink-0 snap-start items-end overflow-hidden rounded-lg bg-white p-2.5 text-[13px] font-extrabold leading-[1.15] text-tinta shadow-flota transition-transform duration-200 hover:-translate-y-[3px] md:w-auto md:text-sm dark:bg-slate-800 dark:text-slate-100"
             >
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-brand-50 text-brand-600 transition-transform duration-[220ms] [transition-timing-function:cubic-bezier(.2,1.5,.4,1)] group-hover:-translate-y-[3px] group-hover:scale-[1.07] md:h-14 md:w-14 dark:bg-slate-800 dark:text-brand-200">
-                <LayoutGrid className="h-[25px] w-[25px] md:h-7 md:w-7" aria-hidden="true" />
-              </span>
+              <LayoutGrid className="absolute right-3 top-3 h-6 w-6 text-brand-600 dark:text-brand-300" aria-hidden="true" />
               Ver todas
             </Link>
           )}
@@ -198,13 +199,13 @@ export function Inicio() {
           ].map(({ to, titulo, texto, foto, destacado }) => {
             const clase = cn(
               'card card-hover grid min-h-[116px] grid-cols-[minmax(0,1fr)_38%] overflow-hidden text-tinta hover:text-tinta dark:text-slate-100 dark:hover:text-slate-100',
-              destacado && 'border-transparent bg-amarillo dark:bg-[#E9B949] dark:text-tinta dark:hover:text-tinta',
+              destacado && 'border-transparent bg-amarillo dark:bg-[#C99A2E] dark:text-tinta dark:hover:text-tinta',
             );
             const contenido = (
               <>
                 <span className="flex flex-col justify-center gap-1 p-4">
                   <b className="text-base leading-tight">{titulo}</b>
-                  <small className={cn('text-[13px]', destacado ? 'text-[#38505B]' : 'text-slate-500 dark:text-slate-400')}>
+                  <small className={cn('text-[13px]', destacado ? 'text-tinta/85' : 'text-slate-500 dark:text-slate-400')}>
                     {texto}
                   </small>
                 </span>
@@ -254,7 +255,7 @@ export function Inicio() {
                   key={p.id}
                   to={`/puestos/${p.id}`}
                   className={`grid h-[132px] grid-cols-[minmax(0,1fr)_40%] overflow-hidden rounded-xl transition duration-[180ms] hover:-translate-y-0.5 hover:shadow-hover md:h-[176px] md:grid-cols-[minmax(0,1fr)_44%] ${
-                    claro ? 'bg-amarillo text-tinta hover:text-tinta dark:bg-[#E9B949]' : 'bg-brand-600 text-white hover:text-white dark:bg-brand-800'
+                    claro ? 'bg-amarillo text-tinta hover:text-tinta dark:bg-[#C99A2E]' : 'bg-brand-600 text-white hover:text-white dark:bg-brand-800'
                   }`}
                 >
                   <div className="flex flex-col justify-center gap-1.5 p-4 md:p-[22px]">
@@ -283,7 +284,7 @@ export function Inicio() {
       <Revela
         as="section"
         id="puestos"
-        className="relative mt-9 scroll-mt-4 overflow-hidden bg-brand-600 text-white dark:bg-brand-900 md:mt-12"
+        className="relative mt-9 scroll-mt-4 overflow-hidden bg-brand-600 text-white dark:bg-brand-700 md:mt-12"
         aria-label="Puestos de Riohacha"
       >
         <PatronOlas className="text-white opacity-[.07]" style={desvanecerEnMancha('100% 0%', 55, 140)} />
@@ -297,7 +298,13 @@ export function Inicio() {
             <div className="card px-6 py-10 text-center text-slate-500 dark:text-slate-400">Todavía no hay puestos publicados.</div>
           )}
           {puestos.data && puestos.data.results.length > 0 && (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div
+              className={cn(
+                'grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3',
+                // Con 6 o menos puestos, tres columnas: 4 arriba y 2 abajo dejaba un hueco vacío.
+                puestos.data.results.length > 6 && 'xl:grid-cols-4',
+              )}
+            >
               {puestos.data.results.slice(0, 8).map((puesto, i) => (
                 <div key={puesto.id} className="rv [&>*]:h-full" style={lugar(i % 4)}>
                   <PuestoCard puesto={puesto} />
@@ -323,7 +330,7 @@ export function Inicio() {
         </div>
       )}
 
-      <Revela as="section" bloque className="mt-9 bg-crema dark:bg-slate-900" aria-label="Cómo funciona">
+      <Revela as="section" bloque className="mt-9 bg-amarillo text-tinta dark:border-t-4 dark:border-amarillo dark:bg-slate-900 dark:text-slate-100" aria-label="Cómo funciona">
         <div className="mx-auto grid max-w-[1240px] gap-5 px-5 py-6 md:grid-cols-3 md:gap-6">
           {[
             { icono: Store, titulo: 'Un pedido por puesto', texto: 'Compras directo a cada vendedor.' },
@@ -331,10 +338,10 @@ export function Inicio() {
             { icono: Star, titulo: 'Reseñas de compradores', texto: 'Solo opina quien recibió su pedido.' },
           ].map(({ icono: Icono, titulo, texto }) => (
             <div key={titulo} className="flex items-start gap-3">
-              <Icono className="h-[30px] w-[30px] shrink-0 text-brand-600 dark:text-brand-300" strokeWidth={1.8} aria-hidden="true" />
+              <Icono className="h-[30px] w-[30px] shrink-0 text-brand-700 dark:text-amarillo" strokeWidth={1.8} aria-hidden="true" />
               <div>
                 <b className="block">{titulo}</b>
-                <span className="text-sm text-slate-500 dark:text-slate-400">{texto}</span>
+                <span className="text-sm text-tinta/80 dark:text-slate-400">{texto}</span>
               </div>
             </div>
           ))}

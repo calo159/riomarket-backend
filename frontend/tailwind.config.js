@@ -25,26 +25,29 @@ export default {
         azul: { DEFAULT: '#0D5C8A', suave: '#DFF1FA' },
         exito: { DEFAULT: '#0B7A3E', suave: '#E2F4E7' },
         estrella: '#9A5B00',
-        tinta: '#1B2A33',
-        // Papel cálido del toldo: la página ya no es un gris de hospital y las tarjetas blancas se despegan de él.
-        fondo: '#F4EBDA',
+        tinta: '#14262A',
+        // «Sal»: el blanco de las salinas, apenas verdoso. Ni el gris frío de antes ni el crema que usan todas las
+        // interfaces «cálidas»: el color lo ponen las cartulinas de categoría y las bandas, no el fondo.
+        fondo: '#F4F6F2',
         papel: '#FBF7EE',
         crema: '#FFF4DC',
-        pie: '#17313B',
-        // Neutros: del 50 al 300 son de papel cálido (superficies y bordes); del 400 al 950 siguen fríos
-        // (texto y tema oscuro). 200 = borde, 500 = texto secundario, 900 = tinta.
+        pie: '#0E2A2F',
+        // Neutros con un hilo de verde marino (el del turquesa de la marca), no azul-gris genérico.
+        // Del 50 al 300 son las superficies y bordes de la tienda de día; del 600 al 950 son la «noche de
+        // mercado» (tema oscuro): ya no un azul-gris neutro sino el fondo de un puesto a la luz de un bombillo.
+        // 200 = borde, 500 = texto secundario, 900 = tinta.
         slate: {
-          50: '#FAF6EC',
-          100: '#F3ECDD',
-          200: '#E4D9C3',
-          300: '#CDBFA4',
-          400: '#8797A1',
-          500: '#566973',
-          600: '#465862',
-          700: '#34454E',
-          800: '#26363E',
-          900: '#1B2A33',
-          950: '#0F1A20',
+          50: '#F8F9F6',
+          100: '#EEF1EC',
+          200: '#DCE2D8',
+          300: '#C3CCC0',
+          400: '#8D9B94',
+          500: '#4F6663',
+          600: '#41666A',
+          700: '#31585D',
+          800: '#214449',
+          900: '#133136',
+          950: '#0A1D21',
         },
       },
       fontFamily: {
@@ -58,10 +61,10 @@ export default {
       boxShadow: {
         // Las sombras aparecen solo al pasar el cursor (tarjetas) o en elementos flotantes.
         // En reposo: una línea de contacto y una sombra corta, lo justo para que la tarjeta se separe del papel.
-        reposo: '0 1px 0 rgba(27, 42, 51, 0.04), 0 2px 8px rgba(27, 42, 51, 0.07)',
-        hover: '0 7px 20px rgba(16, 44, 54, 0.16)',
-        flota: '0 3px 12px rgba(16, 44, 54, 0.12)',
-        menu: '0 8px 22px rgba(16, 44, 54, 0.22)',
+        reposo: '0 1px 0 rgba(10, 29, 33, 0.04), 0 2px 8px rgba(10, 29, 33, 0.07)',
+        hover: '0 7px 20px rgba(10, 29, 33, 0.16)',
+        flota: '0 3px 12px rgba(10, 29, 33, 0.12)',
+        menu: '0 8px 22px rgba(10, 29, 33, 0.22)',
       },
       keyframes: {
         pop: { '0%': { transform: 'scale(.6)' }, '60%': { transform: 'scale(1.35)' }, '100%': { transform: 'scale(1)' } },

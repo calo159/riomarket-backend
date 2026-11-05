@@ -1,6 +1,6 @@
 # Sistema de diseño de RioMarket
 
-Interfaz densa de marketplace: encabezado turquesa, tarjetas blancas con borde y sombra de reposo sobre papel cálido, bandas de color de ancho completo, acción en coral.
+Interfaz densa de marketplace con una idea de color propia: **las cartulinas de precio de un puesto de mercado**. Encabezado turquesa, tarjetas blancas sobre «sal», bandas de color de ancho completo, acción en coral, y un color de cartulina por categoría. Sin degradados ni brillos.
 La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio celular, producto).
 
 ## Tokens (`frontend/tailwind.config.js`)
@@ -10,15 +10,33 @@ La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio c
 | `brand-600` | `#00626D` | Encabezado, enlaces, estados activos. La escala `brand-50..950` es turquesa |
 | `accion` / `accion-hover` | `#CF3F1B` / `#B53414` | Comprar, agregar, confirmar (`.btn-primary`) |
 | `amarillo` | `#FFD166` | Detalles: «Market» del logo, contadores, foco de la búsqueda |
-| `tinta` | `#1B2A33` | Texto principal |
+| `tinta` | `#14262A` | Texto principal (tinta marina, con un hilo de verde) |
 | `slate-*` | `50-300` cálidos (`200 = #E4D9C3`, bordes y superficies); `400-950` fríos (`500 = #566973`) | Texto secundario y bordes. En oscuro, `900` es la tarjeta y `950` la página |
-| `fondo` | `#F4EBDA` | Fondo de página: papel cálido del toldo (antes un gris frío `#EDF1F3`). `papel` `#FBF7EE` y `crema` `#FFF4DC` son las bandas claras |
+| `fondo` | `#F4F6F2` | Fondo de página: «sal», el blanco verdoso de las salinas. Ni gris frío (`#EDF1F3`, lo pálido) ni crema cálido (`#F4EBDA`, la apariencia de toda interfaz «cálida»): el color lo ponen las cartulinas y las bandas. `papel` y `crema` quedan solo para la marca y el logo |
 | `exito`, `azul`, `estrella`, `pie` | `#0B7A3E`, `#0D5C8A`, `#9A5B00`, `#17313B` | Domicilio/éxito, bloque azul, calificación, pie |
 
 `estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` porque el original daba 4,2:1 sobre blanco; ahora 5,4:1.
 `sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin vidrio ni manchas decorativas. En reposo la tarjeta se separa del papel con borde cálido y una sombra corta (`shadow-reposo`); sube con `shadow-hover` al pasar el cursor y los elementos flotantes usan `shadow-flota` y `shadow-menu`. Los degradados y las texturas existen, pero salen de la marca (ver «Detalles de marca»).
 
-**Ritmo de color de la tienda.** El color no se queda arriba: tras el carrusel y las categorías, la sección «Puestos de Riohacha» es una banda turquesa de ancho completo (`brand-600`, olas muy tenues, tarjetas blancas encima) y «Cómo funciona» una banda crema. Contraste medido (AA): tinta sobre papel 12,5:1, texto secundario 4,8:1, enlace turquesa 6,0:1, blanco sobre turquesa 7,1:1 y sobre coral 4,8:1. La tarjeta blanca contra el papel es 1,18:1 por valor: la separan el borde y la sombra, no el contraste.
+**Cartulinas de precio (dirección de color).** Un puesto de mercado marca cada producto con una cartulina de color y el precio a mano. Aquí el color de esa cartulina es el de la **categoría**, así el color significa algo en vez de decorar (`components/cartulina.ts`):
+
+| Categoría | Cartulina | Fondo | Tinta |
+| --- | --- | --- | --- |
+| Arepas | maíz | `#F2E35A` | `#14262A` |
+| Frutas y verduras | limón | `#BFE23A` | `#14262A` |
+| Pescados y mariscos | mar | `#5FE3D0` | `#14262A` |
+| Comida | ají | `#D9303A` | `#FFFFFF` |
+| Dulces típicos | guayaba | `#FF7FA5` | `#14262A` |
+| Bebidas | mango | `#FFA21F` | `#14262A` |
+| Artesanías | corozo | `#7C3AA8` | `#FFFFFF` |
+| Ropa | índigo | `#4D5BD8` | `#FFFFFF` |
+| Otra | sal | `#DCE5E3` | `#14262A` |
+
+Los tonos están separados a propósito de los que significan otra cosa: el ají es un rojo frío lejos del coral del botón de comprar, el mar es más verdoso que el turquesa de la marca y el maíz se distingue del mango. Donde se ven: la **etiqueta del precio** de cada producto (`.etiqueta-precio`: con la unidad escrita dentro, un hueco para el cordel y una inclinación de ±2° que cambia de una a otra; en celular la unidad va abreviada), la **fila de categorías** (cada una es una cartulina rectangular de su color con la foto del producto típico asomando, ya no círculos en una caja blanca) y los chips de categoría de los puestos. El botón de comprar de cada tarjeta es una pastilla coral compacta («+ Agregar»), no un bloque a todo lo ancho: diez botones enteros por pantalla pesaban más que el producto. Una prueba comprueba el contraste AA de cada par y que no se repita ningún color. Son colores de papel fluorescente: sirven igual de día y de noche.
+
+**Claro y oscuro.** De día, la sal con tarjetas blancas, bandas turquesa y amarilla de ancho completo y botones de compra coral planos. De noche, la «noche de mercado»: los neutros del 600 al 950 son un verde marino muy oscuro (`#0A1D21` la página, `#133136` la tarjeta, `#214449` el borde) en lugar del azul-gris genérico, y las cartulinas brillan sobre él como bajo el bombillo de un puesto. El oscuro no es el claro invertido: el encabezado y los paneles pasan de turquesa a `slate-900`, la banda de puestos sigue siendo turquesa (`brand-700`), los amarillos bajan a `#C99A2E` para no deslumbrar y «Cómo funciona» lleva una franja amarilla arriba.
+
+**Ritmo de color de la tienda.** El color no se queda arriba: tras el carrusel y las categorías, «Puestos de Riohacha» es una banda turquesa de ancho completo (`brand-600`, olas muy tenues) y «Cómo funciona» una banda amarilla. Contraste medido (AA): tinta sobre sal 14,4:1, texto secundario `#4F6663` 5,7:1, blanco sobre turquesa 7,1:1 y sobre coral 4,8:1. La tarjeta blanca contra la sal se separa por borde y sombra de reposo, no por contraste de valor.
 
 ## Marca
 
@@ -55,7 +73,7 @@ Los dos motivos del logo (las olas y el toldo festoneado) se usan como textura y
 Además: fondo de página con un velo turquesa (arriba a la izquierda) y otro amarillo (arriba a la derecha) solo en claro; tarjetas
 con un reflejo en el borde superior; símbolo del logo como marca de agua en el panel de login.
 
-**Carrusel de destacados.** Las diapositivas rotan turquesa, amarillo, crema del toldo y coral (ya no hay azul: chocaba con el turquesa del encabezado). Cada una lleva su color con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
+**Carrusel de destacados.** Las diapositivas rotan turquesa, amarillo, aguamarina y coral (ya no hay azul: chocaba con el turquesa del encabezado). Cada una lleva su color con un degradado en diagonal y un brillo detrás de la foto. La foto tiene el
 borde izquierdo inclinado con una banda translúcida detrás. Con texto blanco el lado del texto se oscurece un 8 % para dejar margen al contraste;
 `color-mix` queda de respaldo en el color sólido. El texto se limita al espacio libre a la izquierda de la foto
 (`calc(52vw - 4.5rem)` en tablet, `calc(42vw - 4.5rem)` desde `lg`) y la flecha izquierda mide 36 px para no tapar la primera letra.
