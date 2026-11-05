@@ -53,6 +53,7 @@ jobs:
       SECRET_KEY: ci-respaldo-secret-key-riomarket-0123456789abcdefghijklmnopqrstuvwxyz
       FERNET_KEY: 5yje5UOGK7sn3fg3xean97SK9QMXDRl-jS8LiAKULP8=
       SEED_DEMO_PASSWORD: RioMarket2026!
+      PAYMENTS_SANDBOX_ENABLED: "True"
       PGPASSWORD: riomarket
       URL_ORIGEN: postgres://riomarket:riomarket@localhost:5432/origen
       URL_DESTINO: postgres://riomarket:riomarket@localhost:5432/destino
