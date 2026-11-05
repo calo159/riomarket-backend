@@ -63,3 +63,23 @@ describe('PanelAdmin: vendedores en pausa por comisión', () => {
     expect(enlace).toHaveTextContent('0');
   });
 });
+
+describe('PanelAdmin: requiere atención', () => {
+  it('con todo en cero se ve tranquilo: «Todo al día» y sin total', async () => {
+    mocks.obtenerResumenAdmin.mockResolvedValue(resumen(0));
+    renderizar();
+
+    expect(await screen.findByRole('heading', { name: 'Requiere atención' })).toBeInTheDocument();
+    expect(screen.getByText('Todo al día')).toBeInTheDocument();
+    expect(screen.queryByText(/^asuntos? esperan? una revisión/)).not.toBeInTheDocument();
+  });
+
+  it('con algo pendiente muestra el total como dato principal', async () => {
+    mocks.obtenerResumenAdmin.mockResolvedValue({ ...resumen(2), verificaciones_pendientes: 1 });
+    renderizar();
+
+    expect(await screen.findByText('asuntos esperan una revisión')).toBeInTheDocument();
+    expect(screen.queryByText('Todo al día')).not.toBeInTheDocument();
+    expect(screen.getByText('Verificaciones pendientes').closest('a')).toHaveTextContent('1');
+  });
+});
