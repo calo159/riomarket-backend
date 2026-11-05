@@ -256,3 +256,38 @@ export const ETIQUETAS_AMBITO: Record<AmbitoRecurso, string> = {
 
 /** Recursos que el rol «administrador» nunca puede perder (candado anti-bloqueo). */
 export const RECURSOS_OBLIGATORIOS_ADMIN = ['admin.usuarios', 'admin.roles', 'admin.recursos', 'admin.resumen'];
+
+export type ClaveConfiguracion = 'comision_porcentaje' | 'tarifa_domicilio' | 'limite_aviso' | 'limite_bloqueo';
+
+export interface CampoConfiguracion {
+  clave: ClaveConfiguracion;
+  etiqueta: string;
+  ayuda: string;
+  unidad: '%' | '$';
+  minimo: string;
+  maximo: string;
+  /** Lo que rige hoy. */
+  valor: string;
+  /** Lo que valdría si se borra el del panel (la variable de entorno del servidor). */
+  del_servidor: string;
+  origen: 'panel' | 'servidor';
+}
+
+export interface ConfiguracionAdmin {
+  campos: CampoConfiguracion[];
+  vendedores: { al_dia: number; aviso: number; bloqueado: number };
+  actualizado: string | null;
+}
+
+/** Solo van los campos que cambian; `null` borra el valor del panel y vuelve a regir el del servidor. */
+export type ValoresConfiguracion = Partial<Record<ClaveConfiguracion, string | null>>;
+
+export async function obtenerConfiguracion(): Promise<ConfiguracionAdmin> {
+  const { data } = await api.get<ConfiguracionAdmin>('/admin/configuracion/');
+  return data;
+}
+
+export async function guardarConfiguracion(valores: ValoresConfiguracion, motivo: string): Promise<ConfiguracionAdmin> {
+  const { data } = await api.put<ConfiguracionAdmin>('/admin/configuracion/', { valores, motivo });
+  return data;
+}

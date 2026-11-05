@@ -17,6 +17,7 @@ import secrets
 import string
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import password_validation
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -30,6 +31,8 @@ from apps.audit.services import registrar
 from apps.catalog.models import Producto, Puesto
 from apps.common.motivo import validar_motivo
 from apps.common.query import parametro_entero
+from apps.configuracion.campos import CAMPOS, POR_CLAVE
+from apps.configuracion.models import ConfiguracionPlataforma
 from apps.notifications.models import Notificacion
 from apps.notifications.services import crear_notificacion
 from apps.orders.models import Pedido
@@ -573,3 +576,120 @@ def resumen() -> dict:
 def _contar_cupones() -> dict:
 
     return Cupon.objects.aggregate(total=Count("id"), activos=Count("id", filter=Q(activo=True)))
+
+
+# ---------------------------------------------------------------------------
+# Configuración de la plataforma (ADR-022)
+# ---------------------------------------------------------------------------
+def _cuantizado(valor) -> Decimal:
+    return Decimal(str(valor)).quantize(Decimal("0.01"))
+
+
+def configuracion_actual() -> dict:
+    """Los ajustes editables con su valor vigente, de dónde viene y el del servidor.
+
+    ``origen`` es ``panel`` si lo fijó un administrador y ``servidor`` si rige la variable de
+    entorno de Render (que también es el valor al que se vuelve al borrar el del panel).
+    """
+    fila = ConfiguracionPlataforma.objects.filter(pk=1).first()
+    usa_panel = settings.AJUSTES_EN_BASE_DE_DATOS
+    campos = []
+    for campo in CAMPOS:
+        del_panel = getattr(fila, campo.clave) if fila else None
+        servidor = _cuantizado(getattr(settings, campo.ajuste, 0))
+        fijado = usa_panel and del_panel is not None
+        campos.append(
+            {
+                "clave": campo.clave,
+                "etiqueta": campo.etiqueta,
+                "ayuda": campo.ayuda,
+                "unidad": campo.unidad,
+                "minimo": campo.minimo,
+                "maximo": campo.maximo,
+                "valor": _cuantizado(del_panel) if fijado else servidor,
+                "del_servidor": servidor,
+                "origen": "panel" if fijado else "servidor",
+            }
+        )
+    return {
+        "campos": campos,
+        "vendedores": comisiones.cuentas_por_estado(),
+        "actualizado": fila.fecha_actualizacion if fila else None,
+    }
+
+
+def _validar_valor(campo, valor) -> Decimal | None:
+    if valor is None:
+        return None
+    valor = _cuantizado(valor)
+    if not campo.minimo <= valor <= campo.maximo:
+        unidad = "%" if campo.unidad == "%" else "pesos"
+        raise ValidationError(
+            {campo.clave: f"Debe estar entre {campo.minimo:f} y {campo.maximo:f} {unidad}."}
+        )
+    return valor
+
+
+def actualizar_configuracion(*, actor: Usuario, valores: dict, motivo: str) -> dict:
+    """Fija (o, con ``None``, borra) los ajustes indicados; cada cambio queda auditado con motivo.
+
+    Solo afecta a lo que ocurra de aquí en adelante: los pedidos y pagos ya creados guardan la
+    comisión y la tarifa con que nacieron.
+    """
+    motivo = _motivo(motivo)
+    desconocidos = [k for k in valores if k not in POR_CLAVE]
+    if desconocidos:
+        raise ValidationError({"valores": f"Ajuste desconocido: {', '.join(desconocidos)}."})
+    if not valores:
+        raise ValidationError({"valores": "No cambiaste ningún valor."})
+    nuevos = {clave: _validar_valor(POR_CLAVE[clave], v) for clave, v in valores.items()}
+
+    with transaction.atomic():
+        fila = ConfiguracionPlataforma.objects.select_for_update().get_or_create(pk=1)[0]
+
+        def vigente(clave: str) -> Decimal:
+            """Valor que regiría con lo ya guardado: el del panel o, si no hay, el del servidor."""
+            del_panel = getattr(fila, clave)
+            if del_panel is not None:
+                return _cuantizado(del_panel)
+            return _cuantizado(getattr(settings, POR_CLAVE[clave].ajuste, 0))
+
+        def despues(clave: str) -> Decimal:
+            if clave in nuevos and nuevos[clave] is not None:
+                return nuevos[clave]
+            if clave in nuevos:
+                return _cuantizado(getattr(settings, POR_CLAVE[clave].ajuste, 0))
+            return vigente(clave)
+
+        aviso, bloqueo = despues("limite_aviso"), despues("limite_bloqueo")
+        if aviso > 0 and bloqueo > 0 and bloqueo < aviso:
+            raise ValidationError(
+                {"limite_bloqueo": "La pausa no puede ser menor que el aviso (0 apaga la pausa)."}
+            )
+
+        cambios = []
+        for clave, nuevo in nuevos.items():
+            antes_panel = getattr(fila, clave)
+            if antes_panel == nuevo:
+                continue
+            cambios.append((POR_CLAVE[clave], vigente(clave), despues(clave), nuevo))
+            setattr(fila, clave, nuevo)
+        if not cambios:
+            raise ValidationError({"valores": "No cambiaste ningún valor."})
+        fila.save()
+
+        for campo, antes, ahora, fijado in cambios:
+            registrar(
+                usuario=actor,
+                accion="actualizar",
+                entidad="configuracion",
+                id_entidad=fila.pk,
+                detalle={
+                    "campo": campo.etiqueta,
+                    "de": str(antes),
+                    "a": str(ahora),
+                    "origen": "panel" if fijado is not None else "servidor",
+                    "motivo": motivo,
+                },
+            )
+    return configuracion_actual()

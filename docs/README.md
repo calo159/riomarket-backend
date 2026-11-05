@@ -61,6 +61,7 @@ stack, pruebas y despliegue.
 - [ADR-019: la comisión del efectivo se anota y se cobra](ADR-019-comision-del-efectivo.md)
 - [ADR-020: quien se atrasa con la comisión recibe un aviso y, si sigue, una pausa](ADR-020-politica-de-atraso.md)
 - [ADR-021: pago contra entrega a domicilio](ADR-021-pago-contra-entrega.md)
+- [ADR-022: configuración editable desde el panel (comisión, tarifa y límites)](ADR-022-configuracion-editable-desde-el-panel.md)
 
 ## Entrega
 

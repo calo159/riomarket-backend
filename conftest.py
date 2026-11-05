@@ -23,3 +23,18 @@ def _limpiar_cache():
     cache.clear()
     yield
     cache.clear()
+
+
+@pytest.fixture
+def ajustes_del_panel(settings):
+    """Enciende la lectura de los ajustes fijados en el panel (en las pruebas está apagada).
+
+    Descarta lo que haya en memoria al entrar y al salir, para que un valor de una prueba no se
+    cuele en la siguiente.
+    """
+    from apps.configuracion import lectura
+
+    settings.AJUSTES_EN_BASE_DE_DATOS = True
+    lectura.invalidar()
+    yield
+    lectura.invalidar()

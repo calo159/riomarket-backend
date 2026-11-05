@@ -169,6 +169,16 @@ RECURSOS_POR_DEFECTO = [
         "Sistema",
         1,
     ),
+    _r(
+        "admin.configuracion",
+        "Configuración",
+        _PA,
+        "/admin/configuracion",
+        "SlidersHorizontal",
+        (ADMINISTRADOR,),
+        "Sistema",
+        2,
+    ),
 ]
 
 

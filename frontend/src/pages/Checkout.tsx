@@ -27,6 +27,7 @@ import {
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { crearPedidoConPagoEnEfectivo, type DatosPedido } from '../api/orders';
 import { validarCupon } from '../api/coupons';
+import { obtenerConfiguracionPublica } from '../api/config';
 import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
@@ -37,7 +38,8 @@ function finDeFrase(fecha: string): string {
   return fecha.endsWith('.') ? fecha : `${fecha}.`;
 }
 
-const TARIFA_DOMICILIO = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
+/** Mientras llega la tarifa del servidor se usa la de compilación, solo para no mostrar un hueco. */
+const TARIFA_DOMICILIO_INICIAL = Number(import.meta.env.VITE_TARIFA_DOMICILIO || 3000);
 
 export function Checkout() {
   const { carrito, subtotal, vaciar } = useCart();
@@ -74,6 +76,14 @@ export function Checkout() {
     queryKey: claves.direcciones,
     queryFn: listarDirecciones,
   });
+
+  // La tarifa la fija el administrador desde el panel: se pide al servidor para anunciar la misma que se cobra.
+  const configuracion = useQuery({
+    queryKey: claves.configuracionPublica,
+    queryFn: obtenerConfiguracionPublica,
+    staleTime: 60_000,
+  });
+  const tarifaDomicilio = configuracion.data ? Number(configuracion.data.tarifa_domicilio) : TARIFA_DOMICILIO_INICIAL;
 
   useEffect(() => {
     if (!direcciones.data?.length) {
@@ -154,7 +164,7 @@ export function Checkout() {
   });
 
   const descuento = cupon ? Number(cupon.descuento) : 0;
-  const tarifa = tipoEntrega === 'domicilio' ? TARIFA_DOMICILIO : 0;
+  const tarifa = tipoEntrega === 'domicilio' ? tarifaDomicilio : 0;
   const total = Math.max(0, subtotal + tarifa - descuento);
 
   const items = useMemo(
@@ -269,7 +279,7 @@ export function Checkout() {
                 <div>
                   <p className="font-semibold">Domicilio</p>
                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    {ofreceDomicilio ? `Tarifa: ${formatearMoneda(TARIFA_DOMICILIO)}` : 'Este puesto no ofrece domicilio.'}
+                    {ofreceDomicilio ? `Tarifa: ${formatearMoneda(tarifaDomicilio)}` : 'Este puesto no ofrece domicilio.'}
                   </p>
                 </div>
               </button>

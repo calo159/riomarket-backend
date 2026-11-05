@@ -43,6 +43,7 @@ const PedidosAdmin = lazy(() => import('./pages/admin/PedidosAdmin').then((modul
 const PuestosAdmin = lazy(() => import('./pages/admin/PuestosAdmin').then((modulo) => ({ default: modulo.PuestosAdmin })));
 const PagosAdmin = lazy(() => import('./pages/admin/PagosAdmin').then((modulo) => ({ default: modulo.PagosAdmin })));
 const Auditoria = lazy(() => import('./pages/admin/Auditoria').then((modulo) => ({ default: modulo.Auditoria })));
+const Configuracion = lazy(() => import('./pages/admin/Configuracion').then((modulo) => ({ default: modulo.Configuracion })));
 const CuponesAdmin = lazy(() => import('./pages/admin/CuponesAdmin').then((modulo) => ({ default: modulo.CuponesAdmin })));
 const MapaPuestos = lazy(() => import('./pages/MapaPuestos').then((modulo) => ({ default: modulo.MapaPuestos })));
 const CreditosFotos = lazy(() => import('./pages/CreditosFotos').then((modulo) => ({ default: modulo.CreditosFotos })));
@@ -166,6 +167,9 @@ export function App() {
               </Route>
               <Route element={<RutaProtegida recurso="admin.auditoria" />}>
                 <Route path="auditoria" element={<Auditoria />} />
+              </Route>
+              <Route element={<RutaProtegida recurso="admin.configuracion" />}>
+                <Route path="configuracion" element={<Configuracion />} />
               </Route>
             </Route>
           </Route>

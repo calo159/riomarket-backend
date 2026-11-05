@@ -20,6 +20,8 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from django.conf import settings
 
+from apps.common import ajustes
+
 CENTAVOS = Decimal("0.01")
 CIEN = Decimal("100.00")
 
@@ -30,7 +32,7 @@ def _setting_decimal(nombre: str, default: str = "0.00") -> Decimal:
     ``django-environ`` no tiene un método ``decimal``; leer como texto y
     convertirlo evita los errores de punto flotante de ``env.float``.
     """
-    valor = getattr(settings, nombre, default)
+    valor = ajustes.valor(nombre, default)
     if valor is None:
         valor = default
     try:

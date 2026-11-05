@@ -25,6 +25,8 @@ export const claves = {
   auditoriaLista: (pagina: number, busqueda: Filtro, accion: Filtro, desde: Filtro, hasta: Filtro) =>
     ['auditoria', pagina, busqueda, accion, desde, hasta] as const,
   adminResumen: ['admin-resumen'] as const,
+  adminConfiguracion: ['admin-configuracion'] as const,
+  configuracionPublica: ['configuracion-publica'] as const,
   adminRoles: ['admin-roles'] as const,
   perfil: ['perfil'] as const,
   direcciones: ['direcciones'] as const,

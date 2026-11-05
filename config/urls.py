@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/promotions/", include("apps.promotions.urls")),
     path("api/audit/", include("apps.audit.urls")),
     path("api/admin/", include("apps.administration.urls")),
+    path("api/configuracion/", include("apps.configuracion.urls")),
 ]
 
 if settings.DEBUG:

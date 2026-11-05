@@ -12,7 +12,6 @@ la plataforma recibiría ese dinero y le debería el neto al vendedor, que es ot
 import contextlib
 from decimal import Decimal, InvalidOperation
 
-from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, F, Max, Sum
@@ -20,6 +19,7 @@ from django.db.models import Count, F, Max, Sum
 from apps.accounts.models import Usuario
 from apps.audit import services as audit
 from apps.audit.models import RegistroAuditoria
+from apps.common import ajustes
 from apps.notifications import services as notificaciones
 from apps.notifications.models import Notificacion
 from apps.payments.models import LiquidacionComision, Pago
@@ -45,8 +45,8 @@ def _pesos(valor: Decimal) -> str:
 def limites() -> tuple[Decimal, Decimal]:
     """(aviso, bloqueo) en pesos de comisión pendiente; 0 apaga ese escalón."""
     return (
-        Decimal(str(getattr(settings, "COMISION_LIMITE_AVISO", 0) or 0)),
-        Decimal(str(getattr(settings, "COMISION_LIMITE_BLOQUEO", 0) or 0)),
+        Decimal(str(ajustes.valor("COMISION_LIMITE_AVISO", 0) or 0)),
+        Decimal(str(ajustes.valor("COMISION_LIMITE_BLOQUEO", 0) or 0)),
     )
 
 
