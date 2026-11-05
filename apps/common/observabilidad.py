@@ -1,6 +1,7 @@
 """Observabilidad mínima (ADR-015): identificador de petición, registro de acceso y JSON.
 
-Sin dependencias externas. Regla de oro: en los registros no entra nada personal ni secreto.
+Sin dependencias externas (Sentry, ADR-023, es opcional y solo se importa si hay DSN).
+Regla de oro: en los registros no entra nada personal ni secreto.
 El registro de acceso lleva solo método, ruta (sin query string), estado, duración, el número
 de usuario y el identificador de la petición; jamás cuerpo, cabeceras, cookies ni correos.
 """
@@ -150,3 +151,48 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             datos["error"] = redactar(self.formatException(record.exc_info))
         return json.dumps(datos, ensure_ascii=False, default=str)
+
+
+# ---------------------------------------------------------------------------
+# Aviso de errores a Sentry (opcional)
+# ---------------------------------------------------------------------------
+_PARTES_DE_LA_PETICION_QUE_SE_DESCARTAN = ("data", "cookies", "query_string", "headers", "env")
+
+
+def limpiar_evento(evento, pista=None):
+    """Quita de cada error enviado a Sentry todo lo que pueda ser personal o secreto.
+
+    El SDK ya omite cookies y datos de la persona con ``send_default_pii=False``; esto cierra el
+    resto: cuerpo de la petición, cabeceras, texto de la consulta y la identidad del usuario. Llegan
+    el tipo de error, la línea de código, la ruta y el identificador de la petición, que alcanzan
+    para diagnosticar sin exponer a nadie.
+    """
+    peticion = evento.get("request")
+    if isinstance(peticion, dict):
+        for parte in _PARTES_DE_LA_PETICION_QUE_SE_DESCARTAN:
+            peticion.pop(parte, None)
+    evento.pop("user", None)
+    return evento
+
+
+def iniciar_sentry(dsn: str, *, release: str = "", entorno: str = "produccion") -> bool:
+    """Activa el aviso de errores a Sentry si hay ``SENTRY_DSN``; sin él no hace nada.
+
+    Devuelve si quedó activo. No manda variables locales, cuerpos de petición ni datos de personas,
+    y no mide rendimiento (``traces_sample_rate=0``): solo errores.
+    """
+    if not dsn:
+        return False
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=dsn,
+        release=release or None,
+        environment=entorno,
+        send_default_pii=False,
+        include_local_variables=False,
+        max_request_body_size="never",
+        traces_sample_rate=0.0,
+        before_send=limpiar_evento,
+    )
+    return True

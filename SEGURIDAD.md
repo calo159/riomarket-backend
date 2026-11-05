@@ -116,4 +116,4 @@ En producción (`config/settings/prod.py` y `SecurityHeadersMiddleware`):
 5. Revisar `pip-audit` y `npm audit`; planear los saltos mayores pendientes.
 6. Probar el flujo de verificación y comprobar que la cédula no es accesible sin
    rol administrador.
-7. Definir respaldo de la base y retención de auditoría.
+7. Cargar los secretos del respaldo diario cifrado (ADR-023, `docs/despliegue.md`) y definir la retención de auditoría.

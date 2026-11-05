@@ -2,6 +2,7 @@
 
 from decimal import Decimal
 
+from apps.common.observabilidad import iniciar_sentry
 from config.logs import construir_logging
 from config.storage_urls import construir_media_url
 
@@ -58,6 +59,14 @@ WHITENOISE_ROOT = BASE_DIR / "frontend" / "dist"
 # Registro en JSON de una línea con request_id (ADR-015). LOG_FORMAT=texto lo devuelve a legible.
 LOG_FORMAT = env("LOG_FORMAT", default="json")
 LOGGING = construir_logging(LOG_FORMAT, debug=DEBUG, nivel=env("LOG_LEVEL", default="INFO"))
+
+# Aviso de errores a Sentry (ADR-023). Sin SENTRY_DSN no hace nada; con él, solo errores y sin datos
+# personales (ver apps/common/observabilidad.py).
+iniciar_sentry(
+    env("SENTRY_DSN", default=""),
+    release=env("RENDER_GIT_COMMIT", default="")[:7],
+    entorno=env("SENTRY_ENVIRONMENT", default="produccion"),
+)
 
 import logging
 

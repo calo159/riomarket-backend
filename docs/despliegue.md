@@ -107,6 +107,54 @@ conserva 60 segundos (`CONN_MAX_AGE`), y durante un despliegue conviven la insta
 - Si algún día necesitas más capacidad, usa el **Transaction pooler** (puerto 6543) con `CONN_MAX_AGE=0`; la aplicación
   no usa cursores del lado del servidor ni transacciones entre peticiones, pero pruébalo antes en una base de ensayo.
 
+## Respaldo de la base
+
+([ADR-023](ADR-023-respaldo-y-alertas.md).) Cada día a las 08:23 UTC un flujo de GitHub copia la base, la **cifra** y la sube a
+un bucket **privado**. Se guardan 30 días. Hasta que cargues los secretos de abajo el flujo falla y GitHub te avisa por
+correo: es a propósito.
+
+**Una sola vez:**
+
+1. Crea un bucket **privado** nuevo (por ejemplo `respaldos`). **No uses el de las imágenes públicas**: el respaldo
+   contiene datos personales.
+2. En GitHub → Settings → Secrets and variables → Actions → *New repository secret*, crea estos seis:
+
+   | Secreto | Qué poner |
+   | --- | --- |
+   | `RESPALDO_DATABASE_URL` | La misma URI del **Session pooler** que usa `DATABASE_URL` en Render |
+   | `RESPALDO_CLAVE` | Una frase larga y aleatoria (`openssl rand -base64 32`). **Guárdala también en un gestor de contraseñas**: sin ella los respaldos no se abren y no hay forma de recuperarla |
+   | `RESPALDO_S3_ENDPOINT` | La misma URL S3 que `STORAGE_S3_ENDPOINT` |
+   | `RESPALDO_S3_BUCKET` | El nombre del bucket privado del paso 1 |
+   | `RESPALDO_S3_ACCESS_KEY` / `RESPALDO_S3_SECRET_KEY` | Las claves S3 (pueden ser las mismas de `STORAGE_S3_*`) |
+
+   Opcional: `RESPALDO_S3_REGION` (por defecto `us-east-1`) y la variable `RESPALDO_DIAS` (por defecto `30`).
+3. Actions → **Respaldo de la base** → *Run workflow*, y comprueba que aparece un archivo `riomarket-AAAAMMDD-….dump.gpg`
+   en el bucket.
+
+**Restaurar** (en un computador con `postgresql-client` 17 y `gpg`; la base destino debe estar **vacía**):
+
+```bash
+# 1. Descarga el archivo del bucket (consola de Supabase o `aws s3 cp ... --endpoint-url ...`).
+# 2. Crea una base nueva y vacía y copia su URI.
+RESPALDO_CLAVE='la-frase-guardada' bash scripts/restaurar_respaldo.sh riomarket-20261105-082300.dump.gpg 'postgres://...base-nueva'
+# 3. Para usarla: pon esa URI en DATABASE_URL en Render y haz Manual Deploy.
+```
+
+**La base destino debe ser PostgreSQL 17 o más nueva**: el respaldo se hace con `pg_dump` 17 y un servidor más viejo no entiende lo que escribe (la prueba mensual lo descubrió). En Supabase crea el proyecto nuevo con la versión más reciente. El script se niega a restaurar sobre una base que ya tiene tablas. La restauración se ensaya sola cada mes y cada vez que
+cambian los scripts (flujo **Prueba del respaldo**), con datos de demostración.
+
+Lo que **no** cubre: las imágenes (viven en su propio bucket, que ya es duradero) y lo ocurrido entre dos respaldos (hasta
+un día de datos).
+
+## Avisos de errores y caídas
+
+- **Caídas:** el flujo *Tareas programadas* revisa `/api/health/` cada 10 minutos y falla si el sistema no está sano;
+  GitHub avisa por correo. *Despliegue* hace lo mismo tras cada versión nueva.
+- **Errores del código (opcional):** crea un proyecto Django en Sentry (plan gratis), copia su DSN y ponlo en Render como
+  `SENTRY_DSN`. Llegan solo errores no controlados, con su línea de código, la ruta y el `X-Request-ID` (para buscar la
+  petición en los registros de Render). No se envían cuerpos de petición, cabeceras, cookies, variables locales ni la
+  identidad del usuario. Sin `SENTRY_DSN` no se envía nada.
+
 ## Almacenamiento S3-compatible (persistir imágenes)
 
 1. En Supabase Storage crea dos buckets: `productos` (público) y `privado` (privado).
