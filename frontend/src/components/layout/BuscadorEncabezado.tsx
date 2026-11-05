@@ -144,7 +144,7 @@ export function BuscadorEncabezado({ categorias }: { categorias: Categoria[] | u
       <form
         onSubmit={enviar}
         role="search"
-        className="flex overflow-hidden rounded-lg bg-white shadow-[0_2px_6px_rgba(0,40,46,.28)] transition-shadow focus-within:shadow-[0_0_0_3px_#FFD166]"
+        className="flex items-center overflow-hidden rounded-full bg-white p-1 pl-2 shadow-[0_2px_6px_rgba(0,40,46,.22)] transition-shadow focus-within:shadow-[0_0_0_3px_#FFD166]"
       >
         <label className="flex-1">
           <span className="sr-only">Buscar productos</span>
@@ -165,7 +165,7 @@ export function BuscadorEncabezado({ categorias }: { categorias: Categoria[] | u
             onFocus={() => setAbierto(true)}
             onKeyDown={alTeclear}
             placeholder="Buscar productos y puestos"
-            className="h-[46px] w-full min-w-0 border-0 bg-transparent px-4 text-base text-tinta outline-none placeholder:text-slate-500 md:h-[48px]"
+            className="h-[40px] w-full min-w-0 border-0 bg-transparent px-3 text-base text-tinta outline-none placeholder:text-slate-500 md:h-[42px]"
           />
         </label>
         <label className="hidden md:block">
@@ -173,7 +173,7 @@ export function BuscadorEncabezado({ categorias }: { categorias: Categoria[] | u
           <select
             value={categoria}
             onChange={(evento) => setCategoria(evento.target.value)}
-            className="h-full max-w-[190px] cursor-pointer border-0 border-l border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none"
+            className="h-[28px] max-w-[170px] cursor-pointer rounded-full border-0 border-l border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none"
           >
             <option value="">Todo</option>
             {(categorias ?? []).map((c) => (
@@ -186,9 +186,9 @@ export function BuscadorEncabezado({ categorias }: { categorias: Categoria[] | u
         <button
           type="submit"
           aria-label="Buscar"
-          className="grid w-14 place-items-center bg-accion text-white transition-colors hover:bg-accion-hover"
+          className="ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accion text-white transition-colors hover:bg-accion-hover md:h-[42px] md:w-[42px]"
         >
-          <Search className="h-[22px] w-[22px]" strokeWidth={2.4} aria-hidden="true" />
+          <Search className="h-5 w-5" strokeWidth={2.4} aria-hidden="true" />
         </button>
       </form>
 

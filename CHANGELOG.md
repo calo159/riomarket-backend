@@ -11,6 +11,15 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **La tienda pasa a un diseño sobrio y presentable, con la vara de Apple, Airbnb y Etsy.** Después de dos rondas que seguían viéndose «hechas por
+  IA» (el crema con coral y las cartulinas de colores vivos), se pidió al dueño el rumbo y se eligió «sobrio y profesional». Se quitan los
+  colores vivos y las bandas de color, los degradados, los títulos bicolor repetidos, el «cómo funciona» de tres iconos en círculo y las
+  etiquetas arcoíris. Ahora: tarjetas de producto **sin marco** (la foto es la tarjeta, el precio en negrita y un solo botón redondo
+  blanco que se vuelve coral al pasar el cursor); tarjeta de **puesto** con foto 3:2 y tres líneas, con sus categorías como texto con un
+  punto de color apagado; **ficha de producto plana** con un único panel de compra que se queda fijo; buscador en **píldora** con el
+  botón dentro; categorías en círculos con foto sin caja; un solo fondo y el espacio separa las secciones, con «Ver todos ›» a la derecha;
+  escaparate con un toldo más fino, sin patrón de olas ni muescas, con la foto del puesto mejor calificado y, en oscuro, un fondo propio. El
+  pie ya no dice «Proyecto académico»: dice cómo se paga (en efectivo al recibir o al recoger).
 - **El carrusel genérico del primer pliegue de la tienda se reemplaza por un escaparate propio.** Era la plantilla de marketplace más
   repetida (carrusel con corte diagonal, flechas pegadas al borde y puntos). Ahora el primer pliegue es fijo: un titular grande
   («Compra directo en los puestos de Riohacha»), dos acciones, y un **puesto con toldo** (el símbolo del logo, franjas coral y crema con

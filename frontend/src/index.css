@@ -150,40 +150,11 @@
   .precio {
     @apply font-extrabold tracking-tight tabular-nums;
   }
-  /* Etiqueta de precio: la cartulina de un puesto de mercado, con su hueco para el cordel. El color lo pone la
-     categoría (components/cartulina.ts) y el hueco toma el color de la tarjeta que tiene detrás. */
-  .etiqueta-precio {
-    @apply inline-flex max-w-full items-baseline gap-[7px] rounded-[5px] py-[2px] pl-[9px] pr-[10px] shadow-[0_1px_0_rgba(10,29,33,0.2)];
-    --hueco: #ffffff;
-  }
-  .dark .etiqueta-precio {
-    --hueco: #133136;
-  }
-  /* El hueco del cordel: del color de la tarjeta que hay detrás, con un borde interior para que se lea como agujero. */
-  .etiqueta-precio::before {
-    content: '';
-    @apply block h-[7px] w-[7px] shrink-0 self-center rounded-full;
-    background: var(--hueco);
-    box-shadow: inset 0 1px 1px rgba(10, 29, 33, 0.45);
-  }
-  .etiqueta-precio small {
-    @apply truncate text-[0.58em] font-semibold tracking-normal opacity-80;
-  }
-  /* Título de sección de la tienda (componente TituloSeccion): la escala de la landing, en pequeño. */
+  /* Título de sección de la tienda (componente TituloSeccion): un solo color, peso firme, sin adornos. */
   .titulo-seccion {
-    @apply text-[26px] font-black leading-[1.08] md:text-[34px];
-    letter-spacing: -0.03em;
+    @apply text-[24px] font-bold leading-[1.15] md:text-[28px];
+    letter-spacing: -0.015em;
     text-wrap: balance;
-  }
-  .titulo-seccion .resalta {
-    @apply text-brand-600 dark:text-brand-300;
-  }
-  /* Sobre una banda de color: texto blanco y resalte amarillo (4,9:1 sobre el turquesa; es texto grande). */
-  .titulo-seccion-claro {
-    @apply text-white;
-  }
-  .titulo-seccion-claro .resalta {
-    @apply text-amarillo dark:text-amarillo;
   }
 }
 
@@ -247,7 +218,7 @@
    --i es el lugar del elemento dentro de su grupo (0, 1, 2…) y da un retraso corto, nunca mayor a 0,32 s. */
 [data-revela='oculto'] .rv {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(12px);
 }
 [data-revela='visto'] .rv {
   transition:
@@ -258,7 +229,7 @@
 
 [data-revela='oculto'].rv-self {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(12px);
 }
 [data-revela='visto'].rv-self {
   transition:
@@ -284,7 +255,7 @@
   }
 }
 
-/* Momento de marca de la tienda: al cargar, las categorías suben una tras otra, justo después del carrusel.
+/* Momento de marca de la tienda: al cargar, las categorías suben una tras otra, justo después del escaparate.
    --i (lugar() en components/Revela) da el orden; con «reducir movimiento» no se anima (regla global de abajo). */
 .entra-medallas > * {
   animation: sube-medalla 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -293,7 +264,7 @@
 @keyframes sube-medalla {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.92);
+    transform: translateY(10px);
   }
 }
 

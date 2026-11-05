@@ -199,7 +199,7 @@ export function PublicLayout() {
           </div>
         </div>
         <p className="mx-auto mt-6 max-w-[1240px] border-t border-white/10 px-5 pt-4 text-xs">
-          © {new Date().getFullYear()} RioMarket. Proyecto académico; pagos en modo sandbox.
+          © {new Date().getFullYear()} RioMarket · Riohacha, La Guajira. Pagas en efectivo al recibir o al recoger.
         </p>
       </footer>
 

@@ -49,6 +49,13 @@ describe('Escaparate', () => {
     expect(screen.getByRole('link', { name: 'Ver el puesto' })).toHaveAttribute('href', '/puestos/2');
   });
 
+  it('entre_los_puestos_con_portada_elige_el_mejor_calificado', () => {
+    const { container } = montar([puesto(1, { calificacion_promedio: 4.1 }), puesto(2, { calificacion_promedio: 4.9 }), puesto(3, { calificacion_promedio: 4.5 })]);
+
+    expect(container.querySelector('img')).toHaveAttribute('src', '/media/portada-2.webp');
+    expect(screen.getByText('Puesto 2')).toBeInTheDocument();
+  });
+
   it('con_un_pedido_en_curso_el_ticket_es_el_pedido_y_lleva_a_seguirlo', () => {
     montar([puesto(1), puesto(2)], pedido());
 
