@@ -14,7 +14,7 @@ import { lugar, Revela } from '../components/Revela';
 
 const TITULO = 'RioMarket · Haz el mercado desde el celular';
 const DESCRIPCION =
-  'Los puestos de Riohacha venden aquí frutas, pescado, comida y dulces. Pide a un puesto, escoge domicilio o retiro y sigue tu pedido hasta que lo recibes. Proyecto académico.';
+  'Los puestos de Riohacha venden aquí frutas, pescado, comida y dulces. Pide a un puesto, escoge domicilio o retiro y sigue tu pedido hasta que lo recibes.';
 
 type Modo = 'comprar' | 'vender';
 
@@ -400,7 +400,7 @@ export function Landing() {
                   Tengo un puesto
                 </a>
               </div>
-              <p className={cn(s.nota, s.in, s.d3)}>Proyecto académico. Los pagos en línea funcionan en modo de prueba.</p>
+              <p className={cn(s.nota, s.in, s.d3)}>Los pagos en línea funcionan en modo de prueba.</p>
             </div>
             <div className={s.stage}>
               <figure className={cn(s.ph, s.phBig)}>
@@ -527,7 +527,7 @@ export function Landing() {
           </div>
           <div className={s.pie}>
             <Logo sobreOscuro />
-            <span>Riohacha, La Guajira · Proyecto académico · © 2026</span>
+            <span>Riohacha, La Guajira · © 2026</span>
             <nav aria-label="Pie de página">
               <Link to="/login">Ingresar</Link>
               <Link to="/terminos">Términos</Link>

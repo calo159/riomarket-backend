@@ -11,6 +11,7 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- La landing ya no dice «Proyecto académico» (la nota sobre los pagos en línea en modo de prueba se conserva).
 - **Paneles del vendedor y de administración sin aspecto de plantilla.** Las filas de tarjetas iguales (icono teñido,
   etiqueta y número; seis seguidas en «Resumen general») se cambian por un dato principal y una franja sobria con líneas
   finas. *Vendedor:* manda «Ingresos aprobados»; los pedidos por atender se destacan solo si hay alguno; la semana se lee
