@@ -11,6 +11,9 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Títulos con la escala de la landing (fase 2 de 5 del rediseño visual).** Los títulos de sección de la tienda y de la página
+  del puesto pasan de 23 px en peso 700 a 26-34 px en peso 900, con la última palabra resaltada («Recién **llegados**»; en la
+  banda turquesa el resalte es amarillo) y los precios a peso 800. Es un componente nuevo, `TituloSeccion`.
 - **La tienda se ve más viva y más de RioMarket (fase 1 de 5 del rediseño visual).** El revisor del proyecto la encontró «pálida»
   frente a la landing; la medición mostró que no faltaba color sino contraste y calidez. Ahora: fondo de papel cálido en lugar del
   gris frío; tarjetas con borde cálido y sombra de reposo; botón «Agregar al carrito» en coral relleno (antes un contorno turquesa

@@ -64,7 +64,7 @@ El contraste real (píxeles detrás del texto) se midió en cinco anchos y las c
 ## Tipografía
 
 Figtree variable autoalojada (`@fontsource-variable/figtree`, solo el subconjunto latino, 20 kB, sin CDN). Base 15 px.
-Precios con `.precio` (negrita, cifras tabulares).
+Precios con `.precio` (peso 800, cifras tabulares). Los títulos de sección de la tienda usan `TituloSeccion` (`.titulo-seccion`): 26 px en celular y 34 px desde `md`, peso 900, seguimiento −0,03 em, con la última palabra en turquesa (`.resalta`; en las bandas de color, `titulo-seccion-claro`: texto blanco y resalte amarillo). Es la escala de la landing en pequeño.
 
 ## Clases de componente (`src/index.css`)
 
