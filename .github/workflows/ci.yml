@@ -38,7 +38,7 @@ jobs:
       FERNET_KEY: 5yje5UOGK7sn3fg3xean97SK9QMXDRl-jS8LiAKULP8=
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -76,7 +76,7 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Node
         uses: actions/setup-node@v4
@@ -144,7 +144,7 @@ jobs:
       THROTTLE_PAGOS: 100000/min
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Python
         uses: actions/setup-python@v5
