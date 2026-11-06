@@ -13,6 +13,7 @@ import {
   User,
 } from 'lucide-react';
 import { BordeFestoneado } from '../ui/Decoracion';
+import { BarraProgreso } from './BarraProgreso';
 import { Logo } from './Logo';
 import { AccountMenu } from './AccountMenu';
 import { BuscadorEncabezado } from './BuscadorEncabezado';
@@ -55,7 +56,8 @@ export function PublicLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-brand-600 text-white dark:bg-slate-900">
+      <BarraProgreso />
+      <header className="bg-brand-600 text-white transition-colors duration-500 dark:bg-slate-900">
         <div className="mx-auto max-w-[1240px] px-3 sm:px-5">
           <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 pb-2 pt-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-7 md:pb-2.5 md:pt-3.5">
             <Logo sobreMarca className="text-2xl md:text-[27px]" />

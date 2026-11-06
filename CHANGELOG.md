@@ -11,6 +11,20 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Panel con más movimiento y transiciones (vendedor y administración).** Movimiento con propósito, rápido y sobrio:
+  la opción activa del menú es un fondo con barrita que **se desliza** hasta la opción nueva (y las opciones entran de
+  a una al abrir el panel); cambiar de pantalla hace que la anterior se desvanezca y la nueva **entre en cascada**
+  (encabezado y luego cada bloque, con 55 ms de diferencia; el menú y el encabezado no se mueven); una **barra fina
+  amarilla de progreso** avisa cuando algo carga o se guarda (no aparece si es instantáneo); mientras cargan, las
+  listas muestran **renglones que brillan** en vez de un círculo girando; los avisos traen un **reloj** que se vacía y
+  se van deslizando, y las ventanas (confirmaciones y formularios) también **salen** con animación; la fila de una
+  tabla bajo el cursor se tiñe y se marca con una barrita que crece; la insignia de pendientes del menú rebota cuando
+  cambia el número; en Personalización el color elegido «hace pop» y el encabezado cambia de color con suavidad.
+  Todo se apaga con «reducir movimiento» (donde los avisos y ventanas se quitan de una vez).
+- Arreglo de fondo: desde «Editar menú» (#49), las opciones del menú del panel (y las del encabezado de la tienda)
+  perdían su estilo de «activa» y su espaciado, porque la clase del enlace se armaba con una utilidad que ignora
+  funciones. Ya vuelven a verse.
+
 - **Personalizar el sitio desde el panel, sin tocar código** (ADR-024, RF-38). Nueva pantalla **Administración → Personalización**
   (`/admin/personalizacion`, recurso `admin.personalizacion`, solo el administrador): nombre de la marca, ciudad, departamento y país, descripción
   para buscadores y WhatsApp, titular y texto de la portada, correo, WhatsApp, Instagram y Facebook de soporte (los vacíos no se muestran), pie

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, Pencil, Store, X } from 'lucide-react';
+import { BarraProgreso } from './BarraProgreso';
 import { Logo } from './Logo';
 import { NotificationBell } from './NotificationBell';
 import { EditarOpcionMenu } from './EditarOpcionMenu';
@@ -96,7 +97,8 @@ export function PanelLayout() {
 
   return (
     <div className="min-h-screen bg-fondo dark:bg-slate-950">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-brand-600 px-3 text-white shadow-flota dark:bg-slate-900 sm:px-5">
+      <BarraProgreso />
+      <header className="vt-cabecera-panel fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-brand-600 px-3 text-white shadow-flota transition-colors duration-500 dark:bg-slate-900 sm:px-5">
         <button
           type="button"
           className="acto-encabezado lg:hidden"
@@ -124,7 +126,7 @@ export function PanelLayout() {
         </div>
       </header>
 
-      <aside aria-label="Menú del panel" className="fixed bottom-0 left-0 top-14 z-30 hidden w-60 border-r bg-white dark:bg-slate-900 lg:block">
+      <aside aria-label="Menú del panel" className="vt-menu-panel menu-entra fixed bottom-0 left-0 top-14 z-30 hidden w-60 border-r bg-white dark:bg-slate-900 lg:block">
         {barraLateral}
       </aside>
 
@@ -162,7 +164,7 @@ export function PanelLayout() {
       )}
 
       <div className="pt-14 lg:pl-60">
-        <main key={location.pathname} className="ruta-entra mx-auto max-w-[1240px] px-3 py-5 sm:px-6 lg:py-7">
+        <main key={location.pathname} className="panel-pagina mx-auto max-w-[1240px] px-3 py-5 sm:px-6 lg:py-7">
           <Outlet />
         </main>
       </div>

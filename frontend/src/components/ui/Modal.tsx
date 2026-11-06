@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { hayMovimiento, SALIDA_MS } from '../../lib/movimiento';
 
 export function Modal({
   abierto,
@@ -20,6 +21,30 @@ export function Modal({
   const tituloId = useId();
   const cerrarRef = useRef(onCerrar);
   cerrarRef.current = onCerrar;
+  // Al cerrar, la ventana sigue montada lo que dura su salida (fundido y baja un poco) y después se quita.
+  const [montado, setMontado] = useState(abierto);
+  const [saliendo, setSaliendo] = useState(false);
+
+  useEffect(() => {
+    if (abierto) {
+      setMontado(true);
+      setSaliendo(false);
+      return undefined;
+    }
+    if (!montado) return undefined;
+    if (!hayMovimiento()) {
+      setMontado(false);
+      return undefined;
+    }
+    setSaliendo(true);
+    const fin = window.setTimeout(() => {
+      setMontado(false);
+      setSaliendo(false);
+    }, SALIDA_MS);
+    return () => window.clearTimeout(fin);
+    // `montado` no entra: solo importa que `abierto` cambie.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abierto]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -61,10 +86,15 @@ export function Modal({
     };
   }, [abierto]);
 
-  if (!abierto) return null;
+  if (!abierto && !montado) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 animate-fadein sm:items-center sm:p-4">
+    <div
+      className={cn(
+        'fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-0 sm:items-center sm:p-4',
+        saliendo ? 'animate-fadeout' : 'animate-fadein',
+      )}
+    >
       <button
         type="button"
         className="absolute inset-0 cursor-default"
@@ -80,7 +110,8 @@ export function Modal({
         aria-labelledby={tituloId}
         tabIndex={-1}
         className={cn(
-          'relative z-10 max-h-[92vh] w-full animate-sheet overflow-y-auto rounded-t-xl border bg-white p-5 shadow-menu outline-none dark:bg-slate-900 sm:animate-fadezoom sm:rounded-xl',
+          'relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-xl border bg-white p-5 shadow-menu outline-none dark:bg-slate-900 sm:rounded-xl',
+          saliendo ? 'animate-sheet-sale sm:animate-zoomout' : 'animate-sheet sm:animate-fadezoom',
           ancho,
         )}
       >

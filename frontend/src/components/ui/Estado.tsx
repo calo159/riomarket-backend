@@ -17,10 +17,21 @@ export function CargandoPantalla({ mensaje = `Cargando ${nombreMarca()}…` }: {
   );
 }
 
+/**
+ * Lo que se ve mientras carga una lista o un panel: renglones que brillan con la forma de lo que va a llegar, en vez de
+ * un círculo girando. El mensaje queda para los lectores de pantalla.
+ */
 export function CargandoBloque({ mensaje = 'Cargando…' }: { mensaje?: string }) {
+  const anchos = ['w-full', 'w-[92%]', 'w-full', 'w-[84%]', 'w-[96%]'];
   return (
-    <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500 dark:text-slate-400">
-      <Spinner /> {mensaje}
+    <div role="status" className="py-4">
+      <p className="sr-only">{mensaje}</p>
+      <div aria-hidden="true" className="space-y-2.5">
+        <div className="skeleton h-9 w-2/5" />
+        {anchos.map((ancho, i) => (
+          <div key={i} className={cn('skeleton h-12', ancho)} style={{ opacity: 1 - i * 0.14, animationDelay: `${i * 90}ms` }} />
+        ))}
+      </div>
     </div>
   );
 }
