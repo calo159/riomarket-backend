@@ -40,6 +40,32 @@ export function PatronOlas({ className, style }: { className?: string; style?: C
   );
 }
 
+/**
+ * Una ola tendida a lo ancho del contenedor: el mismo trazo de las olas del logo repetido en un patrón, de modo que
+ * llega entera hasta el borde y se puede revelar de izquierda a derecha con `clip-path` (cosa que un trazo escalado
+ * no deja). Toma el color del texto y es decorativa.
+ */
+export function OlaTendida({ className, alto = 8, trazo = 2.4 }: { className?: string; alto?: number; trazo?: number }) {
+  const id = useId();
+  const tile = alto * 2;
+  return (
+    <svg aria-hidden="true" focusable="false" className={className} width="100%" height={alto}>
+      <defs>
+        <pattern id={id} width={tile} height={alto} patternUnits="userSpaceOnUse">
+          <path
+            d={`M0 ${alto / 2}q${tile / 4} ${-alto / 2} ${tile / 2} 0t${tile / 2} 0`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={trazo}
+            strokeLinecap="round"
+          />
+        </pattern>
+      </defs>
+      <rect width="100%" height={alto} fill={`url(#${id})`} />
+    </svg>
+  );
+}
+
 /** Dos siluetas de olas pegadas al borde inferior que se desplazan despacio (se detienen con «menos movimiento»). */
 export function OlasInferiores({ className }: { className?: string }) {
   const tramo = 'M0 12q15 -12 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0V24H0Z';
