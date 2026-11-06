@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="es" class="h-full">
+<html lang="es" class="h-full" data-marca="__MARCA__">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="RioMarket: el mercado de Riohacha en línea." />
-    <meta name="theme-color" content="#00626D" />
+    <meta name="theme-color" content="__COLOR_TEMA__" />
     <!-- Los marcadores __…__ los completa Django (apps/common/seo.py) al servir la página. Con
          `npm run dev` Vite no pasa por Django y se ven tal cual: solo afecta a vistas previas. -->
     <meta property="og:type" content="website" />
@@ -19,7 +19,9 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <title>RioMarket · Mercado de Riohacha</title>
+    <title>__TITULO__</title>
+    <!-- La identidad del sitio (nombre, textos, color) que el administrador fijó en el panel: no es un script, lo lee la SPA. -->
+    <script id="sitio-config" type="application/json">__SITIO_JSON__</script>
     <script src="/theme-init.js"></script>
   </head>
   <body class="h-full bg-fondo text-tinta antialiased dark:bg-slate-950 dark:text-slate-100">

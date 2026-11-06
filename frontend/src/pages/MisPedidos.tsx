@@ -12,6 +12,7 @@ import { formatearFechaHora, formatearMoneda, OPCIONES_FILTRO_PEDIDO } from '../
 import { estaPorVencer, textoCuentaRegresiva, useAhora } from '../lib/plazo';
 import { claves } from '../lib/queryKeys';
 import { puedeVolverAPedir } from '../lib/volverAPedir';
+import { nombreMarca } from '../lib/sitio';
 
 const TAMANO = 10;
 
@@ -21,7 +22,7 @@ export function MisPedidos() {
   const ahora = useAhora();
 
   useEffect(() => {
-    document.title = 'Mis pedidos · RioMarket';
+    document.title = `Mis pedidos · ${nombreMarca()}`;
   }, []);
 
   const pedidos = useQuery({

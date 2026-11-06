@@ -27,6 +27,7 @@ import { validarImagen } from '../../lib/utils';
 import type { Categoria, Producto, Puesto } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
 import { MAX_DETALLES, etiquetaDeDetalles, formatearPreparacion } from '../../lib/encargos';
+import { nombreMarca } from '../../lib/sitio';
 
 const MAX_ETIQUETA = 80;
 const MAX_HORAS_PREPARACION = 336;
@@ -70,7 +71,7 @@ export function ProductosVendedor() {
   const [prepUnidad, setPrepUnidad] = useState<UnidadPreparacion>('horas');
 
   useEffect(() => {
-    document.title = 'Productos · RioMarket';
+    document.title = `Productos · ${nombreMarca()}`;
   }, []);
 
   const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });

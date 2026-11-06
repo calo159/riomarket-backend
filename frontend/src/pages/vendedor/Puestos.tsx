@@ -24,6 +24,7 @@ import type { Categoria, Puesto } from '../../lib/types';
 import { cn } from '../../lib/utils';
 import { claves } from '../../lib/queryKeys';
 import { InterruptorWhatsapp } from './InterruptorWhatsapp';
+import { nombreMarca } from '../../lib/sitio';
 
 const VACIO: DatosPuesto = {
   nombre: '',
@@ -48,7 +49,7 @@ export function Puestos() {
   const [categoriasDe, setCategoriasDe] = useState<Puesto | null>(null);
 
   useEffect(() => {
-    document.title = 'Mis puestos · RioMarket';
+    document.title = `Mis puestos · ${nombreMarca()}`;
   }, []);
 
   const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });

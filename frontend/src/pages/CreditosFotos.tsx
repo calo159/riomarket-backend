@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import creditos from '../lib/creditosFotos.json';
+import { nombreMarca } from '../lib/sitio';
 
 export function CreditosFotos() {
   useEffect(() => {
-    document.title = 'Créditos de fotos · RioMarket';
+    document.title = `Créditos de fotos · ${nombreMarca()}`;
   }, []);
 
   return (

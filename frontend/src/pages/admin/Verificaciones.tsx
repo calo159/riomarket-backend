@@ -11,6 +11,7 @@ import { formatearFechaHora, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 export function Verificaciones() {
   const queryClient = useQueryClient();
@@ -24,7 +25,7 @@ export function Verificaciones() {
   const [errorCedula, setErrorCedula] = useState('');
 
   useEffect(() => {
-    document.title = 'Verificaciones · Administración · RioMarket';
+    document.title = `Verificaciones · Administración · ${nombreMarca()}`;
   }, []);
 
   // La foto de la cédula es privada: se pide con la sesión y se muestra desde un blob local.

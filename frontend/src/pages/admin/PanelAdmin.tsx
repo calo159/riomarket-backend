@@ -13,10 +13,11 @@ import { CargandoBloque, EstadoError } from '../../components/ui/Estado';
 import { formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 export function PanelAdmin() {
   useEffect(() => {
-    document.title = 'Administración · RioMarket';
+    document.title = `Administración · ${nombreMarca()}`;
   }, []);
 
   const resumen = useQuery({ queryKey: claves.adminResumen, queryFn: obtenerResumenAdmin });

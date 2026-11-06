@@ -17,6 +17,7 @@ import { claves } from '../../lib/queryKeys';
 import { estaPorVencer, textoCuentaRegresiva, useAhora } from '../../lib/plazo';
 import { BotonDarMasTiempo } from '../pedido/BotonDarMasTiempo';
 import { ICONOS_SIGUIENTE, siguienteAccion } from '../pedido/siguienteAccion';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 12;
 
@@ -36,7 +37,7 @@ export function PedidosVendedor() {
   const ahora = useAhora();
 
   useEffect(() => {
-    document.title = 'Pedidos del puesto · RioMarket';
+    document.title = `Pedidos del puesto · ${nombreMarca()}`;
   }, []);
 
   const pedidos = useQuery({

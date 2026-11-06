@@ -13,6 +13,7 @@ import { formatearFecha, ETIQUETAS_ROL } from '../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import { iniciales } from '../lib/utils';
 import { claves } from '../lib/queryKeys';
+import { nombreMarca } from '../lib/sitio';
 
 export function Perfil() {
   const { recargarPerfil, cerrarSesion } = useSession();
@@ -25,7 +26,7 @@ export function Perfil() {
   const [inicializado, setInicializado] = useState(false);
 
   useEffect(() => {
-    document.title = 'Mi perfil · RioMarket';
+    document.title = `Mi perfil · ${nombreMarca()}`;
   }, []);
 
   const perfil = useQuery({ queryKey: claves.perfil, queryFn: obtenerPerfil });

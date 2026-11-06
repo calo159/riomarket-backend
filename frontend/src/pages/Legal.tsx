@@ -1,12 +1,23 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { ciudadSitio, nombreMarca, sitioActual, useSitio } from '../lib/sitio';
 
-const CONTACTO = 'soporte@riomarket.test';
 const ACTUALIZADO = 'noviembre de 2026';
+
+/** El correo de soporte que fijó el administrador; si no hay, remite al pie de página. */
+function Contacto() {
+  const { correo_soporte: correo } = useSitio();
+  if (!correo) return <>los canales de contacto del pie de página</>;
+  return (
+    <a className="link" href={`mailto:${correo}`}>
+      {correo}
+    </a>
+  );
+}
 
 function Documento({ titulo, children }: { titulo: string; children: ReactNode }) {
   useEffect(() => {
-    document.title = `${titulo} · RioMarket`;
+    document.title = `${titulo} · ${nombreMarca()}`;
   }, [titulo]);
 
   return (
@@ -46,13 +57,13 @@ export function Terminos() {
   return (
     <Documento titulo="Términos y condiciones">
       <p>
-        RioMarket es una plataforma que conecta a compradores con los puestos de la plaza de mercado de Riohacha. Al crear
+        {nombreMarca()} es una plataforma que conecta a compradores con los puestos de la plaza de mercado de {ciudadSitio()}. Al crear
         una cuenta aceptas estas condiciones.
       </p>
 
-      <Seccion titulo="Qué es RioMarket y qué no es">
+      <Seccion titulo={`Qué es ${nombreMarca()} y qué no es`}>
         <p>
-          RioMarket es un intermediario: publica el catálogo de los puestos y organiza los pedidos. Los productos los vende
+          {nombreMarca()} es un intermediario: publica el catálogo de los puestos y organiza los pedidos. Los productos los vende
           y los entrega cada puesto, que es responsable de su calidad, su precio y su disponibilidad.
         </p>
         <p>
@@ -87,8 +98,8 @@ export function Terminos() {
           items={[
             'Para publicar puestos debes verificar tu identidad con tu cédula, y solo los vendedores aprobados pueden vender.',
             'Eres responsable de la información de tus productos, de tus precios y de entregar lo que el cliente pidió.',
-            'RioMarket cobra una comisión sobre lo que el cliente paga por la mercancía (sin contar el envío). El porcentaje vigente te lo informamos en tu panel y puede cambiar avisando antes.',
-            'El efectivo lo cobras tú en el puesto, así que la comisión de esos cobros se la debes a RioMarket. El administrador anota cada pago que le haces.',
+            `${nombreMarca()} cobra una comisión sobre lo que el cliente paga por la mercancía (sin contar el envío). El porcentaje vigente te lo informamos en tu panel y puede cambiar avisando antes.`,
+            `El efectivo lo cobras tú en el puesto, así que la comisión de esos cobros se la debes a ${nombreMarca()}. El administrador anota cada pago que le haces.`,
             'Si tu deuda de comisión crece, te avisaremos; si llega al límite establecido, tus puestos dejan de recibir pedidos nuevos hasta que pagues. Los pedidos que ya tenías en curso se siguen atendiendo.',
           ]}
         />
@@ -96,14 +107,14 @@ export function Terminos() {
 
       <Seccion titulo="Uso aceptable">
         <p>
-          No uses RioMarket para vender productos ilegales o peligrosos, engañar a otras personas, copiar datos de forma
+          No uses {nombreMarca()} para vender productos ilegales o peligrosos, engañar a otras personas, copiar datos de forma
           masiva ni intentar saltarte las medidas de seguridad.
         </p>
       </Seccion>
 
       <Seccion titulo="Responsabilidad">
         <p>
-          Hacemos lo posible por mantener el servicio disponible, pero puede tener interrupciones. RioMarket no responde por
+          Hacemos lo posible por mantener el servicio disponible, pero puede tener interrupciones. {nombreMarca()} no responde por
           lo que un puesto venda o entregue mal, ni por daños que no pueda controlar; la relación de compra es entre el
           comprador y el puesto.
         </p>
@@ -112,7 +123,7 @@ export function Terminos() {
       <Seccion titulo="Cambios y ley aplicable">
         <p>
           Podemos actualizar estas condiciones; la fecha de arriba indica la última versión. Se rigen por las leyes de
-          Colombia. Para dudas o reclamos escribe a <a className="link" href={`mailto:${CONTACTO}`}>{CONTACTO}</a>.
+          Colombia. Para dudas o reclamos escribe a <Contacto />.
         </p>
       </Seccion>
     </Documento>
@@ -123,14 +134,14 @@ export function Privacidad() {
   return (
     <Documento titulo="Política de privacidad">
       <p>
-        Esta política explica qué datos personales trata RioMarket, para qué y cómo puedes ejercer tus derechos, conforme a
+        Esta política explica qué datos personales trata {nombreMarca()}, para qué y cómo puedes ejercer tus derechos, conforme a
         la Ley 1581 de 2012 de Colombia (protección de datos personales).
       </p>
 
       <Seccion titulo="Quién es el responsable">
         <p>
-          RioMarket, Riohacha, La Guajira (Colombia). Contacto para temas de datos:{' '}
-          <a className="link" href={`mailto:${CONTACTO}`}>{CONTACTO}</a>.
+          {nombreMarca()}, {ciudadSitio()}, {sitioActual().region}. Contacto para temas de datos:{' '}
+          <Contacto />.
         </p>
       </Seccion>
 
@@ -183,13 +194,13 @@ export function Privacidad() {
         <p>Puedes conocer, actualizar y rectificar tus datos, pedir que los suprimamos, y revocar tu autorización.</p>
         <p>
           Gran parte la haces tú en tu perfil. Para lo demás, o para pedir que eliminemos tu cuenta, escribe a{' '}
-          <a className="link" href={`mailto:${CONTACTO}`}>{CONTACTO}</a>; respondemos en un plazo máximo de 15 días hábiles.
+          <Contacto />; respondemos en un plazo máximo de 15 días hábiles.
           Si no quedas conforme, puedes acudir a la Superintendencia de Industria y Comercio.
         </p>
       </Seccion>
 
       <Seccion titulo="Menores de edad">
-        <p>RioMarket no está dirigido a menores de 18 años y no recopilamos sus datos a propósito.</p>
+        <p>{nombreMarca()} no está dirigido a menores de 18 años y no recopilamos sus datos a propósito.</p>
       </Seccion>
     </Documento>
   );

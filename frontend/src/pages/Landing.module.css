@@ -2,9 +2,9 @@
    Paleta propia y clara: no sigue el tema oscuro de la tienda. */
 
 .lp {
-  --tq: #00626d;
-  --tq-d: #004a52;
-  --tq-50: #e5f3f4;
+  --tq: rgb(var(--brand-600));
+  --tq-d: rgb(var(--brand-700));
+  --tq-50: rgb(var(--brand-50));
   --tq-cl: #d3ecee;
   --co: #cf3f1b;
   --co-d: #b53414;

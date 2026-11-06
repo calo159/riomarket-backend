@@ -18,6 +18,7 @@ import { CanastaVacia } from '../components/ui/Ilustraciones';
 import { ConfirmarModal } from '../components/ui/Modal';
 import { useState } from 'react';
 import { useToast } from '../components/ui/Toast';
+import { nombreMarca } from '../lib/sitio';
 
 export function Carrito() {
   const { carrito, totalItems, subtotal, cambiarCantidad, cambiarDetalles, quitar, vaciar } = useCart();
@@ -38,7 +39,7 @@ export function Carrito() {
   };
 
   useEffect(() => {
-    document.title = 'Carrito · RioMarket';
+    document.title = `Carrito · ${nombreMarca()}`;
   }, []);
 
   if (!carrito || carrito.items.length === 0) {

@@ -7,6 +7,7 @@ WhatsApp solo leen el HTML inicial. Por eso Django completa las metaetiquetas Op
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from urllib.parse import quote
@@ -19,6 +20,8 @@ from django.utils.html import escape
 from django.views import View
 
 from apps.catalog.models import ImagenProducto, Producto, Puesto
+from apps.configuracion import lectura
+from apps.configuracion.sitio import PALETAS
 
 # Páginas privadas o sin valor para un buscador (el panel y las pantallas con sesión).
 RUTAS_PRIVADAS = (
@@ -34,10 +37,6 @@ RUTAS_PRIVADAS = (
     "/perfil",
 )
 
-TITULO_GENERICO = "RioMarket · Mercado de Riohacha"
-DESCRIPCION_GENERICA = (
-    "Compra en los puestos del mercado de Riohacha desde el celular: a domicilio o para recoger."
-)
 IMAGEN_GENERICA = "/og-riomarket.png"
 LARGO_DESCRIPCION = 150
 
@@ -46,7 +45,28 @@ _RUTA_PRODUCTO = re.compile(r"^/productos/(\d{1,9})/?$")
 _RUTA_PUESTO = re.compile(r"^/puestos/(\d{1,9})/?$")
 
 
-_MARCADORES = re.compile(r"__(?:OG_TITULO|OG_DESCRIPCION|OG_IMAGEN|ORIGEN|RUTA)__")
+_MARCADORES = re.compile(
+    r"__(?:OG_TITULO|OG_DESCRIPCION|OG_IMAGEN|ORIGEN|RUTA|TITULO|MARCA|COLOR_TEMA|SITIO_JSON)__"
+)
+
+
+def titulo_generico() -> str:
+    sitio = lectura.sitio()
+    return f"{sitio['nombre_marca']} · Mercado de {sitio['ciudad']}"
+
+
+def descripcion_generica() -> str:
+    return lectura.sitio()["descripcion"]
+
+
+# Escapes JSON de los tres caracteres que podrían cerrar el script o abrir una entidad.
+_ESCAPES_HTML = {ord(c): f"{chr(92)}u{ord(c):04x}" for c in "<>&"}
+
+
+def _json_para_html(datos: dict) -> str:
+    """JSON para ir dentro de ``<script type="application/json">``: sin ``<``, ``>`` ni ``&``."""
+    crudo = json.dumps(datos, ensure_ascii=True, separators=(",", ":"))
+    return crudo.translate(_ESCAPES_HTML)
 
 
 class RobotsView(View):
@@ -141,7 +161,7 @@ def _url_de_archivo(campo, nombre: str | None) -> str | None:
 
 
 def meta_generica(origen: str) -> MetaPagina:
-    return MetaPagina(TITULO_GENERICO, DESCRIPCION_GENERICA, f"{origen}{IMAGEN_GENERICA}")
+    return MetaPagina(titulo_generico(), descripcion_generica(), f"{origen}{IMAGEN_GENERICA}")
 
 
 def meta_de_ruta(path: str, origen: str) -> MetaPagina:
@@ -167,8 +187,8 @@ def meta_de_ruta(path: str, origen: str) -> MetaPagina:
             return meta_generica(origen)
         campo = ImagenProducto._meta.get_field("archivo")
         return MetaPagina(
-            f"{producto.nombre} · RioMarket",
-            _recortar(producto.descripcion) or DESCRIPCION_GENERICA,
+            f"{producto.nombre} · {lectura.sitio()['nombre_marca']}",
+            _recortar(producto.descripcion) or descripcion_generica(),
             _absoluta(origen, _url_de_archivo(campo, producto._foto)),
         )
 
@@ -189,8 +209,8 @@ def meta_de_ruta(path: str, origen: str) -> MetaPagina:
             except Exception:
                 url = None
         return MetaPagina(
-            f"{puesto.nombre} · RioMarket",
-            _recortar(puesto.descripcion) or DESCRIPCION_GENERICA,
+            f"{puesto.nombre} · {lectura.sitio()['nombre_marca']}",
+            _recortar(puesto.descripcion) or descripcion_generica(),
             _absoluta(origen, url),
         )
 
@@ -201,7 +221,13 @@ def completar_index(html: str, *, origen: str, path: str) -> str:
     """Sustituye los marcadores de ``index.html`` por valores reales (todos escapados)."""
     meta = meta_de_ruta(path, origen)
     ruta = quote(path, safe="/%:@!$&'()*+,;=-._~")
+    sitio = lectura.sitio()
+    publico = {**sitio, "color_tema": PALETAS[sitio["color_marca"]][1]}
     reemplazos = {
+        "__TITULO__": escape(meta.titulo),
+        "__MARCA__": escape(sitio["color_marca"]),
+        "__COLOR_TEMA__": escape(publico["color_tema"]),
+        "__SITIO_JSON__": _json_para_html(publico),
         "__OG_TITULO__": escape(meta.titulo),
         "__OG_DESCRIPCION__": escape(meta.descripcion),
         "__OG_IMAGEN__": escape(meta.imagen),

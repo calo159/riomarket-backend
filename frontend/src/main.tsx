@@ -7,6 +7,7 @@ import { SessionProvider } from './auth/SessionProvider';
 import { CartProvider } from './cart/CartProvider';
 import { ToastProvider } from './components/ui/Toast';
 import { App } from './App';
+import './paletasMarca.css';
 import './index.css';
 import { registrarServiceWorker } from './lib/registrarServiceWorker';
 import { precargarRuta } from './api/precarga';

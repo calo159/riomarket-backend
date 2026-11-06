@@ -8,6 +8,7 @@ import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoBloque, EstadoError, EstadoVacio } from '../components/ui/Estado';
 import { claves } from '../lib/queryKeys';
 import { puestosConCoordenadas } from '../lib/mapa';
+import { ciudadSitio, nombreMarca } from '../lib/sitio';
 
 export function MapaPuestos() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function MapaPuestos() {
   const [mapaFallo, setMapaFallo] = useState(false);
 
   useEffect(() => {
-    document.title = 'Mapa de puestos · RioMarket';
+    document.title = `Mapa de puestos · ${nombreMarca()}`;
   }, []);
 
   const puestos = useQuery({
@@ -36,7 +37,7 @@ export function MapaPuestos() {
     <div className="mx-auto max-w-[1240px] px-3 py-5 sm:px-5">
       <EncabezadoPagina
         titulo="Mapa de puestos"
-        descripcion="Mira dónde queda cada puesto de Riohacha y cómo llegar. También puedes elegir uno de la lista."
+        descripcion={`Mira dónde queda cada puesto de ${ciudadSitio()} y cómo llegar. También puedes elegir uno de la lista.`}
       />
 
       {puestos.isLoading && <CargandoBloque mensaje="Cargando puestos…" />}
@@ -72,7 +73,7 @@ export function MapaPuestos() {
                 seleccion={seleccion}
                 onAbrirPuesto={(id) => navigate(`/puestos/${id}`)}
                 alFallar={() => setMapaFallo(true)}
-                etiqueta="Mapa de puestos de Riohacha"
+                etiqueta={`Mapa de puestos de ${ciudadSitio()}`}
               />
             </div>
           </div>

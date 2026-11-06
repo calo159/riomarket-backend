@@ -15,6 +15,7 @@ import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const MOTIVO_MIN = 5;
 /** Venta de ejemplo para que se vea qué significa el porcentaje en pesos. */
@@ -64,7 +65,7 @@ export function Configuracion() {
   const [errorGeneral, setErrorGeneral] = useState('');
 
   useEffect(() => {
-    document.title = 'Configuración · Administración · RioMarket';
+    document.title = `Configuración · Administración · ${nombreMarca()}`;
   }, []);
 
   const consulta = useQuery({ queryKey: claves.adminConfiguracion, queryFn: obtenerConfiguracion });

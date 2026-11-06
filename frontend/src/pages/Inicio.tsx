@@ -23,6 +23,7 @@ import {
 } from '../api/consultas';
 import { cn } from '../lib/utils';
 import { claves } from '../lib/queryKeys';
+import { useSitio } from '../lib/sitio';
 import { listarPedidos } from '../api/orders';
 import type { Categoria, Producto } from '../lib/types';
 
@@ -103,6 +104,7 @@ function Estante({
 }
 
 export function Inicio() {
+  const sitio = useSitio();
   const { autenticado, rol } = useSession();
 
   // Las definiciones viven en api/consultas para que api/precarga use las mismas claves.
@@ -126,8 +128,8 @@ export function Inicio() {
   });
 
   useEffect(() => {
-    document.title = 'RioMarket · Mercado de Riohacha';
-  }, []);
+    document.title = `${sitio.nombre_marca} · Mercado de ${sitio.ciudad}`;
+  }, [sitio.nombre_marca, sitio.ciudad]);
 
   const todosPuestos = puestos.data?.results ?? [];
   const visibles = lista.length > 8 ? lista.slice(0, 7) : lista;
@@ -212,12 +214,12 @@ export function Inicio() {
         as="section"
         id="puestos"
         className="relative mt-14 scroll-mt-4 bg-arena pb-12 pt-10 [--festoneado:#EDE4CF] md:mt-20 md:pb-16 md:pt-14 dark:bg-[#0F2A2F] dark:[--festoneado:#0F2A2F]"
-        aria-label="Puestos de Riohacha"
+        aria-label={`Puestos de ${sitio.ciudad}`}
       >
         <div aria-hidden="true" className="borde-festoneado pointer-events-none absolute inset-x-0 bottom-full" />
         <div className="mx-auto max-w-[1240px] px-3 md:px-5">
           <div className="rv mb-4 md:mb-5">
-            <TituloSeccion texto="Puestos de Riohacha" />
+            <TituloSeccion texto={`Puestos de ${sitio.ciudad}`} />
           </div>
           {puestos.isLoading && <EsqueletoGrid cantidad={4} />}
           {puestos.isError && <EstadoError mensaje="No pudimos cargar los puestos." onReintentar={() => void puestos.refetch()} />}

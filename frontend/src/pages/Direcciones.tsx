@@ -17,6 +17,7 @@ import { useToast } from '../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../lib/errors';
 import type { Direccion } from '../lib/types';
 import { claves } from '../lib/queryKeys';
+import { nombreMarca } from '../lib/sitio';
 
 const VACIO: DatosDireccion = {
   alias: '',
@@ -35,7 +36,7 @@ export function Direcciones() {
   const [eliminar, setEliminar] = useState<Direccion | null>(null);
 
   useEffect(() => {
-    document.title = 'Mis direcciones · RioMarket';
+    document.title = `Mis direcciones · ${nombreMarca()}`;
   }, []);
 
   const direcciones = useQuery({ queryKey: claves.direcciones, queryFn: listarDirecciones });

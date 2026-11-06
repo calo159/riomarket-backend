@@ -9,6 +9,7 @@ import { Paginacion } from '../../components/ui/Paginacion';
 import { ETIQUETAS_ACCION, resumenDetalle } from '../../lib/auditoria';
 import { formatearFechaHora } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 25;
 
@@ -20,7 +21,7 @@ export function Auditoria() {
   const [hasta, setHasta] = useState('');
 
   useEffect(() => {
-    document.title = 'Auditoría · Administración · RioMarket';
+    document.title = `Auditoría · Administración · ${nombreMarca()}`;
   }, []);
 
   const filtros = {

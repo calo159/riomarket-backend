@@ -4,6 +4,7 @@ import { PublicLayout } from './components/layout/PublicLayout';
 import { PanelLayout } from './components/layout/PanelLayout';
 import { RutaProtegida } from './components/RutaProtegida';
 import { CargandoPantalla } from './components/ui/Estado';
+import { SitioSync } from './components/SitioSync';
 
 const Landing = lazy(() => import('./pages/Landing').then((modulo) => ({ default: modulo.Landing })));
 const Inicio = lazy(() => import('./pages/Inicio').then((modulo) => ({ default: modulo.Inicio })));
@@ -44,6 +45,7 @@ const PuestosAdmin = lazy(() => import('./pages/admin/PuestosAdmin').then((modul
 const PagosAdmin = lazy(() => import('./pages/admin/PagosAdmin').then((modulo) => ({ default: modulo.PagosAdmin })));
 const Auditoria = lazy(() => import('./pages/admin/Auditoria').then((modulo) => ({ default: modulo.Auditoria })));
 const Configuracion = lazy(() => import('./pages/admin/Configuracion').then((modulo) => ({ default: modulo.Configuracion })));
+const Personalizacion = lazy(() => import('./pages/admin/Personalizacion').then((modulo) => ({ default: modulo.Personalizacion })));
 const CuponesAdmin = lazy(() => import('./pages/admin/CuponesAdmin').then((modulo) => ({ default: modulo.CuponesAdmin })));
 const MapaPuestos = lazy(() => import('./pages/MapaPuestos').then((modulo) => ({ default: modulo.MapaPuestos })));
 const CreditosFotos = lazy(() => import('./pages/CreditosFotos').then((modulo) => ({ default: modulo.CreditosFotos })));
@@ -63,6 +65,7 @@ function DesplazarArriba() {
 export function App() {
   return (
     <>
+      <SitioSync />
       <DesplazarArriba />
       <Suspense fallback={<CargandoPantalla mensaje="Cargando página…" />}>
         <Routes>
@@ -170,6 +173,9 @@ export function App() {
               </Route>
               <Route element={<RutaProtegida recurso="admin.configuracion" />}>
                 <Route path="configuracion" element={<Configuracion />} />
+              </Route>
+              <Route element={<RutaProtegida recurso="admin.personalizacion" />}>
+                <Route path="personalizacion" element={<Personalizacion />} />
               </Route>
             </Route>
           </Route>

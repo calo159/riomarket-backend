@@ -14,6 +14,7 @@ import { EtiquetaEstado } from '../../components/ui/EtiquetaEstado';
 import { CargandoBloque } from '../../components/ui/Estado';
 import { formatearDiaMes, formatearFechaHora, formatearMoneda, numero, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 /** Pesos en corto para la etiqueta de la barra: «$ 7 mil», «$ 1,2 M». */
 function pesosCortos(valor: number): string {
@@ -77,7 +78,7 @@ export function PanelVendedor() {
   const { usuario } = useSession();
 
   useEffect(() => {
-    document.title = 'Panel de vendedor · RioMarket';
+    document.title = `Panel de vendedor · ${nombreMarca()}`;
   }, []);
 
   const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });
@@ -119,7 +120,7 @@ export function PanelVendedor() {
     <div>
       <EncabezadoPagina
         titulo={`Hola, ${usuario?.nombre.split(' ')[0] ?? 'vendedor'}`}
-        descripcion="Este es el resumen de tu operación en RioMarket."
+        descripcion={`Este es el resumen de tu operación en ${nombreMarca()}.`}
         acciones={
           verificado ? (
             <Link to="/vendedor/productos" className="btn-primary">

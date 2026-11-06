@@ -24,6 +24,7 @@ import { Campo } from '../../components/ui/Campos';
 import { Logo } from '../../components/layout/Logo';
 import { MarcaSvg } from '../../components/layout/MarcaSvg';
 import { desvanecer, PatronOlas } from '../../components/ui/Decoracion';
+import { ciudadSitio, nombreMarca } from '../../lib/sitio';
 
 // zod/mini (en lugar de zod clásico) para no cargar en el bundle los métodos que no se usan.
 const esquema = z.object({
@@ -67,7 +68,7 @@ export function Login() {
   });
 
   useEffect(() => {
-    document.title = 'Ingresar · RioMarket';
+    document.title = `Ingresar · ${nombreMarca()}`;
   }, []);
 
   if (estado === 'cargando') return <CargandoPantalla mensaje="Comprobando tu sesión…" />;
@@ -110,7 +111,7 @@ export function Login() {
             Tu mercado local, a un clic de distancia.
           </p>
           <p className="mt-4 max-w-md text-lg text-brand-50">
-            Compra frutas, comidas y artesanías directo a los vendedores de Riohacha.
+            Compra frutas, comidas y artesanías directo a los vendedores de {ciudadSitio()}.
           </p>
         </div>
         <div className="relative grid gap-3">

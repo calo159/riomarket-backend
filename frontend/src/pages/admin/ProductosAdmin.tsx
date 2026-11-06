@@ -13,6 +13,7 @@ import { formatearMoneda } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import type { Producto } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 15;
 
@@ -28,7 +29,7 @@ export function ProductosAdmin() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    document.title = 'Productos · Administración · RioMarket';
+    document.title = `Productos · Administración · ${nombreMarca()}`;
   }, []);
 
   const filtros: FiltrosProducto = {

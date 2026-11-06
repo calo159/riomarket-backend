@@ -11,7 +11,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.accounts.models import Usuario, Vendedor
-from apps.common import crypto
+from apps.common import crypto, marca
 from apps.common.validators import renombrar_archivo, validate_image_file
 from apps.rbac.acceso import tiene_recurso
 
@@ -233,7 +233,7 @@ def solicitar_recuperacion(*, correo: str):
         TokenRecuperacion.objects.create(usuario=usuario, token=token, expira=expira)
     if settings.NOTIFICATIONS_EMAIL_ENABLED:
         send_mail(
-            subject="Recupera tu contraseña de RioMarket",
+            subject=f"Recupera tu contraseña de {marca.nombre()}",
             message=_mensaje_de_recuperacion(token),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[usuario.correo],

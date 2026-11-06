@@ -28,6 +28,7 @@ import { Imagen } from '../components/Imagen';
 import { claves } from '../lib/queryKeys';
 import { BotonWhatsapp } from '../components/BotonWhatsapp';
 import { mensajeWhatsappProducto } from '../lib/whatsapp';
+import { ciudadSitio } from '../lib/sitio';
 
 export function ProductoDetalle() {
   const { id } = useParams();
@@ -270,7 +271,7 @@ export function ProductoDetalle() {
           {domicilio !== undefined && (
             <p className={`flex items-center gap-1.5 text-sm font-semibold ${domicilio ? 'text-exito dark:text-[#6FD596]' : 'text-slate-500 dark:text-slate-400'}`}>
               <Truck className="h-[18px] w-[18px]" aria-hidden="true" />
-              {domicilio ? 'Domicilio en Riohacha o retiro en el puesto' : 'Retiro en el puesto'}
+              {domicilio ? `Domicilio en ${ciudadSitio()} o retiro en el puesto` : 'Retiro en el puesto'}
             </p>
           )}
 

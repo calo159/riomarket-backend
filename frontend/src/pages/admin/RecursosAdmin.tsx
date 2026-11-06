@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 export function RecursosAdmin() {
   const queryClient = useQueryClient();
@@ -22,7 +23,7 @@ export function RecursosAdmin() {
   const [errorEliminar, setErrorEliminar] = useState('');
 
   useEffect(() => {
-    document.title = 'Recursos · Administración · RioMarket';
+    document.title = `Recursos · Administración · ${nombreMarca()}`;
   }, []);
 
   const recursos = useQuery({

@@ -11,6 +11,7 @@ import { Paginacion } from '../components/ui/Paginacion';
 import { Modal } from '../components/ui/Modal';
 import { GRID_PRODUCTOS } from '../lib/estilos';
 import { consultaCatalogo, consultaCategorias, filtrosCatalogoDe, TAMANO_CATALOGO as TAMANO } from '../api/consultas';
+import { nombreMarca } from '../lib/sitio';
 
 export function Catalogo() {
   const [params, setParams] = useSearchParams();
@@ -24,7 +25,7 @@ export function Catalogo() {
   const ordering = params.get('ordering') ?? '';
 
   useEffect(() => {
-    document.title = 'Catálogo · RioMarket';
+    document.title = `Catálogo · ${nombreMarca()}`;
   }, []);
 
   useEffect(() => {

@@ -14,6 +14,7 @@ import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const SANDBOX = import.meta.env.VITE_SANDBOX_PAGOS === 'true';
 
@@ -26,7 +27,7 @@ export function PagosAdmin() {
   const [pendiente, setPendiente] = useState<{ id: number; accion: 'reembolsar' | 'anular' } | null>(null);
 
   useEffect(() => {
-    document.title = 'Pagos · Administración · RioMarket';
+    document.title = `Pagos · Administración · ${nombreMarca()}`;
   }, []);
 
   const cambiarEstado = (valor: string) => {

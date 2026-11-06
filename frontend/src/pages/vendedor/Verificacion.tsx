@@ -11,6 +11,7 @@ import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { formatearFechaHora, ETIQUETAS_VERIFICACION } from '../../lib/format';
 import { validarImagen } from '../../lib/utils';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 export function Verificacion() {
   const { recargarPerfil } = useSession();
@@ -22,7 +23,7 @@ export function Verificacion() {
   const [errores, setErrores] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    document.title = 'Verificación · RioMarket';
+    document.title = `Verificación · ${nombreMarca()}`;
   }, []);
 
   const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });

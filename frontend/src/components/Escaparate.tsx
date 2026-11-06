@@ -8,6 +8,7 @@ import { Imagen } from './Imagen';
 import { EtiquetaEstado } from './ui/EtiquetaEstado';
 import { desvanecerEnMancha, OlaTendida, PatronOlas } from './ui/Decoracion';
 import { Banderines } from './ui/Banderines';
+import { useSitio } from '../lib/sitio';
 
 /** El titular sube palabra por palabra desde una máscara (`.palabra`, index.css); `desde` es el lugar de la primera. */
 function Palabras({ texto, desde = 0 }: { texto: string; desde?: number }) {
@@ -91,6 +92,7 @@ export function Escaparate({
   /** Pedido sin terminar del comprador con sesión, si lo hay. */
   pedido?: Pedido | null;
 }) {
+  const sitio = useSitio();
   // Los puestos de la vitrina: con portada primero y, entre los que la tienen, los mejor calificados.
   const ordenados = [...puestos].sort(
     (a, b) =>
@@ -126,9 +128,9 @@ export function Escaparate({
             id="titular-tienda"
             className="text-balance font-display text-[clamp(36px,5.2vw,58px)] font-normal leading-[1.08] tracking-[-0.01em] [font-synthesis:none]"
           >
-            <Palabras texto="Compra directo en los puestos de" />
+            <Palabras texto={sitio.titular_inicio} />
             <span className="relative inline-block text-amarillo">
-              <Palabras texto="Riohacha" desde={6} />
+              <Palabras texto={sitio.titular_destacado} desde={sitio.titular_inicio.split(' ').length} />
               <OlaTendida alto={9} trazo={3} className="subraya-ola pointer-events-none absolute -bottom-[0.14em] left-0 w-full" />
             </span>
           </h1>
@@ -136,7 +138,7 @@ export function Escaparate({
             className="hero-aparece mt-4 max-w-[34rem] text-[17px] leading-snug text-white/90 md:text-lg"
             style={{ '--retraso': '650ms' } as CSSProperties}
           >
-            Cada pedido es de un solo puesto: sabes quién lo prepara y a quién preguntarle. A domicilio o para recoger.
+            {sitio.subtitulo_inicio}
           </p>
           <div className="hero-aparece mt-6 flex flex-wrap gap-3" style={{ '--retraso': '800ms' } as CSSProperties}>
             <Link to="/catalogo" className="btn-primary !min-h-[52px] px-6 text-base">

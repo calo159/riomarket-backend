@@ -753,3 +753,26 @@
     - "frontend/src/pages/admin/Configuracion.test.tsx::avisa si la pausa queda por debajo del aviso"
     - "frontend/src/pages/admin/Configuracion.test.tsx::«Usar el del servidor» borra el valor del panel y se envía null"
     - "frontend/src/pages/Checkout.test.tsx::anuncia la tarifa de domicilio que fijó el administrador, no una de compilación"
+
+- id: RF-38
+  titulo: Personalizar la identidad del sitio (nombre, ciudad, portada, contacto, pie y color) desde el panel, sin tocar código
+  actor: [administrador]
+  origen: Petición del profesor (que quien compre el proyecto lo vuelva suyo sin programar)
+  pantallas: ["/admin/personalizacion", "/tienda", "/terminos", "/privacidad"]
+  endpoints:
+    - "GET /api/admin/personalizacion/"
+    - "PUT /api/admin/personalizacion/"
+    - "GET /api/configuracion/sitio/"
+  pruebas:
+    - "apps/administration/tests/test_personalizacion.py::TestPermisos"
+    - "apps/administration/tests/test_personalizacion.py::TestCambiar"
+    - "apps/administration/tests/test_personalizacion.py::TestValidacion"
+    - "apps/administration/tests/test_personalizacion.py::TestLosDefectosSiguenALaCiudad"
+    - "apps/administration/tests/test_personalizacion.py::TestSitioPublico"
+    - "apps/administration/tests/test_personalizacion.py::TestIndex"
+    - "apps/administration/tests/test_personalizacion.py::TestLaMarcaHablaEnLosMensajes"
+    - "frontend/src/pages/admin/Personalizacion.test.tsx::al escribir el nombre, toda la página ya lo muestra antes de guardar"
+    - "frontend/src/pages/admin/Personalizacion.test.tsx::elegir un color lo pone en la página y se manda al guardar"
+    - "frontend/src/pages/admin/Personalizacion.test.tsx::solo se manda lo que cambió"
+    - "frontend/src/paletasMarca.test.ts::el texto blanco sobre el color principal se lee en todas (AA, 4,5:1)"
+    - "frontend/src/pages/Legal.test.tsx::las páginas legales hablan en nombre de la marca y la ciudad del panel"

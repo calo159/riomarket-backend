@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { ErrorApi } from './types';
+import { nombreMarca } from './sitio';
 
 function extraerErrores(data: unknown): Record<string, string[]> {
   if (!data || typeof data !== 'object') return {};
@@ -41,7 +42,7 @@ export function mensajeDeError(error: unknown, porDefecto = 'Ocurrió un error. 
     return error instanceof Error && error.message ? error.message : porDefecto;
   }
   if (!error.response) {
-    return 'No pudimos conectar con RioMarket. Verifica que el backend esté encendido.';
+    return `No pudimos conectar con ${nombreMarca()}. Verifica que el backend esté encendido.`;
   }
   const campos = erroresDeCampo(error);
   const todos = Object.values(campos).flat();
@@ -63,10 +64,10 @@ export function esErrorTemporal(error: unknown): boolean {
 /** Texto de una página que no pudo cargar: separa «no existe» de «vas muy rápido» y «sin conexión». */
 export function mensajeDeCarga(error: unknown, noEncontrado: string): string {
   if (!axios.isAxiosError(error)) return noEncontrado;
-  if (!error.response) return 'No pudimos conectar con RioMarket. Revisa tu conexión e inténtalo de nuevo.';
+  if (!error.response) return `No pudimos conectar con ${nombreMarca()}. Revisa tu conexión e inténtalo de nuevo.`;
   if (error.response.status === 429) {
     return 'Hiciste muchas consultas seguidas. Espera unos segundos e inténtalo de nuevo.';
   }
-  if (error.response.status >= 500) return 'RioMarket tuvo un problema al cargar esto. Inténtalo de nuevo en un momento.';
+  if (error.response.status >= 500) return `${nombreMarca()} tuvo un problema al cargar esto. Inténtalo de nuevo en un momento.`;
   return noEncontrado;
 }

@@ -14,6 +14,7 @@ import { formatearFecha, formatearMoneda, hoyBogota } from '../../lib/format';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Cupon } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const HOY = hoyBogota();
 
@@ -42,7 +43,7 @@ export function Cupones() {
   const [eliminar, setEliminar] = useState<Cupon | null>(null);
 
   useEffect(() => {
-    document.title = 'Cupones · RioMarket';
+    document.title = `Cupones · ${nombreMarca()}`;
   }, []);
 
   const verificacion = useQuery({ queryKey: claves.miVerificacion, queryFn: miVerificacion });

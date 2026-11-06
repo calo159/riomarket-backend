@@ -19,7 +19,7 @@ from django.db.models import Count, F, Max, Sum
 from apps.accounts.models import Usuario
 from apps.audit import services as audit
 from apps.audit.models import RegistroAuditoria
-from apps.common import ajustes
+from apps.common import ajustes, marca
 from apps.notifications import services as notificaciones
 from apps.notifications.models import Notificacion
 from apps.payments.models import LiquidacionComision, Pago
@@ -206,10 +206,10 @@ def avisar_si_empeora(pago: Pago) -> None:
         if bloqueo > 0:
             mensaje += (
                 f" Si pasa de {_pesos(bloqueo)}, tus puestos dejarán de recibir pedidos nuevos "
-                "hasta que la pagues a RioMarket."
+                f"hasta que la pagues a {marca.nombre()}."
             )
         else:
-            mensaje += " Págala a RioMarket."
+            mensaje += f" Págala a {marca.nombre()}."
     with contextlib.suppress(ValidationError):
         notificaciones.crear_notificacion(
             usuario=vendedor, tipo=Notificacion.Tipo.GENERAL, titulo=titulo, mensaje=mensaje
@@ -287,5 +287,5 @@ def _avisar(vendedor, monto: Decimal, queda: Decimal, *, reactivado: bool = Fals
             usuario=vendedor,
             tipo=Notificacion.Tipo.GENERAL,
             titulo="Anotamos tu pago de comisión",
-            mensaje=f"RioMarket anotó tu pago de comisión por {_pesos(monto)}.{resto}",
+            mensaje=f"{marca.nombre()} anotó tu pago de comisión por {_pesos(monto)}.{resto}",
         )

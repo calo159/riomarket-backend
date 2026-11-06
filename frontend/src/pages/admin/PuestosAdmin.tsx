@@ -14,6 +14,7 @@ import { mensajeDeError } from '../../lib/errors';
 import type { Puesto } from '../../lib/types';
 import { formatearCalificacion } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 15;
 
@@ -30,7 +31,7 @@ export function PuestosAdmin() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    document.title = 'Puestos · Administración · RioMarket';
+    document.title = `Puestos · Administración · ${nombreMarca()}`;
   }, []);
 
   const puestos = useQuery({
