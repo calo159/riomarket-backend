@@ -1,6 +1,6 @@
-import { Fragment, type CSSProperties } from 'react';
+import { Fragment, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import { Store, Truck } from 'lucide-react';
+import { Pause, Play, Store, Truck } from 'lucide-react';
 import type { Pedido, Puesto } from '../lib/types';
 import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
@@ -73,6 +73,9 @@ function Ticket({ children }: { children: React.ReactNode }) {
   return <div className="rounded-xl bg-white p-4 text-tinta shadow-menu dark:bg-slate-800 dark:text-slate-100">{children}</div>;
 }
 
+/** Cuántos puestos se turnan en la vitrina (cada uno dura lo que la animación `.relleno-punto`, index.css). */
+const MAXIMO_PUESTOS = 5;
+
 /**
  * Primer pliegue de la tienda. Reemplaza al carrusel de destacados (la plantilla de marketplace más repetida):
  * un titular fijo, dos acciones y un puesto con toldo. El «ticket» sobre la foto es el pedido en curso del comprador
@@ -86,17 +89,30 @@ export function Escaparate({
   /** Pedido sin terminar del comprador con sesión, si lo hay. */
   pedido?: Pedido | null;
 }) {
-  // El puesto de la foto: con portada primero y, entre los que la tienen, el mejor calificado.
-  const primero =
-    [...puestos].sort(
-      (a, b) =>
-        Number(Boolean(b.portada)) - Number(Boolean(a.portada)) ||
-        (b.calificacion_promedio ?? 0) - (a.calificacion_promedio ?? 0),
-    )[0] ?? null;
+  // Los puestos de la vitrina: con portada primero y, entre los que la tienen, los mejor calificados.
+  const ordenados = [...puestos].sort(
+    (a, b) =>
+      Number(Boolean(b.portada)) - Number(Boolean(a.portada)) ||
+      (b.calificacion_promedio ?? 0) - (a.calificacion_promedio ?? 0),
+  );
+  const conPortada = ordenados.filter((p) => p.portada).slice(0, MAXIMO_PUESTOS);
   const delPedido = pedido ? (puestos.find((p) => p.id === pedido.id_puesto) ?? null) : null;
-  // La foto es la del puesto del pedido en curso (si lo hay y está en la lista); si no, la del primer puesto con portada.
-  const puesto = delPedido ?? primero;
-  const portada = urlAbsoluta(puesto?.portada);
+  // Con un pedido en curso la vitrina es la de ese puesto y no rota (el ticket habla de él). Sin pedido, van saliendo
+  // varios puestos, uno tras otro; si ninguno tiene portada, se muestra el primero con su recuadro neutro.
+  const candidatos = delPedido ? [delPedido] : conPortada.length > 0 ? conPortada : ordenados.slice(0, 1);
+  const rota = !pedido && candidatos.length > 1;
+
+  const [activo, setActivo] = useState(0);
+  // Hasta dónde se ha llegado: las fotos se piden una antes de que les toque, no todas de golpe.
+  const [visto, setVisto] = useState(0);
+  const [pausado, setPausado] = useState(false);
+  const actual = Math.min(activo, candidatos.length - 1);
+  const ir = (i: number) => {
+    setActivo(i);
+    setVisto((v) => Math.max(v, i, Math.min(i + 1, candidatos.length - 1)));
+  };
+  const siguiente = () => ir((actual + 1) % candidatos.length);
+  const puesto = candidatos[actual] ?? null;
 
   return (
     <section className="relative overflow-hidden bg-brand-600 text-white dark:bg-[#0B3A3F]" aria-labelledby="titular-tienda">
@@ -130,20 +146,77 @@ export function Escaparate({
           </div>
         </div>
 
-        <div className="foto-flota relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto">
+        <div
+          className="foto-flota rota relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto"
+          data-pausa={pausado ? "1" : undefined}
+        >
           <Toldo className="toldo-desplega relative z-[2] block h-[28px] w-full md:h-[38px]" />
           <div className="foto-entra relative -mt-1 overflow-hidden rounded-b-[16px] bg-brand-700 dark:bg-slate-800">
-            {portada ? (
-              <Imagen
-                src={portada}
-                fallbackNombre={puesto?.nombre ?? 'RioMarket'}
-                alt={`Puesto ${puesto?.nombre ?? ''}`}
-                contenedorClassName="aspect-[16/10] w-full md:aspect-[5/4]"
-                prioridad
-              />
+            {candidatos.some((c) => c.portada) ? (
+              <div className="grid">
+                {candidatos.map((c, i) =>
+                  i <= visto + 1 && c.portada ? (
+                    <div
+                      key={c.id}
+                      aria-hidden={i !== actual}
+                      className={`vitrina-diapositiva [grid-area:1/1] ${i === actual ? 'vitrina-activa' : ''}`}
+                    >
+                      <Imagen
+                        src={urlAbsoluta(c.portada)}
+                        fallbackNombre={c.nombre}
+                        alt={`Puesto ${c.nombre}`}
+                        contenedorClassName="aspect-[16/10] w-full md:aspect-[5/4]"
+                        prioridad={i === 0}
+                      />
+                    </div>
+                  ) : null,
+                )}
+              </div>
             ) : (
               <div className="grid aspect-[16/10] w-full place-items-center md:aspect-[5/4]">
                 <Store className="h-16 w-16 text-white/60" aria-hidden="true" />
+              </div>
+            )}
+            {rota && (
+              <div
+                role="group"
+                aria-label="Puestos de la vitrina"
+                className="absolute right-3 top-3 z-[2] flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1.5"
+              >
+                {candidatos.map((c, i) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => ir(i)}
+                    aria-label={`Ver ${c.nombre}`}
+                    aria-current={i === actual}
+                    className="grid h-6 min-w-[12px] place-items-center px-0.5"
+                  >
+                    <span
+                      className={`block h-2 overflow-hidden rounded-full bg-white/50 transition-[width] duration-500 ${i === actual ? "w-9" : "w-2"}`}
+                    >
+                      {i === actual && (
+                        <span
+                          key={`${c.id}-${actual}`}
+                          onAnimationEnd={siguiente}
+                          className="relleno-punto block h-full w-full rounded-full bg-white"
+                        />
+                      )}
+                    </span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setPausado((p) => !p)}
+                  aria-label={pausado ? 'Reanudar la rotación de puestos' : 'Pausar la rotación de puestos'}
+                  className="ml-0.5 grid h-6 w-6 place-items-center rounded-full text-white"
+                >
+                  {pausado ? (
+                    <Play className="h-3 w-3" fill="currentColor" aria-hidden="true" />
+                  ) : (
+                    <Pause className="h-3 w-3" fill="currentColor" aria-hidden="true" />
+                  )}
+                </button>
               </div>
             )}
           </div>
@@ -165,7 +238,7 @@ export function Escaparate({
                   </>
                 ) : (
                   puesto && (
-                    <>
+                    <div key={puesto.id} className={rota ? 'ticket-cambia' : undefined}>
                       <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">Un puesto para empezar</p>
                       <b className="mt-1 block text-base">{puesto.nombre}</b>
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-slate-600 dark:text-slate-300">
@@ -181,7 +254,7 @@ export function Escaparate({
                       <Link to={`/puestos/${puesto.id}`} className="link mt-1.5 inline-block text-sm">
                         Ver el puesto
                       </Link>
-                    </>
+                    </div>
                   )
                 )}
               </Ticket>

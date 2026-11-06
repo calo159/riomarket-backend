@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **La vitrina de la portada ya no muestra un solo puesto: van saliendo varios.** La foto grande y el ticket pasan por hasta cinco puestos con portada (los
+  mejor calificados primero), uno cada unos seis segundos, con fundido entre fotos y el nombre, la calificación y el enlace del ticket cambiando con ella. Un
+  indicador de puntos permite saltar a uno y el punto activo se llena para mostrar cuánto falta; se detiene al pasar el cursor, al enfocar con el teclado y
+  con un botón de pausa, y con «reducir movimiento» no rota sola. Si el comprador tiene un pedido en curso, la vitrina sigue siendo la de ese puesto. Las
+  fotos se piden de una en una, no todas de golpe.
 - **Detalles propios del mercado: cada puesto con su toldo, una ola que se dibuja bajo los títulos, etiqueta de precio y estados vacíos ilustrados.**
   Las tarjetas de puesto llevan un toldo festoneado del color de su primera categoría (el mismo motivo del primer pliegue, a escala de tarjeta; se echa un
   poco hacia abajo al pasar el cursor). Bajo cada título de sección se traza sola una ola del logo cuando la sección aparece. En la ficha del producto el
