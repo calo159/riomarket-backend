@@ -18,6 +18,14 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   el sello de «enviado», el resumen (productos, entrega, total) y el mensaje de siempre sobre qué pasa ahora y cómo se paga. Los colores de estado
   (pendiente, en marcha, listo, entregado, cancelado) dejan los colores por defecto de la librería por tonos apagados y parejos de la marca, con versión
   oscura. En oscuro, las fotos se atenúan un poco para que las de fondo blanco no brillen como linternas.
+- La landing ya no dice «Proyecto académico» (la nota sobre los pagos en línea en modo de prueba se conserva).
+- **Paneles del vendedor y de administración sin aspecto de plantilla.** Las filas de tarjetas iguales (icono teñido,
+  etiqueta y número; seis seguidas en «Resumen general») se cambian por un dato principal y una franja sobria con líneas
+  finas. *Vendedor:* manda «Ingresos aprobados»; los pedidos por atender se destacan solo si hay alguno; la semana se lee
+  día por día (nombre del día y lo vendido sobre la barra) y «Pedidos pendientes» toma la altura de su contenido, con un
+  estado vacío que dice qué hacer. *Administración:* «Requiere atención» muestra el total de asuntos y los ordena primero;
+  con todo en cero dice «Todo al día» en calma. Las cifras de ventas del periodo (también en `/vendedor/ventas`) son una
+  sola tarjeta con «Ingreso neto» al frente. Contraste medido en ambos paneles, claro y oscuro, a 1440 y 390 px: 0 fallos.
 - **Modo oscuro más legible y más movimiento visible.** *Oscuro:* se midió el contraste real de cada texto en 13 pantallas. Había textos con un gris
   pensado para el modo claro y sin versión oscura (la cabecera y las celdas de la tabla de usuarios del panel, a 2,25:1) y la etiqueta del ticket
   (3,65:1); ahora el oscuro tiene su propia rampa de texto (principal `#EDF1EC`, secundario `#A8B8B1`) con una red de seguridad que aclara esos grises

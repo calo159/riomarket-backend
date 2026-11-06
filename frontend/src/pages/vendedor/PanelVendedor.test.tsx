@@ -49,3 +49,42 @@ describe('PanelVendedor: ingresos aprobados', () => {
     expect(mocks.obtenerResumenIngresos).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('PanelVendedor: lo que hay que atender', () => {
+  beforeEach(() => {
+    Object.values(mocks).forEach((mock) => mock.mockReset());
+    mocks.listarPuestos.mockResolvedValue(vacio);
+    mocks.listarProductos.mockResolvedValue(vacio);
+    mocks.miVerificacion.mockResolvedValue({ estado_verificacion: 'aprobado' });
+    mocks.obtenerResumenIngresos.mockResolvedValue({ pagos_aprobados: 0, ingresos_aprobados: '0.00' });
+    mocks.obtenerVentas.mockResolvedValue({ totales: { pedidos_pagados: 0 }, por_dia: [] });
+  });
+
+  function renderizar() {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <PanelVendedor />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('sin pedidos pendientes lo dice con calma y ofrece qué hacer', async () => {
+    mocks.listarPedidos.mockResolvedValue(vacio);
+    renderizar();
+
+    expect(await screen.findByText('Todo al día.')).toBeInTheDocument();
+    expect(screen.getByText('No tienes pedidos por atender.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Revisar mis productos' })).toHaveAttribute('href', '/vendedor/productos');
+  });
+
+  it('con pedidos pendientes los destaca y lleva a atenderlos', async () => {
+    mocks.listarPedidos.mockResolvedValue({ ...vacio, count: 2 });
+    renderizar();
+
+    const aviso = (await screen.findByText(/pedidos esperan tu respuesta/)).closest('a');
+    expect(aviso).toHaveAttribute('href', '/vendedor/pedidos');
+    expect(aviso).toHaveTextContent('2');
+  });
+});
