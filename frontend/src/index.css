@@ -118,6 +118,25 @@
     height: 10px;
     background: radial-gradient(circle at 10px 10px, var(--festoneado, #0e2a2f) 9.5px, transparent 10.5px) 0 0 / 20px 10px repeat-x;
   }
+  /* Festón hacia abajo: medias lunas del color del bloque que cuelgan sobre lo que sigue (el borde inferior del primer pliegue). */
+  .borde-festoneado-abajo {
+    height: 10px;
+    background: radial-gradient(circle at 10px 0, var(--festoneado, #004c56) 9.5px, transparent 10.5px) 0 0 / 20px 10px repeat-x;
+  }
+  /* Primer pliegue con profundidad: un resplandor suave detrás de la foto y el turquesa que se oscurece hacia abajo, en vez
+     de un bloque plano. Arranca en el mismo #00626D del encabezado para que no haya costura. */
+  .hero-fondo {
+    --festoneado: #004c56;
+    background:
+      radial-gradient(58% 85% at 76% 42%, rgba(74, 154, 164, 0.4), transparent 72%),
+      linear-gradient(180deg, #00626d 0%, #004c56 100%);
+  }
+  .dark .hero-fondo {
+    --festoneado: #072a2e;
+    background:
+      radial-gradient(58% 85% at 76% 42%, rgba(26, 119, 130, 0.32), transparent 72%),
+      linear-gradient(180deg, #0b3a3f 0%, #072a2e 100%);
+  }
   .card-hover {
     @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-hover;
   }

@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Paleta con más profundidad y ritmo.** El primer pliegue de la tienda deja de ser un bloque turquesa plano: baja del turquesa del encabezado a uno más
+  profundo, con un resplandor claro detrás de la foto, las olas del logo muy tenues y un borde festoneado que lo une con lo que sigue (en oscuro, lo mismo
+  en verdes de noche). Los puestos van sobre una banda de color arena con festón arriba, así la página alterna turquesa, sal y arena en vez de repetir
+  el mismo fondo. Para que la calificación (estrella) y «Domicilio» se lean también sobre la arena, esos dos colores se oscurecieron un poco (4,9:1 sobre
+  la arena, 6,2:1 sobre blanco). El contraste se midió en claro y oscuro sin fallos.
 - **La vitrina de la portada ya no muestra un solo puesto: van saliendo varios.** La foto grande y el ticket pasan por hasta cinco puestos con portada (los
   mejor calificados primero), uno cada unos seis segundos, con fundido entre fotos y el nombre, la calificación y el enlace del ticket cambiando con ella. Un
   indicador de puntos permite saltar a uno y el punto activo se llena para mostrar cuánto falta; se detiene al pasar el cursor y al enfocar con el teclado, y

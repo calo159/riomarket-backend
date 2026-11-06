@@ -202,9 +202,10 @@ export function Inicio() {
       <Revela
         as="section"
         id="puestos"
-        className="mt-12 scroll-mt-4 md:mt-16"
+        className="relative mt-14 scroll-mt-4 bg-arena pb-12 pt-10 [--festoneado:#EDE4CF] md:mt-20 md:pb-16 md:pt-14 dark:bg-[#0F2A2F] dark:[--festoneado:#0F2A2F]"
         aria-label="Puestos de Riohacha"
       >
+        <div aria-hidden="true" className="borde-festoneado pointer-events-none absolute inset-x-0 bottom-full" />
         <div className="mx-auto max-w-[1240px] px-3 md:px-5">
           <div className="rv mb-4 md:mb-5">
             <TituloSeccion texto="Puestos de Riohacha" />
