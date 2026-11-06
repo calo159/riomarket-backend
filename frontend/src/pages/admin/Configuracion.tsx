@@ -15,6 +15,7 @@ import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { formatearFechaHora, formatearMoneda } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
+import { useUnaVez } from '../../lib/useUnaVez';
 import { nombreMarca } from '../../lib/sitio';
 
 const MOTIVO_MIN = 5;
@@ -63,6 +64,7 @@ export function Configuracion() {
   const [motivo, setMotivo] = useState('');
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [errorGeneral, setErrorGeneral] = useState('');
+  const [guardadoAhora, avisarGuardado] = useUnaVez();
 
   useEffect(() => {
     document.title = `Configuración · Administración · ${nombreMarca()}`;
@@ -83,6 +85,7 @@ export function Configuracion() {
       setErrores({});
       setErrorGeneral('');
       toast.exito('Guardamos la configuración. Rige para los pedidos nuevos.');
+      avisarGuardado();
     },
     onError: (fallo) => {
       setErrores(erroresDeCampo(fallo));
@@ -265,7 +268,7 @@ export function Configuracion() {
           </section>
         ))}
 
-        <section className="card p-4 sm:p-5" aria-labelledby="config-guardar">
+        <section className={`card p-4 sm:p-5 ${guardadoAhora ? 'destello-ok' : ''}`} aria-labelledby="config-guardar">
           <h2 id="config-guardar" className="text-base font-bold">
             Guardar cambios
           </h2>

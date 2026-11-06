@@ -25,6 +25,87 @@
 @tailwind utilities;
 
 @layer base {
+  /* Casillas y botones de opción propios: la marca de elegido «salta» con un rebote al marcarse (el sistema solo la pone).
+     Con `appearance: none` y `display: inline-grid` el dibujo queda centrado sea cual sea el tamaño (h-4, h-5…). */
+  input[type='checkbox'],
+  input[type='radio'] {
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1.5px solid theme('colors.slate.400');
+    background-color: theme('colors.white');
+    transition:
+      background-color 0.16s ease,
+      border-color 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+  input[type='checkbox'] {
+    border-radius: 5px;
+  }
+  input[type='radio'] {
+    border-radius: 9999px;
+  }
+  input[type='checkbox']::after {
+    content: '';
+    width: 0.3125rem;
+    height: 0.5625rem;
+    border: solid theme('colors.white');
+    border-width: 0 2px 2px 0;
+    transform: translateY(-1px) rotate(45deg) scale(0);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  input[type='radio']::after {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: theme('colors.white');
+    transform: scale(0);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  input[type='checkbox']:checked,
+  input[type='radio']:checked {
+    border-color: rgb(var(--brand-600));
+    background-color: rgb(var(--brand-600));
+  }
+  input[type='checkbox']:checked::after {
+    transform: translateY(-1px) rotate(45deg) scale(1);
+  }
+  input[type='radio']:checked::after {
+    transform: scale(1);
+  }
+  input[type='checkbox']:not(:disabled):not(:checked):hover,
+  input[type='radio']:not(:disabled):not(:checked):hover {
+    border-color: rgb(var(--brand-600));
+  }
+  input[type='checkbox']:disabled,
+  input[type='radio']:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .dark input[type='checkbox'],
+  .dark input[type='radio'] {
+    border-color: theme('colors.slate.500');
+    background-color: theme('colors.slate.900');
+  }
+  .dark input[type='checkbox']:checked,
+  .dark input[type='radio']:checked {
+    border-color: rgb(var(--brand-300));
+    background-color: rgb(var(--brand-300));
+  }
+  .dark input[type='checkbox']::after {
+    border-color: theme('colors.slate.950');
+  }
+  .dark input[type='radio']::after {
+    background: theme('colors.slate.950');
+  }
+
   :root {
     color-scheme: light;
   }
@@ -818,6 +899,45 @@ html:has(.panel-pagina):not(.cambiando-tema)::view-transition-new(root) {
 @keyframes vt-sale {
   to {
     opacity: 0;
+  }
+}
+
+/* ───── Más movimiento del panel ───── */
+
+/* Selector de vista: la pastilla se desliza de una opción a otra (components/ui/Segmentado.tsx). */
+.segmentado-pastilla {
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1),
+    width 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Una cifra que cambia destella un momento (components/ui/NumeroAnimado.tsx). */
+.numero-cambia {
+  border-radius: 6px;
+  animation: numero-cambia 1.1s ease-out;
+}
+@keyframes numero-cambia {
+  from {
+    background-color: rgb(var(--brand-300) / 0.55);
+    box-shadow: 0 0 0 4px rgb(var(--brand-300) / 0.55);
+  }
+  to {
+    background-color: transparent;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+/* Tarjeta de «Guardar cambios»: un aro verde que se abre y se desvanece cuando el guardado salió bien. */
+.destello-ok {
+  animation: destello-ok 1.3s ease-out;
+}
+@keyframes destello-ok {
+  0% {
+    box-shadow: 0 0 0 0 rgb(11 122 62 / 0.45);
+    border-color: rgb(11 122 62 / 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgb(11 122 62 / 0);
   }
 }
 

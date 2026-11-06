@@ -11,6 +11,14 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Más movimiento en el panel.** El selector de vista (Lista/Matriz en Roles, Gráfico/Tabla en las ventas por día) lleva una
+  **pastilla que se desliza** y el contenido cambia con un fundido; las **casillas y botones de opción** de toda la aplicación
+  dibujan su marca con un rebote al marcarse (con versión oscura y estado deshabilitado); el **interruptor** del vendedor
+  estira el pulgar al apretarlo; las **cifras** del Resumen, cuando cambian, cuentan desde el valor que tenían (no desde
+  cero) y destellan un momento; las **barras** de lo más vendido crecen una tras otra; «Todo al día» llega con un pop; y al
+  guardar en Configuración y Personalización un **aro verde** se abre alrededor de la tarjeta de guardar. Todo se apaga con
+  «reducir movimiento». El medidor de contraste (`e2e/contraste.ts`) ahora mira qué hay pintado bajo el texto, así que
+  entiende los fondos que son hermanos del texto (como la pastilla) y no solo los de sus contenedores.
 - **Panel con más movimiento y transiciones (vendedor y administración).** Movimiento con propósito, rápido y sobrio:
   la opción activa del menú es un fondo con barrita que **se desliza** hasta la opción nueva (y las opciones entran de
   a una al abrir el panel); cambiar de pantalla hace que la anterior se desvanezca y la nueva **entre en cascada**

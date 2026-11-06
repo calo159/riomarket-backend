@@ -15,6 +15,7 @@ import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { formatearFechaHora } from '../../lib/format';
 import { claves } from '../../lib/queryKeys';
 import { aplicarSitio, sitioActual, tituloPagina, type Sitio } from '../../lib/sitio';
+import { useUnaVez } from '../../lib/useUnaVez';
 
 /** El sitio tal como quedaría con lo que hay en el servidor y lo que se está escribiendo. */
 function armarSitio(datos: PersonalizacionAdmin, escrito: Record<string, string>): Sitio {
@@ -86,6 +87,7 @@ export function Personalizacion() {
   const [escrito, setEscrito] = useState<Record<string, string>>({});
   const [errores, setErrores] = useState<Record<string, string[]>>({});
   const [errorGeneral, setErrorGeneral] = useState('');
+  const [guardadoAhora, avisarGuardado] = useUnaVez();
 
   useEffect(() => {
     document.title = tituloPagina('Personalización', 'Administración');
@@ -117,6 +119,7 @@ export function Personalizacion() {
       setErrores({});
       setErrorGeneral('');
       toast.exito('Listo: el sitio ya muestra tus cambios.');
+      avisarGuardado();
     },
     onError: (error) => {
       const porCampo = erroresDeCampo(error);
@@ -223,7 +226,7 @@ export function Personalizacion() {
           </section>
         ))}
 
-        <section className="card p-4 sm:p-5" aria-labelledby="personalizacion-guardar">
+        <section className={`card p-4 sm:p-5 ${guardadoAhora ? 'destello-ok' : ''}`} aria-labelledby="personalizacion-guardar">
           <h2 id="personalizacion-guardar" className="text-base font-bold">
             Guardar cambios
           </h2>
