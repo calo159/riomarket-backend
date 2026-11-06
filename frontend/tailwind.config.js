@@ -23,14 +23,17 @@ export default {
         accion: { DEFAULT: '#CF3F1B', hover: '#B53414', suave: '#FDE8E1' },
         amarillo: '#FFD166',
         azul: { DEFAULT: '#0D5C8A', suave: '#DFF1FA' },
-        exito: { DEFAULT: '#0B7A3E', suave: '#E2F4E7' },
-        estrella: '#9A5B00',
+        exito: { DEFAULT: '#09703A', suave: '#E2F4E7' },
+        estrella: '#8F5300',
         tinta: '#14262A',
         // «Sal»: el blanco de las salinas, apenas verdoso. Ni el gris frío de antes ni el crema que usan todas las
         // interfaces «cálidas»: el color lo ponen las cartulinas de categoría y las bandas, no el fondo.
         fondo: '#F4F6F2',
         papel: '#FBF7EE',
         crema: '#FFF4DC',
+        // «Arena»: la lona y la arena del mercado. Una sola banda por página (los puestos) para romper el verde-sal sin
+        // llenar la tienda de crema; en oscuro la banda es una noche un poco más clara que el fondo.
+        arena: '#EDE4CF',
         pie: '#0E2A2F',
         // Neutros con un hilo de verde marino (el del turquesa de la marca), no azul-gris genérico.
         // Del 50 al 300 son las superficies y bordes de la tienda de día; del 600 al 950 son la «noche de

@@ -6,6 +6,7 @@ import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { Imagen } from './Imagen';
 import { EtiquetaEstado } from './ui/EtiquetaEstado';
+import { desvanecerEnMancha, PatronOlas } from './ui/Decoracion';
 
 /** El titular sube palabra por palabra desde una máscara (`.palabra`, index.css); `desde` es el lugar de la primera. */
 function Palabras({ texto, desde = 0 }: { texto: string; desde?: number }) {
@@ -114,7 +115,9 @@ export function Escaparate({
   const puesto = candidatos[actual] ?? null;
 
   return (
-    <section className="relative overflow-hidden bg-brand-600 text-white dark:bg-[#0B3A3F]" aria-labelledby="titular-tienda">
+    <section className="hero-fondo relative overflow-x-clip text-white" aria-labelledby="titular-tienda">
+      <PatronOlas className="text-white opacity-[.06]" style={desvanecerEnMancha('0% 100%', 70, 80)} />
+      <div aria-hidden="true" className="borde-festoneado-abajo pointer-events-none absolute inset-x-0 top-full z-[1]" />
       <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-10 md:px-5 md:pb-28 md:pt-[72px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
         <div>
           <h1

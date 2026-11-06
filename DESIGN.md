@@ -13,9 +13,12 @@ La fuente de verdad fueron los tres mocks aprobados (inicio escritorio, inicio c
 | `tinta` | `#14262A` | Texto principal (tinta marina, con un hilo de verde) |
 | `slate-*` | `50-300` cálidos (`200 = #E4D9C3`, bordes y superficies); `400-950` fríos (`500 = #566973`) | Texto secundario y bordes. En oscuro, `900` es la tarjeta y `950` la página |
 | `fondo` | `#F4F6F2` | Fondo de página: «sal», el blanco verdoso de las salinas. Ni gris frío (`#EDF1F3`, lo pálido) ni crema cálido (`#F4EBDA`, la apariencia de toda interfaz «cálida»): el color lo ponen las cartulinas y las bandas. `papel` y `crema` quedan solo para la marca y el logo |
-| `exito`, `azul`, `estrella`, `pie` | `#0B7A3E`, `#0D5C8A`, `#9A5B00`, `#17313B` | Domicilio/éxito, bloque azul, calificación, pie |
+| `exito`, `azul`, `estrella`, `pie` | `#09703A`, `#0D5C8A`, `#8F5300`, `#17313B` | Domicilio/éxito, bloque azul, calificación, pie |
+| `arena` | `#EDE4CF` (oscuro: `#0F2A2F`) | Una sola banda por página (los puestos de la tienda) con festón arriba: rompe el verde-sal sin llenar la tienda de crema |
 
-`estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` porque el original daba 4,2:1 sobre blanco; ahora 5,4:1.
+`estrella` se oscureció de `#B26A00` (mock) a `#9A5B00` y luego a `#8F5300`, y `exito` de `#0B7A3E` a `#09703A`, para dar 4,5:1 también sobre la banda `arena` (4,9:1); sobre blanco dan 6,2:1.
+
+**Profundidad del primer pliegue.** `.hero-fondo` ya no es un bloque plano: arranca en el `#00626D` del encabezado (sin costura) y baja a `#004C56` (oscuro: `#0B3A3F` a `#072A2E`), con un resplandor turquesa claro detrás de la foto y las olas del logo al 6 % abajo a la izquierda. El borde inferior es un festón del mismo color (`.borde-festoneado-abajo`), el eco del toldo y del pie. La banda `arena` de los puestos repite el festón arriba, así el ritmo de la tienda es: turquesa profundo, sal, arena, sal, pie oscuro.
 `sand` ya no existe. Radios: `lg` 8 px, `xl`/`2xl` 10 px. Sin vidrio ni manchas decorativas. En reposo la tarjeta se separa del papel con borde cálido y una sombra corta (`shadow-reposo`); sube con `shadow-hover` al pasar el cursor y los elementos flotantes usan `shadow-flota` y `shadow-menu`. Los degradados y las texturas existen, pero salen de la marca (ver «Detalles de marca»).
 
 **Dirección: sobrio y profesional.** La vara de calidad es Apple, Airbnb y Etsy: foto grande, tarjetas sin marco, tipografía cuidada y animación discreta. Lo que no se hace, porque delata «hecho por IA» o plantilla: colores vivos en etiquetas y bandas (se probaron y se descartaron las cartulinas de caramelo y el crema con coral), degradados y brillos en botones y encabezados, títulos bicolor repetidos en cada sección, tres iconos en círculo con título y frase gris, adornos que no informan (muescas, patrones de olas) y diez botones coral idénticos por pantalla.
