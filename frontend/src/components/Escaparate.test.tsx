@@ -140,15 +140,11 @@ describe('Escaparate', () => {
       expect(fotos[1]).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('el_boton_de_pausa_detiene_y_reanuda_la_rotacion', () => {
-      const { container } = montar(tres());
-      const raiz = container.querySelector('.rota')!;
+    it('no_hay_boton_de_pausa_pero_el_indicador_sigue_siendo_de_puntos', () => {
+      montar(tres());
 
-      fireEvent.click(screen.getByRole('button', { name: 'Pausar la rotación de puestos' }));
-      expect(raiz).toHaveAttribute('data-pausa', '1');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Reanudar la rotación de puestos' }));
-      expect(raiz).not.toHaveAttribute('data-pausa');
+      expect(screen.queryByRole('button', { name: /pausa|Pausar|Reanudar/i })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /^Ver Puesto/ })).toHaveLength(3);
     });
 
     it('con_un_solo_puesto_o_con_un_pedido_no_rota', () => {

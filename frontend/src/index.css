@@ -374,8 +374,7 @@
   animation: llenar 6.5s linear forwards;
 }
 .rota:hover .relleno-punto,
-.rota:focus-within .relleno-punto,
-.rota[data-pausa='1'] .relleno-punto {
+.rota:focus-within .relleno-punto {
   animation-play-state: paused;
 }
 .ticket-cambia {
