@@ -1,6 +1,6 @@
 import { Fragment, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import { Pause, Play, Store, Truck } from 'lucide-react';
+import { Store, Truck } from 'lucide-react';
 import type { Pedido, Puesto } from '../lib/types';
 import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
@@ -105,7 +105,6 @@ export function Escaparate({
   const [activo, setActivo] = useState(0);
   // Hasta dónde se ha llegado: las fotos se piden una antes de que les toque, no todas de golpe.
   const [visto, setVisto] = useState(0);
-  const [pausado, setPausado] = useState(false);
   const actual = Math.min(activo, candidatos.length - 1);
   const ir = (i: number) => {
     setActivo(i);
@@ -148,7 +147,6 @@ export function Escaparate({
 
         <div
           className="foto-flota rota relative mx-auto w-full max-w-[520px] lg:mx-0 lg:ml-auto"
-          data-pausa={pausado ? "1" : undefined}
         >
           <Toldo className="toldo-desplega relative z-[2] block h-[28px] w-full md:h-[38px]" />
           <div className="foto-entra relative -mt-1 overflow-hidden rounded-b-[16px] bg-brand-700 dark:bg-slate-800">
@@ -205,18 +203,6 @@ export function Escaparate({
                     </span>
                   </button>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setPausado((p) => !p)}
-                  aria-label={pausado ? 'Reanudar la rotación de puestos' : 'Pausar la rotación de puestos'}
-                  className="ml-0.5 grid h-6 w-6 place-items-center rounded-full text-white"
-                >
-                  {pausado ? (
-                    <Play className="h-3 w-3" fill="currentColor" aria-hidden="true" />
-                  ) : (
-                    <Pause className="h-3 w-3" fill="currentColor" aria-hidden="true" />
-                  )}
-                </button>
               </div>
             )}
           </div>
