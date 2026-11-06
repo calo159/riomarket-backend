@@ -41,7 +41,7 @@ export function InterruptorWhatsapp({ puesto }: { puesto: Puesto }) {
         aria-describedby={`${idTexto}-ayuda`}
         disabled={cambiar.isPending}
         onClick={() => cambiar.mutate(!activo)}
-        className="relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full disabled:opacity-60"
+        className="group relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full disabled:opacity-60"
       >
         <span
           aria-hidden="true"
@@ -53,8 +53,9 @@ export function InterruptorWhatsapp({ puesto }: { puesto: Puesto }) {
         <span
           aria-hidden="true"
           className={cn(
-            'relative ml-0.5 h-6 w-6 rounded-full bg-white transition-transform',
-            activo ? 'translate-x-5' : 'translate-x-0',
+            // Al apretarlo el pulgar se estira (4 px) hacia donde va, como un interruptor físico; al soltar, rebota.
+            'relative ml-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-[transform,width] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-active:w-7',
+            activo ? 'translate-x-5 group-active:translate-x-4' : 'translate-x-0',
           )}
         />
       </button>

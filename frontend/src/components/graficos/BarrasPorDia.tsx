@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { VentasDia } from '../../api/payments';
 import { formatearDiaMes, formatearMoneda, numero } from '../../lib/format';
 import { cn } from '../../lib/utils';
+import { Segmentado } from '../ui/Segmentado';
 
 const BASE = 118; // y de la línea base dentro del viewBox (alto 120)
 const ALTO = 114; // alto útil de la barra más alta
@@ -173,26 +174,19 @@ export function BarrasPorDia({ datos, compacto = false, className }: Props) {
 
   return (
     <div className={className}>
-      <div className="mb-2 inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700" role="tablist" aria-label="Forma de ver las ventas por día">
-        {(['grafico', 'tabla'] as const).map((opcion) => (
-          <button
-            key={opcion}
-            type="button"
-            role="tab"
-            id={`${id}-tab-${opcion}`}
-            aria-selected={vista === opcion}
-            aria-controls={opcion === 'tabla' ? `${id}-tabla` : undefined}
-            className={cn(
-              'min-h-[36px] rounded-md px-3 text-sm font-semibold transition-colors',
-              vista === opcion ? 'bg-brand-600 text-white dark:bg-brand-300 dark:text-slate-950' : 'text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-300',
-            )}
-            onClick={() => setVista(opcion)}
-          >
-            {opcion === 'grafico' ? 'Gráfico' : 'Tabla'}
-          </button>
-        ))}
+      <Segmentado
+        etiqueta="Forma de ver las ventas por día"
+        className="mb-2"
+        valor={vista}
+        onCambiar={setVista}
+        opciones={[
+          { valor: 'grafico', etiqueta: 'Gráfico', id: `${id}-tab-grafico` },
+          { valor: 'tabla', etiqueta: 'Tabla', id: `${id}-tab-tabla`, controla: `${id}-tabla` },
+        ]}
+      />
+      <div key={mostrarGrafico ? 'grafico' : 'tabla'} className="animate-fadezoom">
+        {mostrarGrafico ? grafico : tabla}
       </div>
-      {mostrarGrafico ? grafico : tabla}
     </div>
   );
 }

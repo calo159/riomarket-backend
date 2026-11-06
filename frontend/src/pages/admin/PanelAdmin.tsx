@@ -79,7 +79,7 @@ export function PanelAdmin() {
               ) : (
                 <>
                   <p className="mt-2 flex items-center gap-2 text-xl font-bold text-exito dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> Todo al día
+                    <CheckCircle2 className="h-5 w-5 animate-pop" aria-hidden="true" /> Todo al día
                   </p>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Nada espera una revisión ahora mismo.</p>
                 </>

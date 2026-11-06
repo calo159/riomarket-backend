@@ -22,6 +22,7 @@ import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
 import { nombreMarca } from '../../lib/sitio';
+import { Segmentado } from '../../components/ui/Segmentado';
 
 type Vista = 'lista' | 'matriz';
 
@@ -103,20 +104,16 @@ export function RolesAdmin() {
         }
       />
 
-      <div className="mb-4 inline-flex rounded-xl border p-1" role="tablist" aria-label="Vista de roles">
-        {(['lista', 'matriz'] as Vista[]).map((opcion) => (
-          <button
-            key={opcion}
-            type="button"
-            role="tab"
-            aria-selected={vista === opcion}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${vista === opcion ? 'bg-brand-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
-            onClick={() => setVista(opcion)}
-          >
-            {opcion === 'lista' ? 'Lista' : 'Matriz'}
-          </button>
-        ))}
-      </div>
+      <Segmentado
+        etiqueta="Vista de roles"
+        className="mb-4"
+        valor={vista}
+        onCambiar={setVista}
+        opciones={[
+          { valor: 'lista', etiqueta: 'Lista' },
+          { valor: 'matriz', etiqueta: 'Matriz' },
+        ]}
+      />
 
       {cargando && <CargandoBloque mensaje="Cargando roles…" />}
       {fallo && <EstadoError mensaje="No pudimos cargar los roles." onReintentar={() => void roles.refetch()} />}

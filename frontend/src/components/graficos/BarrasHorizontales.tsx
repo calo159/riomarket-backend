@@ -30,7 +30,10 @@ export function BarrasHorizontales({ filas }: { filas: FilaBarra[] }) {
           </div>
           {fila.detalle && <p className="text-xs text-slate-500 dark:text-slate-400">{fila.detalle}</p>}
           <div className="mt-1.5 h-2 rounded-sm bg-slate-100 dark:bg-slate-800" aria-hidden="true">
-            <div className="h-2 rounded-sm bg-brand-600 dark:bg-brand-300" style={{ width: `${(fila.unidades / maximo) * 100}%` }} />
+            <div
+              className="h-2 origin-left animate-grow rounded-sm bg-brand-600 [animation-fill-mode:backwards] dark:bg-brand-300"
+              style={{ width: `${(fila.unidades / maximo) * 100}%`, animationDelay: `${indice * 90}ms` }}
+            />
           </div>
         </li>
       ))}
