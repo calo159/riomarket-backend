@@ -9,6 +9,17 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+### Cambiado
+
+- **Optimización de rendimiento de la tienda.** Medido en un móvil lento simulado (CPU 4 veces más lenta, red 1,6 Mbps): los
+  banderines de la portada gastaban casi toda la CPU de la página en reposo (~365 ms de cada 3 s; la cinta de precios,
+  nada). Se rehicieron como elementos HTML (el navegador no anima en la tarjeta gráfica los elementos dentro de un SVG) y
+  con cinco fases de balanceo en vez de veinte (lo que cuesta es cuántas fases distintas hay), y se pausan cuando la portada
+  sale de la pantalla: ~365 → ~110 ms con la portada a la vista y ~0 al bajar, y el tiempo bloqueado del hilo principal al
+  cargar bajó de 468 a ~180 ms. Además: la identidad del sitio ya no se pide al cargar cuando Django la deja en el HTML
+  (una petición menos), las reseñas de la portada solo se piden cuando la sección está a ~800 px de la pantalla, y la
+  tipografía de los titulares (Young Serif) se precarga junto con la del texto.
+
 ### Añadido
 
 - **Más movimiento en el panel.** El selector de vista (Lista/Matriz en Roles, Gráfico/Tabla en las ventas por día) lleva una

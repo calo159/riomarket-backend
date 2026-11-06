@@ -14,17 +14,15 @@ function precargaDeFuente(): Plugin {
     transformIndexHtml: {
       order: "post",
       handler(_html, contexto) {
-        const archivo = Object.keys(contexto.bundle ?? {}).find((nombre) =>
-          /^assets\/figtree-latin-wght-normal-[\w-]+\.woff2$/.test(nombre),
+        // Figtree (el texto) y Young Serif (el titular de la portada, que suele ser lo más grande en pintarse).
+        const archivos = Object.keys(contexto.bundle ?? {}).filter((nombre) =>
+          /^assets\/(figtree-latin-wght|young-serif-latin-400)-normal-[\w-]+\.woff2$/.test(nombre),
         );
-        if (!archivo) return [];
-        return [
-          {
-            tag: "link",
-            attrs: { rel: "preload", href: `/${archivo}`, as: "font", type: "font/woff2", crossorigin: "" },
-            injectTo: "head",
-          },
-        ];
+        return archivos.map((archivo) => ({
+          tag: "link" as const,
+          attrs: { rel: "preload", href: `/${archivo}`, as: "font", type: "font/woff2", crossorigin: "" },
+          injectTo: "head" as const,
+        }));
       },
     },
   };

@@ -518,15 +518,21 @@
   }
 }
 .banderin {
-  animation: banderin-mece 3.4s ease-in-out infinite;
-  animation-delay: calc(var(--i, 0) * -0.23s);
+  transform-origin: 50% 0;
+  will-change: transform;
+  /* Lo que cuesta no es cuántos banderines se mecen sino cuántas FASES distintas hay: medido en un móvil lento, veinte
+     fases costaban ~540 ms de CPU por cada 3 s en reposo y cinco, ~95 ms. Por eso el retraso sale de `--f` (0 a 4). */
+  animation: banderin-mece 1.7s ease-in-out infinite alternate;
+  animation-delay: calc(var(--f, 0) * -0.34s);
+}
+.banderines[data-pausa] .banderin {
+  animation-play-state: paused;
 }
 @keyframes banderin-mece {
-  0%,
-  100% {
+  from {
     transform: rotate(-6deg);
   }
-  50% {
+  to {
     transform: rotate(6deg);
   }
 }

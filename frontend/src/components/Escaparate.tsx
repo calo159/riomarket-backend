@@ -119,7 +119,7 @@ export function Escaparate({
 
   return (
     <section className="hero-fondo relative overflow-x-clip text-white" aria-labelledby="titular-tienda">
-      <Banderines className="absolute inset-x-0 top-0 z-[1] h-[52px] w-full md:h-[60px]" />
+      <Banderines className="absolute inset-x-0 top-0 z-[1] h-[52px] w-full md:h-[60px]" alto={60} />
       <PatronOlas className="text-white opacity-[.06]" style={desvanecerEnMancha('0% 100%', 70, 80)} />
       <div aria-hidden="true" className="borde-festoneado-abajo pointer-events-none absolute inset-x-0 top-full z-[1]" />
       <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-14 md:px-5 md:pb-28 md:pt-[80px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
