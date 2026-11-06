@@ -252,7 +252,7 @@ export function ProductoDetalle() {
               <span className="badge ml-2 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Producto {datos.estado}</span>
             )}
           </p>
-          <h1 className="text-2xl font-bold leading-tight tracking-tight">{datos.nombre}</h1>
+          <h1 className="font-display text-[28px] font-normal leading-[1.12] [font-synthesis:none] [text-wrap:balance]">{datos.nombre}</h1>
           {calificacion ? (
             <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
               <span className="font-bold text-estrella dark:text-amber-400">★ {calificacion.toFixed(1)}</span>

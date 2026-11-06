@@ -55,6 +55,8 @@ export default {
       },
       fontFamily: {
         sans: ['"Figtree Variable"', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
+        // Rótulo de puesto: solo titulares de la tienda (hero, secciones, citas). Un solo peso: sin negrita falsa.
+        display: ['"Young Serif"', 'Georgia', 'Cambria', 'serif'],
       },
       borderRadius: {
         lg: '8px',

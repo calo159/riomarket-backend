@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Menos aspecto de plantilla, más voz propia.** Los titulares de la tienda (portada, secciones, y los nombres de catálogo, producto y puesto) pasan a una
+  tipografía de rótulo, Young Serif, autoalojada, en vez de la misma sans de todo lo demás. Se quitan los adornos que delataban una plantilla: el resplandor
+  detrás de la foto, la ola repetida bajo cada título y los tres círculos con icono de «cómo funciona» (ahora una frase grande y tres líneas entre filetes). Los
+  banderines de la portada se atan como los de verdad: de distinto tamaño, algo torcidos y a distancias desiguales. Nueva sección **«Lo que dicen de los puestos»**
+  con reseñas reales de compradores (solo con comentario y bien calificadas, una por puesto, la más larga en grande); no aparece si hay menos de dos.
 - **Una tienda con carácter propio y más movimiento.** El primer pliegue estrena **banderines de fiesta** tendidos sobre la portada (la cuerda baja al abrir y
   cada banderín se mece, uno tras otro) y la palabra «Riohacha» se subraya con una ola que se traza al terminar el titular. Debajo de las categorías pasa una
   **cinta de precios** con productos reales y su precio en una etiquetita (se detiene al pasar el cursor; con «reducir movimiento» queda quieta y se recorre

@@ -124,7 +124,7 @@ export function Escaparate({
         <div>
           <h1
             id="titular-tienda"
-            className="text-balance text-[clamp(34px,5vw,56px)] font-bold leading-[1.06] tracking-[-0.03em]"
+            className="text-balance font-display text-[clamp(36px,5.2vw,58px)] font-normal leading-[1.08] tracking-[-0.01em] [font-synthesis:none]"
           >
             <Palabras texto="Compra directo en los puestos de" />
             <span className="relative inline-block text-amarillo">

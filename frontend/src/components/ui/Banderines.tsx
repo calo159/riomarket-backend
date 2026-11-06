@@ -3,34 +3,60 @@ import { cn } from '../../lib/utils';
 const ANCHO = 1440;
 const ALTO = 64;
 const TRAMOS = 6;
-const POR_TRAMO = 5;
 const CAIDA = 15;
 // Coral y crema del toldo y el turquesa claro de la marca: el amarillo queda para el titular.
-const COLORES = ['#E4502A', '#FFF4DC', '#7DB6BC', '#FFF4DC'];
+const COLORES = ['#E4502A', '#FFF4DC', '#FFF4DC', '#7DB6BC', '#E4502A'];
 
-/** Punto de una cuerda que cuelga entre dos postes: una parábola con su flecha en el centro. */
-function puntoDeCuerda(tramo: number, t: number) {
+/** Punto de la cuerda en `x`: seis tramos que cuelgan entre postes, cada uno con su flecha en el centro. */
+function cuerdaEn(x: number) {
   const ancho = ANCHO / TRAMOS;
-  const x = tramo * ancho + t * ancho;
-  const y = 6 + 4 * CAIDA * t * (1 - t);
-  return { x, y };
+  const tramo = Math.min(TRAMOS - 1, Math.floor(x / ancho));
+  const t = (x - tramo * ancho) / ancho;
+  return 6 + 4 * CAIDA * t * (1 - t);
 }
 
+/** Azar repetible (siempre los mismos banderines): nadie ata 30 banderines idénticos a la misma distancia. */
+function azar(semilla: number) {
+  let s = semilla;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+
+const banderines = (() => {
+  const r = azar(7);
+  const lista: { x: number; y: number; ancho: number; largo: number; giro: number; color: string }[] = [];
+  let x = 26;
+  while (x < ANCHO - 20) {
+    const y = cuerdaEn(x);
+    lista.push({
+      x,
+      y,
+      ancho: 15 + r() * 8,
+      largo: 21 + r() * 14,
+      giro: (r() - 0.5) * 9,
+      color: COLORES[Math.floor(r() * COLORES.length)],
+    });
+    // A veces dos juntos, a veces un hueco.
+    x += r() < 0.22 ? 24 + r() * 8 : 44 + r() * 38;
+  }
+  return lista;
+})();
+
+const cuerda = (() => {
+  const ancho = ANCHO / TRAMOS;
+  let d = `M0 6`;
+  for (let i = 0; i < TRAMOS; i++) d += `Q${i * ancho + ancho / 2} ${6 + 2 * CAIDA} ${(i + 1) * ancho} 6`;
+  return d;
+})();
+
 /**
- * Banderines de fiesta tendidos sobre el primer pliegue, como los de una calle de mercado en día de feria. Se bajan al
- * abrir la página y después cada uno se mece un poco, uno tras otro (`.banderin`, index.css). Decorativo (`aria-hidden`).
+ * Banderines de fiesta tendidos sobre el primer pliegue, como los de una calle de mercado en día de feria: distintos de
+ * tamaño, algo torcidos y a distancias desiguales. Se bajan al abrir la página y después cada uno se mece un poco
+ * (`.banderin`, index.css). Decorativo (`aria-hidden`).
  */
 export function Banderines({ className }: { className?: string }) {
-  const tramos = Array.from({ length: TRAMOS });
-  const cuerda = tramos
-    .map((_, i) => {
-      const a = puntoDeCuerda(i, 0);
-      const b = puntoDeCuerda(i, 1);
-      const medio = puntoDeCuerda(i, 0.5);
-      return `${i === 0 ? `M${a.x} ${a.y}` : ''}Q${medio.x} ${medio.y + CAIDA} ${b.x} ${b.y}`;
-    })
-    .join('');
-  let n = 0;
   return (
     <svg
       viewBox={`0 0 ${ANCHO} ${ALTO}`}
@@ -39,18 +65,17 @@ export function Banderines({ className }: { className?: string }) {
       focusable="false"
       className={cn('banderines pointer-events-none', className)}
     >
-      <path d={cuerda} fill="none" stroke="#FFF4DC" strokeOpacity="0.55" strokeWidth="1.6" strokeLinecap="round" />
-      {tramos.flatMap((_, i) =>
-        Array.from({ length: POR_TRAMO }).map((__, j) => {
-          const { x, y } = puntoDeCuerda(i, (j + 0.5) / POR_TRAMO);
-          const k = n++;
-          return (
-            <g key={`${i}-${j}`} className="banderin" style={{ transformOrigin: `${x}px ${y}px`, ['--i' as string]: k }}>
-              <path d={`M${x - 10} ${y}L${x + 10} ${y}L${x} ${y + 27}Z`} fill={COLORES[k % COLORES.length]} opacity="0.95" />
-            </g>
-          );
-        }),
-      )}
+      <path d={cuerda} fill="none" stroke="#FFF4DC" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
+      {banderines.map((b, k) => (
+        <g key={k} className="banderin" style={{ transformOrigin: `${b.x}px ${b.y}px`, ['--i' as string]: k }}>
+          <path
+            transform={`rotate(${b.giro.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)})`}
+            d={`M${(b.x - b.ancho / 2).toFixed(1)} ${b.y.toFixed(1)}L${(b.x + b.ancho / 2).toFixed(1)} ${b.y.toFixed(1)}L${b.x.toFixed(1)} ${(b.y + b.largo).toFixed(1)}Z`}
+            fill={b.color}
+            opacity="0.94"
+          />
+        </g>
+      ))}
     </svg>
   );
 }
