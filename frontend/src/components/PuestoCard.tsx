@@ -5,6 +5,7 @@ import { Imagen } from './Imagen';
 import { coloresDePuesto, inicialesDe } from './iconos';
 import { tonoDe } from './tonoCategoria';
 import { urlAbsoluta } from '../lib/utils';
+import { ToldoPuesto } from './ui/ToldoPuesto';
 
 /** Logo redondo del puesto: su foto, o las iniciales sobre un color propio. */
 export function LogoPuesto({
@@ -44,7 +45,8 @@ export function PuestoCard({ puesto }: { puesto: Puesto }) {
   // Sin marco ni avatar encima de la foto: la foto, el nombre y tres líneas (calificación y entrega, dirección, descripción).
   return (
     <Link to={`/puestos/${puesto.id}`} className="group block text-tinta dark:text-slate-100">
-      <div className="aspect-[3/2] overflow-hidden rounded-xl bg-brand-50 transition duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-hover dark:bg-slate-800">
+      <div className="relative aspect-[3/2] overflow-hidden rounded-xl bg-brand-50 transition duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-hover dark:bg-slate-800">
+        <ToldoPuesto categoria={categorias[0]?.nombre} className="absolute inset-x-0 top-0 z-[1]" />
         {portada ? (
           <Imagen
             src={portada}

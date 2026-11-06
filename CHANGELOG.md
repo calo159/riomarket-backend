@@ -11,6 +11,12 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Detalles propios del mercado: cada puesto con su toldo, una ola que se dibuja bajo los títulos, etiqueta de precio y estados vacíos ilustrados.**
+  Las tarjetas de puesto llevan un toldo festoneado del color de su primera categoría (el mismo motivo del primer pliegue, a escala de tarjeta; se echa un
+  poco hacia abajo al pasar el cursor). Bajo cada título de sección se traza sola una ola del logo cuando la sección aparece. En la ficha del producto el
+  precio cuelga como una etiqueta con su agujero y se asienta con un vaivén al abrir. El carrito vacío y el catálogo sin resultados muestran una canasta
+  con una hoja que cae, y la página 404 es un puesto con el cartel «CERRADO» que se balancea («Este puesto ya cerró, o nunca existió»). Todo es SVG o CSS
+  propio, se detiene con «reducir movimiento» y es decorativo para los lectores de pantalla.
 - **El pedido y la compra se ven completos: fotos, un cierre con ticket y colores de estado de la marca.** Del checkout y el detalle del pedido faltaba lo
   más básico de una tienda: ver las fotos de lo que compras. Ahora el resumen del checkout y la lista de productos del pedido llevan la miniatura de cada
   producto (el servidor la trae en cada línea del pedido, `imagen`, precargada en bloque: sin una consulta por línea, comprobado con pruebas de conteo de

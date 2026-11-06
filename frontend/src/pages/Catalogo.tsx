@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Filter, PackageSearch, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Filter, Search, SlidersHorizontal, X } from 'lucide-react';
 import type { FiltrosProducto } from '../api/catalog';
 import { ProductoCard } from '../components/ProductoCard';
 import { EsqueletoGrid, EstadoError, EstadoVacio } from '../components/ui/Estado';
+import { CanastaVacia } from '../components/ui/Ilustraciones';
 import { Paginacion } from '../components/ui/Paginacion';
 import { Modal } from '../components/ui/Modal';
 import { GRID_PRODUCTOS } from '../lib/estilos';
@@ -232,8 +233,8 @@ export function Catalogo() {
           {productos.data && productos.data.results.length === 0 && (
             <EstadoVacio
               titulo="No encontramos productos"
-              descripcion="Prueba con otra búsqueda o quita algunos filtros."
-              icono={<PackageSearch className="h-7 w-7" />}
+              descripcion="Esa canasta salió vacía. Prueba con otra búsqueda o quita algunos filtros."
+              ilustracion={<CanastaVacia />}
               accion={hayFiltros ? <button type="button" className="btn-secondary" onClick={limpiar}>Limpiar filtros</button> : <Link to="/tienda" className="btn-primary">Volver al inicio</Link>}
             />
           )}
