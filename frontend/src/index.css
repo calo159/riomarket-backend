@@ -69,6 +69,10 @@
   img {
     @apply bg-slate-100 dark:bg-slate-800;
   }
+  /* En oscuro, las fotos de fondo blanco brillan como linternas: se atenúan un poco (no los logos en SVG). */
+  .dark main img:not([src$='.svg']) {
+    filter: brightness(0.9) contrast(1.03);
+  }
 }
 
 @layer components {
@@ -359,6 +363,27 @@
     to {
       transform: translateY(44px);
     }
+  }
+}
+
+/* Momento de cierre de la compra (pages/pedido/TicketEnviado.tsx): el ticket se «imprime» de arriba abajo y el sello
+   llega al final con un golpe suave. Con «reducir movimiento» aparece ya impreso y sellado. */
+.ticket-imprime {
+  animation: ticket-imprime 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes ticket-imprime {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-14px);
+  }
+}
+.sello-llega {
+  animation: sello-llega 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.75s backwards;
+}
+@keyframes sello-llega {
+  from {
+    opacity: 0;
+    transform: scale(1.9) rotate(-16deg);
   }
 }
 

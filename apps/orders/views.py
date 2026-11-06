@@ -9,6 +9,7 @@ Patrón de permisos (igual que catálogo, con la lógica en services):
   otro decide ``services`` (regla 5) → 403/400.
 """
 
+from django.db.models import Prefetch
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -19,7 +20,7 @@ from apps.accounts.permissions import EsComprador
 from apps.common.exportacion import respuesta_csv
 from apps.common.query import aplicar_ordenamiento
 from apps.orders import services, vencimientos
-from apps.orders.models import Pedido
+from apps.orders.models import ItemPedido, Pedido
 from apps.orders.serializers import PedidoSerializer, ReportarNoRecibidoSerializer
 from apps.rbac.permissions import TieneRecurso
 
@@ -61,7 +62,18 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         params = self.request.query_params
-        qs = Pedido.objects.select_related("id_puesto", "pago").prefetch_related("items")
+        # Las fotos de los ítems solo se precargan donde se muestran (no en la exportación a CSV).
+        items = (
+            "items"
+            if self.action == "exportar"
+            else Prefetch(
+                "items",
+                queryset=ItemPedido.objects.select_related("id_producto").prefetch_related(
+                    "id_producto__imagenes"
+                ),
+            )
+        )
+        qs = Pedido.objects.select_related("id_puesto", "pago").prefetch_related(items)
         qs = services.visibles_pedidos(self.request.user, qs, params)
         return aplicar_ordenamiento(qs, params.get("ordering"), services.ORDENAMIENTO_PEDIDO)
 

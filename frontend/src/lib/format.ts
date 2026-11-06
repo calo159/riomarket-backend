@@ -94,33 +94,44 @@ export function etiquetaEstado(estado: string | null | undefined): string {
   return ETIQUETAS_PEDIDO[estado] ?? ETIQUETAS_PAGO[estado] ?? ETIQUETAS_VERIFICACION[estado] ?? estado;
 }
 
+/**
+ * Colores de estado: una familia de tonos apagados y parejos en luminosidad (como los de categoría), no los colores por
+ * defecto de la librería. Verde = bien, ámbar = espera, turquesa = en marcha, rojo = problema, gris = sin significado.
+ */
+const TONO_BIEN = 'bg-[#DFF0E4] text-[#14532D] dark:bg-[#12331F] dark:text-[#9BDDB1]';
+const TONO_ESPERA = 'bg-[#FBE8C6] text-[#6E4200] dark:bg-[#46330F] dark:text-[#F5D79B]';
+const TONO_EN_MARCHA = 'bg-[#D9EFEC] text-[#0F5550] dark:bg-[#12383A] dark:text-[#BDE6E1]';
+const TONO_LISTO = 'bg-[#DDEBD3] text-[#274A12] dark:bg-[#22351A] dark:text-[#CFE4B8]';
+const TONO_PROBLEMA = 'bg-[#F6DDD6] text-[#7E2413] dark:bg-[#43211D] dark:text-[#F5BFB2]';
+const TONO_DEVUELTO = 'bg-[#E9DFEF] text-[#4A2860] dark:bg-[#33263F] dark:text-[#DAC7E6]';
+const TONO_NEUTRO = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+
 export function colorEstado(estado: string | null | undefined): string {
   switch (estado) {
     case 'entregado':
     case 'aprobado':
     case 'activo':
     case 'activa':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+      return TONO_BIEN;
     case 'pendiente':
     case 'procesando':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+      return TONO_ESPERA;
     case 'confirmado':
     case 'en_preparacion':
-      return 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300';
-    case 'listo_para_recoger':
-      return 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300';
     case 'en_camino':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300';
+      return TONO_EN_MARCHA;
+    case 'listo_para_recoger':
+      return TONO_LISTO;
     case 'cancelado':
     case 'rechazado':
     case 'anulado':
     case 'suspendido':
     case 'bloqueado':
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+      return TONO_PROBLEMA;
     case 'reembolsado':
-      return 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300';
+      return TONO_DEVUELTO;
     default:
-      return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+      return TONO_NEUTRO;
   }
 }
 

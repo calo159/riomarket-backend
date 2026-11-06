@@ -15,6 +15,7 @@ import { useToast } from '../components/ui/Toast';
 import { EncabezadoPagina } from '../components/ui/Encabezado';
 import { CargandoPantalla, EstadoVacio } from '../components/ui/Estado';
 import { Campo } from '../components/ui/Campos';
+import { Imagen } from '../components/Imagen';
 import { formatearFechaHora, formatearMoneda } from '../lib/format';
 import {
   PASO_MINUTOS,
@@ -499,8 +500,18 @@ export function Checkout() {
           <p className="text-sm font-semibold text-brand-600 dark:text-brand-300">{carrito.puestoNombre}</p>
           <div className="mt-3 space-y-2">
             {carrito.items.map((item) => (
-              <div key={item.productoId} className="flex justify-between gap-2 text-sm">
-                <span className="min-w-0 text-slate-600 dark:text-slate-300">
+              <div key={item.productoId} className="flex items-start justify-between gap-3 text-sm">
+                {item.imagen ? (
+                  <Imagen
+                    src={item.imagen}
+                    alt=""
+                    fallbackNombre={item.nombre}
+                    contenedorClassName="h-12 w-12 shrink-0 rounded-lg"
+                  />
+                ) : (
+                  <span aria-hidden="true" className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800" />
+                )}
+                <span className="min-w-0 flex-1 text-slate-600 dark:text-slate-300">
                   <span className="font-medium text-slate-900 dark:text-slate-100">{item.cantidad}×</span> {item.nombre}
                   {esEncargo(item) && item.detalles?.trim() && (
                     <span className="block whitespace-pre-line break-words text-sm text-slate-500 dark:text-slate-400">

@@ -11,6 +11,13 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **El pedido y la compra se ven completos: fotos, un cierre con ticket y colores de estado de la marca.** Del checkout y el detalle del pedido faltaba lo
+  más básico de una tienda: ver las fotos de lo que compras. Ahora el resumen del checkout y la lista de productos del pedido llevan la miniatura de cada
+  producto (el servidor la trae en cada línea del pedido, `imagen`, precargada en bloque: sin una consulta por línea, comprobado con pruebas de conteo de
+  consultas; la respuesta de «crear pedido» no la trae). Al confirmar, el aviso verde genérico pasa a ser un **ticket que se «imprime»** de arriba abajo con
+  el sello de «enviado», el resumen (productos, entrega, total) y el mensaje de siempre sobre qué pasa ahora y cómo se paga. Los colores de estado
+  (pendiente, en marcha, listo, entregado, cancelado) dejan los colores por defecto de la librería por tonos apagados y parejos de la marca, con versión
+  oscura. En oscuro, las fotos se atenúan un poco para que las de fondo blanco no brillen como linternas.
 - La landing ya no dice «Proyecto académico» (la nota sobre los pagos en línea en modo de prueba se conserva).
 - **Paneles del vendedor y de administración sin aspecto de plantilla.** Las filas de tarjetas iguales (icono teñido,
   etiqueta y número; seis seguidas en «Resumen general») se cambian por un dato principal y una franja sobria con líneas

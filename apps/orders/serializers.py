@@ -39,6 +39,12 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
     """
 
     subtotal = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    imagen = serializers.SerializerMethodField(
+        help_text=(
+            "Miniatura de la primera foto del producto (o la grande si no hay), para mostrar el "
+            "pedido con fotos. Solo viene en el detalle y el listado; la de crear no la trae."
+        )
+    )
     id_producto = ProductoPorId(queryset=Producto.objects.all())
     detalles = serializers.CharField(
         required=False,
@@ -59,6 +65,7 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
             "modalidad",
             "detalles",
             "subtotal",
+            "imagen",
         )
         read_only_fields = (
             "id",
@@ -67,6 +74,23 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
             "precio_unitario",
             "modalidad",
         )
+
+    def get_imagen(self, item) -> str | None:
+        # Solo si la vista precargó el producto y sus fotos (el Prefetch de get_queryset): así no
+        # hay una consulta por línea. En la respuesta de «crear» no están y el campo va vacío.
+        producto = item._state.fields_cache.get("id_producto")
+        precargadas = getattr(producto, "_prefetched_objects_cache", {})
+        if producto is None or "imagenes" not in precargadas:
+            return None
+        imagenes = list(producto.imagenes.all())
+        if not imagenes:
+            return None
+        primera = imagenes[0]
+        archivo = primera.miniatura or primera.archivo
+        try:
+            return archivo.url if archivo else None
+        except Exception:
+            return None
 
 
 class ReportarNoRecibidoSerializer(serializers.Serializer):
