@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Pedido, Puesto } from '../lib/types';
@@ -93,5 +93,77 @@ describe('Escaparate', () => {
     expect(adornos.length).toBeGreaterThan(0);
     // El único contenido «hablado» es el titular, el texto y las acciones: ningún svg decorativo con rol de imagen.
     expect(container.querySelectorAll('svg:not([aria-hidden="true"])').length).toBe(0);
+  });
+
+  describe('vitrina que rota', () => {
+    const tres = () => [
+      puesto(1, { calificacion_promedio: 4.9 }),
+      puesto(2, { calificacion_promedio: 4.5 }),
+      puesto(3, { calificacion_promedio: 4.1 }),
+    ];
+
+    it('con_varios_puestos_ofrece_un_punto_por_puesto_y_empieza_por_el_mejor', () => {
+      montar(tres());
+
+      expect(screen.getByRole('group', { name: 'Puestos de la vitrina' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Ver Puesto 1' })).toHaveAttribute('aria-current', 'true');
+      expect(screen.getByRole('button', { name: 'Ver Puesto 3' })).toHaveAttribute('aria-current', 'false');
+      expect(screen.getByRole('link', { name: 'Ver el puesto' })).toHaveAttribute('href', '/puestos/1');
+    });
+
+    it('al_terminar_el_relleno_pasa_al_siguiente_puesto_y_da_la_vuelta', () => {
+      const { container } = montar(tres());
+
+      for (const esperado of [2, 3, 1]) {
+        fireEvent.animationEnd(container.querySelector('.relleno-punto')!);
+        expect(screen.getByRole('link', { name: 'Ver el puesto' })).toHaveAttribute('href', `/puestos/${esperado}`);
+        expect(screen.getByText(`Puesto ${esperado}`, { selector: 'b' })).toBeInTheDocument();
+      }
+    });
+
+    it('al_pulsar_un_punto_va_a_ese_puesto', () => {
+      montar(tres());
+
+      fireEvent.click(screen.getByRole('button', { name: 'Ver Puesto 3' }));
+
+      expect(screen.getByRole('link', { name: 'Ver el puesto' })).toHaveAttribute('href', '/puestos/3');
+      expect(screen.getByRole('button', { name: 'Ver Puesto 3' })).toHaveAttribute('aria-current', 'true');
+    });
+
+    it('solo_la_foto_activa_se_lee_y_las_demas_se_piden_de_a_una', () => {
+      const { container } = montar(tres());
+
+      const fotos = container.querySelectorAll('.vitrina-diapositiva');
+      // La activa y la siguiente; la tercera todavía no se pidió.
+      expect(fotos).toHaveLength(2);
+      expect(fotos[0]).toHaveAttribute('aria-hidden', 'false');
+      expect(fotos[1]).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('el_boton_de_pausa_detiene_y_reanuda_la_rotacion', () => {
+      const { container } = montar(tres());
+      const raiz = container.querySelector('.rota')!;
+
+      fireEvent.click(screen.getByRole('button', { name: 'Pausar la rotación de puestos' }));
+      expect(raiz).toHaveAttribute('data-pausa', '1');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Reanudar la rotación de puestos' }));
+      expect(raiz).not.toHaveAttribute('data-pausa');
+    });
+
+    it('con_un_solo_puesto_o_con_un_pedido_no_rota', () => {
+      const { unmount } = montar([puesto(1)]);
+      expect(screen.queryByRole('group', { name: 'Puestos de la vitrina' })).not.toBeInTheDocument();
+      unmount();
+
+      montar(tres(), pedido({ id_puesto: 2 }));
+      expect(screen.queryByRole('group', { name: 'Puestos de la vitrina' })).not.toBeInTheDocument();
+    });
+
+    it('se_turnan_como_mucho_cinco_puestos', () => {
+      montar(Array.from({ length: 8 }, (_, i) => puesto(i + 1)));
+
+      expect(screen.getByRole('group', { name: 'Puestos de la vitrina' }).querySelectorAll('button[aria-label^="Ver "]')).toHaveLength(5);
+    });
   });
 });

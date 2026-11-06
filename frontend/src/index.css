@@ -352,6 +352,42 @@
     transform: translateY(30px) scale(0.96);
   }
 }
+/* Vitrina que rota (Escaparate): las fotos se funden una en otra y la foto activa se asienta despacio. El punto activo se
+   va llenando; cuando termina, pasa al siguiente puesto (onAnimationEnd). Pausa con el cursor, el foco o el botón;
+   con «reducir movimiento» no hay animación, así que no rota sola. */
+.vitrina-diapositiva {
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.vitrina-diapositiva img {
+  transform: scale(1.06);
+  transition: transform 7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vitrina-activa {
+  opacity: 1;
+}
+.vitrina-activa img {
+  transform: none;
+}
+.relleno-punto {
+  transform-origin: left;
+  animation: llenar 6.5s linear forwards;
+}
+.rota:hover .relleno-punto,
+.rota:focus-within .relleno-punto,
+.rota[data-pausa='1'] .relleno-punto {
+  animation-play-state: paused;
+}
+.ticket-cambia {
+  animation: ticket-cambia 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes ticket-cambia {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 /* Con scroll, la columna de la foto se desliza un poco más lenta que la página (solo donde el navegador lo soporta). */
 @supports (animation-timeline: scroll()) {
   .foto-flota {
