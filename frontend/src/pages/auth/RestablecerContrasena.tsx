@@ -10,6 +10,7 @@ import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import { Campo } from '../../components/ui/Campos';
 import { CampoContrasena } from '../../components/ui/CampoContrasena';
 import { TarjetaAuth } from './TarjetaAuth';
+import { nombreMarca } from '../../lib/sitio';
 
 const esquema = z
   .object({
@@ -42,7 +43,7 @@ export function RestablecerContrasena() {
   });
 
   useEffect(() => {
-    document.title = 'Nueva contraseña · RioMarket';
+    document.title = `Nueva contraseña · ${nombreMarca()}`;
   }, []);
 
   const enviar = async (datos: Formulario) => {

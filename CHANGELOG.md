@@ -9,6 +9,17 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Personalizar el sitio desde el panel, sin tocar código** (ADR-024, RF-38). Nueva pantalla **Administración → Personalización**
+  (`/admin/personalizacion`, recurso `admin.personalizacion`, solo el administrador): nombre de la marca, ciudad, departamento y país, descripción
+  para buscadores y WhatsApp, titular y texto de la portada, correo, WhatsApp, Instagram y Facebook de soporte (los vacíos no se muestran), pie
+  de página y **color de la marca** entre cinco paletas con el contraste ya comprobado. El nombre y la ciudad salen en el encabezado, el pie, el
+  título de cada pestaña, los términos y la privacidad, los correos de recuperación de contraseña, el remitente de Brevo y los avisos de comisión.
+  Mientras se escribe, la página ya muestra cómo queda; la primera pantalla sale con la marca correcta (Django la deja en el HTML), cada campo
+  se valida y cada cambio queda en la auditoría con el valor de antes y el de después. Lo que no se cambia solo (descripción, pie, palabra
+  destacada) sigue a la ciudad que se escriba. Pendiente: subir un logo propio y personalizar el manifest de la app instalada.
+
 ### Cambiado
 
 - **Menos aspecto de plantilla, más voz propia.** Los titulares de la tienda (portada, secciones, y los nombres de catálogo, producto y puesto) pasan a una

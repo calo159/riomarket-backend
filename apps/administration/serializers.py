@@ -237,3 +237,41 @@ class ValoresConfiguracionSerializer(serializers.Serializer):
 class ActualizarConfiguracionSerializer(serializers.Serializer):
     valores = ValoresConfiguracionSerializer()
     motivo = serializers.CharField(min_length=MOTIVO_MIN, max_length=MOTIVO_MAX)
+
+
+class CampoPersonalizacionSerializer(serializers.Serializer):
+    clave = serializers.CharField()
+    etiqueta = serializers.CharField()
+    ayuda = serializers.CharField()
+    tipo = serializers.ChoiceField(
+        choices=["texto", "parrafo", "correo", "url", "telefono", "paleta"]
+    )
+    largo = serializers.IntegerField()
+    valor = serializers.CharField(allow_blank=True)
+    propio = serializers.CharField(allow_blank=True)
+    defecto = serializers.CharField(allow_blank=True)
+    plantilla = serializers.CharField(allow_blank=True)
+    personalizado = serializers.BooleanField()
+
+
+class GrupoPersonalizacionSerializer(serializers.Serializer):
+    nombre = serializers.CharField()
+    campos = CampoPersonalizacionSerializer(many=True)
+
+
+class PaletaSerializer(serializers.Serializer):
+    clave = serializers.CharField()
+    etiqueta = serializers.CharField()
+    color = serializers.CharField()
+
+
+class PersonalizacionSerializer(serializers.Serializer):
+    grupos = GrupoPersonalizacionSerializer(many=True)
+    paletas = PaletaSerializer(many=True)
+    actualizado = serializers.DateTimeField(allow_null=True)
+
+
+class ActualizarPersonalizacionSerializer(serializers.Serializer):
+    """Solo los campos presentes se cambian; vacío o ``null`` borra el valor propio."""
+
+    valores = serializers.DictField(child=serializers.CharField(allow_blank=True, allow_null=True))

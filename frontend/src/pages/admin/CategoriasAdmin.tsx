@@ -15,6 +15,7 @@ import { useToast } from '../../components/ui/Toast';
 import { erroresDeCampo, mensajeDeError } from '../../lib/errors';
 import type { Categoria } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 interface FormularioCategoria {
   nombre: string;
@@ -34,7 +35,7 @@ export function CategoriasAdmin() {
   const [eliminar, setEliminar] = useState<Categoria | null>(null);
 
   useEffect(() => {
-    document.title = 'Categorías · Administración · RioMarket';
+    document.title = `Categorías · Administración · ${nombreMarca()}`;
   }, []);
 
   const categorias = useQuery({ queryKey: claves.categorias, queryFn: listarCategorias });

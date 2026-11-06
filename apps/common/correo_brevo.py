@@ -13,6 +13,8 @@ from urllib import error, request
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
 
+from apps.common import marca
+
 logger = logging.getLogger(__name__)
 
 URL_ENVIO = "https://api.brevo.com/v3/smtp/email"
@@ -37,7 +39,7 @@ class BrevoEmailBackend(BaseEmailBackend):
                 continue
             remitente = _correo(mensaje.from_email or settings.DEFAULT_FROM_EMAIL)
             cuerpo = {
-                "sender": {"name": "RioMarket", "email": remitente},
+                "sender": {"name": marca.nombre(), "email": remitente},
                 "to": [{"email": _correo(a)} for a in mensaje.to],
                 "subject": mensaje.subject,
                 "textContent": mensaje.body,

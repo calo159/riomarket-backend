@@ -24,6 +24,7 @@ import type { Rol } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
 import { EditarCuenta } from './EditarCuenta';
 import { NuevoUsuario } from './NuevoUsuario';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 15;
 const ROLES: Rol[] = ['comprador', 'vendedor', 'administrador'];
@@ -72,7 +73,7 @@ export function Usuarios() {
   const [editando, setEditando] = useState<UsuarioAdmin | null>(null);
 
   useEffect(() => {
-    document.title = 'Usuarios · Administración · RioMarket';
+    document.title = `Usuarios · Administración · ${nombreMarca()}`;
   }, []);
 
   const usuarios = useQuery({

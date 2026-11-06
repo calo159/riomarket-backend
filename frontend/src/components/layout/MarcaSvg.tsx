@@ -22,7 +22,7 @@ export const OLAS = [
 export function MarcaSvg({ conFondo = true, className }: { conFondo?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false" className={className}>
-      {conFondo && <rect width="64" height="64" rx="14" fill="#00626D" />}
+      {conFondo && <rect width="64" height="64" rx="14" style={{ fill: 'rgb(var(--brand-600))' }} />}
       {PANELES_TOLDO.map((panel) => (
         <path key={panel.d} d={panel.d} fill={panel.color} />
       ))}

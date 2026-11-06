@@ -51,7 +51,8 @@ describe('index.html', () => {
 
   it('enlaza el manifest, el color del tema y el ícono de Apple', () => {
     expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest"');
-    expect(html).toContain('<meta name="theme-color" content="#00626D"');
+    // Django completa el color con el de la paleta que eligió el administrador (apps/sitio/seo.py).
+    expect(html).toContain('<meta name="theme-color" content="__COLOR_TEMA__"');
     expect(html).toContain('rel="apple-touch-icon" href="/icons/apple-touch-icon.png"');
   });
 });

@@ -50,13 +50,13 @@
     color: #14262a;
   }
   html {
-    accent-color: #00626d;
-    caret-color: #00626d;
+    accent-color: rgb(var(--brand-600));
+    caret-color: rgb(var(--brand-600));
     scrollbar-color: #c3ccc0 transparent;
   }
   .dark {
-    accent-color: #7db6bc;
-    caret-color: #7db6bc;
+    accent-color: rgb(var(--brand-300));
+    caret-color: rgb(var(--brand-300));
     scrollbar-color: #2b474b transparent;
   }
   /* Texto en oscuro: rampa propia. Muchos textos usan un gris de modo claro (`text-slate-500`…) sin variante oscura y en
@@ -136,12 +136,12 @@
   }
   /* Primer pliegue con profundidad: el turquesa se oscurece hacia abajo, en vez de un bloque plano (sin resplandores). Arranca en el mismo #00626D del encabezado para que no haya costura. */
   .hero-fondo {
-    --festoneado: #004c56;
-    background: linear-gradient(180deg, #00626d 0%, #004c56 100%);
+    --festoneado: rgb(var(--hero-b));
+    background: linear-gradient(180deg, rgb(var(--hero-a)) 0%, rgb(var(--hero-b)) 100%);
   }
   .dark .hero-fondo {
-    --festoneado: #072a2e;
-    background: linear-gradient(180deg, #0b3a3f 0%, #072a2e 100%);
+    --festoneado: rgb(var(--hero-oscuro-b));
+    background: linear-gradient(180deg, rgb(var(--hero-oscuro-a)) 0%, rgb(var(--hero-oscuro-b)) 100%);
   }
   .card-hover {
     @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-hover;

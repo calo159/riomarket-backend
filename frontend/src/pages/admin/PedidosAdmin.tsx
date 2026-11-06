@@ -15,6 +15,7 @@ import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
 import { ICONOS_SIGUIENTE, siguienteAccion } from '../pedido/siguienteAccion';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 15;
 
@@ -36,7 +37,7 @@ export function PedidosAdmin() {
   };
 
   useEffect(() => {
-    document.title = 'Pedidos · Administración · RioMarket';
+    document.title = `Pedidos · Administración · ${nombreMarca()}`;
   }, []);
 
   const pedidos = useQuery({

@@ -6,18 +6,19 @@ export default {
     extend: {
       colors: {
         // Marca turquesa (encabezado, enlaces). 600 = #00626D del diseño aprobado.
+        // Marca: la escala sale de variables (src/paletasMarca.css) para que el administrador cambie el color desde el panel.
         brand: {
-          50: '#E5F3F4',
-          100: '#CFE8EB',
-          200: '#A8D3D8',
-          300: '#7DB6BC',
-          400: '#4A9AA4',
-          500: '#1A7782',
-          600: '#00626D',
-          700: '#004A52',
-          800: '#003A41',
-          900: '#002C32',
-          950: '#001B1F',
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
+          950: 'rgb(var(--brand-950) / <alpha-value>)',
         },
         // Acción coral: comprar, agregar, confirmar.
         accion: { DEFAULT: '#CF3F1B', hover: '#B53414', suave: '#FDE8E1' },

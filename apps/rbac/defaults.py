@@ -179,6 +179,16 @@ RECURSOS_POR_DEFECTO = [
         "Sistema",
         2,
     ),
+    _r(
+        "admin.personalizacion",
+        "Personalización",
+        _PA,
+        "/admin/personalizacion",
+        "Palette",
+        (ADMINISTRADOR,),
+        "Sistema",
+        3,
+    ),
 ]
 
 

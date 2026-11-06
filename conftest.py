@@ -36,5 +36,7 @@ def ajustes_del_panel(settings):
 
     settings.AJUSTES_EN_BASE_DE_DATOS = True
     lectura.invalidar()
+    lectura.invalidar_sitio()
     yield
     lectura.invalidar()
+    lectura.invalidar_sitio()

@@ -13,7 +13,8 @@ from django.conf import settings
 from django.db import DatabaseError
 
 from apps.configuracion.campos import POR_CLAVE
-from apps.configuracion.models import ConfiguracionPlataforma
+from apps.configuracion.models import ConfiguracionPlataforma, PersonalizacionSitio
+from apps.configuracion.sitio import DEFECTOS, resolver_defectos
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,45 @@ def fijados() -> dict:
         _estado["valores"] = valores
         _estado["vence"] = ahora + settings.AJUSTES_CACHE_SEGUNDOS
     return _estado["valores"]
+
+
+_sitio: dict = {"valores": None, "vence": 0.0}
+
+
+def invalidar_sitio() -> None:
+    _sitio["valores"] = None
+    _sitio["vence"] = 0.0
+
+
+def sitio() -> dict:
+    """La identidad del sitio: lo que fijó el panel y, donde no hay nada, el valor de por defecto.
+
+    Con ``AJUSTES_EN_BASE_DE_DATOS`` apagado (las pruebas) siempre devuelve los de por defecto.
+    """
+    if not settings.AJUSTES_EN_BASE_DE_DATOS:
+        return dict(DEFECTOS)
+    ahora = time.monotonic()
+    if _sitio["valores"] is None or ahora >= _sitio["vence"]:
+        valores = dict(DEFECTOS)
+        try:
+            fila = PersonalizacionSitio.objects.filter(pk=1).first()
+            if fila is not None:
+                propios = {clave: getattr(fila, clave) for clave in DEFECTOS}
+                valores = resolver_defectos(propios)
+                for clave, dato in propios.items():
+                    if dato:
+                        valores[clave] = dato
+        except DatabaseError:
+            logger.exception("No se pudo leer la personalización del sitio")
+            valores = _sitio["valores"] or valores
+        _sitio["valores"] = valores
+        _sitio["vence"] = ahora + settings.AJUSTES_CACHE_SEGUNDOS
+    return dict(_sitio["valores"])
+
+
+def proveedor_marca(clave: str, defecto: str = "") -> str:
+    """Gancho de ``apps.common.marca``: el valor vigente de un dato del sitio."""
+    return sitio().get(clave, defecto)
 
 
 def proveedor(nombre: str):

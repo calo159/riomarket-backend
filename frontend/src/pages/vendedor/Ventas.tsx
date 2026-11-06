@@ -13,6 +13,7 @@ import { formatearDiaMes } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import { claves } from '../../lib/queryKeys';
 import { cn } from '../../lib/utils';
+import { nombreMarca } from '../../lib/sitio';
 
 const PERIODOS: { dias: DiasVentas; etiqueta: string }[] = [
   { dias: 7, etiqueta: '7 días' },
@@ -45,7 +46,7 @@ export function Ventas() {
   const [puesto, setPuesto] = useState<number | null>(null);
 
   useEffect(() => {
-    document.title = 'Ventas · RioMarket';
+    document.title = `Ventas · ${nombreMarca()}`;
   }, []);
 
   const puestos = useQuery({

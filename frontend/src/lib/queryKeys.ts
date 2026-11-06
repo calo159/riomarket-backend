@@ -26,6 +26,8 @@ export const claves = {
     ['auditoria', pagina, busqueda, accion, desde, hasta] as const,
   adminResumen: ['admin-resumen'] as const,
   adminConfiguracion: ['admin-configuracion'] as const,
+  adminPersonalizacion: ['admin-personalizacion'] as const,
+  sitio: ['sitio'] as const,
   configuracionPublica: ['configuracion-publica'] as const,
   adminRoles: ['admin-roles'] as const,
   perfil: ['perfil'] as const,

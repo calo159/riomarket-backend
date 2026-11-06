@@ -28,10 +28,12 @@ import { itemsDe, primerPanel } from '../../navigation/tipos';
 import { listarCategorias } from '../../api/catalog';
 import { claves } from '../../lib/queryKeys';
 import { DESTINO_CARRITO } from '../../lib/volarAlCarrito';
+import { useSitio } from '../../lib/sitio';
 import { cn } from '../../lib/utils';
 
 export function PublicLayout() {
   const { autenticado, cerrarSesion } = useSession();
+  const sitio = useSitio();
   const { menu, badges } = useMenu();
   const panel = primerPanel(menu);
   const publicos = itemsDe(menu, 'publico');
@@ -101,7 +103,7 @@ export function PublicLayout() {
 
           <nav className="hidden flex-wrap items-center gap-x-6 gap-y-1 pb-2.5 md:flex" aria-label="Principal">
             <span className="mr-2 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-              <MapPin className="h-4 w-4" aria-hidden="true" /> Entregar en Riohacha
+              <MapPin className="h-4 w-4" aria-hidden="true" /> Entregar en {sitio.ciudad}
             </span>
             <MenuItems items={publicos} badges={badges} variante="encabezado" />
             <NavLink
@@ -133,13 +135,13 @@ export function PublicLayout() {
                 to="/registro?rol=vendedor"
                 className="inline-flex min-h-[32px] items-center border-b-2 border-transparent py-1 text-sm font-medium text-[#E2F3F5] transition-colors hover:text-white"
               >
-                Vender en RioMarket
+                Vender en {sitio.nombre_marca}
               </Link>
             )}
           </nav>
           <div className="flex items-center justify-between gap-3 pb-1 text-[13px] font-semibold md:hidden">
             <p className="flex items-center gap-1.5">
-              <MapPin className="h-[15px] w-[15px]" aria-hidden="true" /> Entregar en Riohacha
+              <MapPin className="h-[15px] w-[15px]" aria-hidden="true" /> Entregar en {sitio.ciudad}
             </p>
             <NavLink
               to="/mapa"
@@ -165,7 +167,7 @@ export function PublicLayout() {
         <div className="mx-auto grid max-w-[1240px] gap-6 px-5 md:grid-cols-[1.5fr_repeat(3,minmax(0,1fr))]">
           <div>
             <Logo sobreMarca className="!text-[23px]" />
-            <p className="mt-2.5 max-w-xs">El mercado de Riohacha en línea. Compra directo a vendedores de tu ciudad.</p>
+            <p className="mt-2.5 max-w-xs">{sitio.texto_pie}</p>
           </div>
           <div>
             <h2 className="font-bold text-white">Comprar</h2>
@@ -188,10 +190,35 @@ export function PublicLayout() {
             </div>
           )}
           <div>
-            <h2 className="font-bold text-white">RioMarket</h2>
+            <h2 className="font-bold text-white">{sitio.nombre_marca}</h2>
             <ul className="mt-1">
-              <li className="py-2 md:py-1">Riohacha, La Guajira · Colombia</li>
-              <li className="py-2 md:py-1">Soporte: soporte@riomarket.test</li>
+              <li className="py-2 md:py-1">{sitio.ciudad}, {sitio.region}</li>
+              {sitio.correo_soporte && (
+                <li className="py-2 md:py-1">
+                  Soporte: <a className="pie-enlace !inline" href={`mailto:${sitio.correo_soporte}`}>{sitio.correo_soporte}</a>
+                </li>
+              )}
+              {sitio.whatsapp_soporte && (
+                <li>
+                  <a className="pie-enlace" href={`https://wa.me/${sitio.whatsapp_soporte.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
+                    WhatsApp de soporte
+                  </a>
+                </li>
+              )}
+              {sitio.instagram_url && (
+                <li>
+                  <a className="pie-enlace" href={sitio.instagram_url} target="_blank" rel="noopener noreferrer">
+                    Instagram
+                  </a>
+                </li>
+              )}
+              {sitio.facebook_url && (
+                <li>
+                  <a className="pie-enlace" href={sitio.facebook_url} target="_blank" rel="noopener noreferrer">
+                    Facebook
+                  </a>
+                </li>
+              )}
               <li><Link className="pie-enlace" to="/terminos">Términos y condiciones</Link></li>
               <li><Link className="pie-enlace" to="/privacidad">Política de privacidad</Link></li>
               <li><Link className="pie-enlace" to="/creditos-fotos">Créditos de fotos</Link></li>
@@ -199,7 +226,7 @@ export function PublicLayout() {
           </div>
         </div>
         <p className="mx-auto mt-6 max-w-[1240px] border-t border-white/10 px-5 pt-4 text-xs">
-          © {new Date().getFullYear()} RioMarket · Riohacha, La Guajira. Pagas en efectivo al recibir o al recoger.
+          © {new Date().getFullYear()} {sitio.nombre_marca} · {sitio.ciudad}, {sitio.region}. {sitio.nota_pagos}
         </p>
       </footer>
 
@@ -271,7 +298,7 @@ export function PublicLayout() {
               className="link mt-1 text-center text-sm"
               onClick={() => setCuentaAbierta(false)}
             >
-              Vender en RioMarket
+              Vender en {sitio.nombre_marca}
             </Link>
           </div>
         )}

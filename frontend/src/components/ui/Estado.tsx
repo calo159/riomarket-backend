@@ -2,12 +2,13 @@ import type { ReactNode } from 'react';
 import { AlertTriangle, Inbox, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { desvanecerEnMancha, PatronOlas } from './Decoracion';
+import { nombreMarca } from '../../lib/sitio';
 
 export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={cn('h-5 w-5 animate-spin', className)} aria-hidden="true" />;
 }
 
-export function CargandoPantalla({ mensaje = 'Cargando RioMarket…' }: { mensaje?: string }) {
+export function CargandoPantalla({ mensaje = `Cargando ${nombreMarca()}…` }: { mensaje?: string }) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-slate-600 dark:text-slate-300">
       <Spinner className="h-8 w-8 text-brand-600" />

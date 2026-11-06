@@ -12,6 +12,7 @@ import { mensajeDeError } from '../lib/errors';
 import { cn } from '../lib/utils';
 import { claves } from '../lib/queryKeys';
 import { invalidarMenu } from '../navigation/useMenu';
+import { nombreMarca } from '../lib/sitio';
 
 const TAMANO = 15;
 
@@ -22,7 +23,7 @@ export function Notificaciones() {
   const toast = useToast();
 
   useEffect(() => {
-    document.title = 'Notificaciones · RioMarket';
+    document.title = `Notificaciones · ${nombreMarca()}`;
   }, []);
 
   const notificaciones = useQuery({

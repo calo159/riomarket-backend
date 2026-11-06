@@ -15,6 +15,7 @@ import { Logo } from '../../components/layout/Logo';
 import { MarcaSvg } from '../../components/layout/MarcaSvg';
 import { desvanecer, PatronOlas } from '../../components/ui/Decoracion';
 import { cn } from '../../lib/utils';
+import { ciudadSitio, nombreMarca } from '../../lib/sitio';
 
 const esquema = z
   .object({
@@ -88,7 +89,7 @@ export function Registro() {
   const rol = watch('rol');
 
   useEffect(() => {
-    document.title = 'Crear cuenta · RioMarket';
+    document.title = `Crear cuenta · ${nombreMarca()}`;
   }, []);
 
   if (estado === 'cargando') return <CargandoPantalla mensaje="Comprobando tu sesión…" />;
@@ -105,7 +106,7 @@ export function Registro() {
       });
       try {
         const usuario = await iniciarSesion({ correo: datos.correo, password: datos.password });
-        toast.exito('¡Tu cuenta está lista! Bienvenido a RioMarket.');
+        toast.exito(`¡Tu cuenta está lista! Bienvenido a ${nombreMarca()}.`);
         navigate(
           usuario.rol === 'vendedor' ? '/vendedor/verificacion' : inicioPorRol(usuario.rol),
           { replace: true },
@@ -131,7 +132,7 @@ export function Registro() {
         <div className="relative">
           <Logo sobreMarca />
           <p className="mt-16 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight">
-            Únete a la comunidad que mueve a Riohacha.
+            Únete a la comunidad que mueve a {ciudadSitio()}.
           </p>
           <p className="mt-4 max-w-md text-lg text-brand-50">
             Compra a tus vecinos o abre tu propio puesto y llega a más clientes.
@@ -164,7 +165,7 @@ export function Registro() {
             )}
 
             <fieldset>
-              <legend className="label">Quiero usar RioMarket para…</legend>
+              <legend className="label">Quiero usar {nombreMarca()} para…</legend>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { valor: 'comprador' as const, titulo: 'Comprar', icono: ShoppingBag },

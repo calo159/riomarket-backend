@@ -11,13 +11,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.administration import rbac_services, services
+from apps.administration import personalizacion, rbac_services, services
 from apps.administration.serializers import (
     ActualizarConfiguracionSerializer,
+    ActualizarPersonalizacionSerializer,
     CambiarRolSerializer,
     ConfiguracionSerializer,
     CrearUsuarioSerializer,
     EditarDatosUsuarioSerializer,
+    PersonalizacionSerializer,
     RecursoSerializer,
     ReiniciarContrasenaSerializer,
     RolesUsuarioSerializer,
@@ -366,3 +368,29 @@ class ConfiguracionAdminView(APIView):
             motivo=serializer.validated_data["motivo"],
         )
         return Response(ConfiguracionSerializer(datos).data)
+
+
+class PersonalizacionAdminView(APIView):
+    """Nombre, ciudad, textos de la portada, contacto y color de la marca (ADR-024)."""
+
+    permission_classes = [TieneRecurso("admin.personalizacion")]
+
+    @extend_schema(responses={200: PersonalizacionSerializer})
+    def get(self, request):
+        return Response(PersonalizacionSerializer(personalizacion.personalizacion_actual()).data)
+
+    @extend_schema(
+        request=ActualizarPersonalizacionSerializer,
+        responses={200: PersonalizacionSerializer},
+        description=(
+            "Fija los campos enviados; vacío o ``null`` borra el valor propio y vuelve el de "
+            "por defecto. Cada cambio queda en la auditoría con el valor de antes y el de después."
+        ),
+    )
+    def put(self, request):
+        serializer = ActualizarPersonalizacionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datos = personalizacion.actualizar_personalizacion(
+            actor=request.user, valores=dict(serializer.validated_data["valores"])
+        )
+        return Response(PersonalizacionSerializer(datos).data)

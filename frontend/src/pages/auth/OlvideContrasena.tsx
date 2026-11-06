@@ -8,6 +8,7 @@ import { solicitarRecuperacion } from '../../api/auth';
 import { mensajeDeError } from '../../lib/errors';
 import { Campo } from '../../components/ui/Campos';
 import { TarjetaAuth } from './TarjetaAuth';
+import { nombreMarca } from '../../lib/sitio';
 
 const esquema = z.object({
   correo: z.pipe(
@@ -28,7 +29,7 @@ export function OlvideContrasena() {
   } = useForm<Formulario>({ resolver: zodResolver(esquema), defaultValues: { correo: '' } });
 
   useEffect(() => {
-    document.title = 'Recuperar contraseña · RioMarket';
+    document.title = `Recuperar contraseña · ${nombreMarca()}`;
   }, []);
 
   const enviar = async ({ correo }: Formulario) => {

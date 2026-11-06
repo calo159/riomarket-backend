@@ -12,6 +12,7 @@ import { formatearFechaHora } from '../../lib/format';
 import { mensajeDeError } from '../../lib/errors';
 import type { Resena } from '../../lib/types';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 const TAMANO = 15;
 
@@ -23,7 +24,7 @@ export function ResenasAdmin() {
   const [eliminar, setEliminar] = useState<Resena | null>(null);
 
   useEffect(() => {
-    document.title = 'Reseñas · Administración · RioMarket';
+    document.title = `Reseñas · Administración · ${nombreMarca()}`;
   }, []);
 
   const resenas = useQuery({

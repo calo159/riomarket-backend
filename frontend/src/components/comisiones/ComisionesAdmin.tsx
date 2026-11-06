@@ -9,6 +9,7 @@ import { Campo } from '../ui/Campos';
 import { CargandoBloque, EstadoError } from '../ui/Estado';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
+import { nombreMarca } from '../../lib/sitio';
 
 const ESTADOS: Record<Comision['estado'], { texto: string; clase: string }> = {
   al_dia: { texto: 'Al día', clase: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
@@ -75,7 +76,7 @@ export function ComisionesAdmin() {
             <HandCoins className="h-5 w-5" aria-hidden="true" /> Comisión por cobrar
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-            El efectivo se cobra en el puesto, así que cada vendedor le debe su comisión a RioMarket. Anota aquí cada pago que recibas.
+            El efectivo se cobra en el puesto, así que cada vendedor le debe su comisión a {nombreMarca()}. Anota aquí cada pago que recibas.
           </p>
         </div>
         {filas.length > 0 && (

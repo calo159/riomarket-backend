@@ -11,10 +11,12 @@ import { claves } from '../lib/queryKeys';
 import { cn, urlAbsoluta } from '../lib/utils';
 import s from './Landing.module.css';
 import { lugar, Revela } from '../components/Revela';
+import { ciudadSitio, nombreMarca, sitioActual, useSitio } from '../lib/sitio';
+import { partirNombre } from '../components/layout/Logo';
 
-const TITULO = 'RioMarket · Haz el mercado desde el celular';
-const DESCRIPCION =
-  'Los puestos de Riohacha venden aquí frutas, pescado, comida y dulces. Pide a un puesto, escoge domicilio o retiro y sigue tu pedido hasta que lo recibes.';
+const titulo = () => `${nombreMarca()} · Haz el mercado desde el celular`;
+const descripcion = () =>
+  `Los puestos de ${ciudadSitio()} venden aquí frutas, pescado, comida y dulces. Pide a un puesto, escoge domicilio o retiro y sigue tu pedido hasta que lo recibes.`;
 
 type Modo = 'comprar' | 'vender';
 
@@ -38,11 +40,14 @@ function Flecha() {
 
 /** `sobreOscuro`: en el pie (fondo oscuro) el símbolo va sin su cuadro turquesa. */
 function Logo({ className, sobreOscuro = false }: { className?: string; sobreOscuro?: boolean }) {
+  const { nombre_marca: nombre } = useSitio();
+  const [inicio, final] = partirNombre(nombre);
   return (
-    <Link className={cn(s.logo, className)} to="/" aria-label="RioMarket, inicio">
+    <Link className={cn(s.logo, className)} to="/" aria-label={`${nombre}, inicio`}>
       <MarcaSvg conFondo={!sobreOscuro} className={s.logoMarca} />
-      <span>
-        Rio<span className={s.mk}>Market</span>
+      <span className="whitespace-pre">
+        {inicio}
+        <span className={s.mk}>{final}</span>
       </span>
     </Link>
   );
@@ -339,8 +344,8 @@ export function Landing() {
     const anterior = document.title;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     const descripcionAnterior = meta?.content ?? null;
-    document.title = TITULO;
-    if (meta) meta.content = DESCRIPCION;
+    document.title = titulo();
+    if (meta) meta.content = descripcion();
     return () => {
       document.title = anterior;
       if (meta && descripcionAnterior !== null) meta.content = descripcionAnterior;
@@ -388,7 +393,7 @@ export function Landing() {
           <div className={s.hRow}>
             <div>
               <p className={cn(s.lead, s.in, s.d1)}>
-                Los puestos de Riohacha venden aquí frutas, pescado, comida y dulces. Le pides a un puesto, escoges
+                Los puestos de {ciudadSitio()} venden aquí frutas, pescado, comida y dulces. Le pides a un puesto, escoges
                 domicilio o retiro, y ves tu pedido avanzar hasta que lo tienes en la mano.
               </p>
               <div className={cn(s.acts, s.in, s.d2)}>
@@ -527,7 +532,7 @@ export function Landing() {
           </div>
           <div className={s.pie}>
             <Logo sobreOscuro />
-            <span>Riohacha, La Guajira · © 2026</span>
+            <span>{ciudadSitio()}, {sitioActual().region} · © {new Date().getFullYear()}</span>
             <nav aria-label="Pie de página">
               <Link to="/login">Ingresar</Link>
               <Link to="/terminos">Términos</Link>

@@ -21,6 +21,7 @@ import { useToast } from '../../components/ui/Toast';
 import { mensajeDeError } from '../../lib/errors';
 import { invalidarMenu } from '../../navigation/useMenu';
 import { claves } from '../../lib/queryKeys';
+import { nombreMarca } from '../../lib/sitio';
 
 type Vista = 'lista' | 'matriz';
 
@@ -54,7 +55,7 @@ export function RolesAdmin() {
   const [errorEliminar, setErrorEliminar] = useState('');
 
   useEffect(() => {
-    document.title = 'Roles · Administración · RioMarket';
+    document.title = `Roles · Administración · ${nombreMarca()}`;
   }, []);
 
   const roles = useQuery({ queryKey: claves.adminRoles, queryFn: listarRoles });

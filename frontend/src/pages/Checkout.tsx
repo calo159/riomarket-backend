@@ -33,6 +33,7 @@ import { crearDireccion, listarDirecciones } from '../api/addresses';
 import { obtenerPuesto } from '../api/catalog';
 import type { RespuestaValidarCupon } from '../lib/types';
 import { claves } from '../lib/queryKeys';
+import { nombreMarca } from '../lib/sitio';
 
 /** Termina una frase con la fecha sin duplicar el punto de «p. m.». */
 function finDeFrase(fecha: string): string {
@@ -64,7 +65,7 @@ export function Checkout() {
   const [fechaLocal, setFechaLocal] = useState('');
 
   useEffect(() => {
-    document.title = 'Finalizar compra · RioMarket';
+    document.title = `Finalizar compra · ${nombreMarca()}`;
   }, []);
 
   const puesto = useQuery({
