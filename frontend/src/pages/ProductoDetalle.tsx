@@ -259,8 +259,10 @@ export function ProductoDetalle() {
               {tienda && tienda.cantidad_resenas > 0 && `${tienda.cantidad_resenas} ${tienda.cantidad_resenas === 1 ? 'reseña' : 'reseñas'} del puesto`}
             </p>
           ) : null}
-          <p className="precio text-[34px] leading-none md:text-[38px]">
-            {formatearMoneda(Number(datos.precio) * cantidad)}{' '}
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="etiqueta-precio precio text-[32px] leading-none md:text-[36px]">
+              {formatearMoneda(Number(datos.precio) * cantidad)}
+            </span>
             <small className="text-[15px] font-medium tracking-normal text-slate-500 dark:text-slate-400">
               {cantidad > 1 ? `por ${cantidad} ${datos.unidad_medida ?? 'unidad'}` : `/ ${datos.unidad_medida ?? 'unidad'}`}
             </small>
