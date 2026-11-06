@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { CheckCircle2, Info, X, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { hayMovimiento, SALIDA_MS } from '../../lib/movimiento';
 
 type TipoToast = 'exito' | 'error' | 'info';
 
@@ -8,6 +9,8 @@ interface Toast {
   id: number;
   tipo: TipoToast;
   mensaje: string;
+  /** Se está yendo: ya no cuenta, pero sigue en pantalla lo que dura su animación de salida. */
+  saliendo?: boolean;
 }
 
 interface ContextoToast {
@@ -35,7 +38,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const quitar = useCallback((id: number) => {
-    setToasts((actuales) => actuales.filter((toast) => toast.id !== id));
+    if (!hayMovimiento()) {
+      setToasts((actuales) => actuales.filter((toast) => toast.id !== id));
+      return;
+    }
+    setToasts((actuales) => actuales.map((toast) => (toast.id === id ? { ...toast, saliendo: true } : toast)));
+    window.setTimeout(() => setToasts((actuales) => actuales.filter((toast) => toast.id !== id)), SALIDA_MS);
   }, []);
 
   const agregar = useCallback(
@@ -70,10 +78,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-menu',
+              'pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-lg border px-4 py-3 text-sm shadow-menu',
+              toast.saliendo ? 'toast-sale' : 'animate-rise',
               ESTILOS[toast.tipo],
             )}
           >
+            <span aria-hidden="true" className="toast-reloj absolute inset-x-0 bottom-0 h-[2px] bg-white/35" />
             {ICONOS[toast.tipo]}
             <p className="flex-1 leading-snug">{toast.mensaje}</p>
             <button

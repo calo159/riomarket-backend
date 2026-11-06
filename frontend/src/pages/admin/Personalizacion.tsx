@@ -65,7 +65,7 @@ function SelectorDeColor({
               className="grid h-6 w-6 place-items-center rounded-full text-white"
               style={{ background: paleta.color }}
             >
-              {activa && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+              {activa && <Check className="h-3.5 w-3.5 animate-pop" strokeWidth={3} />}
             </span>
             {paleta.etiqueta}
           </button>

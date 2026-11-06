@@ -21,4 +21,16 @@ describe('animaciones que envuelven a toda una pantalla', () => {
   it('las tarjetas de una cuadrícula tampoco', () => {
     expect(regla('.entra-lista > *')).not.toMatch(/\b(both|forwards)\b/);
   });
+
+  it('la cascada de entrada del panel y la de las opciones del menú tampoco', () => {
+    expect(regla('.panel-pagina > div > *')).toMatch(/animation:[^;]*\bbackwards\b/);
+    expect(regla('.panel-pagina > div > *')).not.toMatch(/\b(both|forwards)\b/);
+    expect(regla('.menu-entra .menu-opcion')).toMatch(/animation:[^;]*\bbackwards\b/);
+  });
+
+  it('con «reducir movimiento» se apagan también las transiciones entre pantallas', () => {
+    const bloque = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(bloque).toMatch(/::view-transition-old\(\*\)/);
+    expect(bloque).toMatch(/animation: none !important/);
+  });
 });

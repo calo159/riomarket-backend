@@ -182,7 +182,20 @@
     @apply divide-y divide-slate-100 dark:divide-slate-800;
   }
   .table tbody tr {
-    @apply transition-colors hover:bg-brand-50/60 dark:hover:bg-slate-800/60;
+    @apply hover:bg-brand-50/60 dark:hover:bg-slate-800/60;
+    box-shadow: inset 0 0 0 0 rgb(var(--brand-600));
+    transition:
+      background-color 0.15s ease,
+      box-shadow 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .table tbody tr:hover {
+    box-shadow: inset 3px 0 0 0 rgb(var(--brand-600));
+  }
+  .dark .table tbody tr {
+    box-shadow: inset 0 0 0 0 rgb(var(--brand-300));
+  }
+  .dark .table tbody tr:hover {
+    box-shadow: inset 3px 0 0 0 rgb(var(--brand-300));
   }
   /* Acciones del encabezado turquesa (ingresar, pedidos, carrito, iconos). */
   .acto-encabezado {
@@ -659,6 +672,155 @@ html.cambiando-tema::view-transition-new(root) {
   }
 }
 
+/* ───── Panel (vendedor y administración): movimiento con propósito, rápido y sobrio ─────
+   Las animaciones que envuelven una pantalla entera usan `backwards`, nunca `both` ni `forwards` (lo comprueba
+   `estilos-movimiento.test.ts`): si no, los elementos `position: fixed` de dentro se colocan mal. */
+
+/* Cada pantalla del panel entra en cascada: el encabezado, y después cada bloque, con 55 ms de diferencia. */
+.panel-pagina > div > * {
+  animation: panel-sube 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.panel-pagina > div > :nth-child(2) { animation-delay: 55ms; }
+.panel-pagina > div > :nth-child(3) { animation-delay: 110ms; }
+.panel-pagina > div > :nth-child(4) { animation-delay: 165ms; }
+.panel-pagina > div > :nth-child(5) { animation-delay: 220ms; }
+.panel-pagina > div > :nth-child(n + 6) { animation-delay: 275ms; }
+@keyframes panel-sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Las opciones del menú entran de a una al abrir el panel. */
+.menu-entra .menu-opcion {
+  animation: menu-entra 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(60ms + var(--i, 0) * 32ms);
+}
+@keyframes menu-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+/* El fondo de la opción activa se desliza de una a otra (components/layout/MenuItems.tsx). */
+.menu-indicador::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: rgb(var(--brand-600));
+}
+.dark .menu-indicador::before {
+  background: rgb(var(--brand-300));
+}
+.menu-indicador-anima {
+  transition:
+    transform 0.34s cubic-bezier(0.2, 0.9, 0.3, 1),
+    width 0.34s cubic-bezier(0.2, 0.9, 0.3, 1),
+    height 0.34s cubic-bezier(0.2, 0.9, 0.3, 1),
+    opacity 0.2s ease;
+}
+
+/* Barra de progreso (components/layout/BarraProgreso.tsx): avanza rápido y se frena; al terminar llega y se desvanece. */
+.barra-avanza,
+.barra-termina {
+  height: 100%;
+  background: #ffd166;
+  transform-origin: left;
+}
+.barra-avanza {
+  animation: barra-avanza 9s cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+.barra-termina {
+  animation: barra-termina 0.42s ease-out forwards;
+}
+@keyframes barra-avanza {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(0.88);
+  }
+}
+@keyframes barra-termina {
+  from {
+    transform: scaleX(0.88);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* Avisos: un reloj fino que se vacía mientras el aviso está a la vista, y una salida que desliza hacia abajo. */
+.toast-reloj {
+  transform-origin: left;
+  animation: toast-reloj 4.5s linear forwards;
+}
+@keyframes toast-reloj {
+  to {
+    transform: scaleX(0);
+  }
+}
+.toast-sale {
+  animation: toast-sale 0.17s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes toast-sale {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* Tablas del panel: la fila bajo el cursor se tiñe y se marca con una barrita que crece desde el borde. */
+.panel-pagina tbody tr {
+  box-shadow: inset 0 0 0 0 rgb(var(--brand-600));
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.panel-pagina tbody tr:hover {
+  background-color: rgb(var(--brand-50) / 0.6);
+  box-shadow: inset 3px 0 0 0 rgb(var(--brand-600));
+}
+.dark .panel-pagina tbody tr {
+  box-shadow: inset 0 0 0 0 rgb(var(--brand-300));
+}
+.dark .panel-pagina tbody tr:hover {
+  background-color: rgb(33 68 73 / 0.6);
+  box-shadow: inset 3px 0 0 0 rgb(var(--brand-300));
+}
+
+/* Cambio de pantalla dentro del panel: la anterior se desvanece rápido y la nueva entra en cascada (arriba). El menú
+   y el encabezado no se mueven: tienen su propio nombre de transición. Solo donde el navegador sabe hacerlo. */
+.vt-menu-panel {
+  view-transition-name: panel-menu;
+}
+.vt-cabecera-panel {
+  view-transition-name: panel-cabecera;
+}
+html:has(.panel-pagina):not(.cambiando-tema)::view-transition-old(root) {
+  animation: vt-sale 0.15s cubic-bezier(0.4, 0, 1, 1) both;
+}
+html:has(.panel-pagina):not(.cambiando-tema)::view-transition-new(root) {
+  animation: none;
+}
+@keyframes vt-sale {
+  to {
+    opacity: 0;
+  }
+}
+
 /* Con "reducir movimiento" no se anima nada. */
 /* «Reducir movimiento»: sin desplazamientos, escalas ni bucles, pero el feedback sigue (fundidos y cambios de color de
    150 ms): una persona que lo pide quiere menos movimiento, no una interfaz que no responde. */
@@ -676,6 +838,11 @@ html.cambiando-tema::view-transition-new(root) {
   [data-revela].rv-self {
     opacity: 1 !important;
     transform: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
   .pizarra {
     overflow-x: auto;
