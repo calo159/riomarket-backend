@@ -57,12 +57,13 @@ describe('diseño de mercado', () => {
       </>,
     );
 
-    container.querySelectorAll('svg').forEach((s) => expect(s).toHaveAttribute('aria-hidden', 'true'));
+    // El banderín va en un contenedor `aria-hidden`; la ola tendida es un svg `aria-hidden` por sí misma.
+    container.querySelectorAll('svg').forEach((s) => expect(s.closest('[aria-hidden="true"]')).not.toBeNull());
     // Irregulares: ni todos del mismo tamaño ni a la misma distancia.
     const n = container.querySelectorAll('.banderin').length;
     expect(n).toBeGreaterThan(14);
     expect(n).toBeLessThan(34);
-    const anchos = new Set(Array.from(container.querySelectorAll('.banderin path')).map((p) => p.getAttribute('d')?.split('L')[0]?.length));
+    const anchos = new Set(Array.from(container.querySelectorAll<HTMLElement>('.banderin')).map((e) => e.style.width));
     expect(anchos.size).toBeGreaterThan(1);
   });
 });

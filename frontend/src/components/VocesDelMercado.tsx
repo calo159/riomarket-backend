@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { listarResenas } from '../api/reviews';
 import { claves } from '../lib/queryKeys';
+import { useCerca } from '../lib/useCerca';
 import { lugar, Revela } from './Revela';
 import { Estrellas } from './ui/Estrellas';
 import { TituloSeccion } from './ui/TituloSeccion';
@@ -49,13 +50,17 @@ function Firma({ resena, puesto }: { resena: Resena; puesto?: Puesto }) {
  * comentario, la sección no aparece.
  */
 export function VocesDelMercado({ puestos }: { puestos: Puesto[] }) {
+  // La sección está al final de la página: no se piden las reseñas hasta que falten ~800 px para llegar a ella.
+  const [lugarDeLaSeccion, cerca] = useCerca<HTMLDivElement>(800, true);
   const resenas = useQuery({
     queryKey: claves.resenas.inicio,
     queryFn: () => listarResenas({ calificacion_min: 4, ordering: '-fecha_creacion', page_size: 24 }),
     staleTime: 5 * 60_000,
+    enabled: cerca,
   });
   const citas = seleccionarCitas(resenas.data?.results ?? []);
-  if (citas.length < 2) return null;
+  // Mientras no hay citas se deja solo un marcador invisible para saber cuándo se acerca la sección.
+  if (citas.length < 2) return <div ref={lugarDeLaSeccion} aria-hidden="true" className="h-px" />;
   const [grande, ...otras] = citas;
   const puestoDe = (r: Resena) => puestos.find((p) => p.id === r.id_puesto);
 

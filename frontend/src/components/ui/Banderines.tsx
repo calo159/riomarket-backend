@@ -1,8 +1,10 @@
 import { cn } from '../../lib/utils';
+import { useCerca } from '../../lib/useCerca';
 
 const ANCHO = 1440;
 const ALTO = 64;
 const TRAMOS = 6;
+const FASES = 5;
 const CAIDA = 15;
 // Coral y crema del toldo y el turquesa claro de la marca: el amarillo queda para el titular.
 const COLORES = ['#E4502A', '#FFF4DC', '#FFF4DC', '#7DB6BC', '#E4502A'];
@@ -55,27 +57,59 @@ const cuerda = (() => {
  * Banderines de fiesta tendidos sobre el primer pliegue, como los de una calle de mercado en día de feria: distintos de
  * tamaño, algo torcidos y a distancias desiguales. Se bajan al abrir la página y después cada uno se mece un poco
  * (`.banderin`, index.css). Decorativo (`aria-hidden`).
+ *
+ * La cuerda es un SVG quieto, pero cada banderín es un elemento HTML: el navegador anima en la tarjeta gráfica las
+ * transformaciones de los elementos HTML, y las de los elementos dentro de un SVG las recalcula en el hilo principal en
+ * cada cuadro (con veinte banderines eso era casi toda la CPU de la portada en reposo). Todo cabe en una caja con la
+ * proporción del dibujo (1440 × 64) que se agranda hasta cubrir el ancho, como hacía `preserveAspectRatio="slice"`; los
+ * tamaños y posiciones van en porcentajes de esa caja. `alto` y `ancho` son las medidas del contenedor en px que
+ * decide quien lo usa (para calcular el ancho mínimo de la caja).
  */
-export function Banderines({ className }: { className?: string }) {
+export function Banderines({ className, alto = 60 }: { className?: string; alto?: number }) {
+  const anchoMinimo = Math.round((alto * ANCHO) / ALTO);
+  // Con la portada ya fuera de pantalla los banderines se quedan quietos (`.banderines[data-pausa]`, index.css).
+  const [ref, aLaVista] = useCerca<HTMLDivElement>(0);
   return (
-    <svg
-      viewBox={`0 0 ${ANCHO} ${ALTO}`}
-      preserveAspectRatio="xMidYMin slice"
+    <div
+      ref={ref}
       aria-hidden="true"
-      focusable="false"
-      className={cn('banderines pointer-events-none', className)}
+      data-pausa={aLaVista ? undefined : '1'}
+      className={cn('banderines pointer-events-none overflow-hidden', className)}
+      style={{ contain: 'layout paint' }}
     >
-      <path d={cuerda} fill="none" stroke="#FFF4DC" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
-      {banderines.map((b, k) => (
-        <g key={k} className="banderin" style={{ transformOrigin: `${b.x}px ${b.y}px`, ['--i' as string]: k }}>
-          <path
-            transform={`rotate(${b.giro.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)})`}
-            d={`M${(b.x - b.ancho / 2).toFixed(1)} ${b.y.toFixed(1)}L${(b.x + b.ancho / 2).toFixed(1)} ${b.y.toFixed(1)}L${b.x.toFixed(1)} ${(b.y + b.largo).toFixed(1)}Z`}
-            fill={b.color}
-            opacity="0.94"
-          />
-        </g>
-      ))}
-    </svg>
+      <div
+        className="absolute left-1/2 top-0 -translate-x-1/2"
+        style={{ width: `max(100%, ${anchoMinimo}px)`, aspectRatio: `${ANCHO} / ${ALTO}` }}
+      >
+        <svg viewBox={`0 0 ${ANCHO} ${ALTO}`} preserveAspectRatio="none" aria-hidden="true" focusable="false" className="absolute inset-0 h-full w-full">
+          <path d={cuerda} fill="none" stroke="#FFF4DC" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </svg>
+        {banderines.map((banderin, k) => (
+          <span
+            key={k}
+            className="banderin absolute block"
+            style={{
+              left: `${((banderin.x - banderin.ancho / 2) / ANCHO) * 100}%`,
+              top: `${(banderin.y / ALTO) * 100}%`,
+              width: `${(banderin.ancho / ANCHO) * 100}%`,
+              height: `${(banderin.largo / ALTO) * 100}%`,
+              // Cinco fases de balanceo, no veinte: el costo en CPU depende de cuántas fases distintas hay (ver index.css).
+              ['--f' as string]: k % FASES,
+            }}
+          >
+            <span
+              className="block h-full w-full"
+              style={{
+                background: banderin.color,
+                opacity: 0.94,
+                clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+                transform: `rotate(${banderin.giro.toFixed(1)}deg)`,
+                transformOrigin: '50% 0',
+              }}
+            />
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

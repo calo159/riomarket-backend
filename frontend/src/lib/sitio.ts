@@ -56,6 +56,16 @@ function leerDelHtml(): Sitio {
 }
 
 let actual: Sitio = typeof document === 'undefined' ? SITIO_POR_DEFECTO : leerDelHtml();
+
+/** ¿Vino la identidad en el HTML (servida por Django)? Entonces ya es la vigente y no hay que pedirla al cargar. */
+export const identidadEnElHtml: boolean = (() => {
+  try {
+    const texto = typeof document === 'undefined' ? '' : (document.getElementById('sitio-config')?.textContent ?? '');
+    return Boolean(texto) && !texto.includes('__SITIO_JSON__');
+  } catch {
+    return false;
+  }
+})();
 const oyentes = new Set<() => void>();
 
 export function sitioActual(): Sitio {
