@@ -11,6 +11,11 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Cambiado
 
+- **Una tienda con carácter propio y más movimiento.** El primer pliegue estrena **banderines de fiesta** tendidos sobre la portada (la cuerda baja al abrir y
+  cada banderín se mece, uno tras otro) y la palabra «Riohacha» se subraya con una ola que se traza al terminar el titular. Debajo de las categorías pasa una
+  **cinta de precios** con productos reales y su precio en una etiquetita (se detiene al pasar el cursor; con «reducir movimiento» queda quieta y se recorre
+  con el desplazamiento). La frase de «cómo funciona» se convierte en **tres pasos** (elige un puesto, sigue tu pedido, opina al recibirlo) unidos por una ola
+  que se traza y con iconos que llegan con un rebote, uno tras otro. Nada nuevo en el texto: es lo mismo que decía la frase, ahora se ve.
 - **Paleta con más profundidad y ritmo.** El primer pliegue de la tienda deja de ser un bloque turquesa plano: baja del turquesa del encabezado a uno más
   profundo, con un resplandor claro detrás de la foto, las olas del logo muy tenues y un borde festoneado que lo une con lo que sigue (en oscuro, lo mismo
   en verdes de noche). Los puestos van sobre una banda de color arena con festón arriba, así la página alterna turquesa, sal y arena en vez de repetir

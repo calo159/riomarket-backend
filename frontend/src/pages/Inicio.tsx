@@ -6,6 +6,8 @@ import { ChevronRight, LayoutGrid } from 'lucide-react';
 import { ProductoCard } from '../components/ProductoCard';
 import { PuestoCard } from '../components/PuestoCard';
 import { Escaparate } from '../components/Escaparate';
+import { PizarraPrecios } from '../components/PizarraPrecios';
+import { ComoFunciona } from '../components/ComoFunciona';
 import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { MedallaCategoria } from '../components/iconos';
 import { TituloSeccion } from '../components/ui/TituloSeccion';
@@ -128,10 +130,16 @@ export function Inicio() {
 
   const todosPuestos = puestos.data?.results ?? [];
   const visibles = lista.length > 8 ? lista.slice(0, 7) : lista;
+  // La cinta de precios: lo más reciente y lo de la categoría destacada, sin repetir.
+  const paraLaCinta = Array.from(
+    new Map([...(productos.data?.results ?? []), ...(deCategoria.data?.results ?? [])].map((p) => [p.id, p])).values(),
+  ).slice(0, 14);
 
   return (
     <div>
       <Escaparate puestos={todosPuestos} pedido={pedidoActivo.data?.results[0] ?? null} />
+
+      <PizarraPrecios productos={paraLaCinta} />
 
       <div className="mx-auto max-w-[1240px] px-3 pb-1.5 md:px-5">
         {/* Fila de categorías limpia, como la de Airbnb: la foto del producto típico en un círculo y su nombre. Sin caja
@@ -248,11 +256,7 @@ export function Inicio() {
         </div>
       )}
 
-      <Revela as="section" bloque className="mx-auto mt-14 max-w-[1240px] px-5 text-center md:mt-20" aria-label="Cómo funciona">
-        <p className="mx-auto max-w-2xl text-balance text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
-          Cada pedido es de un solo puesto, lo sigues paso a paso desde el puesto hasta tus manos, y solo opina quien recibió su pedido.
-        </p>
-      </Revela>
+      <ComoFunciona />
     </div>
   );
 }

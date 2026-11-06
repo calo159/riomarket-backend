@@ -6,7 +6,8 @@ import { formatearMoneda } from '../lib/format';
 import { urlAbsoluta } from '../lib/utils';
 import { Imagen } from './Imagen';
 import { EtiquetaEstado } from './ui/EtiquetaEstado';
-import { desvanecerEnMancha, PatronOlas } from './ui/Decoracion';
+import { desvanecerEnMancha, OlaTendida, PatronOlas } from './ui/Decoracion';
+import { Banderines } from './ui/Banderines';
 
 /** El titular sube palabra por palabra desde una máscara (`.palabra`, index.css); `desde` es el lugar de la primera. */
 function Palabras({ texto, desde = 0 }: { texto: string; desde?: number }) {
@@ -116,17 +117,19 @@ export function Escaparate({
 
   return (
     <section className="hero-fondo relative overflow-x-clip text-white" aria-labelledby="titular-tienda">
+      <Banderines className="absolute inset-x-0 top-0 z-[1] h-[52px] w-full md:h-[60px]" />
       <PatronOlas className="text-white opacity-[.06]" style={desvanecerEnMancha('0% 100%', 70, 80)} />
       <div aria-hidden="true" className="borde-festoneado-abajo pointer-events-none absolute inset-x-0 top-full z-[1]" />
-      <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-10 md:px-5 md:pb-28 md:pt-[72px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+      <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 px-4 pb-24 pt-14 md:px-5 md:pb-28 md:pt-[80px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
         <div>
           <h1
             id="titular-tienda"
             className="text-balance text-[clamp(34px,5vw,56px)] font-bold leading-[1.06] tracking-[-0.03em]"
           >
             <Palabras texto="Compra directo en los puestos de" />
-            <span className="text-amarillo">
+            <span className="relative inline-block text-amarillo">
               <Palabras texto="Riohacha" desde={6} />
+              <OlaTendida alto={9} trazo={3} className="subraya-ola pointer-events-none absolute -bottom-[0.14em] left-0 w-full" />
             </span>
           </h1>
           <p
