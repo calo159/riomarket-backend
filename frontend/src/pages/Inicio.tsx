@@ -8,6 +8,7 @@ import { PuestoCard } from '../components/PuestoCard';
 import { Escaparate } from '../components/Escaparate';
 import { PizarraPrecios } from '../components/PizarraPrecios';
 import { ComoFunciona } from '../components/ComoFunciona';
+import { VocesDelMercado } from '../components/VocesDelMercado';
 import { AvisoUnPuesto } from '../components/ui/AvisoUnPuesto';
 import { MedallaCategoria } from '../components/iconos';
 import { TituloSeccion } from '../components/ui/TituloSeccion';
@@ -255,6 +256,8 @@ export function Inicio() {
           />
         </div>
       )}
+
+      <VocesDelMercado puestos={todosPuestos} />
 
       <ComoFunciona />
     </div>

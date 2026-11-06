@@ -108,7 +108,7 @@ export function PuestoDetalle() {
             />
             <div className="min-w-0 flex-1 sm:pt-3">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-extrabold tracking-tight">{tienda.nombre}</h1>
+                <h1 className="font-display text-[28px] font-normal leading-tight [font-synthesis:none]">{tienda.nombre}</h1>
                 {tienda.estado !== 'activo' && (
                   <span className="badge bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
                     Puesto {tienda.estado}

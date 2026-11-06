@@ -37,14 +37,16 @@ describe('diseño de mercado', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('como_funciona_son_tres_pasos_con_su_titulo_y_su_texto', () => {
-    render(<ComoFunciona />);
+  it('como_funciona_son_tres_lineas_de_texto_sin_iconos', () => {
+    const { container } = render(<ComoFunciona />);
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Cómo funciona' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Cómo funciona' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Cada pedido sale de un solo puesto.' })).toBeInTheDocument();
     const pasos = screen.getAllByRole('listitem');
     expect(pasos).toHaveLength(3);
-    expect(within(pasos[0]).getByRole('heading', { level: 3, name: 'Elige un puesto' })).toBeInTheDocument();
+    expect(within(pasos[0]).getByText('Eliges un puesto.')).toBeInTheDocument();
     expect(within(pasos[2]).getByText('Solo opina quien recibió su pedido.')).toBeInTheDocument();
+    expect(container.querySelector('svg')).toBeNull();
   });
 
   it('los_banderines_y_la_ola_tendida_son_decorativos', () => {
@@ -56,6 +58,11 @@ describe('diseño de mercado', () => {
     );
 
     container.querySelectorAll('svg').forEach((s) => expect(s).toHaveAttribute('aria-hidden', 'true'));
-    expect(container.querySelectorAll('.banderin')).toHaveLength(30);
+    // Irregulares: ni todos del mismo tamaño ni a la misma distancia.
+    const n = container.querySelectorAll('.banderin').length;
+    expect(n).toBeGreaterThan(14);
+    expect(n).toBeLessThan(34);
+    const anchos = new Set(Array.from(container.querySelectorAll('.banderin path')).map((p) => p.getAttribute('d')?.split('L')[0]?.length));
+    expect(anchos.size).toBeGreaterThan(1);
   });
 });

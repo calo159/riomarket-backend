@@ -109,6 +109,7 @@ export const claves = {
 
   resenas: {
     todos: ['resenas'] as const,
+    inicio: ['resenas', 'inicio'] as const,
     admin: (pagina: Filtro, calificacion: Filtro) => ['resenas', 'admin', pagina, calificacion] as const,
     deUnPuesto: (puestoId: Id) => ['resenas', 'puesto', idClave(puestoId)] as const,
     vendedor: (usuarioId: Id) => ['resenas', 'vendedor', idClave(usuarioId)] as const,

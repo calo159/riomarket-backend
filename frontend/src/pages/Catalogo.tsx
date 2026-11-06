@@ -196,7 +196,7 @@ export function Catalogo() {
           <AvisoUnPuesto className="mb-3" />
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h1 className="text-[22px] font-extrabold tracking-tight">{categoriaActual ?? 'Catálogo'}</h1>
+              <h1 className="font-display text-[26px] font-normal leading-tight [font-synthesis:none]">{categoriaActual ?? 'Catálogo'}</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
                 {productos.data ? `${productos.data.count} ${productos.data.count === 1 ? 'resultado' : 'resultados'}` : 'Buscando…'}
               </p>
