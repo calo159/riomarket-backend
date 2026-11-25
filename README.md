@@ -12,7 +12,7 @@ Marketplace local para los puestos de mercado de Riohacha (Colombia). Incluye la
 
 - [Qué es](#qué-es-riomarket) · [Funcionalidades](#funcionalidades-y-estado) · [Arquitectura](#arquitectura) · [Stack](#stack) · [Inicio](#inicio-rápido) · [Datos](#datos-demo)
 - [Configuración](#configuración) · [Autenticación](#autenticación-y-roles) · [API](#api) · [Administración y RBAC](#administración-y-rbac) · [Frontend](#frontend) · [Pruebas](#pruebas)
-- [Despliegue](#despliegue-en-render) · [Seguridad](#seguridad-y-limitaciones) · [Estructura](#estructura) · [Documentación](#documentación) · [Problemas](#solución-de-problemas) · [Roadmap](#roadmap) · [Contribuir y licencia](#contribuir-licencia-y-autores)
+- [Despliegue](#despliegue-en-render) · [Seguridad](#seguridad-y-limitaciones) · [Estructura](#estructura) · [Documentación](#documentación) · [Problemas](#solución-de-problemas) · [Roadmap](#roadmap) · [Versionado](#versionado-y-estado-actual) · [Contribuir y licencia](#contribuir-licencia-y-autores)
 
 ## Qué es RioMarket
 
@@ -487,9 +487,17 @@ riomarket-backend/
 - Enviar correos transaccionales y notificaciones en tiempo real.
 - Migrar los archivos subidos a almacenamiento durable y ampliar las pruebas E2E por rol (hoy cubren los recorridos principales; faltan, por ejemplo, la compra a domicilio con pago sandbox y «Dar más tiempo»).
 
+## Versionado y estado actual
+
+**Versión actual: [`1.1.0`](CHANGELOG.md)** (25 de noviembre de 2026). El proyecto usa [versionado semántico](https://semver.org/lang/es/) (`MAJOR.MINOR.PATCH`) y cada versión tiene su etiqueta de git (`v1.0.0`, `v1.1.0`).
+
+- La versión se define en un solo lugar, [`config/version.py`](config/version.py), y se ve en ejecución en `GET /api/health/` (campo `release`).
+- Qué cambió en cada versión: [`CHANGELOG.md`](CHANGELOG.md). Cómo se publica una: [`CONTRIBUTING.md`](CONTRIBUTING.md#publicar-una-versión).
+- Evidencia del ciclo issue → rama → commit → pull request → versión, deuda técnica y pendientes: [`docs/mantenimiento-semana-15.md`](docs/mantenimiento-semana-15.md).
+
 ## Contribuir, licencia y autores
 
-Lee [`CONTRIBUTING.md`](CONTRIBUTING.md): crea una rama desde `main`, mantén los cambios pequeños, añade pruebas, ejecuta los comandos de la sección de pruebas (incluida la matriz de trazabilidad) y abre un pull request. No incluyas secretos reales en commits nuevos.
+Lee [`CONTRIBUTING.md`](CONTRIBUTING.md): registra un issue, crea una rama desde `main` (`feature/*`, `fix/*`, `docs/*`), mantén los cambios pequeños con commits `tipo: descripción`, añade pruebas, ejecuta los comandos de la sección de pruebas (incluida la matriz de trazabilidad) y abre un pull request que cierre el issue. No incluyas secretos reales en commits nuevos.
 
 **Licencia:** no hay `LICENSE`;
 

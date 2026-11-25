@@ -22,9 +22,16 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   (una petición menos), las reseñas de la portada solo se piden cuando la sección está a ~800 px de la pantalla, y la
   tipografía de los titulares (Young Serif) se precarga junto con la del texto.
 
+### Documentación
+
+- **Gobernanza del repositorio (#107, PR #113).** `CONTRIBUTING.md` define el flujo issue → rama → commits → pull
+  request → versión, los nombres de rama (`main`, `feature/*`, `fix/*`, `docs/*`, `chore/*`), el formato de commits
+  (`tipo: descripción`), el proceso de pull request y el versionado SemVer; se agrega la plantilla de pull request y
+  `docs/mantenimiento-semana-15.md` con el diagnóstico de deuda técnica, la trazabilidad de dos cambios y la reflexión.
+
 ### Añadido
 
-- **Versión semántica del sistema en `/api/health/` (#106).** La respuesta incluye el campo `release` (p. ej. `"1.1.0"`),
+- **Versión semántica del sistema en `/api/health/` (#106, PR #112).** La respuesta incluye el campo `release` (p. ej. `"1.1.0"`),
   que sale de una sola fuente, `config/version.py`; el campo `version` sigue siendo el commit desplegado. Una prueba
   (`apps/common/tests/test_version.py`) falla si esa cifra y la primera sección versionada de este archivo no coinciden,
   así el código, el CHANGELOG y el tag `vX.Y.Z` no se desincronizan.
@@ -337,6 +344,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Corregido
 
+- **Las tareas programadas reintentaban en vano con el servicio suspendido (#105, PR #111).** Con la cabecera
+  `x-render-routing: suspend` el `503` no es transitorio, pero el trabajo reintentaba 6 veces (~85 s) y fallaba con un
+  `curl: (22) ... 503` sin causa. Ahora falla en el primer intento (~9 s) y dice que el servicio está suspendido en
+  Render; un `503` sin esa cabecera sigue reintentando como antes.
 - **Los despliegues en Render fallaban con `EMAXCONNSESSION`.** El arranque usaba 2 procesos × 4 hilos, hasta 8
   conexiones por instancia, y cada una se conserva 60 segundos; el *Session pooler* de Supabase admite 15 en total y,
   durante un despliegue, conviven la instancia vieja y la nueva (más cualquier otro servicio conectado a la misma
@@ -477,5 +488,6 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
   moderados de herramientas de desarrollo (0 en dependencias de producción) y `pip-audit` no reporta
   vulnerabilidades. Ver [SECURITY.md](SECURITY.md).
 
-[Sin publicar]: https://github.com/calo159/riomarket-backend/compare/v1.0.0...HEAD
+[Sin publicar]: https://github.com/calo159/riomarket-backend/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/calo159/riomarket-backend/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/calo159/riomarket-backend/releases/tag/v1.0.0
