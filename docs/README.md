@@ -19,6 +19,9 @@ stack, pruebas y despliegue.
   cada uno y propuestas pendientes.
 - [Auditoría y mantenimiento](MANTENIMIENTO.md): línea base, herramientas,
   dependencias, datos demo y decisiones de limpieza.
+- [Mantenimiento y evolución (Semana 15)](mantenimiento-semana-15.md): deuda
+  técnica, issues, ramas, pull requests, versión `1.1.0`, trazabilidad de dos
+  cambios y reflexión.
 - [Rendimiento (Lighthouse antes/después)](rendimiento.md): método de medición,
   cifras y lo que no se pudo medir.
 - [Alcance del frontend](alcance-frontend.md): encargo original y estado actual
