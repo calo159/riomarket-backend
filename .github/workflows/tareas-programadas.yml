@@ -32,6 +32,15 @@ jobs:
     steps:
       - name: Despertar el servicio y comprobar su salud
         run: |
+          # Render contesta 503 con «x-render-routing: suspend» cuando el servicio está SUSPENDIDO
+          # (plan, facturación o suspensión manual). Eso no es transitorio: reintentar solo gasta
+          # minutos de Actions, así que se falla de inmediato y se dice la causa.
+          cabeceras=$(curl --silent --max-time 30 --output /dev/null --dump-header - \
+            "$URL_PRODUCCION/api/health/" || true)
+          if printf '%s' "$cabeceras" | grep -qi '^x-render-routing: *suspend'; then
+            echo "::error::El servicio $URL_PRODUCCION está SUSPENDIDO en Render; no es un fallo del código. Reactívalo en Render → tu servicio → Resume (o revisa el plan y la facturación)."
+            exit 1
+          fi
           curl --fail --silent --show-error --retry 5 --retry-delay 15 --retry-all-errors \
             --max-time 90 "$URL_PRODUCCION/api/health/" | tee salud.json
           grep -q '"status": *"ok"' salud.json
