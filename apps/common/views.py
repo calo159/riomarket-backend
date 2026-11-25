@@ -11,6 +11,8 @@ from django.db.migrations.executor import MigrationExecutor
 from django.http import JsonResponse
 from django.views import View
 
+from config.version import __version__
+
 # Resultado cacheado de «¿hay migraciones pendientes?»: cargar el grafo de migraciones cuesta
 # decenas de ms y Render llama a /api/health/ cada pocos segundos.
 _MIGRACIONES: dict = {"valor": None, "hasta": 0.0}
@@ -51,6 +53,8 @@ class HealthCheckView(View):
 
     Responde 503 solo si la base está caída (Render reinicia con 503 repetidos); el resto de los
     campos son informativos. ``debug`` y los nombres de variables no se exponen a propósito.
+
+    ``release`` es la versión semántica (``config/version.py``); ``version``, el commit desplegado.
     """
 
     def get(self, request):
@@ -64,6 +68,7 @@ class HealthCheckView(View):
             {
                 "status": "ok" if db_status == "up" else "degraded",
                 "database": db_status,
+                "release": __version__,
                 "version": _version(),
                 "migraciones": _estado_migraciones() if db_status == "up" else "desconocido",
                 "almacenamiento_externo": _almacenamiento_externo(),

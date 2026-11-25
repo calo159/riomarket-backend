@@ -8,6 +8,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
 from apps.common import views
+from config.version import __version__
 
 URL = "/api/health/"
 
@@ -27,6 +28,7 @@ def test_health_ok_con_campos_esperados(client):
     assert set(datos) == {
         "status",
         "database",
+        "release",
         "version",
         "migraciones",
         "almacenamiento_externo",
@@ -37,6 +39,13 @@ def test_health_ok_con_campos_esperados(client):
     assert datos["migraciones"] == "al_dia"
     assert datos["almacenamiento_externo"] is False
     assert re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$", datos["hora_servidor"])
+
+
+@pytest.mark.django_db
+def test_release_es_la_version_semantica_del_codigo(client):
+    datos = client.get(URL).json()
+    assert datos["release"] == __version__
+    assert re.fullmatch(r"\d+\.\d+\.\d+", datos["release"])
 
 
 @pytest.mark.django_db
