@@ -9,6 +9,8 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-11-25
+
 ### Cambiado
 
 - **Optimización de rendimiento de la tienda.** Medido en un móvil lento simulado (CPU 4 veces más lenta, red 1,6 Mbps): los
@@ -22,6 +24,10 @@ lo anterior al PR #1 se hizo con commits directos y se resume por fases. El PR #
 
 ### Añadido
 
+- **Versión semántica del sistema en `/api/health/` (#106).** La respuesta incluye el campo `release` (p. ej. `"1.1.0"`),
+  que sale de una sola fuente, `config/version.py`; el campo `version` sigue siendo el commit desplegado. Una prueba
+  (`apps/common/tests/test_version.py`) falla si esa cifra y la primera sección versionada de este archivo no coinciden,
+  así el código, el CHANGELOG y el tag `vX.Y.Z` no se desincronizan.
 - **Más movimiento en el panel.** El selector de vista (Lista/Matriz en Roles, Gráfico/Tabla en las ventas por día) lleva una
   **pastilla que se desliza** y el contenido cambia con un fundido; las **casillas y botones de opción** de toda la aplicación
   dibujan su marca con un rebote al marcarse (con versión oscura y estado deshabilitado); el **interruptor** del vendedor
